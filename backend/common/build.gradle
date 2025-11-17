@@ -1,0 +1,18 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    implementation platform(libs.spring.boot.bom)
+    testImplementation platform(libs.spring.boot.bom)
+    implementation libs.spring.context
+    implementation libs.jakarta.persistence
+    implementation libs.spring.data.commons
+    implementation libs.ulid.creator
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+    testImplementation libs.bundles.spring.test
+    testImplementation libs.junit.platform.launcher
+}

@@ -1,0 +1,23 @@
+import org.gradle.api.initialization.resolve.RepositoriesMode
+
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+    }
+}
+
+enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
+
+rootProject.name = 'clear-reg'
+
+include('backend:common')
+include('backend:server')
+include('backend:auth')

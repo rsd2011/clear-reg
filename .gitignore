@@ -1,0 +1,153 @@
+# 빌드 출력 디렉토리
+/build
+/*/build
+/*/*/build
+/out
+/*/out
+/*/*/out
+**/src/main/gen-java
+**/src/test/gen-java
+**/gen-src
+*.log
+/data
+/*/*/data
+
+# 패키지 파일 #
+*.jar
+!**/src/**/WEB-INF/lib/*.jar
+!/gradle/wrapper/gradle-wrapper.jar
+!/settings/intellij_idea/settings.jar
+*.war
+*.ear
+
+# 클라이언트 벤더 종속성
+**/webapp/vendor
+
+# gogradle 출력
+.gogradle
+
+# 가상 머신 충돌 로그, http://www.java.com/en/download/help/error_hotspot.xml 참조
+hs_err_pid*
+
+# Gradle 관련
+.gradle
+.gradle-cache
+
+# IntelliJ 관련 파일 및 디렉토리
+.idea
+!.idea/icon.svg
+*.iml
+*.iws
+*.ipr
+*.ids
+*.orig
+/classes
+/out
+
+# Eclipse 관련 파일 및 디렉토리
+*.pydevproject
+.project
+.metadata
+/bin
+/*/bin
+/tmp
+/*/tmp
+*.tmp
+*.bak
+*.swp
+*~.nib
+.classpath
+.settings
+.loadpath
+
+# 외부 도구 빌더
+.externalToolBuilders/**
+
+# 로컬에 저장된 "Eclipse 실행 구성"
+*.launch
+
+# CDT 전용 파일
+.cproject
+
+# PDT 전용 파일
+.buildpath
+
+# ASDF 관련 파일
+.tool-versions
+
+### Node 템플릿
+# 로그 파일
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 런타임 데이터
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# jscoverage/JSCover가 생성한 라이브러리 디렉토리
+lib-cov
+
+# istanbul과 같은 도구가 사용하는 커버리지 디렉토리
+coverage
+
+# nyc 테스트 커버리지 출력
+.nyc_output
+
+# Grunt 임시 저장소 (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower 의존성 디렉토리 (https://bower.io/)
+bower_components
+
+# node-waf 설정 파일
+.lock-wscript
+
+# 컴파일된 바이너리 애드온 (https://nodejs.org/api/addons.html)
+build/Release
+
+# 의존성 디렉토리
+node_modules/
+jspm_packages/
+
+# TypeScript v1 선언 파일
+typings/
+
+# 선택적 npm 캐시 디렉토리
+.npm
+
+# 선택적 eslint 캐시 파일
+.eslintcache
+
+# 선택적 REPL 히스토리 파일
+.node_repl_history
+
+# 'npm pack'의 출력 파일
+*.tgz
+
+# Yarn 무결성 파일
+.yarn-integrity
+
+# dotenv 환경 변수 파일
+.env
+.env*.local
+
+# next.js 빌드 출력
+.next
+.swc
+
+# macOS 폴더 메타 데이터
+.DS_Store
+
+# 로컬 파일 업로드 경로
+src/main/resources/upload
+src/main/resources/manual
+
+# 스크립트 파일
+*.sh
+
+.vscode

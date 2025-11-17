@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    alias(libs.plugins.spring.boot)
+}
+
+dependencies {
+    implementation platform(libs.spring.boot.bom)
+    testImplementation platform(libs.spring.boot.bom)
+    implementation project(':backend:common')
+    implementation project(':backend:auth')
+    implementation libs.spring.boot.starter.web
+    implementation libs.spring.boot.starter.data.jpa
+    implementation libs.bundles.spring.boot.security
+    implementation libs.spring.boot.starter.validation
+    implementation libs.springdoc.openapi.starter
+    implementation libs.spring.boot.starter.cache
+    implementation libs.spring.boot.starter.data.redis
+    implementation libs.caffeine
+    runtimeOnly libs.h2.database
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+
+    testImplementation libs.bundles.spring.test
+    testImplementation libs.junit.platform.launcher
+}

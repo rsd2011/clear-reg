@@ -1,0 +1,76 @@
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+
+plugins {
+    alias(libs.plugins.spring.boot) apply false
+}
+
+allprojects {
+    group = 'com.example'
+    version = '0.0.1-SNAPSHOT'
+}
+
+subprojects { subproject ->
+    plugins.withType(JavaPlugin) {
+        subproject.pluginManager.apply('jacoco')
+
+        subproject.extensions.configure(JavaPluginExtension) { javaExt ->
+            javaExt.toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+            }
+            javaExt.withSourcesJar()
+            javaExt.withJavadocJar()
+        }
+
+        subproject.extensions.configure(JacocoPluginExtension) { jacocoExt ->
+            jacocoExt.toolVersion = '0.8.11'
+        }
+
+        tasks.withType(Test).configureEach {
+            useJUnitPlatform()
+            testLogging {
+                events 'passed', 'skipped', 'failed'
+                exceptionFormat = TestExceptionFormat.FULL
+            }
+            finalizedBy(tasks.named('jacocoTestReport'))
+        }
+
+        def jacocoExclusions = ['**/Application.class', '**/config/**', '**/dto/**', '**/domain/**']
+
+        tasks.named('jacocoTestReport').configure { JacocoReport report ->
+            dependsOn tasks.named('test')
+            reports {
+                xml.required = true
+                html.required = true
+            }
+            def classDirFiles = report.classDirectories.asFileTree.files
+            def filtered = classDirFiles.collect { file ->
+                fileTree(dir: file, exclude: jacocoExclusions)
+            }
+            report.classDirectories.setFrom(filtered)
+        }
+
+        tasks.named('jacocoTestCoverageVerification').configure { JacocoCoverageVerification verification ->
+            dependsOn tasks.named('test')
+            def classDirFiles = verification.classDirectories.asFileTree.files
+            def filtered = classDirFiles.collect { file ->
+                fileTree(dir: file, exclude: jacocoExclusions)
+            }
+            verification.classDirectories.setFrom(filtered)
+            violationRules {
+                rule {
+                    limit {
+                        minimum = 0.80
+                    }
+                }
+            }
+        }
+
+        tasks.named('check').configure {
+            dependsOn tasks.named('jacocoTestCoverageVerification')
+        }
+    }
+}

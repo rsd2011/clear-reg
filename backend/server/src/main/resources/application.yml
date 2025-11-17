@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: multi-module-application
+  datasource:
+    url: jdbc:h2:mem:cleardb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          use_get_generated_keys: true
+  h2:
+    console:
+      enabled: true
+  ldap:
+    urls: ""
+    base: ""
+    username: ""
+    password: ""
+
+cache:
+  redis:
+    enabled: false
+  local-ttl-seconds: 300
+  redis-ttl-seconds: 600
+  local-maximum-size: 10000
+
+security:
+  jwt:
+    secret: change-me-change-me-change-me-change-me-change-me-32bytes
+    access-token-seconds: 900
+    refresh-token-seconds: 2592000
+    issuer: clear-reg-backend
+  auth:
+    password-min-length: 12
+    require-uppercase: true
+    require-lowercase: true
+    require-digit: true
+    require-special: true
+    max-failed-attempts: 5
+    lockout-seconds: 900
+  session:
+    max-active-sessions: 2
