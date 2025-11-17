@@ -6,6 +6,7 @@ junit-platform = "1.10.2"
 springdoc = "2.5.0"
 lombok = "1.18.32"
 jjwt = "0.11.5"
+jackson = "2.17.1"
 
 [libraries]
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
@@ -32,6 +33,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 ulid-creator = { module = "com.github.f4b6a3:ulid-creator", version = "5.2.0" }
 jakarta-persistence = { module = "jakarta.persistence:jakarta.persistence-api" }
 spring-data-commons = { module = "org.springframework.data:spring-data-commons" }
+jackson-dataformat-yaml = { module = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml", version.ref = "jackson" }
 
 [bundles]
 spring-boot-core = ["spring-boot-starter", "spring-boot-starter-validation"]

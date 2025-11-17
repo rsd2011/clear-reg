@@ -16,6 +16,7 @@ dependencies {
     implementation libs.spring.boot.starter.cache
     implementation libs.spring.boot.starter.data.redis
     implementation libs.caffeine
+    implementation libs.jackson.dataformat.yaml
     runtimeOnly libs.h2.database
     compileOnly libs.lombok
     annotationProcessor libs.lombok

@@ -12,6 +12,8 @@ public class AuthPolicyProperties {
     private boolean requireSpecial = true;
     private int maxFailedAttempts = 5;
     private long lockoutSeconds = 900;
+    private int passwordHistorySize = 5;
+    private long passwordExpiryDays = 90;
 
     public int getPasswordMinLength() {
         return passwordMinLength;
@@ -67,5 +69,21 @@ public class AuthPolicyProperties {
 
     public void setLockoutSeconds(long lockoutSeconds) {
         this.lockoutSeconds = lockoutSeconds;
+    }
+
+    public int getPasswordHistorySize() {
+        return passwordHistorySize;
+    }
+
+    public void setPasswordHistorySize(int passwordHistorySize) {
+        this.passwordHistorySize = passwordHistorySize;
+    }
+
+    public long getPasswordExpiryDays() {
+        return passwordExpiryDays;
+    }
+
+    public void setPasswordExpiryDays(long passwordExpiryDays) {
+        this.passwordExpiryDays = passwordExpiryDays;
     }
 }

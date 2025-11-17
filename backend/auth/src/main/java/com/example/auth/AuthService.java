@@ -8,12 +8,18 @@ import org.springframework.stereotype.Service;
 
 import com.example.auth.domain.RefreshTokenService;
 import com.example.auth.domain.RefreshTokenService.IssuedRefreshToken;
+import com.example.auth.domain.UserAccountService;
 import com.example.auth.domain.UserAccount;
+import com.example.auth.dto.AccountStatusChangeRequest;
 import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.LoginResponse;
+import com.example.auth.dto.PasswordChangeRequest;
 import com.example.auth.dto.TokenResponse;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.auth.security.JwtTokenProvider.JwtToken;
+import com.example.auth.security.AccountStatusPolicy;
+import com.example.auth.security.PasswordPolicyValidator;
+import com.example.auth.security.PolicyToggleProvider;
 import com.example.auth.strategy.AuthenticationStrategy;
 
 @Service
@@ -22,17 +28,32 @@ public class AuthService {
     private final Map<LoginType, AuthenticationStrategy> strategies;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
+    private final UserAccountService userAccountService;
+    private final AccountStatusPolicy accountStatusPolicy;
+    private final PasswordPolicyValidator passwordPolicyValidator;
+    private final PolicyToggleProvider policyToggleProvider;
 
     public AuthService(List<AuthenticationStrategy> strategies,
                        JwtTokenProvider jwtTokenProvider,
-                       RefreshTokenService refreshTokenService) {
+                       RefreshTokenService refreshTokenService,
+                       UserAccountService userAccountService,
+                       AccountStatusPolicy accountStatusPolicy,
+                       PasswordPolicyValidator passwordPolicyValidator,
+                       PolicyToggleProvider policyToggleProvider) {
         this.strategies = new EnumMap<>(LoginType.class);
         strategies.forEach(strategy -> this.strategies.put(strategy.supportedType(), strategy));
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
+        this.userAccountService = userAccountService;
+        this.accountStatusPolicy = accountStatusPolicy;
+        this.passwordPolicyValidator = passwordPolicyValidator;
+        this.policyToggleProvider = policyToggleProvider;
     }
 
     public LoginResponse login(LoginRequest request) {
+        if (request.type() == null || !policyToggleProvider.enabledLoginTypes().contains(request.type())) {
+            throw new InvalidCredentialsException();
+        }
         AuthenticationStrategy strategy = strategies.get(request.type());
         if (strategy == null) {
             throw new InvalidCredentialsException();
@@ -48,6 +69,28 @@ public class AuthService {
 
     public void logout(String refreshTokenValue) {
         refreshTokenService.revoke(refreshTokenValue);
+    }
+
+    public void changePassword(String username, PasswordChangeRequest request) {
+        UserAccount account = userAccountService.getByUsernameOrThrow(username);
+        accountStatusPolicy.ensureLoginAllowed(account);
+        if (!userAccountService.passwordMatches(account, request.currentPassword())) {
+            accountStatusPolicy.onFailedLogin(account);
+            throw new InvalidCredentialsException();
+        }
+        passwordPolicyValidator.validate(request.newPassword());
+        userAccountService.changePassword(account, request.newPassword());
+        accountStatusPolicy.onSuccessfulLogin(account);
+    }
+
+    public void updateAccountStatus(AccountStatusChangeRequest request) {
+        UserAccount account = userAccountService.getByUsernameOrThrow(request.username());
+        if (request.active()) {
+            accountStatusPolicy.activate(account);
+        } else {
+            accountStatusPolicy.deactivate(account);
+            refreshTokenService.revokeAll(account);
+        }
     }
 
     private LoginResponse assembleResponse(UserAccount account, LoginType type, IssuedRefreshToken refreshToken) {

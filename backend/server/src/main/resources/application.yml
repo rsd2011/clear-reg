@@ -48,5 +48,15 @@ security:
     require-special: true
     max-failed-attempts: 5
     lockout-seconds: 900
+    password-history-size: 5
+    password-expiry-days: 90
   session:
     max-active-sessions: 2
+  policy:
+    password-policy-enabled: true
+    password-history-enabled: true
+    account-lock-enabled: true
+    enabled-login-types:
+      - PASSWORD
+      - SSO
+      - AD

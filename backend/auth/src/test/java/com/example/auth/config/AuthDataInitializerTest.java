@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
+import com.example.auth.security.PasswordHistoryService;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthDataInitializer")
@@ -28,13 +29,16 @@ class AuthDataInitializerTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private PasswordHistoryService passwordHistoryService;
+
     private AuthDataInitializer initializer;
 
     @BeforeEach
     void setUp() {
         org.mockito.Mockito.lenient().when(passwordEncoder.encode(any()))
                 .thenAnswer(invocation -> "encoded-" + invocation.getArgument(0));
-        initializer = new AuthDataInitializer(repository, passwordEncoder);
+        initializer = new AuthDataInitializer(repository, passwordEncoder, passwordHistoryService);
     }
 
     @Test

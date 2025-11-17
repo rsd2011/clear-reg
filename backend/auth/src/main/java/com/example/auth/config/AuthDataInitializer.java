@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
+import com.example.auth.security.PasswordHistoryService;
 
 @Component
 @Profile("!test")
@@ -16,10 +17,14 @@ public class AuthDataInitializer implements CommandLineRunner {
 
     private final UserAccountRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordHistoryService passwordHistoryService;
 
-    public AuthDataInitializer(UserAccountRepository repository, PasswordEncoder passwordEncoder) {
+    public AuthDataInitializer(UserAccountRepository repository,
+                               PasswordEncoder passwordEncoder,
+                               PasswordHistoryService passwordHistoryService) {
         this.repository = repository;
         this.passwordEncoder = passwordEncoder;
+        this.passwordHistoryService = passwordHistoryService;
     }
 
     @Override
@@ -28,9 +33,10 @@ public class AuthDataInitializer implements CommandLineRunner {
             return;
         }
 
+        String defaultPassword = "local-password";
         UserAccount passwordUser = UserAccount.builder()
                 .username("local-user")
-                .password(passwordEncoder.encode("local-password"))
+                .password(passwordEncoder.encode(defaultPassword))
                 .email("local@example.com")
                 .roles(Set.of("ROLE_USER"))
                 .build();
@@ -52,6 +58,7 @@ public class AuthDataInitializer implements CommandLineRunner {
         ssoUser.setSsoId("sso-sso-user");
 
         repository.save(passwordUser);
+        passwordHistoryService.record(passwordUser, passwordUser.getPassword());
         repository.save(adUser);
         repository.save(ssoUser);
     }
