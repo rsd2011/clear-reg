@@ -48,5 +48,29 @@ security:
     require-special: true
     max-failed-attempts: 5
     lockout-seconds: 900
+    password-history-size: 5
+    password-expiry-days: 90
   session:
     max-active-sessions: 2
+  policy:
+    password-policy-enabled: true
+    password-history-enabled: true
+    account-lock-enabled: true
+    enabled-login-types:
+      - PASSWORD
+      - SSO
+      - AD
+
+hr:
+  ingestion:
+    enabled: false
+    batch-cron: "0 30 2 * * *"
+    timezone: Asia/Seoul
+    incoming-dir: "${HR_INCOMING_DIR:build/hr/incoming}"
+    archive-dir: "${HR_ARCHIVE_DIR:build/hr/archive}"
+    error-dir: "${HR_ERROR_DIR:build/hr/error}"
+    reconciliation-lookback: "30d"
+    retention: "90d"
+    database:
+      enabled: false
+      batch-size: 1000

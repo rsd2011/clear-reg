@@ -54,6 +54,9 @@ public class UserAccount extends PrimaryKeyEntity {
     @Column(name = "locked_until")
     private Instant lockedUntil;
 
+    @Column(name = "password_changed_at")
+    private Instant passwordChangedAt = Instant.now();
+
     @Builder
     public UserAccount(String username, String password, String email, Set<String> roles) {
         this.username = username;
@@ -79,6 +82,7 @@ public class UserAccount extends PrimaryKeyEntity {
 
     public void updatePassword(String encodedPassword) {
         this.password = encodedPassword;
+        this.passwordChangedAt = Instant.now();
     }
 
     public void updateEmail(String email) {
@@ -121,5 +125,9 @@ public class UserAccount extends PrimaryKeyEntity {
 
     public void lockUntil(Instant instant) {
         this.lockedUntil = instant;
+    }
+
+    public Instant getPasswordChangedAt() {
+        return passwordChangedAt;
     }
 }

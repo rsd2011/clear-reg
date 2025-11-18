@@ -22,6 +22,12 @@ class AccountStatusPolicyTest {
     @Mock
     private UserAccountRepository repository;
 
+    @Mock
+    private PasswordHistoryService passwordHistoryService;
+
+    @Mock
+    private PolicyToggleProvider policyToggleProvider;
+
     private AccountStatusPolicy policy;
 
     @BeforeEach
@@ -30,7 +36,10 @@ class AccountStatusPolicyTest {
         AuthPolicyProperties properties = new AuthPolicyProperties();
         properties.setMaxFailedAttempts(1);
         properties.setLockoutSeconds(60);
-        policy = new AccountStatusPolicy(properties, repository);
+        org.mockito.BDDMockito.given(policyToggleProvider.isAccountLockEnabled()).willReturn(true);
+        org.mockito.BDDMockito.given(policyToggleProvider.isPasswordHistoryEnabled()).willReturn(true);
+        policy = new AccountStatusPolicy(properties, repository, passwordHistoryService, policyToggleProvider);
+        org.mockito.BDDMockito.given(passwordHistoryService.isExpired(org.mockito.ArgumentMatchers.any())).willReturn(false);
     }
 
     @Test
@@ -89,5 +98,19 @@ class AccountStatusPolicyTest {
         policy.onSuccessfulLogin(account);
 
         then(repository).should().save(account);
+    }
+
+    @Test
+    @DisplayName("Given expired password When ensureLoginAllowed Then throw")
+    void givenExpiredPasswordWhenEnsureThenThrow() {
+        UserAccount account = UserAccount.builder()
+                .username("expired")
+                .password("pw")
+                .email("expired@example.com")
+                .build();
+        org.mockito.BDDMockito.given(passwordHistoryService.isExpired(account)).willReturn(true);
+
+        assertThatThrownBy(() -> policy.ensureLoginAllowed(account))
+                .isInstanceOf(InvalidCredentialsException.class);
     }
 }

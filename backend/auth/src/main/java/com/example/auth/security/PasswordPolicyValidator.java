@@ -11,14 +11,20 @@ import com.example.auth.config.AuthPolicyProperties;
 public class PasswordPolicyValidator {
 
     private final AuthPolicyProperties properties;
+    private final PolicyToggleProvider policyToggleProvider;
 
     private static final Pattern SPECIAL = Pattern.compile("[^A-Za-z0-9]");
 
-    public PasswordPolicyValidator(AuthPolicyProperties properties) {
+    public PasswordPolicyValidator(AuthPolicyProperties properties,
+                                   PolicyToggleProvider policyToggleProvider) {
         this.properties = properties;
+        this.policyToggleProvider = policyToggleProvider;
     }
 
     public void validate(String password) {
+        if (!policyToggleProvider.isPasswordPolicyEnabled()) {
+            return;
+        }
         if (password == null) {
             throw new InvalidCredentialsException();
         }
