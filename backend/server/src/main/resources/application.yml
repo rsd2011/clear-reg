@@ -60,3 +60,17 @@ security:
       - PASSWORD
       - SSO
       - AD
+
+hr:
+  ingestion:
+    enabled: false
+    batch-cron: "0 30 2 * * *"
+    timezone: Asia/Seoul
+    incoming-dir: "${HR_INCOMING_DIR:build/hr/incoming}"
+    archive-dir: "${HR_ARCHIVE_DIR:build/hr/archive}"
+    error-dir: "${HR_ERROR_DIR:build/hr/error}"
+    reconciliation-lookback: "30d"
+    retention: "90d"
+    database:
+      enabled: false
+      batch-size: 1000

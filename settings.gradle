@@ -18,6 +18,9 @@ enableFeaturePreview('TYPESAFE_PROJECT_ACCESSORS')
 
 rootProject.name = 'clear-reg'
 
-include('backend:common')
+include('backend:platform')
 include('backend:server')
 include('backend:auth')
+include('backend:hr-core')
+include('backend:batch-app')
+include('backend:policy')

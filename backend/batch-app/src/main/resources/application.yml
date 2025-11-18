@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: batch-app
+
+hr:
+  ingestion:
+    enabled: true
