@@ -39,6 +39,8 @@ public class AuthDataInitializer implements CommandLineRunner {
                 .password(passwordEncoder.encode(defaultPassword))
                 .email("local@example.com")
                 .roles(Set.of("ROLE_USER"))
+                .organizationCode("ROOT")
+                .permissionGroupCode("DEFAULT")
                 .build();
 
         UserAccount adUser = UserAccount.builder()
@@ -46,6 +48,8 @@ public class AuthDataInitializer implements CommandLineRunner {
                 .password(passwordEncoder.encode("unused"))
                 .email("ad@example.com")
                 .roles(Set.of("ROLE_USER"))
+                .organizationCode("ROOT")
+                .permissionGroupCode("DEFAULT")
                 .build();
         adUser.setActiveDirectoryDomain("corp.example.com");
 
@@ -54,6 +58,8 @@ public class AuthDataInitializer implements CommandLineRunner {
                 .password(passwordEncoder.encode("unused"))
                 .email("sso@example.com")
                 .roles(Set.of("ROLE_USER"))
+                .organizationCode("ROOT")
+                .permissionGroupCode("DEFAULT")
                 .build();
         ssoUser.setSsoId("sso-sso-user");
 

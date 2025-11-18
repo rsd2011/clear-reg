@@ -12,6 +12,7 @@ import com.example.hr.infrastructure.persistence.HrIngestionPolicyRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 @Service
 public class HrIngestionPolicyService implements HrIngestionPolicyProvider {
@@ -26,6 +27,7 @@ public class HrIngestionPolicyService implements HrIngestionPolicyProvider {
                                     HrIngestionProperties defaults) {
         this.repository = repository;
         this.yamlMapper = new ObjectMapper(new YAMLFactory());
+        this.yamlMapper.registerModule(new JavaTimeModule());
         HrIngestionPolicyState initial = HrIngestionPolicyState.from(defaults);
         this.cache = new AtomicReference<>(initial);
         repository.findByCode(DOCUMENT_CODE)

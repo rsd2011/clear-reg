@@ -11,6 +11,7 @@ dependencies {
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.boot.starter.validation
     implementation libs.jackson.dataformat.yaml
+    implementation libs.jackson.datatype.jsr310
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok
@@ -19,4 +20,5 @@ dependencies {
 
     testImplementation libs.bundles.spring.test
     testImplementation libs.junit.platform.launcher
+    testImplementation testFixtures(project(':backend:platform'))
 }

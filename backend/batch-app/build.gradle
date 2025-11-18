@@ -19,6 +19,7 @@ dependencies {
 
     testImplementation libs.bundles.spring.test
     testImplementation libs.junit.platform.launcher
+    testImplementation testFixtures(project(':backend:platform'))
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

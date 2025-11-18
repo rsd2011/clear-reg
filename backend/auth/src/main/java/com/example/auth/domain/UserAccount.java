@@ -33,6 +33,12 @@ public class UserAccount extends PrimaryKeyEntity {
 
     private String email;
 
+    @Column(name = "organization_code", nullable = false)
+    private String organizationCode;
+
+    @Column(name = "permission_group_code", nullable = false)
+    private String permissionGroupCode;
+
     @Column(name = "sso_id")
     private String ssoId;
 
@@ -58,7 +64,12 @@ public class UserAccount extends PrimaryKeyEntity {
     private Instant passwordChangedAt = Instant.now();
 
     @Builder
-    public UserAccount(String username, String password, String email, Set<String> roles) {
+    public UserAccount(String username,
+                       String password,
+                       String email,
+                       Set<String> roles,
+                       String organizationCode,
+                       String permissionGroupCode) {
         this.username = username;
         this.password = password;
         this.email = email;
@@ -66,6 +77,8 @@ public class UserAccount extends PrimaryKeyEntity {
             this.roles = new HashSet<>(roles);
         }
         this.active = true;
+        this.organizationCode = organizationCode != null ? organizationCode : "ROOT";
+        this.permissionGroupCode = permissionGroupCode != null ? permissionGroupCode : "DEFAULT";
     }
 
     public void setSsoId(String ssoId) {
@@ -129,5 +142,21 @@ public class UserAccount extends PrimaryKeyEntity {
 
     public Instant getPasswordChangedAt() {
         return passwordChangedAt;
+    }
+
+    public String getOrganizationCode() {
+        return organizationCode;
+    }
+
+    public void updateOrganizationCode(String organizationCode) {
+        this.organizationCode = organizationCode;
+    }
+
+    public String getPermissionGroupCode() {
+        return permissionGroupCode;
+    }
+
+    public void updatePermissionGroupCode(String permissionGroupCode) {
+        this.permissionGroupCode = permissionGroupCode;
     }
 }

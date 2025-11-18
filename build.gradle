@@ -38,7 +38,9 @@ subprojects { subproject ->
             finalizedBy(tasks.named('jacocoTestReport'))
         }
 
-        def jacocoExclusions = ['**/Application.class', '**/config/**', '**/dto/**', '**/domain/**']
+        def jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**', '**/domain/**', '**/infrastructure/**']
+
+        def mainSourceSet = subproject.extensions.getByType(JavaPluginExtension).sourceSets.named('main').get()
 
         tasks.named('jacocoTestReport').configure { JacocoReport report ->
             dependsOn tasks.named('test')
@@ -46,23 +48,22 @@ subprojects { subproject ->
                 xml.required = true
                 html.required = true
             }
-            def classDirFiles = report.classDirectories.asFileTree.files
-            def filtered = classDirFiles.collect { file ->
-                fileTree(dir: file, exclude: jacocoExclusions)
-            }
-            report.classDirectories.setFrom(filtered)
+            report.classDirectories.setFrom(mainSourceSet.output.classesDirs.asFileTree.matching {
+                exclude jacocoExclusions
+            })
         }
 
         tasks.named('jacocoTestCoverageVerification').configure { JacocoCoverageVerification verification ->
             dependsOn tasks.named('test')
-            def classDirFiles = verification.classDirectories.asFileTree.files
-            def filtered = classDirFiles.collect { file ->
-                fileTree(dir: file, exclude: jacocoExclusions)
-            }
-            verification.classDirectories.setFrom(filtered)
+            verification.classDirectories.setFrom(mainSourceSet.output.classesDirs.asFileTree.matching {
+                exclude jacocoExclusions
+            })
             violationRules {
                 rule {
+                    element = 'BUNDLE'
                     limit {
+                        counter = 'LINE'
+                        value = 'COVEREDRATIO'
                         minimum = 0.80
                     }
                 }

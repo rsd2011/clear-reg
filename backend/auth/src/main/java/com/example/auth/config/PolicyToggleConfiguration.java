@@ -1,15 +1,24 @@
 package com.example.auth.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
 import com.example.auth.security.PolicyToggleProvider;
+import com.example.auth.security.DtoBackedPolicyToggleProvider;
+import com.example.common.policy.PolicySettingsProvider;
 
 @Configuration
 @EnableConfigurationProperties(PolicyToggleProperties.class)
 public class PolicyToggleConfiguration {
+
+    @Bean
+    @ConditionalOnBean(PolicySettingsProvider.class)
+    public PolicyToggleProvider policyToggleProviderFromSettings(PolicySettingsProvider provider) {
+        return new DtoBackedPolicyToggleProvider(provider);
+    }
 
     @Bean
     @ConditionalOnMissingBean(PolicyToggleProvider.class)

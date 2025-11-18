@@ -1,11 +1,13 @@
 package com.example.batch.ingestion;
 
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.Date;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -28,11 +30,24 @@ public class HrIngestionScheduler implements SchedulingConfigurer {
                         ingestionService.ingestNextFile().ifPresent(batch ->
                                 log.info("Completed scheduled HR batch {} with status {}", batch.getId(), batch.getStatus())),
                 triggerContext -> {
-                    String cron = policyProvider.batchCron();
+                    CronExpression expression = CronExpression.parse(policyProvider.batchCron());
                     ZoneId zoneId = ZoneId.of(policyProvider.timezone());
-                    CronTrigger trigger = new CronTrigger(cron, zoneId);
-                    var next = trigger.nextExecutionTime(triggerContext);
+                    ZonedDateTime last = getLastExecution(triggerContext, zoneId);
+                    ZonedDateTime next = expression.next(last);
                     return next == null ? null : next.toInstant();
                 });
+    }
+
+    private static ZonedDateTime getLastExecution(org.springframework.scheduling.TriggerContext triggerContext,
+                                                  ZoneId zoneId) {
+        Date lastCompletion = triggerContext.lastCompletionTime();
+        if (lastCompletion != null) {
+            return lastCompletion.toInstant().atZone(zoneId);
+        }
+        Date lastScheduled = triggerContext.lastScheduledExecutionTime();
+        if (lastScheduled != null) {
+            return lastScheduled.toInstant().atZone(zoneId);
+        }
+        return ZonedDateTime.now(zoneId);
     }
 }

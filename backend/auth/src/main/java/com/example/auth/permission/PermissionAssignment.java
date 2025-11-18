@@ -1,0 +1,45 @@
+package com.example.auth.permission;
+
+import com.example.common.security.RowScope;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
+@Embeddable
+public class PermissionAssignment {
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "feature_code", nullable = false)
+    private FeatureCode feature;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action_code", nullable = false)
+    private ActionCode action;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "row_scope", nullable = false)
+    private RowScope rowScope = RowScope.OWN;
+
+    protected PermissionAssignment() {
+    }
+
+    public PermissionAssignment(FeatureCode feature, ActionCode action, RowScope rowScope) {
+        this.feature = feature;
+        this.action = action;
+        this.rowScope = rowScope == null ? RowScope.OWN : rowScope;
+    }
+
+    public FeatureCode getFeature() {
+        return feature;
+    }
+
+    public ActionCode getAction() {
+        return action;
+    }
+
+    public RowScope getRowScope() {
+        return rowScope;
+    }
+}
