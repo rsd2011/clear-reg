@@ -220,7 +220,7 @@ class DraftControllerTest {
         given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", false)).willReturn(snapshot);
         DraftApprovalStepResponse delegatedStep = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
                 "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), "위임", "delegatee", OffsetDateTime.now(ZoneOffset.UTC));
-        DraftResponse delegated = new DraftResponse(snapshot.id(), "제목", "본문", "NOTICE", "ORG-001",
+        DraftResponse delegated = new DraftResponse(snapshot.id(), "제목", "본문", "NOTICE", "ORG-001", "writer",
                 DraftStatus.IN_REVIEW, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
                 OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC),
                 null, null, null, null, List.of(delegatedStep), snapshot.attachments());
@@ -295,7 +295,7 @@ class DraftControllerTest {
         List<DraftAttachmentResponse> attachments = List.of(
                 new DraftAttachmentResponse(UUID.randomUUID(), "evidence.pdf", "application/pdf", 1024L,
                         now, "writer"));
-        return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", "ORG-001",
+        return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", "ORG-001", "writer",
                 status, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
                 now, now,
                 null, null, null, null, List.of(step), attachments);
@@ -308,7 +308,7 @@ class DraftControllerTest {
         List<DraftAttachmentResponse> attachments = List.of(
                 new DraftAttachmentResponse(UUID.randomUUID(), "plan.xlsx", "application/vnd.ms-excel", 2048L,
                         now, "writer"));
-        return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", org,
+        return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", org, "writer",
                 status, "TEMPLATE", "FORM", 2, "{\"schema\":true}", "{\"value\":true}",
                 now, now,
                 null, null, null, null, List.of(step), attachments);
