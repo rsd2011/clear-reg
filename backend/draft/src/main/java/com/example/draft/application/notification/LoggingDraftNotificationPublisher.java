@@ -4,7 +4,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-//@Component
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConditionalOnProperty(name = "draft.notification.publisher", havingValue = "log")
 public class LoggingDraftNotificationPublisher implements DraftNotificationPublisher {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingDraftNotificationPublisher.class);
