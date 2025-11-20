@@ -1,25 +1,26 @@
 package com.example.server.readmodel;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-@WebMvcTest(ReadModelWorkerController.class)
-@Import(ReadModelWorkerController.class)
 class ReadModelWorkerControllerTest {
 
-    @Autowired
     private MockMvc mockMvc;
-
-    @MockBean
     private ReadModelWorker worker;
+
+    @BeforeEach
+    void setUp() {
+        this.worker = mock(ReadModelWorker.class);
+        ReadModelWorkerController controller = new ReadModelWorkerController(worker);
+        this.mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
 
     @Test
     void rebuildOrganization() throws Exception {

@@ -34,7 +34,7 @@ import com.example.draft.domain.repository.DraftFormTemplateRepository;
 class TemplateAdminServiceTest {
 
     private static final AuthContext AUDIT = new AuthContext("admin", "ORG-A", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT, RowScope.ALL, null);
-    private static final AuthContext USER = new AuthContext("user", "ORG-A", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT, RowScope.SELF, null);
+    private static final AuthContext USER = new AuthContext("user", "ORG-A", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT, RowScope.ORG, null);
 
     @Mock
     private ApprovalGroupRepository approvalGroupRepository;
@@ -46,14 +46,9 @@ class TemplateAdminServiceTest {
     @InjectMocks
     private TemplateAdminService service;
 
-    @BeforeEach
-    void setup() {
-        when(approvalLineTemplateRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(draftFormTemplateRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-    }
-
     @Test
     void createsGlobalApprovalLineTemplate_andOrdersSteps() {
+        when(approvalLineTemplateRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         ApprovalLineTemplateRequest req = new ApprovalLineTemplateRequest(
                 "휴가결재선", "LEAVE", null, true,
                 List.of(

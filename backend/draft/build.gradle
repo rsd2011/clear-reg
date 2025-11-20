@@ -15,6 +15,7 @@ dependencies {
     implementation libs.spring.kafka
     implementation libs.jackson.databind
     implementation libs.jackson.datatype.jsr310
+    implementation project(':backend:auth')
     implementation libs.caffeine
     implementation libs.ulid.creator
     runtimeOnly libs.h2.database
