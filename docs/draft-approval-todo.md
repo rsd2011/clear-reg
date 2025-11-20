@@ -24,7 +24,7 @@
 | T7 | 서비스 | 참조자 등록 및 알림 트리거 | High | T2 선행; 생성/상신 시 참조자 등록 및 이벤트 발행 |
 | T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ApprovalGroup/LineTemplate/FormTemplate CRUD, UI/REST |
 | T9 | API/컨트롤러 | 이력/참조 조회 API | Medium | DraftHistory, 참조자 목록/열람 로그 제공; T2 이후 |
-| T10 | 프런트/계약 | Nuxt4 전환 대비 UI 계약서(작성/조회) 정의 | High | 기존 Thymeleaf를 제거하고 OpenAPI/DTO 스키마 명세로 전환; Nuxt4 폼/목록/상세 화면 계약 확정 |
+| T10 | 프런트/계약 | Nuxt4 전환 대비 UI 계약서(작성/조회) 정의 | High | ✅ OpenAPI 초안 작성(`docs/draft/openapi-draft-approval.md`); SSR 미사용 Nuxt4 SPA 기준 |
 | T11 | API/컨트롤러 | 뷰 제거 및 JSON 전용 엔드포인트 정돈 | High | 기존 Thymeleaf 컨트롤러/템플릿 삭제, `/drafts` 페이지 라우팅 제거, API 응답 스키마 고정 |
 | T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | Kafka/RabbitMQ 어댑터, 이메일/푸시 플러그인; T7 |
 | T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
@@ -36,4 +36,4 @@
 - `docs/permissions.md`: 결재자/참조자 권한, 상태 전이 정책 추가 (T4, T5, T14)
 - `docs/architecture-todo.md`: 아키텍처 전반 TODO에 본 모듈 링크 추가, Nuxt4 프런트 전환 계획 반영
 - `docs/observability.md` + OTEL 설정: 결재 리드타임/반려율 등 비즈니스 메트릭 노출 (T12, T16)
-- 프런트 전환 가이드: Nuxt4 기반 UI 계약/폼 검증/i18n 전략 정리 (T10, T11)
+- 프런트 전환 가이드: Nuxt4 기반 UI 계약/폼 검증/i18n 전략 정리 (T10, T11) — OpenAPI 초안 `docs/draft/openapi-draft-approval.md`
