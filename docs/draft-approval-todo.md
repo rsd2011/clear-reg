@@ -20,7 +20,7 @@
 | T3 | 도메인/DB | 결재 그룹 멤버십/조건식 확장 | High | ✅ 완료. `approval_group_members` 테이블 및 도메인/리포지토리 추가 |
 | T4 | 서비스 | 결재자 검증 및 단계 잠금 | High | ✅ 완료. 승인/반려 시 그룹 멤버 검증, draft_approval_steps version 컬럼으로 낙관락 적용 |
 | T5 | 서비스 | 회수/재상신/전달 플로우 추가 | High | ✅ 회수/재상신/위임(Delegation) 완료. 위임 대상 기록 및 이력 추가 |
-| T6 | 서비스 | 기본 결재선 자동 선택 | Medium | T1 선행; 조직/업무별 기본 템플릿 조회, 제한적 커스터마이즈 |
+| T6 | 서비스 | 기본 결재선 자동 선택 | Medium | ✅ 조직/업무별 매핑 우선→글로벌 매핑 폴백 선택 로직 적용(`DraftApplicationService.selectTemplates`), 기본 템플릿 조회 API `/api/drafts/templates/default` 제공 |
 | T7 | 서비스 | 참조자 등록 및 알림 트리거 | High | T2 선행; 생성/상신 시 참조자 등록 및 이벤트 발행 |
 | T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ✅ DraftTemplateAdminController JSON API 추가 (그룹/결재선/양식 CRUD) |
 | T9 | API/컨트롤러 | 이력/참조 조회 API | Medium | ✅ REST 존재(`/api/drafts/{id}/history`,`/references`); OpenAPI 예시 추가 |
