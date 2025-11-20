@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: server-rollout-analysis
+spec:
+  metrics:
+    - name: error-rate
+      interval: 60s
+      count: 2
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            sum(rate(http_server_requests_seconds_count{status=~"5.."}[1m]))
+            /
+            sum(rate(http_server_requests_seconds_count[1m]))
+    - name: latency-p95
+      interval: 60s
+      count: 2
+      failureLimit: 1
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring:9090
+          query: |
+            histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le))
