@@ -172,9 +172,13 @@ public class DraftController {
 
     @GetMapping("/{id}/audit")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
-    public List<DraftHistoryResponse> audit(@PathVariable UUID id) {
+    public List<DraftHistoryResponse> audit(@PathVariable UUID id,
+                                            @RequestParam(required = false) String action,
+                                            @RequestParam(required = false) String actor,
+                                            @RequestParam(required = false) OffsetDateTime from,
+                                            @RequestParam(required = false) OffsetDateTime to) {
         AuthContext context = currentContext();
-        return draftApplicationService.listAudit(id, context.organizationCode(), context.username(), true);
+        return draftApplicationService.listAudit(id, context.organizationCode(), context.username(), true, action, actor, from, to);
     }
 
     @GetMapping("/{id}")

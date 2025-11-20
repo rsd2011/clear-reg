@@ -251,12 +251,23 @@ public class DraftApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<DraftHistoryResponse> listAudit(UUID draftId, String organizationCode, String requester, boolean auditAccess) {
+    public List<DraftHistoryResponse> listAudit(UUID draftId,
+                                                String organizationCode,
+                                                String requester,
+                                                boolean auditAccess,
+                                                String action,
+                                                String actor,
+                                                OffsetDateTime from,
+                                                OffsetDateTime to) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
         return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId).stream()
                 .filter(h -> h.getEventType().startsWith("AUDIT:"))
+                .filter(h -> action == null || h.getEventType().equals("AUDIT:" + action))
+                .filter(h -> actor == null || actor.equals(h.getActor()))
+                .filter(h -> from == null || !h.getOccurredAt().isBefore(from))
+                .filter(h -> to == null || !h.getOccurredAt().isAfter(to))
                 .map(DraftHistoryResponse::from)
                 .toList();
     }
