@@ -3,8 +3,10 @@ package com.example.draft.application.audit;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import com.example.draft.domain.DraftAction;
+
 public record DraftAuditEvent(
-        String action,
+        DraftAction action,
         UUID draftId,
         String actor,
         String organizationCode,

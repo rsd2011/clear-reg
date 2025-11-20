@@ -30,6 +30,7 @@ import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
+import com.example.draft.domain.DraftAction;
 import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
 import com.example.draft.domain.repository.ApprovalGroupRepository;
@@ -57,6 +58,7 @@ public class DraftApplicationService {
     private final DraftReferenceRepository draftReferenceRepository;
     private final DraftNotificationService notificationService;
     private final DraftAuditPublisher auditPublisher;
+    private final com.example.draft.application.business.DraftBusinessPolicy businessPolicy;
     private final Clock clock;
 
     public DraftApplicationService(DraftRepository draftRepository,
@@ -69,6 +71,7 @@ public class DraftApplicationService {
                                    DraftReferenceRepository draftReferenceRepository,
                                    DraftNotificationService notificationService,
                                    DraftAuditPublisher auditPublisher,
+                                   com.example.draft.application.business.DraftBusinessPolicy businessPolicy,
                                    Clock clock) {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
@@ -80,12 +83,14 @@ public class DraftApplicationService {
         this.draftReferenceRepository = draftReferenceRepository;
         this.notificationService = notificationService;
         this.auditPublisher = auditPublisher;
+        this.businessPolicy = businessPolicy;
         this.clock = clock;
     }
 
     @Transactional
     public DraftResponse createDraft(DraftCreateRequest request, String actor, String organizationCode) {
         OffsetDateTime now = now();
+        businessPolicy.assertCreatable(request.businessFeatureCode(), organizationCode, actor);
         TemplateSelection selection = selectTemplates(request, organizationCode);
         ApprovalLineTemplate template = selection.approvalTemplate();
         DraftFormTemplate formTemplate = selection.formTemplate();
@@ -100,7 +105,9 @@ public class DraftApplicationService {
         template.instantiateSteps().forEach(draft::addApprovalStep);
         attachFiles(request.attachments(), draft, actor, now);
         draft.initializeWorkflow(now);
-        return DraftResponse.from(draftRepository.save(draft));
+        Draft saved = draftRepository.save(draft);
+        businessPolicy.afterStateChanged(saved, DraftAction.CREATED);
+        return DraftResponse.from(saved);
     }
 
     @Transactional
@@ -108,8 +115,9 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.submit(actor, now());
-        publish("SUBMITTED", draft, actor, null, null, null);
-        audit("SUBMITTED", draft, actor, null, organizationCode, null, null);
+        publish(DraftAction.SUBMITTED, draft, actor, null, null, null);
+        audit(DraftAction.SUBMITTED, draft, actor, null, organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.SUBMITTED);
         return DraftResponse.from(draft);
     }
 
@@ -123,8 +131,9 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.approveStep(request.stepId(), actor, request.comment(), now());
-        publish("APPROVED", draft, actor, request.stepId(), null, request.comment());
-        audit("APPROVED", draft, actor, request.comment(), organizationCode, null, null);
+        publish(DraftAction.APPROVED, draft, actor, request.stepId(), null, request.comment());
+        audit(DraftAction.APPROVED, draft, actor, request.comment(), organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.APPROVED);
         return DraftResponse.from(draft);
     }
 
@@ -138,8 +147,9 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
-        publish("REJECTED", draft, actor, request.stepId(), null, request.comment());
-        audit("REJECTED", draft, actor, request.comment(), organizationCode, null, null);
+        publish(DraftAction.REJECTED, draft, actor, request.stepId(), null, request.comment());
+        audit(DraftAction.REJECTED, draft, actor, request.comment(), organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.REJECTED);
         return DraftResponse.from(draft);
     }
 
@@ -148,8 +158,9 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.cancel(actor, now());
-        publish("CANCELLED", draft, actor, null, null, null);
-        audit("CANCELLED", draft, actor, null, organizationCode, null, null);
+        publish(DraftAction.CANCELLED, draft, actor, null, null, null);
+        audit(DraftAction.CANCELLED, draft, actor, null, organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.CANCELLED);
         return DraftResponse.from(draft);
     }
 
@@ -158,8 +169,9 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.withdraw(actor, now());
-        publish("WITHDRAWN", draft, actor, null, null, null);
-        audit("WITHDRAWN", draft, actor, null, organizationCode, null, null);
+        publish(DraftAction.WITHDRAWN, draft, actor, null, null, null);
+        audit(DraftAction.WITHDRAWN, draft, actor, null, organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.WITHDRAWN);
         return DraftResponse.from(draft);
     }
 
@@ -168,8 +180,9 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.resubmit(actor, now());
-        publish("RESUBMITTED", draft, actor, null, null, null);
-        audit("RESUBMITTED", draft, actor, null, organizationCode, null, null);
+        publish(DraftAction.RESUBMITTED, draft, actor, null, null, null);
+        audit(DraftAction.RESUBMITTED, draft, actor, null, organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.RESUBMITTED);
         return DraftResponse.from(draft);
     }
 
@@ -184,8 +197,9 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
-        publish("DELEGATED", draft, actor, request.stepId(), delegatedTo, request.comment());
-        audit("DELEGATED", draft, actor, request.comment(), organizationCode, null, null);
+        publish(DraftAction.DELEGATED, draft, actor, request.stepId(), delegatedTo, request.comment());
+        audit(DraftAction.DELEGATED, draft, actor, request.comment(), organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft, DraftAction.DELEGATED);
         return DraftResponse.from(draft);
     }
 
@@ -308,12 +322,12 @@ public class DraftApplicationService {
         }
     }
 
-    private void publish(String action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {
-        notificationService.notify(action, draft, actor, stepId, delegatedTo, comment, now());
+    private void publish(DraftAction action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {
+        notificationService.notify(action.name(), draft, actor, stepId, delegatedTo, comment, now());
     }
 
-    private void audit(String action, Draft draft, String actor, String comment, String organizationCode, String ip, String userAgent) {
-        String details = comment != null ? comment : "%s by %s".formatted(action, actor);
+    private void audit(DraftAction action, Draft draft, String actor, String comment, String organizationCode, String ip, String userAgent) {
+        String details = comment != null ? comment : "%s by %s".formatted(action.name(), actor);
         if (ip == null || userAgent == null) {
             var ctx = com.example.draft.application.audit.AuditRequestContextHolder.current();
             ip = ip == null ? ctx.map(com.example.draft.application.audit.AuditRequestContext::ip).orElse(null) : ip;
@@ -321,7 +335,7 @@ public class DraftApplicationService {
         }
         OffsetDateTime occurredAt = now();
         draftHistoryRepository.save(
-                com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action, actor, details, occurredAt));
+                com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action.name(), actor, details, occurredAt));
         auditPublisher.publish(new DraftAuditEvent(action, draft.getId(), actor, organizationCode, comment, ip, userAgent, occurredAt));
     }
 

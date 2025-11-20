@@ -49,6 +49,7 @@ import com.example.draft.domain.repository.DraftReferenceRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.draft.application.notification.DraftNotificationService;
 import com.example.common.security.RowScope;
+import com.example.draft.application.business.DraftBusinessPolicy;
 
 @ExtendWith(MockitoExtension.class)
 class DraftApplicationServiceTest {
@@ -87,6 +88,9 @@ class DraftApplicationServiceTest {
     @Mock
     private com.example.draft.application.audit.DraftAuditPublisher auditPublisher;
 
+    @Mock
+    private DraftBusinessPolicy businessPolicy;
+
     private Clock clock;
 
     @InjectMocks
@@ -97,7 +101,7 @@ class DraftApplicationServiceTest {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
                 approvalGroupRepository, approvalGroupMemberRepository, mappingRepository,
-                draftHistoryRepository, draftReferenceRepository, notificationService, auditPublisher, clock);
+                draftHistoryRepository, draftReferenceRepository, notificationService, auditPublisher, businessPolicy, clock);
     }
 
     @Test
