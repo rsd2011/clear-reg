@@ -12,3 +12,15 @@ management:
 logging:
   pattern:
     level: "%5p trace_id=%X{traceId:-} span_id=%X{spanId:-}"
+
+draft:
+  notification:
+    publisher: ${DRAFT_NOTIFICATION_PUBLISHER:event} # event | log | kafka
+
+spring:
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    client-id: ${KAFKA_CLIENT_ID:clear-reg-server}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
