@@ -96,7 +96,7 @@
 - [ ] 기안/결재/템플릿/참조/알림 백로그 정리 및 실행
   - [ ] 상세 TODO 및 우선순위는 `docs/draft-approval-todo.md` 참조 (T1~T17).
   - [ ] 진행 시 `docs/permissions.md`와 Thymeleaf 뷰 가이드, 관측성 문서 업데이트 필요.
-  - 현재 완료: T1(업무-템플릿 매핑), T2(참조자), T3(결재 그룹 멤버십), T4(결재자 검증+락), T5(회수/재상신/위임), T6(기본 템플릿 자동 선택), T7/T12(알림 퍼블리셔 플러그형: 이벤트/로그/Kafka), T8(템플릿/그룹 CRUD API), T9(이력/참조 API 예시 문서화), T10(Nuxt4 SPA용 OpenAPI 초안), T11(Thymeleaf 제거/JSON 전용). 다음: T13~T17 실행.
+  - 현재 완료/진행: T1~T12 완료, T13(단위테스트 보강) 진행, T14 완료(열람 권한 세분화), T15 완료(검색 필터/인덱스), T16 완료(감사 API+Kafka/outbox/siem 퍼블리셔), T17 진행중(파일 스캔 필드/정책/감사 퍼블리셔/outbox 릴레이, draftId 기반 다운로드 검증, 재스캔 스케줄러). 남은 T17 세부: 서명 URL TTL 적용, 결재자/참조자별 다운로드 권한 세부 검증, SIEM 실 어댑터 교체.
 
 ## Tracking & Review
 - Weekly architecture sync reviews progress on sections A-D.
