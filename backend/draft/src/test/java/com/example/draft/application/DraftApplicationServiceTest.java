@@ -53,6 +53,7 @@ import com.example.common.security.RowScope;
 class DraftApplicationServiceTest {
 
     private static final String ORG = "ORG-001";
+    private static final String ACTOR = "user-1";
     private static final OffsetDateTime NOW = OffsetDateTime.ofInstant(Instant.parse("2024-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     @Mock
@@ -304,7 +305,7 @@ class DraftApplicationServiceTest {
         Draft draft = draftReadyForReviewWithOrg("ORG-B");
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
 
-        DraftResponse response = service.getDraft(draft.getId(), ORG, true);
+        DraftResponse response = service.getDraft(draft.getId(), ORG, ACTOR, true);
 
         assertThat(response.organizationCode()).isEqualTo("ORG-B");
     }

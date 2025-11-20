@@ -106,7 +106,7 @@ class DraftControllerTest {
     void givenDraft_whenSubmitting_thenInvokesService() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.DRAFT);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_SUBMIT)).willReturn(null);
-        given(draftApplicationService.getDraft(any(), eq("ORG-001"), eq(false))).willReturn(snapshot);
+        given(draftApplicationService.getDraft(any(), eq("ORG-001"), eq("writer"), eq(false))).willReturn(snapshot);
         DraftResponse submitted = sampleResponse(DraftStatus.IN_REVIEW);
         given(draftApplicationService.submitDraft(any(), eq("writer"), eq("ORG-001"))).willReturn(submitted);
         denyAuditAccess();
@@ -123,7 +123,7 @@ class DraftControllerTest {
     void givenApprovalRequest_whenPosting_thenApproves() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_APPROVE)).willReturn(null);
-        given(draftApplicationService.getDraft(any(), eq("ORG-001"), eq(false))).willReturn(snapshot);
+        given(draftApplicationService.getDraft(any(), eq("ORG-001"), eq("writer"), eq(false))).willReturn(snapshot);
         DraftResponse approved = sampleResponse(DraftStatus.APPROVED);
         given(draftApplicationService.approve(any(), any(), eq("writer"), eq("ORG-001"), eq(false)))
                 .willReturn(approved);
@@ -144,7 +144,7 @@ class DraftControllerTest {
     void givenRejectRequest_whenPosting_thenRejects() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_APPROVE)).willReturn(null);
-        given(draftApplicationService.getDraft(any(), eq("ORG-001"), eq(false))).willReturn(snapshot);
+        given(draftApplicationService.getDraft(any(), eq("ORG-001"), eq("writer"), eq(false))).willReturn(snapshot);
         DraftResponse rejected = sampleResponse(DraftStatus.REJECTED);
         given(draftApplicationService.reject(any(), any(), eq("writer"), eq("ORG-001"), eq(false)))
                 .willReturn(rejected);
@@ -165,7 +165,7 @@ class DraftControllerTest {
     void givenCancelRequest_whenPosting_thenCancels() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_CANCEL)).willReturn(null);
-        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", false)).willReturn(snapshot);
         DraftResponse cancelled = sampleResponse(DraftStatus.CANCELLED);
         given(draftApplicationService.cancel(any(), eq("writer"), eq("ORG-001"))).willReturn(cancelled);
         denyAuditAccess();
@@ -182,7 +182,7 @@ class DraftControllerTest {
     void givenWithdrawRequest_whenPosting_thenWithdrawn() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_WITHDRAW)).willReturn(null);
-        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", false)).willReturn(snapshot);
         DraftResponse withdrawn = sampleResponse(DraftStatus.WITHDRAWN);
         given(draftApplicationService.withdraw(any(), eq("writer"), eq("ORG-001"))).willReturn(withdrawn);
         denyAuditAccess();
@@ -199,7 +199,7 @@ class DraftControllerTest {
     void givenResubmitRequest_whenPosting_thenResubmits() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.WITHDRAWN);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_RESUBMIT)).willReturn(null);
-        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", false)).willReturn(snapshot);
         DraftResponse resubmitted = sampleResponse(DraftStatus.IN_REVIEW);
         given(draftApplicationService.resubmit(any(), eq("writer"), eq("ORG-001"))).willReturn(resubmitted);
         denyAuditAccess();
@@ -216,7 +216,7 @@ class DraftControllerTest {
     void givenDelegateRequest_whenPosting_thenDelegates() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
         given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_DELEGATE)).willReturn(null);
-        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", false)).willReturn(snapshot);
         DraftApprovalStepResponse delegatedStep = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
                 "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), "위임", "delegatee", OffsetDateTime.now(ZoneOffset.UTC));
         DraftResponse delegated = new DraftResponse(snapshot.id(), "제목", "본문", "NOTICE", "ORG-001",
@@ -242,7 +242,7 @@ class DraftControllerTest {
     @DisplayName("Given 감사 권한이 없을 때 When GET 호출 Then 자신의 조직 기안만 조회된다")
     void givenGetRequest_whenAuditDenied_thenReadsOwnOrg() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.DRAFT);
-        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", false)).willReturn(snapshot);
         denyAuditAccess();
 
         mockMvc.perform(get("/api/drafts/" + snapshot.id()))
@@ -255,13 +255,13 @@ class DraftControllerTest {
     void givenAuditPermission_whenGettingOtherOrgDraft_thenSetsAuditFlag() throws Exception {
         DraftResponse snapshot = sampleResponseWithOrg("ORG-999", DraftStatus.DRAFT);
         given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT)).willReturn(null);
-        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", true)).willReturn(snapshot);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", "writer", true)).willReturn(snapshot);
 
         mockMvc.perform(get("/api/drafts/" + snapshot.id()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.organizationCode").value("ORG-999"));
 
-        verify(draftApplicationService).getDraft(snapshot.id(), "ORG-001", true);
+        verify(draftApplicationService).getDraft(snapshot.id(), "ORG-001", "writer", true);
     }
 
     @Test

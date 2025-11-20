@@ -77,7 +77,7 @@ class DraftControllerHistoryReferenceTest {
         UUID draftId = UUID.randomUUID();
         DraftHistoryResponse history = new DraftHistoryResponse(UUID.randomUUID(), "SUBMITTED", "writer", "기안 상신",
                 OffsetDateTime.now(ZoneOffset.UTC));
-        given(draftApplicationService.listHistory(eq(draftId), eq(ORG), eq(false)))
+        given(draftApplicationService.listHistory(eq(draftId), eq(ORG), eq("writer"), eq(false)))
                 .willReturn(List.of(history));
 
         mockMvc.perform(get("/api/drafts/" + draftId + "/history").accept(MediaType.APPLICATION_JSON))
@@ -91,7 +91,7 @@ class DraftControllerHistoryReferenceTest {
         UUID draftId = UUID.randomUUID();
         DraftReferenceResponse reference = new DraftReferenceResponse(UUID.randomUUID(), "user1", ORG, "writer",
                 OffsetDateTime.now(ZoneOffset.UTC));
-        given(draftApplicationService.listReferences(eq(draftId), eq(ORG), eq(false)))
+        given(draftApplicationService.listReferences(eq(draftId), eq(ORG), eq("writer"), eq(false)))
                 .willReturn(List.of(reference));
 
         mockMvc.perform(get("/api/drafts/" + draftId + "/references").accept(MediaType.APPLICATION_JSON))

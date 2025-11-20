@@ -177,10 +177,10 @@ public class DraftApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public DraftResponse getDraft(UUID draftId, String organizationCode, boolean auditAccess) {
+    public DraftResponse getDraft(UUID draftId, String organizationCode, String requester, boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
-        enforceReadAccess(draft, organizationCode, auditAccess);
+        enforceReadAccess(draft, requester, auditAccess);
         return DraftResponse.from(draft);
     }
 
@@ -212,9 +212,10 @@ public class DraftApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<DraftHistoryResponse> listHistory(UUID draftId, String organizationCode, boolean auditAccess) {
+    public List<DraftHistoryResponse> listHistory(UUID draftId, String organizationCode, String requester, boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
+        enforceReadAccess(draft, requester, auditAccess);
         return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId)
                 .stream()
                 .map(DraftHistoryResponse::from)
@@ -222,9 +223,10 @@ public class DraftApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public List<DraftReferenceResponse> listReferences(UUID draftId, String organizationCode, boolean auditAccess) {
+    public List<DraftReferenceResponse> listReferences(UUID draftId, String organizationCode, String requester, boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
+        enforceReadAccess(draft, requester, auditAccess);
         return draftReferenceRepository.findByDraftIdAndActiveTrue(draftId)
                 .stream()
                 .map(DraftReferenceResponse::from)
@@ -273,20 +275,18 @@ public class DraftApplicationService {
 
     /**
      * 열람 허용 주체: 작성자, 결재선 참여자(멤버/위임 포함), 참조자, 감사(AUDIT) 권한 보유자.
-     * 현재는 organizationCode로만 구분되므로, 호출부에서 사용자 ID 전달 확장이 필요함.
      */
-    private void enforceReadAccess(Draft draft, String organizationCode, boolean auditAccess) {
+    private void enforceReadAccess(Draft draft, String requesterUsername, boolean auditAccess) {
         if (auditAccess) {
             return;
         }
-        String requester = organizationCode; // TODO: 사용자 ID 전달 시 교체
-        boolean allowed = draft.getCreatedBy().equals(requester)
+        boolean allowed = draft.getCreatedBy().equals(requesterUsername)
                 || draft.getApprovalSteps().stream().anyMatch(step -> {
-                    if (step.getActedBy() != null && step.getActedBy().equals(requester)) return true;
-                    return step.getDelegatedTo() != null && step.getDelegatedTo().equals(requester);
+                    if (step.getActedBy() != null && step.getActedBy().equals(requesterUsername)) return true;
+                    return step.getDelegatedTo() != null && step.getDelegatedTo().equals(requesterUsername);
                 })
                 || draftReferenceRepository.findByDraftIdAndActiveTrue(draft.getId()).stream()
-                .anyMatch(ref -> ref.getReferencedUserId().equals(requester));
+                .anyMatch(ref -> ref.getReferencedUserId().equals(requesterUsername));
         if (!allowed) {
             throw new DraftAccessDeniedException("열람 권한이 없습니다.");
         }

@@ -75,7 +75,7 @@ public class DraftController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_SUBMIT)
     public DraftResponse submitDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), hasAuditPermission());
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_SUBMIT);
         return draftApplicationService.submitDraft(id, context.username(), context.organizationCode());
     }
@@ -86,7 +86,7 @@ public class DraftController {
                                       @Valid @RequestBody DraftDecisionRequest request) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), audit);
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
         return draftApplicationService.approve(id, request, context.username(), context.organizationCode(), audit);
     }
@@ -97,7 +97,7 @@ public class DraftController {
                                      @Valid @RequestBody DraftDecisionRequest request) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), audit);
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
         return draftApplicationService.reject(id, request, context.username(), context.organizationCode(), audit);
     }
@@ -106,7 +106,7 @@ public class DraftController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CANCEL)
     public DraftResponse cancelDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), hasAuditPermission());
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_CANCEL);
         return draftApplicationService.cancel(id, context.username(), context.organizationCode());
     }
@@ -115,7 +115,7 @@ public class DraftController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_WITHDRAW)
     public DraftResponse withdrawDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), hasAuditPermission());
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_WITHDRAW);
         return draftApplicationService.withdraw(id, context.username(), context.organizationCode());
     }
@@ -124,7 +124,7 @@ public class DraftController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_RESUBMIT)
     public DraftResponse resubmitDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), hasAuditPermission());
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_RESUBMIT);
         return draftApplicationService.resubmit(id, context.username(), context.organizationCode());
     }
@@ -136,7 +136,7 @@ public class DraftController {
                                        @RequestParam("delegatedTo") String delegatedTo) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), audit);
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_DELEGATE);
         return draftApplicationService.delegate(id, request, delegatedTo, context.username(), context.organizationCode(), audit);
     }
@@ -154,7 +154,7 @@ public class DraftController {
     public List<DraftHistoryResponse> history(@PathVariable UUID id) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        return draftApplicationService.listHistory(id, context.organizationCode(), audit);
+        return draftApplicationService.listHistory(id, context.organizationCode(), context.username(), audit);
     }
 
     @GetMapping("/{id}/references")
@@ -162,7 +162,7 @@ public class DraftController {
     public List<DraftReferenceResponse> references(@PathVariable UUID id) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        return draftApplicationService.listReferences(id, context.organizationCode(), audit);
+        return draftApplicationService.listReferences(id, context.organizationCode(), context.username(), audit);
     }
 
     @GetMapping("/{id}")
@@ -170,7 +170,7 @@ public class DraftController {
     public DraftResponse getDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        return draftApplicationService.getDraft(id, context.organizationCode(), audit);
+        return draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
     }
 
     private AuthContext currentContext() {
