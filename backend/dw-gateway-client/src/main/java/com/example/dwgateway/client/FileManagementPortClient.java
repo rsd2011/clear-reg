@@ -99,6 +99,11 @@ public class FileManagementPortClient implements FileManagementPort {
 
     @Override
     public FileDownload download(UUID id, String actor) {
+        return download(id, actor, List.of());
+    }
+
+    @Override
+    public FileDownload download(UUID id, String actor, List<String> alsoAllowedUsers) {
         // actor is captured via dw-gateway authentication headers; not part of the REST payload
         FileMetadataDto metadata = getMetadata(id);
         try {

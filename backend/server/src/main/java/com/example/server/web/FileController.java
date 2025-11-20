@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,9 +41,12 @@ import jakarta.validation.Valid;
 public class FileController {
 
     private final FileManagementPort fileManagementPort;
+    private final com.example.draft.application.DraftApplicationService draftApplicationService;
 
-    public FileController(FileManagementPort fileManagementPort) {
+    public FileController(FileManagementPort fileManagementPort,
+                          com.example.draft.application.DraftApplicationService draftApplicationService) {
         this.fileManagementPort = fileManagementPort;
+        this.draftApplicationService = draftApplicationService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -81,8 +85,20 @@ public class FileController {
 
     @GetMapping("/{id}")
     @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.DOWNLOAD)
-    public ResponseEntity<Resource> download(@PathVariable UUID id) {
-        FileDownload download = fileManagementPort.download(id, currentUsername());
+    public ResponseEntity<Resource> download(@PathVariable UUID id,
+                                             @RequestParam(value = "draftId", required = false) UUID draftId) {
+        String actor = currentUsername();
+        java.util.List<String> allowed = java.util.List.of(actor);
+        if (draftId != null) {
+            AuthContext context = AuthContextHolder.current()
+                    .orElseThrow(() -> new com.example.auth.permission.PermissionDeniedException("인증 정보가 없습니다."));
+            var draft = draftApplicationService.getDraft(draftId, context.organizationCode(), actor, false);
+            boolean attached = draft.attachments().stream().anyMatch(a -> a.fileId().equals(id));
+            if (!attached) {
+                throw new com.example.file.FilePolicyViolationException("해당 기안에 첨부되지 않은 파일입니다.");
+            }
+        }
+        FileDownload download = fileManagementPort.download(id, actor, allowed);
         String filename = URLEncoder.encode(download.metadata().originalName(), StandardCharsets.UTF_8);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)

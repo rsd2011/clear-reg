@@ -113,12 +113,19 @@ public class FileService {
 
     @Transactional
     public FileDownload download(UUID id, String actor) {
+        return download(id, actor, List.of());
+    }
+
+    @Transactional
+    public FileDownload download(UUID id, String actor, List<String> alsoAllowedUsers) {
         StoredFile file = storedFileRepository.findById(id)
                 .orElseThrow(() -> new StoredFileNotFoundException(id));
         if (file.isDeleted()) {
             throw new StoredFileNotFoundException(id);
         }
-        if (!file.getOwnerUsername().equals(actor)) {
+        boolean allowed = file.getOwnerUsername().equals(actor)
+                || (alsoAllowedUsers != null && alsoAllowedUsers.contains(actor));
+        if (!allowed) {
             throw new FilePolicyViolationException("첨부 열람 권한이 없습니다.");
         }
         if (file.getScanStatus() == ScanStatus.BLOCKED) {

@@ -49,10 +49,10 @@ class FileManagementPortAdapterTest {
     void downloadDelegates() {
         FileDownload download = new FileDownload(sampleMetadata(), null);
         UUID id = UUID.randomUUID();
-        given(fileService.download(id, "tester")).willReturn(download);
+        given(fileService.download(id, "tester", List.of())).willReturn(download);
 
         assertThat(adapter.download(id, "tester")).isEqualTo(download);
-        then(fileService).should().download(id, "tester");
+        then(fileService).should().download(id, "tester", List.of());
     }
 
     @Test

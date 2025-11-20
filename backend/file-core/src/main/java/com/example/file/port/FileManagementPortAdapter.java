@@ -46,8 +46,8 @@ public class FileManagementPortAdapter implements FileManagementPort {
     }
 
     @Override
-    public FileDownload download(UUID id, String actor) {
-        FileDownload download = fileService.download(id, actor);
+    public FileDownload download(UUID id, String actor, List<String> alsoAllowedUsers) {
+        FileDownload download = fileService.download(id, actor, alsoAllowedUsers);
         fileAuditPublisher.publish(new FileAuditEvent("DOWNLOAD", id, actor, download.metadata().updatedAt() != null ? download.metadata().updatedAt() : download.metadata().createdAt()));
         return download;
     }

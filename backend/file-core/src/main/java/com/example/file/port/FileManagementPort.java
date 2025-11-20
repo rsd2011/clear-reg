@@ -15,7 +15,11 @@ public interface FileManagementPort {
 
     FileMetadataDto getMetadata(UUID id);
 
-    FileDownload download(UUID id, String actor);
+    default FileDownload download(UUID id, String actor) {
+        return download(id, actor, List.of());
+    }
+
+    FileDownload download(UUID id, String actor, List<String> alsoAllowedUsers);
 
     FileMetadataDto delete(UUID id, String actor);
 }

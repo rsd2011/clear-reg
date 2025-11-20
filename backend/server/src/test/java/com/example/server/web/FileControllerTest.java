@@ -77,10 +77,10 @@ class FileControllerTest {
     void givenDownload_whenRequesting_thenReturnResource() {
         setAuth(ActionCode.DOWNLOAD);
         FileMetadataDto metadata = sampleMetadata();
-        given(fileManagementPort.download(metadata.id(), "tester"))
+        given(fileManagementPort.download(metadata.id(), "tester", List.of("tester")))
                 .willReturn(new FileDownload(metadata, new ByteArrayResource("data".getBytes())));
 
-        var response = controller.download(metadata.id());
+        var response = controller.download(metadata.id(), null);
 
         assertThat(response.getHeaders().getContentDisposition().getFilename()).contains("hello.txt");
     }
