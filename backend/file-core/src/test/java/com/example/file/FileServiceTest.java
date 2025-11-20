@@ -174,6 +174,12 @@ class FileServiceTest {
         FileScanner fileScanner() {
             return (filename, inputStream) -> ScanStatus.CLEAN;
         }
+
+        @Bean
+        com.example.file.audit.FileAuditPublisher fileAuditPublisher() {
+            return event -> {
+            };
+        }
     }
 
     static class InMemoryStorage implements FileStorageClient {

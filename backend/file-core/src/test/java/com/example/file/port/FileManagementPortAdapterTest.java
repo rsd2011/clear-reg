@@ -20,12 +20,15 @@ import com.example.file.FileService;
 import com.example.file.FileSummaryView;
 import com.example.file.FileUploadCommand;
 import com.example.file.StoredFile;
+import com.example.file.audit.FileAuditEvent;
+import com.example.file.audit.FileAuditPublisher;
 
 @DisplayName("FileManagementPortAdapter 테스트")
 class FileManagementPortAdapterTest {
 
     private final FileService fileService = Mockito.mock(FileService.class);
-    private final FileManagementPortAdapter adapter = new FileManagementPortAdapter(fileService);
+    private final FileAuditPublisher auditPublisher = Mockito.mock(FileAuditPublisher.class);
+    private final FileManagementPortAdapter adapter = new FileManagementPortAdapter(fileService, auditPublisher);
 
     @Test
     @DisplayName("업로드 호출을 위임한다")
@@ -38,6 +41,7 @@ class FileManagementPortAdapterTest {
 
         assertThat(result.originalName()).isEqualTo("test.txt");
         then(fileService).should().upload(command);
+        then(auditPublisher).should().publish(Mockito.any(FileAuditEvent.class));
     }
 
     @Test

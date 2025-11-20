@@ -29,6 +29,8 @@ import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.file.audit.FileAuditEvent;
+import com.example.file.audit.FileAuditPublisher;
 import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
 
@@ -46,6 +48,7 @@ public class FileService {
     private final FileStorageClient storageClient;
     private final PolicySettingsProvider policySettingsProvider;
     private final FileScanner fileScanner;
+    private final FileAuditPublisher fileAuditPublisher;
     private final Clock clock;
     private final Tika tika = new Tika();
     private final MimeTypes mimeTypes = MimeTypes.getDefaultMimeTypes();
@@ -56,6 +59,7 @@ public class FileService {
                        FileStorageClient storageClient,
                        PolicySettingsProvider policySettingsProvider,
                        FileScanner fileScanner,
+                       FileAuditPublisher fileAuditPublisher,
                        Clock clock) {
         this.storedFileRepository = storedFileRepository;
         this.versionRepository = versionRepository;
@@ -63,6 +67,7 @@ public class FileService {
         this.storageClient = storageClient;
         this.policySettingsProvider = policySettingsProvider;
         this.fileScanner = fileScanner;
+        this.fileAuditPublisher = fileAuditPublisher;
         this.clock = clock;
     }
 
@@ -91,6 +96,7 @@ public class FileService {
         }
         StoredFile persisted = storedFileRepository.save(file);
         logAccess(persisted, "UPLOAD", command.ownerUsername(), "v" + version.getVersionNumber(), now);
+        audit("UPLOAD", persisted.getId(), command.ownerUsername(), now);
         return persisted;
     }
 
@@ -129,6 +135,7 @@ public class FileService {
             file.markAccessed(now);
             storedFileRepository.save(file);
             logAccess(file, "DOWNLOAD", actor, "v" + version.getVersionNumber(), now);
+            audit("DOWNLOAD", file.getId(), actor, now);
             return new FileDownload(metadataOf(file), resource);
         }
         catch (IOException ex) {
@@ -154,6 +161,7 @@ public class FileService {
         });
         StoredFile saved = storedFileRepository.save(file);
         logAccess(saved, "DELETE", actor, null, now());
+        audit("DELETE", saved.getId(), actor, now());
         return saved;
     }
 
@@ -192,6 +200,10 @@ public class FileService {
         log.setDetail(detail);
         log.setCreatedAt(now);
         accessLogRepository.save(log);
+    }
+
+    private void audit(String action, UUID fileId, String actor, OffsetDateTime occurredAt) {
+        fileAuditPublisher.publish(new FileAuditEvent(action, fileId, actor, occurredAt));
     }
 
     private void enforcePolicy(FileUploadCommand command, PolicyToggleSettings settings) {

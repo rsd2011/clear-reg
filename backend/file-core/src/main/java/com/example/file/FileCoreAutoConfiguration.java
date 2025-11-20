@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Configuration;
 
 import com.example.file.port.FileScanner;
 import com.example.file.port.NoOpFileScanner;
+import com.example.file.audit.FileAuditPublisher;
+import com.example.file.audit.NoOpFileAuditPublisher;
 
 @Configuration
 public class FileCoreAutoConfiguration {
@@ -14,5 +16,11 @@ public class FileCoreAutoConfiguration {
     @ConditionalOnMissingBean(FileScanner.class)
     public FileScanner fileScanner() {
         return new NoOpFileScanner();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(FileAuditPublisher.class)
+    public FileAuditPublisher fileAuditPublisher() {
+        return new NoOpFileAuditPublisher();
     }
 }
