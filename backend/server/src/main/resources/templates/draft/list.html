@@ -10,6 +10,7 @@
             <input type="text" name="status" th:value="${param.status}"/>
         </label>
         <button type="submit">검색</button>
+        <a th:href="@{/drafts/new}" class="button">새 기안</a>
     </form>
     <table>
         <thead>

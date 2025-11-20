@@ -43,5 +43,26 @@
             <span th:text="${h.details}"></span>
         </li>
     </ul>
+
+    <h3>액션</h3>
+    <form class="inline" th:action="@{|/api/drafts/${draft.id}/submit|}" method="post">
+        <button type="submit">상신</button>
+    </form>
+    <form class="inline" th:action="@{|/api/drafts/${draft.id}/withdraw|}" method="post">
+        <button type="submit">회수</button>
+    </form>
+    <form class="inline" th:action="@{|/api/drafts/${draft.id}/resubmit|}" method="post">
+        <button type="submit">재상신</button>
+    </form>
+    <form class="inline" th:action="@{|/api/drafts/${draft.id}/approve|}" method="post">
+        <input type="hidden" name="stepId" th:value="${draft.approvalSteps[0].id}"/>
+        <input type="hidden" name="comment" value="승인"/>
+        <button type="submit">승인</button>
+    </form>
+    <form class="inline" th:action="@{|/api/drafts/${draft.id}/reject|}" method="post">
+        <input type="hidden" name="stepId" th:value="${draft.approvalSteps[0].id}"/>
+        <input type="hidden" name="comment" value="반려"/>
+        <button type="submit">반려</button>
+    </form>
 </div>
 </html>
