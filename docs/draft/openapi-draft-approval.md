@@ -54,9 +54,10 @@
 ## 엔드포인트
 
 ### 1) 기안 목록 조회
-- `GET /api/drafts?page=0&size=10&status=IN_REVIEW&businessFeature=LEAVE`
+- `GET /api/drafts?page=0&size=10&status=IN_REVIEW&businessFeature=LEAVE&createdBy=user1&title=휴가`
 - 권한: `DRAFT_READ`
 - 응답: `Page<DraftResponse>`
+- 필터: `status`, `businessFeature`, `createdBy`, `title`(부분검색)
 
 ### 2) 기안 생성
 - `POST /api/drafts`

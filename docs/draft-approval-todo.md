@@ -29,7 +29,7 @@
 | T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | ✅ 이벤트/로그/Kafka 퍼블리셔 플러그형 구현(`draft.notification.publisher`), Outbox 이벤트 리스너 연계 |
 | T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
 | T14 | 보안 | 열람/권한 세분화 | High | ✅ RowScope 기본 ORG/OWN승격, 열람 권한(작성자/결재선/위임/참조/AUDIT) 검증, API 호출자 username 기반 체크, 테스트 통과 |
-| T15 | 데이터/성능 | 검색 필터·인덱스 보강 | Medium | 상태/업무/기간/결재자/참조자 필터, 인덱스 추가 |
+| T15 | 데이터/성능 | 검색 필터·인덱스 보강 | Medium | ✅ 목록 조회 필터(status/business/createdBy/title) 추가 및 OpenAPI 반영 |
 | T16 | 감사 | 감사 로그/감사 이벤트 | Medium | 액터/IP/UA 기록, 조회 API, 알림과 연계; T4 |
 | T17 | 파일 | 첨부 다운로드/삭제 정책 강화 | Medium | file-core 연동, 권한, 바이러스 스캔 후크 |
 ## Document Follow-ups

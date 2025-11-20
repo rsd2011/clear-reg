@@ -40,6 +40,7 @@ import com.example.draft.domain.BusinessTemplateMapping;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
+import com.example.draft.domain.DraftStatus;
 
 @Service
 public class DraftApplicationService {
@@ -188,17 +189,21 @@ public class DraftApplicationService {
     public Page<DraftResponse> listDrafts(Pageable pageable,
                                           RowScope rowScope,
                                           String organizationCode,
-                                          Collection<String> scopedOrganizations) {
+                                          Collection<String> scopedOrganizations,
+                                          String status,
+                                          String businessFeatureCode,
+                                          String createdBy,
+                                          String titleContains) {
         if (rowScope == RowScope.CUSTOM) {
             throw new UnsupportedOperationException("CUSTOM RowScope는 별도 전략이 필요합니다.");
         }
         rowScope = normalizeRowScope(rowScope);
-        Specification<Draft> specification = RowScopeSpecifications.organizationScoped(
+        Specification<Draft> specification = RowScopeSpecifications.<Draft>organizationScoped(
                 "organizationCode",
                 rowScope,
                 organizationCode,
                 scopedOrganizations
-        );
+        ).and(filter(status, businessFeatureCode, createdBy, titleContains));
         return draftRepository.findAll(specification, pageable)
                 .map(DraftResponse::from);
     }
@@ -324,5 +329,23 @@ public class DraftApplicationService {
             return RowScope.ORG;
         }
         return rowScope;
+    }
+
+    private Specification<Draft> filter(String status, String businessFeature, String createdBy, String titleContains) {
+        Specification<Draft> spec = Specification.where(null);
+        if (status != null) {
+            DraftStatus draftStatus = DraftStatus.valueOf(status);
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), draftStatus));
+        }
+        if (businessFeature != null && !businessFeature.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(cb.lower(root.get("businessFeatureCode")), businessFeature.toLowerCase()));
+        }
+        if (createdBy != null && !createdBy.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("createdBy"), createdBy));
+        }
+        if (titleContains != null && !titleContains.isBlank()) {
+            spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.get("title")), "%" + titleContains.toLowerCase() + "%"));
+        }
+        return spec;
     }
 }

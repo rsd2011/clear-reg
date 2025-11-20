@@ -55,12 +55,17 @@ public class DraftController {
 
     @GetMapping
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_READ)
-    public Page<DraftResponse> listDrafts(Pageable pageable) {
+    public Page<DraftResponse> listDrafts(Pageable pageable,
+                                          @RequestParam(required = false) String status,
+                                          @RequestParam(required = false, name = "businessFeature") String businessFeatureCode,
+                                          @RequestParam(required = false) String createdBy,
+                                          @RequestParam(required = false) String title) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
         RowScope rowScope = audit ? RowScope.ALL : effectiveRowScope(context.rowScope());
         Collection<String> scopedOrganizations = resolveOrganizations(rowScope, context.organizationCode());
-        return draftApplicationService.listDrafts(pageable, rowScope, context.organizationCode(), scopedOrganizations);
+        return draftApplicationService.listDrafts(pageable, rowScope, context.organizationCode(), scopedOrganizations,
+                status, businessFeatureCode, createdBy, title);
     }
 
     @PostMapping

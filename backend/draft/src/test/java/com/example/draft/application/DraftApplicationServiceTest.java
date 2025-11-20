@@ -316,7 +316,8 @@ class DraftApplicationServiceTest {
         Page<Draft> page = new PageImpl<>(List.of(draft));
         given(draftRepository.findAll(any(Specification.class), eq(Pageable.unpaged()))).willReturn(page);
 
-        Page<DraftResponse> result = service.listDrafts(Pageable.unpaged(), RowScope.OWN, ORG, List.of(ORG));
+        Page<DraftResponse> result = service.listDrafts(Pageable.unpaged(), RowScope.OWN, ORG, List.of(ORG),
+                null, null, null, null);
 
         assertThat(result.getContent()).hasSize(1);
         verify(draftRepository).findAll(any(Specification.class), eq(Pageable.unpaged()));

@@ -2,6 +2,7 @@ package com.example.server.web;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -272,7 +273,8 @@ class DraftControllerTest {
         given(organizationQueryService.getOrganizations(Pageable.unpaged(), RowScope.ORG, "ORG-001"))
                 .willReturn(new PageImpl<>(List.of(sampleOrgNode("ORG-001"))));
         DraftResponse response = sampleResponse(DraftStatus.DRAFT);
-        given(draftApplicationService.listDrafts(any(Pageable.class), eq(RowScope.ORG), eq("ORG-001"), eq(List.of("ORG-001"))))
+        given(draftApplicationService.listDrafts(any(Pageable.class), eq(RowScope.ORG), eq("ORG-001"), eq(List.of("ORG-001")),
+                isNull(), isNull(), isNull(), isNull()))
                 .willReturn(new PageImpl<>(List.of(response)));
         denyAuditAccess();
 
