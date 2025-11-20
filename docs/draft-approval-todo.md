@@ -25,8 +25,8 @@
 | T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ✅ DraftTemplateAdminController JSON API 추가 (그룹/결재선/양식 CRUD) |
 | T9 | API/컨트롤러 | 이력/참조 조회 API | Medium | ✅ REST 존재(`/api/drafts/{id}/history`,`/references`); OpenAPI 예시 추가 |
 | T10 | 프런트/계약 | Nuxt4 전환 대비 UI 계약서(작성/조회) 정의 | High | ✅ OpenAPI 초안 작성(`docs/draft/openapi-draft-approval.md`); SSR 미사용 Nuxt4 SPA 기준 |
-| T11 | API/컨트롤러 | 뷰 제거 및 JSON 전용 엔드포인트 정돈 | High | 기존 Thymeleaf 컨트롤러/템플릿 삭제, `/drafts` 페이지 라우팅 제거, API 응답 스키마 고정 |
-| T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | Kafka/RabbitMQ 어댑터, 이메일/푸시 플러그인; T7 |
+| T11 | API/컨트롤러 | 뷰 제거 및 JSON 전용 엔드포인트 정돈 | High | ✅ Thymeleaf 컨트롤러/템플릿 삭제, `/drafts` 라우팅 제거, OpenAPI로 응답 스키마 고정 |
+| T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | ✅ 이벤트/로그/Kafka 퍼블리셔 플러그형 구현(`draft.notification.publisher`), Outbox 이벤트 리스너 연계 |
 | T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
 | T14 | 보안 | 열람/권한 세분화 | High | 작성자/결재자/참조자/관리자 액션 검증, RowScope 확장; T2 |
 | T15 | 데이터/성능 | 검색 필터·인덱스 보강 | Medium | 상태/업무/기간/결재자/참조자 필터, 인덱스 추가 |

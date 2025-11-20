@@ -96,7 +96,7 @@
 - [ ] 기안/결재/템플릿/참조/알림 백로그 정리 및 실행
   - [ ] 상세 TODO 및 우선순위는 `docs/draft-approval-todo.md` 참조 (T1~T17).
   - [ ] 진행 시 `docs/permissions.md`와 Thymeleaf 뷰 가이드, 관측성 문서 업데이트 필요.
-  - 현재 완료: T1(업무-템플릿 매핑), T2(참조자), T3(결재 그룹 멤버십), T4(결재자 검증+락), T5(회수/재상신/위임), T6(기본 템플릿 자동 선택), T7(알림 퍼블리셔/채널 플러그형), T8(템플릿/그룹 CRUD API), T9(이력/참조 API 예시 문서화), T10(Nuxt4 SPA용 OpenAPI 초안). 프런트는 Nuxt4로 전환 예정 → Thymeleaf 제거 및 API 계약 정비 완료. 다음: T11~T12 이후 항목 실행.
+  - 현재 완료: T1(업무-템플릿 매핑), T2(참조자), T3(결재 그룹 멤버십), T4(결재자 검증+락), T5(회수/재상신/위임), T6(기본 템플릿 자동 선택), T7/T12(알림 퍼블리셔 플러그형: 이벤트/로그/Kafka), T8(템플릿/그룹 CRUD API), T9(이력/참조 API 예시 문서화), T10(Nuxt4 SPA용 OpenAPI 초안), T11(Thymeleaf 제거/JSON 전용). 다음: T13~T17 실행.
 
 ## Tracking & Review
 - Weekly architecture sync reviews progress on sections A-D.
