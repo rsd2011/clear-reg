@@ -14,7 +14,11 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,6 +35,7 @@ import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 import com.example.file.audit.FileAuditEvent;
 import com.example.file.audit.FileAuditPublisher;
+import com.example.file.config.FileSecurityProperties;
 import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
 
@@ -49,6 +54,7 @@ public class FileService {
     private final PolicySettingsProvider policySettingsProvider;
     private final FileScanner fileScanner;
     private final FileAuditPublisher fileAuditPublisher;
+    private final FileSecurityProperties securityProperties;
     private final Clock clock;
     private final Tika tika = new Tika();
     private final MimeTypes mimeTypes = MimeTypes.getDefaultMimeTypes();
@@ -60,6 +66,7 @@ public class FileService {
                        PolicySettingsProvider policySettingsProvider,
                        FileScanner fileScanner,
                        FileAuditPublisher fileAuditPublisher,
+                       FileSecurityProperties securityProperties,
                        Clock clock) {
         this.storedFileRepository = storedFileRepository;
         this.versionRepository = versionRepository;
@@ -68,6 +75,7 @@ public class FileService {
         this.policySettingsProvider = policySettingsProvider;
         this.fileScanner = fileScanner;
         this.fileAuditPublisher = fileAuditPublisher;
+        this.securityProperties = securityProperties;
         this.clock = clock;
     }
 
@@ -214,7 +222,8 @@ public class FileService {
     }
 
     private void enforcePolicy(FileUploadCommand command, PolicyToggleSettings settings) {
-        if (settings.maxFileSizeBytes() > 0 && command.size() > settings.maxFileSizeBytes()) {
+        long maxSize = securityProperties.getMaxSizeBytes() > 0 ? securityProperties.getMaxSizeBytes() : settings.maxFileSizeBytes();
+        if (maxSize > 0 && command.size() > maxSize) {
             throw new FilePolicyViolationException("허용된 최대 파일 크기를 초과했습니다.");
         }
         List<String> allowedExtensions = settings.allowedFileExtensions();
@@ -281,9 +290,21 @@ public class FileService {
     }
 
     private ScanStatus runScan(String filename, java.util.function.Supplier<InputStream> supplier) {
+        if (!securityProperties.isScanEnabled()) {
+            return ScanStatus.PENDING;
+        }
         try (InputStream stream = supplier.get()) {
-            return fileScanner.scan(filename, stream);
-        } catch (IOException e) {
+            long timeout = securityProperties.getScanTimeoutMs();
+            if (timeout <= 0) {
+                return fileScanner.scan(filename, stream);
+            }
+            try (var executor = Executors.newSingleThreadExecutor()) {
+                Future<ScanStatus> future = executor.submit(() -> fileScanner.scan(filename, stream));
+                return future.get(timeout, TimeUnit.MILLISECONDS);
+            }
+        } catch (TimeoutException ex) {
+            return ScanStatus.FAILED;
+        } catch (Exception e) {
             return ScanStatus.FAILED;
         }
     }

@@ -32,6 +32,7 @@ import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
+import com.example.file.config.FileSecurityProperties;
 
 @org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 @org.springframework.context.annotation.Import({FileService.class, FileServiceTest.TestConfig.class})
@@ -153,6 +154,11 @@ class FileServiceTest {
         @Bean
         FileStorageClient fileStorageClient() {
             return new InMemoryStorage();
+        }
+
+        @Bean
+        FileSecurityProperties securityProperties() {
+            return new FileSecurityProperties();
         }
 
         @Bean
