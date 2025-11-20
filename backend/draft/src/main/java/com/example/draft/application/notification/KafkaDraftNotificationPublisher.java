@@ -3,6 +3,8 @@ package com.example.draft.application.notification;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @ConditionalOnProperty(name = "draft.notification.publisher", havingValue = "kafka")
@@ -10,7 +12,7 @@ public class KafkaDraftNotificationPublisher implements DraftNotificationPublish
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final String topic;
-    private final ObjectFormatter formatter = new ObjectFormatter();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public KafkaDraftNotificationPublisher(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
@@ -19,48 +21,10 @@ public class KafkaDraftNotificationPublisher implements DraftNotificationPublish
 
     @Override
     public void publish(DraftNotificationPayload payload) {
-        kafkaTemplate.send(topic, payload.draftId().toString(), formatter.asJson(payload));
-    }
-
-    private static class ObjectFormatter {
-        String asJson(DraftNotificationPayload payload) {
-            return """
-                    {
-                      "draftId":"%s",
-                      "action":"%s",
-                      "actor":"%s",
-                      "createdBy":"%s",
-                      "organizationCode":"%s",
-                      "businessFeatureCode":"%s",
-                      "stepId":"%s",
-                      "delegatedTo":"%s",
-                      "comment":%s,
-                      "occurredAt":"%s",
-                      "recipients":%s
-                    }
-                    """.formatted(
-                    payload.draftId(),
-                    payload.action(),
-                    payload.actor(),
-                    payload.createdBy(),
-                    payload.organizationCode(),
-                    payload.businessFeatureCode(),
-                    payload.stepId(),
-                    payload.delegatedTo(),
-                    payload.comment() == null ? null : "\"" + payload.comment().replace("\"", "\\\"") + "\"",
-                    payload.occurredAt(),
-                    toJsonArray(payload.recipients())
-            );
-        }
-
-        private String toJsonArray(java.util.List<String> recipients) {
-            if (recipients == null || recipients.isEmpty()) {
-                return "[]";
-            }
-            return "[" + recipients.stream()
-                    .map(r -> "\"" + r.replace("\"", "\\\"") + "\"")
-                    .reduce((a, b) -> a + "," + b)
-                    .orElse("") + "]";
+        try {
+            kafkaTemplate.send(topic, payload.draftId().toString(), objectMapper.writeValueAsString(payload));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Failed to serialize draft notification", e);
         }
     }
 }
