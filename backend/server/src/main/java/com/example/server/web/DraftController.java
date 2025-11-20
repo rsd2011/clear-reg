@@ -43,6 +43,7 @@ public class DraftController {
     private final DraftApplicationService draftApplicationService;
     private final PermissionEvaluator permissionEvaluator;
     private final DwOrganizationQueryService organizationQueryService;
+    private static final RowScope DEFAULT_ROW_SCOPE = RowScope.ORG;
 
     public DraftController(DraftApplicationService draftApplicationService,
                            PermissionEvaluator permissionEvaluator,
@@ -57,7 +58,7 @@ public class DraftController {
     public Page<DraftResponse> listDrafts(Pageable pageable) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        RowScope rowScope = audit ? RowScope.ALL : context.rowScope();
+        RowScope rowScope = audit ? RowScope.ALL : effectiveRowScope(context.rowScope());
         Collection<String> scopedOrganizations = resolveOrganizations(rowScope, context.organizationCode());
         return draftApplicationService.listDrafts(pageable, rowScope, context.organizationCode(), scopedOrganizations);
     }
@@ -202,5 +203,15 @@ public class DraftController {
         } catch (PermissionDeniedException ex) {
             return false;
         }
+    }
+
+    private RowScope effectiveRowScope(RowScope requested) {
+        if (requested == null) {
+            return DEFAULT_ROW_SCOPE;
+        }
+        if (requested == RowScope.OWN) {
+            return RowScope.ORG;
+        }
+        return requested;
     }
 }
