@@ -147,6 +147,32 @@
 - `GET /api/drafts/{id}/history` → `[DraftHistoryResponse]`
 - `GET /api/drafts/{id}/references` → `[DraftReferenceResponse]`
 - 권한: `DRAFT_READ`
+- 이력 응답 예시
+```json
+[
+  {
+    "eventType": "SUBMITTED",
+    "actor": "userA",
+    "details": "기안 상신",
+    "occurredAt": "2025-11-20T10:05:00Z"
+  },
+  {
+    "eventType": "APPROVED_STEP",
+    "actor": "lead1",
+    "details": "결재 그룹 TEAM_LEAD 승인",
+    "occurredAt": "2025-11-20T10:06:30Z"
+  }
+]
+```
+- 참조 응답 예시
+```json
+[
+  {
+    "referencedUserId": "userB",
+    "referencedAt": "2025-11-20T10:05:00Z"
+  }
+]
+```
 
 ### 6) 기본 템플릿 추천
 - `GET /api/drafts/templates/default?businessFeature=LEAVE`
