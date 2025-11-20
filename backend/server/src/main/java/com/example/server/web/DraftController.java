@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.auth.permission.ActionCode;
@@ -104,6 +105,36 @@ public class DraftController {
         DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_CANCEL);
         return draftApplicationService.cancel(id, context.username(), context.organizationCode());
+    }
+
+    @PostMapping("/{id}/withdraw")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CANCEL)
+    public DraftResponse withdrawDraft(@PathVariable UUID id) {
+        AuthContext context = currentContext();
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_CANCEL);
+        return draftApplicationService.withdraw(id, context.username(), context.organizationCode());
+    }
+
+    @PostMapping("/{id}/resubmit")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_SUBMIT)
+    public DraftResponse resubmitDraft(@PathVariable UUID id) {
+        AuthContext context = currentContext();
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_SUBMIT);
+        return draftApplicationService.resubmit(id, context.username(), context.organizationCode());
+    }
+
+    @PostMapping("/{id}/delegate")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_APPROVE)
+    public DraftResponse delegateDraft(@PathVariable UUID id,
+                                       @Valid @RequestBody DraftDecisionRequest request,
+                                       @RequestParam("delegatedTo") String delegatedTo) {
+        AuthContext context = currentContext();
+        boolean audit = hasAuditPermission();
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), audit);
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
+        return draftApplicationService.delegate(id, request, delegatedTo, context.username(), context.organizationCode(), audit);
     }
 
     @GetMapping("/{id}")

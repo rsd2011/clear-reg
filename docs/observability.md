@@ -34,3 +34,7 @@
 ## TODO
 - 향후 `management.endpoint.health.probes.enabled=true` 등을 추가해 Kubernetes liveness/readiness probe를 직접 노출하는 것도 고려한다.
 - Trace/metrics export(OpenTelemetry, Micrometer Registry) 연계를 위한 설정은 `management.metrics.export.*` 블록에서 확장 가능.
+- Draft/Approval 피쳐 관측성:
+  - 주요 비즈니스 메트릭: 결재 리드타임, 반려율, 회수/재상신 건수, 알림 발송 성공률. 향후 지표 스키마를 `docs/draft-approval-todo.md` T12·T16 진행 시 함께 정의.
+  - OTLP 설정 참고: `application-otlp.yml` 프로파일을 Draft API에도 적용하여 trace/metric/log 삼중 수집.
+  - 알림/이벤트 outbox 처리율·실패율을 Prometheus 커스텀 메트릭으로 노출 (T12 연계).

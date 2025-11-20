@@ -5,7 +5,8 @@ public enum DraftStatus {
     IN_REVIEW,
     APPROVED,
     REJECTED,
-    CANCELLED;
+    CANCELLED,
+    WITHDRAWN;
 
     public boolean isTerminal() {
         return this == APPROVED || this == REJECTED || this == CANCELLED;

@@ -13,6 +13,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,6 +49,16 @@ public class DraftApprovalStep extends PrimaryKeyEntity {
 
     @Column(name = "comment", length = 2000)
     private String comment;
+
+    @Column(name = "delegated_to", length = 100)
+    private String delegatedTo;
+
+    @Column(name = "delegated_at")
+    private OffsetDateTime delegatedAt;
+
+    @Version
+    @Column(name = "version", nullable = false)
+    private long version;
 
     private DraftApprovalStep(int stepOrder, String approvalGroupCode, String description) {
         this.stepOrder = stepOrder;
@@ -96,6 +107,24 @@ public class DraftApprovalStep extends PrimaryKeyEntity {
         this.state = DraftApprovalState.SKIPPED;
         this.comment = reason;
         this.actedAt = now;
+    }
+
+    public void delegateTo(String delegatedTo, String delegateComment, OffsetDateTime now) {
+        if (this.state.isCompleted()) {
+            throw new DraftWorkflowException("이미 완료된 결재 단계는 위임할 수 없습니다.");
+        }
+        this.delegatedTo = delegatedTo;
+        this.delegatedAt = now;
+        this.comment = delegateComment;
+    }
+
+    public void reset() {
+        this.state = DraftApprovalState.WAITING;
+        this.actedBy = null;
+        this.actedAt = null;
+        this.comment = null;
+        this.delegatedTo = null;
+        this.delegatedAt = null;
     }
 
     private void ensureInProgress() {

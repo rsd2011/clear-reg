@@ -86,6 +86,9 @@ public class Draft extends PrimaryKeyEntity {
     @Column(name = "cancelled_at")
     private OffsetDateTime cancelledAt;
 
+    @Column(name = "withdrawn_at")
+    private OffsetDateTime withdrawnAt;
+
     @OneToMany(mappedBy = "draft", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepOrder ASC")
     private final List<DraftApprovalStep> approvalSteps = new ArrayList<>();
@@ -194,6 +197,45 @@ public class Draft extends PrimaryKeyEntity {
         skipRemainingSteps(now, "기안 취소");
     }
 
+    public void withdraw(String actor, OffsetDateTime now) {
+        if (this.status.isTerminal()) {
+            throw new DraftWorkflowException("이미 종료된 기안입니다.");
+        }
+        this.status = DraftStatus.WITHDRAWN;
+        this.withdrawnAt = now;
+        this.updatedAt = now;
+        this.updatedBy = actor;
+        this.history.add(DraftHistory.entry(this, "WITHDRAWN", actor, "기안 회수", now));
+        skipRemainingSteps(now, "기안 회수");
+    }
+
+    public void resubmit(String actor, OffsetDateTime now) {
+        if (this.status != DraftStatus.WITHDRAWN) {
+            throw new DraftWorkflowException("회수된 기안만 재상신할 수 있습니다.");
+        }
+        resetSteps();
+        this.status = DraftStatus.IN_REVIEW;
+        this.submittedAt = now;
+        this.completedAt = null;
+        this.cancelledAt = null;
+        this.withdrawnAt = null;
+        this.updatedAt = now;
+        this.updatedBy = actor;
+        history.add(DraftHistory.entry(this, "RESUBMITTED", actor, "기안 재상신", now));
+        DraftApprovalStep waiting = currentWaitingStep()
+                .orElseThrow(() -> new DraftWorkflowException("결재선이 설정되지 않았습니다."));
+        waiting.start(now);
+    }
+
+    public void delegate(UUID stepId, String delegatedTo, String actor, String comment, OffsetDateTime now) {
+        ensureWritable();
+        DraftApprovalStep step = findStep(stepId);
+        step.delegateTo(delegatedTo, comment, now);
+        this.updatedAt = now;
+        this.updatedBy = actor;
+        this.history.add(DraftHistory.entry(this, "DELEGATED", actor, "결재 위임 대상: " + delegatedTo, now));
+    }
+
     public DraftApprovalStep findStep(UUID stepId) {
         return approvalSteps.stream()
                 .filter(step -> step.getId().equals(stepId))
@@ -229,6 +271,10 @@ public class Draft extends PrimaryKeyEntity {
         approvalSteps.stream()
                 .filter(step -> !step.getState().isCompleted())
                 .forEach(step -> step.skip(reason, now));
+    }
+
+    private void resetSteps() {
+        approvalSteps.forEach(DraftApprovalStep::reset);
     }
 
     private void ensureWritable() {

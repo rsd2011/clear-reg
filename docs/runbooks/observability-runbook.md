@@ -78,3 +78,4 @@
 ## 향후 작업
 - 커스텀 Micrometer Meter 등록 (DW ingestion 실패 카운터, 권한 실패 카운터 등) → 위 지표 실시간 확보.
 - PagerDuty / Slack 자동 티켓 생성 파이프라인 구축 시 본 Runbook 링크 포함.
+- Draft/Approval 관측성 연계: 결재 리드타임/반려율/회수·재상신 건수, 알림 outbox 처리율 등의 지표를 추가하고 알람 정의 시 본 Runbook에 섹션을 신설한다 (`docs/draft-approval-todo.md` T12/T16 참고).

@@ -18,11 +18,16 @@ import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
+import com.example.draft.domain.ApprovalGroup;
+import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftAttachment;
 import com.example.draft.domain.DraftFormTemplate;
+import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
+import com.example.draft.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
@@ -34,15 +39,21 @@ public class DraftApplicationService {
     private final DraftRepository draftRepository;
     private final ApprovalLineTemplateRepository templateRepository;
     private final DraftFormTemplateRepository formTemplateRepository;
+    private final ApprovalGroupRepository approvalGroupRepository;
+    private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
     private final Clock clock;
 
     public DraftApplicationService(DraftRepository draftRepository,
                                    ApprovalLineTemplateRepository templateRepository,
                                    DraftFormTemplateRepository formTemplateRepository,
+                                   ApprovalGroupRepository approvalGroupRepository,
+                                   ApprovalGroupMemberRepository approvalGroupMemberRepository,
                                    Clock clock) {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
         this.formTemplateRepository = formTemplateRepository;
+        this.approvalGroupRepository = approvalGroupRepository;
+        this.approvalGroupMemberRepository = approvalGroupMemberRepository;
         this.clock = clock;
     }
 
@@ -88,6 +99,7 @@ public class DraftApplicationService {
                                  boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
+        ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.approveStep(request.stepId(), actor, request.comment(), now());
         return DraftResponse.from(draft);
     }
@@ -100,6 +112,7 @@ public class DraftApplicationService {
                                 boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
+        ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
         return DraftResponse.from(draft);
     }
@@ -109,6 +122,36 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.cancel(actor, now());
+        return DraftResponse.from(draft);
+    }
+
+    @Transactional
+    public DraftResponse withdraw(UUID draftId, String actor, String organizationCode) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, false);
+        draft.withdraw(actor, now());
+        return DraftResponse.from(draft);
+    }
+
+    @Transactional
+    public DraftResponse resubmit(UUID draftId, String actor, String organizationCode) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, false);
+        draft.resubmit(actor, now());
+        return DraftResponse.from(draft);
+    }
+
+    @Transactional
+    public DraftResponse delegate(UUID draftId,
+                                  DraftDecisionRequest request,
+                                  String delegatedTo,
+                                  String actor,
+                                  String organizationCode,
+                                  boolean auditAccess) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, auditAccess);
+        ensureStepAccess(draft, actor, organizationCode, request.stepId());
+        draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
         return DraftResponse.from(draft);
     }
 
@@ -158,5 +201,18 @@ public class DraftApplicationService {
             );
             draft.addAttachment(entity);
         });
+    }
+
+    private void ensureStepAccess(Draft draft, String actor, String organizationCode, UUID stepId) {
+        DraftApprovalStep step = draft.findStep(stepId);
+        ApprovalGroup group = approvalGroupRepository.findByGroupCode(step.getApprovalGroupCode())
+                .orElseThrow(() -> new DraftNotFoundException("결재 그룹을 찾을 수 없습니다."));
+        boolean permitted = approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId())
+                .stream()
+                .anyMatch(member -> member.getMemberUserId().equals(actor)
+                        && (member.getMemberOrgCode() == null || member.getMemberOrgCode().equals(organizationCode)));
+        if (!permitted) {
+            throw new DraftAccessDeniedException("결재 권한이 없습니다.");
+        }
     }
 }

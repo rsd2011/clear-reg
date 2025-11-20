@@ -13,7 +13,9 @@ public record DraftApprovalStepResponse(UUID id,
                                         DraftApprovalState state,
                                         String actedBy,
                                         OffsetDateTime actedAt,
-                                        String comment) {
+                                        String comment,
+                                        String delegatedTo,
+                                        OffsetDateTime delegatedAt) {
 
     public static DraftApprovalStepResponse from(DraftApprovalStep step) {
         return new DraftApprovalStepResponse(
@@ -24,6 +26,8 @@ public record DraftApprovalStepResponse(UUID id,
                 step.getState(),
                 step.getActedBy(),
                 step.getActedAt(),
-                step.getComment());
+                step.getComment(),
+                step.getDelegatedTo(),
+                step.getDelegatedAt());
     }
 }

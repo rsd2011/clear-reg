@@ -17,6 +17,7 @@
 3. **기타 모듈(`draft`, `policy`, `dw-integration`, `batch-app`)**
    - 상위 모듈 적용이 끝나면 나머지 모듈을 순차적으로 정비한다.
    - 새로 추가되는 테스트는 즉시 컨벤션을 따라야 하며, 기존 테스트는 리팩터링 시 함께 반영한다.
+   - Draft/Approval 모듈 백로그(T13) 진행 시 상태 전이/동시성/권한/RowScope/알림(outbox) 통합 테스트를 우선 추가한다 (`docs/draft-approval-todo.md` 참조).
 
 ## 운영 가이드
 - PR 템플릿에 “테스트 `@DisplayName` 한글 적용 여부” 체크박스를 추가하면 누락을 예방할 수 있다.

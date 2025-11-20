@@ -30,12 +30,16 @@ import com.example.draft.application.request.DraftAttachmentRequest;
 import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
+import com.example.draft.domain.ApprovalGroup;
+import com.example.draft.domain.ApprovalGroupMember;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.DraftStatus;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
+import com.example.draft.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
@@ -55,6 +59,12 @@ class DraftApplicationServiceTest {
     @Mock
     private DraftFormTemplateRepository formTemplateRepository;
 
+    @Mock
+    private ApprovalGroupRepository approvalGroupRepository;
+
+    @Mock
+    private ApprovalGroupMemberRepository approvalGroupMemberRepository;
+
     private Clock clock;
 
     @InjectMocks
@@ -63,7 +73,8 @@ class DraftApplicationServiceTest {
     @BeforeEach
     void setUp() {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
-        service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository, clock);
+        service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
+                approvalGroupRepository, approvalGroupMemberRepository, clock);
     }
 
     @Test
@@ -142,6 +153,7 @@ class DraftApplicationServiceTest {
     void givenDraft_whenApproveStep_thenMovesToNextStep() {
         Draft draft = inReviewDraft();
         UUID firstStep = draft.getApprovalSteps().get(0).getId();
+        stubGroupMember("GROUP-A", "approver");
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
 
         DraftResponse response = service.approve(draft.getId(), new DraftDecisionRequest(firstStep, "ok"),
@@ -157,9 +169,11 @@ class DraftApplicationServiceTest {
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
 
         UUID firstStep = draft.getApprovalSteps().get(0).getId();
+        stubGroupMember("GROUP-A", "approver1");
         service.approve(draft.getId(), new DraftDecisionRequest(firstStep, "first"), "approver1", ORG, false);
 
         UUID secondStep = draft.getApprovalSteps().get(1).getId();
+        stubGroupMember("GROUP-B", "approver2");
         DraftResponse response = service.approve(draft.getId(), new DraftDecisionRequest(secondStep, "second"),
                 "approver2", ORG, false);
 
@@ -172,6 +186,7 @@ class DraftApplicationServiceTest {
         Draft draft = inReviewDraft();
         UUID stepId = draft.getApprovalSteps().get(0).getId();
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
+        stubGroupMember("GROUP-A", "approver");
 
         DraftResponse response = service.reject(draft.getId(), new DraftDecisionRequest(stepId, "반려"),
                 "approver", ORG, false);
@@ -189,6 +204,47 @@ class DraftApplicationServiceTest {
 
         assertThat(response.status()).isEqualTo(DraftStatus.CANCELLED);
         assertThat(response.cancelledAt()).isNotNull();
+    }
+
+    @Test
+    void givenDraftInReview_whenWithdraw_thenStatusWithdrawn() {
+        Draft draft = inReviewDraft();
+        given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
+
+        DraftResponse response = service.withdraw(draft.getId(), "writer", ORG);
+
+        assertThat(response.status()).isEqualTo(DraftStatus.WITHDRAWN);
+        assertThat(response.cancelledAt()).isNull();
+        assertThat(response.approvalSteps()).allMatch(step -> step.state().isCompleted());
+    }
+
+    @Test
+    void givenWithdrawnDraft_whenResubmit_thenRestartFlow() {
+        Draft draft = inReviewDraft();
+        given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
+        stubGroupMember("GROUP-A", "writer"); // allow resubmit start step actor check not required but safe
+        service.withdraw(draft.getId(), "writer", ORG);
+        given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
+
+        DraftResponse response = service.resubmit(draft.getId(), "writer", ORG);
+
+        assertThat(response.status()).isEqualTo(DraftStatus.IN_REVIEW);
+        assertThat(response.submittedAt()).isNotNull();
+        assertThat(response.approvalSteps()).anyMatch(step -> step.state().name().equals("IN_PROGRESS"));
+    }
+
+    @Test
+    void givenInProgressStep_whenDelegate_thenDelegatedToRecorded() {
+        Draft draft = inReviewDraft();
+        UUID stepId = draft.getApprovalSteps().get(0).getId();
+        given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
+        stubGroupMember("GROUP-A", "approver");
+
+        DraftResponse response = service.delegate(draft.getId(), new DraftDecisionRequest(stepId, "please handle"),
+                "delegatee", "approver", ORG, false);
+
+        assertThat(response.approvalSteps())
+                .anyMatch(step -> step.id().equals(stepId) && "delegatee".equals(step.delegatedTo()));
     }
 
     @Test
@@ -230,6 +286,15 @@ class DraftApplicationServiceTest {
         Draft draft = draftReadyForReview();
         draft.submit("writer", NOW.plusMinutes(1));
         return draft;
+    }
+
+    private void stubGroupMember(String groupCode, String memberUserId) {
+        ApprovalGroup group = ApprovalGroup.create(groupCode, groupCode + " name", null, ORG, null, NOW);
+        ApprovalGroupMember member = ApprovalGroupMember.create(memberUserId, ORG, null, NOW);
+        member.attachTo(group);
+        given(approvalGroupRepository.findByGroupCode(groupCode)).willReturn(Optional.of(group));
+        given(approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId()))
+                .willReturn(List.of(member));
     }
 
     private ApprovalLineTemplate sampleTemplate(String organizationCode) {

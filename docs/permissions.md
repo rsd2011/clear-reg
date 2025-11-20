@@ -13,6 +13,10 @@
 - 통합 기안 시스템은 `FeatureCode.DRAFT`와 전용 Action(`DRAFT_CREATE`, `DRAFT_SUBMIT`, `DRAFT_APPROVE`,
   `DRAFT_READ`, `DRAFT_CANCEL`, `DRAFT_AUDIT`)을 사용한다. 실제 업무별 기안 작성 권한은 해당 업무 Feature
   (예: `NOTICE`)에 `DRAFT_CREATE`를 매핑하여 제어하고, 공통 기능(조회/감사)은 `FeatureCode.DRAFT`에 매핑한다.
+  - 예정된 확장(Action 추가): `DRAFT_WITHDRAW`, `DRAFT_RESUBMIT`, `DRAFT_DELEGATE`, `DRAFT_REFERENCE_VIEW` (see `docs/draft-approval-todo.md` T5/T14).
+  - 결재자 검증: ApprovalGroupMember 기반 단계별 승인/반려 권한 검증을 추가(T4).
+  - 참조자 권한: DraftReference로 열람/알림만 허용, 수정/결재 권한은 부여하지 않음(T2/T14).
+  - RowScope 확장: 작성자/결재자/참조자 스코프 필터를 지원하도록 list API 스펙을 확장(T14/T15).
 - 공통 코드 서비스(`FeatureCode.COMMON_CODE`)는 시스템/ DW 양쪽 테이블을 통합 조회하며,
   관리자만이 시스템 코드 값을 생성/수정(`ActionCode.UPDATE`)할 수 있다. 일반 사용자는 `READ`만 부여된다.
 

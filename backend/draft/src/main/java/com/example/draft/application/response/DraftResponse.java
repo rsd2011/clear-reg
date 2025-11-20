@@ -23,6 +23,7 @@ public record DraftResponse(UUID id,
                             OffsetDateTime submittedAt,
                             OffsetDateTime completedAt,
                             OffsetDateTime cancelledAt,
+                            OffsetDateTime withdrawnAt,
                             List<DraftApprovalStepResponse> approvalSteps,
                              List<DraftAttachmentResponse> attachments) {
 
@@ -50,6 +51,7 @@ public record DraftResponse(UUID id,
                 draft.getSubmittedAt(),
                 draft.getCompletedAt(),
                 draft.getCancelledAt(),
+                draft.getWithdrawnAt(),
                 steps,
                 files);
     }
