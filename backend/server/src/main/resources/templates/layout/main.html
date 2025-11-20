@@ -2,13 +2,13 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8"/>
-    <title th:text="${title}">전자결재</title>
+    <title th:text="#{app.title(${title})}">전자결재</title>
     <link rel="stylesheet" th:href="@{/css/main.css}"/>
 </head>
 <body>
 <div th:fragment="content">
     <header>
-        <h1 th:text="${title}">전자결재</h1>
+        <h1 th:text="#{app.title(${title})}">전자결재</h1>
         <nav>
             <a th:href="@{/drafts}">기안 목록</a> |
             <a th:href="@{/drafts/new}">새 기안</a>

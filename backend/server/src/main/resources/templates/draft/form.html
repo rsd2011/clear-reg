@@ -1,18 +1,29 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ko" th:replace="layout/main :: content(title='기안 작성', view='this')">
 <div th:fragment="view">
-    <h2>새 기안 작성</h2>
+    <h2 th:text="#{draft.new}">새 기안 작성</h2>
     <form th:action="@{/drafts}" method="post" th:object="${draft}">
-        <label>제목 <input type="text" th:field="*{title}" required/></label><br/>
-        <label>업무 Feature <input type="text" th:field="*{businessFeatureCode}" required/></label><br/>
-        <label>내용 <textarea th:field="*{content}" rows="6" cols="60" required></textarea></label><br/>
-        <label>결재선 템플릿 ID <input type="text" th:field="*{templateId}"/></label><br/>
-        <label>기안 양식 템플릿 ID <input type="text" th:field="*{formTemplateId}"/></label><br/>
-        <label>양식 Payload <textarea th:field="*{formPayload}" rows="6" cols="60" required></textarea></label><br/>
+        <label th:text="#{label.title}">제목</label>
+        <input type="text" th:field="*{title}" required/><br/>
+
+        <label th:text="#{label.business}">업무 Feature</label>
+        <input type="text" th:field="*{businessFeatureCode}" required/><br/>
+
+        <label th:text="#{label.content}">내용</label>
+        <textarea th:field="*{content}" rows="6" cols="60" required></textarea><br/>
+
+        <label th:text="#{label.approvalTemplateId}">결재선 템플릿 ID</label>
+        <input type="text" th:field="*{templateId}"/><br/>
+
+        <label th:text="#{label.formTemplateId}">기안 양식 템플릿 ID</label>
+        <input type="text" th:field="*{formTemplateId}"/><br/>
+
+        <label th:text="#{label.formPayload}">양식 Payload</label>
+        <textarea th:field="*{formPayload}" rows="6" cols="60" required></textarea><br/>
         <div th:if="${#fields.hasErrors('*')}">
             <p th:each="err: ${#fields.errors('*')}" th:text="${err}"></p>
         </div>
-        <button type="submit">작성</button>
+        <button type="submit" th:text="#{action.create}">작성</button>
     </form>
 </div>
 </html>

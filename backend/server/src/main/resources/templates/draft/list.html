@@ -3,14 +3,12 @@
 <div th:fragment="view">
     <h2>기안 목록</h2>
     <form method="get" th:action="@{/drafts}" class="search-form">
-        <label>업무
-            <input type="text" name="business" th:value="${param.business}"/>
-        </label>
-        <label>상태
-            <input type="text" name="status" th:value="${param.status}"/>
-        </label>
-        <button type="submit">검색</button>
-        <a th:href="@{/drafts/new}" class="button">새 기안</a>
+        <label th:text="#{label.business}">업무</label>
+        <input type="text" name="business" th:value="${param.business}"/>
+        <label th:text="#{label.status}">상태</label>
+        <input type="text" name="status" th:value="${param.status}"/>
+        <button type="submit" th:text="#{action.search}">검색</button>
+        <a th:href="@{/drafts/new}" class="button" th:text="#{action.newDraft}">새 기안</a>
     </form>
     <table>
         <thead>
