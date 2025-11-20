@@ -9,7 +9,7 @@ import com.example.draft.domain.BusinessTemplateMapping;
 
 public interface BusinessTemplateMappingRepository extends JpaRepository<BusinessTemplateMapping, UUID> {
 
-    Optional<BusinessTemplateMapping> findByBusinessFeatureCodeAndOrganizationCode(String businessFeatureCode, String organizationCode);
+    Optional<BusinessTemplateMapping> findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(String businessFeatureCode, String organizationCode);
 
-    Optional<BusinessTemplateMapping> findByBusinessFeatureCodeAndOrganizationCodeIsNull(String businessFeatureCode);
+    Optional<BusinessTemplateMapping> findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(String businessFeatureCode);
 }

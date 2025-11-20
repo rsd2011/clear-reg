@@ -33,6 +33,9 @@ import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeSpecifications;
+import com.example.draft.application.response.DraftTemplateSuggestionResponse;
+import com.example.draft.domain.BusinessTemplateMapping;
+import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 
 @Service
 public class DraftApplicationService {
@@ -42,6 +45,7 @@ public class DraftApplicationService {
     private final DraftFormTemplateRepository formTemplateRepository;
     private final ApprovalGroupRepository approvalGroupRepository;
     private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
+    private final BusinessTemplateMappingRepository mappingRepository;
     private final DraftNotificationService notificationService;
     private final Clock clock;
 
@@ -50,6 +54,7 @@ public class DraftApplicationService {
                                    DraftFormTemplateRepository formTemplateRepository,
                                    ApprovalGroupRepository approvalGroupRepository,
                                    ApprovalGroupMemberRepository approvalGroupMemberRepository,
+                                   BusinessTemplateMappingRepository mappingRepository,
                                    DraftNotificationService notificationService,
                                    Clock clock) {
         this.draftRepository = draftRepository;
@@ -57,6 +62,7 @@ public class DraftApplicationService {
         this.formTemplateRepository = formTemplateRepository;
         this.approvalGroupRepository = approvalGroupRepository;
         this.approvalGroupMemberRepository = approvalGroupMemberRepository;
+        this.mappingRepository = mappingRepository;
         this.notificationService = notificationService;
         this.clock = clock;
     }
@@ -189,6 +195,14 @@ public class DraftApplicationService {
         );
         return draftRepository.findAll(specification, pageable)
                 .map(DraftResponse::from);
+    }
+
+    @Transactional(readOnly = true)
+    public DraftTemplateSuggestionResponse suggestTemplate(String businessFeatureCode, String organizationCode) {
+        BusinessTemplateMapping mapping = mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(businessFeatureCode, organizationCode)
+                .or(() -> mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(businessFeatureCode))
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기본 매핑된 템플릿이 없습니다."));
+        return DraftTemplateSuggestionResponse.from(mapping);
     }
 
     private Draft loadDraft(UUID id) {

@@ -27,6 +27,7 @@ import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
+import com.example.draft.application.response.DraftTemplateSuggestionResponse;
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationQueryService;
 
@@ -135,6 +136,14 @@ public class DraftController {
         DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), audit);
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
         return draftApplicationService.delegate(id, request, delegatedTo, context.username(), context.organizationCode(), audit);
+    }
+
+    @GetMapping("/templates/default")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CREATE)
+    public DraftTemplateSuggestionResponse defaultTemplates(@RequestParam("businessFeature") String businessFeature) {
+        AuthContext context = currentContext();
+        ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
+        return draftApplicationService.suggestTemplate(businessFeature, context.organizationCode());
     }
 
     @GetMapping("/{id}")
