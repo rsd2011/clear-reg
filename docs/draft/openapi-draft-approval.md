@@ -21,7 +21,7 @@
 }
 ```
 
-- Problem 응답
+- Problem 응답 (권장)
 ```json
 {
   "type": "about:blank",
@@ -31,6 +31,25 @@
   "instance": "/api/drafts/{id}/approve"
 }
 ```
+- Validation 오류 예시
+```json
+{
+  "type": "about:blank",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "유효성 검증에 실패했습니다.",
+  "invalidParams": [
+    { "name": "title", "reason": "must not be blank" },
+    { "name": "formPayload", "reason": "invalid JSON" }
+  ]
+}
+```
+
+## 표준 응답/에러 규칙
+- 성공: 200 OK (조회/액션), 201 Created(필요 시), 204 No Content(삭제성 액션 시 사용 가능).
+- 실패: 400(검증), 401/403(인증/인가), 404(리소스 없음), 409(상태 불일치/동시성), 422(도메인 규칙 위반 시 선택적으로 사용), 500(예상치 못한 오류).
+- `Content-Type`은 항상 `application/json` 또는 `application/problem+json`.
+- 동시성 충돌 시 `409` + Problem detail에 기대 상태/현재 상태 명시.
 
 ## 엔드포인트
 
@@ -60,6 +79,53 @@
 - `GET /api/drafts/{id}`
 - 권한: `DRAFT_READ`
 - 응답: `DraftResponse`
+- 예시
+```json
+{
+  "id": "c2c3c0e1-9c35-4a5b-8c63-8c6c6f1d8e11",
+  "title": "휴가 신청",
+  "content": "연차 3일",
+  "businessFeatureCode": "LEAVE",
+  "organizationCode": "ORG-A",
+  "status": "IN_REVIEW",
+  "templateCode": "DEFAULT",
+  "formTemplateCode": "LEAVE_FORM_V1",
+  "formTemplateVersion": 1,
+  "formTemplateSnapshot": "{...json schema...}",
+  "formPayload": "{ \"from\": \"2025-11-25\", \"to\": \"2025-11-27\" }",
+  "createdAt": "2025-11-20T10:00:00Z",
+  "updatedAt": "2025-11-20T10:10:00Z",
+  "submittedAt": "2025-11-20T10:05:00Z",
+  "completedAt": null,
+  "cancelledAt": null,
+  "withdrawnAt": null,
+  "approvalSteps": [
+    {
+      "id": "9c7ba40a-9f17-42d8-9c38-3c9853d2d9ae",
+      "approvalGroupCode": "TEAM_LEAD",
+      "state": "IN_PROGRESS",
+      "actedBy": "lead1",
+      "delegatedTo": null,
+      "comment": null,
+      "startedAt": "2025-11-20T10:05:00Z",
+      "completedAt": null,
+      "lockedVersion": 3
+    },
+    {
+      "id": "a5f0c2bb-1e2f-4d5f-8c1b-5e1a0f8b2c3d",
+      "approvalGroupCode": "DEPT_HEAD",
+      "state": "WAITING",
+      "actedBy": null,
+      "delegatedTo": null,
+      "comment": null,
+      "startedAt": null,
+      "completedAt": null,
+      "lockedVersion": 0
+    }
+  ],
+  "attachments": []
+}
+```
 
 ### 4) 상태 액션
 - 상신: `POST /api/drafts/{id}/submit` (`DRAFT_SUBMIT`)
