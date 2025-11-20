@@ -70,15 +70,9 @@ public class DraftApplicationService {
     @Transactional
     public DraftResponse createDraft(DraftCreateRequest request, String actor, String organizationCode) {
         OffsetDateTime now = now();
-        ApprovalLineTemplate template = templateRepository.findByIdAndActiveTrue(request.templateId())
-                .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-        template.assertOrganization(organizationCode);
-        DraftFormTemplate formTemplate = formTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
-                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
-        formTemplate.assertOrganization(organizationCode);
-        if (!formTemplate.matchesBusiness(request.businessFeatureCode())) {
-            throw new DraftTemplateNotFoundException("비즈니스 유형에 맞는 기안 양식이 아닙니다.");
-        }
+        TemplateSelection selection = selectTemplates(request, organizationCode);
+        ApprovalLineTemplate template = selection.approvalTemplate();
+        DraftFormTemplate formTemplate = selection.formTemplate();
         Draft draft = Draft.create(request.title(),
                 request.content(),
                 request.businessFeatureCode(),
@@ -243,5 +237,29 @@ public class DraftApplicationService {
 
     private void publish(String action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {
         notificationService.notify(action, draft, actor, stepId, delegatedTo, comment, now());
+    }
+
+    private TemplateSelection selectTemplates(DraftCreateRequest request, String organizationCode) {
+        if (request.templateId() != null && request.formTemplateId() != null) {
+            ApprovalLineTemplate template = templateRepository.findByIdAndActiveTrue(request.templateId())
+                    .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
+            template.assertOrganization(organizationCode);
+            DraftFormTemplate formTemplate = formTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
+                    .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
+            formTemplate.assertOrganization(organizationCode);
+            if (!formTemplate.matchesBusiness(request.businessFeatureCode())) {
+                throw new DraftTemplateNotFoundException("비즈니스 유형에 맞는 기안 양식이 아닙니다.");
+            }
+            return new TemplateSelection(template, formTemplate);
+        }
+        BusinessTemplateMapping mapping = mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(request.businessFeatureCode(), organizationCode)
+                .or(() -> mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(request.businessFeatureCode()))
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기본 매핑된 템플릿을 찾을 수 없습니다."));
+        mapping.getDraftFormTemplate().assertOrganization(organizationCode);
+        mapping.getApprovalLineTemplate().assertOrganization(organizationCode);
+        return new TemplateSelection(mapping.getApprovalLineTemplate(), mapping.getDraftFormTemplate());
+    }
+
+    private record TemplateSelection(ApprovalLineTemplate approvalTemplate, DraftFormTemplate formTemplate) {
     }
 }

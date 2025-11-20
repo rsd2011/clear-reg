@@ -40,6 +40,7 @@ import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
 import com.example.draft.domain.repository.ApprovalGroupRepository;
+import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.draft.application.notification.DraftNotificationService;
@@ -69,6 +70,9 @@ class DraftApplicationServiceTest {
     @Mock
     private DraftNotificationService notificationService;
 
+    @Mock
+    private BusinessTemplateMappingRepository mappingRepository;
+
     private Clock clock;
 
     @InjectMocks
@@ -78,7 +82,7 @@ class DraftApplicationServiceTest {
     void setUp() {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
-                approvalGroupRepository, approvalGroupMemberRepository, notificationService, clock);
+                approvalGroupRepository, approvalGroupMemberRepository, mappingRepository, notificationService, clock);
     }
 
     @Test
@@ -129,6 +133,25 @@ class DraftApplicationServiceTest {
 
         assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
         assertThat(response.organizationCode()).isEqualTo(ORG);
+    }
+
+    @Test
+    void givenNullTemplateIds_whenCreate_thenUsesDefaultMapping() {
+        ApprovalLineTemplate template = sampleTemplate(ORG);
+        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
+        com.example.draft.domain.BusinessTemplateMapping mapping = com.example.draft.domain.BusinessTemplateMapping.create(
+                "NOTICE", ORG, template, formTemplate, NOW);
+        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
+                .willReturn(Optional.of(mapping));
+        given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
+                null, null, "{}", List.of());
+
+        DraftResponse response = service.createDraft(request, "writer", ORG);
+
+        assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
+        assertThat(response.formTemplateCode()).isEqualTo(formTemplate.getTemplateCode());
     }
 
     @Test
