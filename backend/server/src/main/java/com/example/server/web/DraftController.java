@@ -28,6 +28,8 @@ import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
 import com.example.draft.application.response.DraftTemplateSuggestionResponse;
+import com.example.draft.application.response.DraftHistoryResponse;
+import com.example.draft.application.response.DraftReferenceResponse;
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationQueryService;
 
@@ -144,6 +146,22 @@ public class DraftController {
         AuthContext context = currentContext();
         ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
         return draftApplicationService.suggestTemplate(businessFeature, context.organizationCode());
+    }
+
+    @GetMapping("/{id}/history")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_READ)
+    public List<DraftHistoryResponse> history(@PathVariable UUID id) {
+        AuthContext context = currentContext();
+        boolean audit = hasAuditPermission();
+        return draftApplicationService.listHistory(id, context.organizationCode(), audit);
+    }
+
+    @GetMapping("/{id}/references")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_READ)
+    public List<DraftReferenceResponse> references(@PathVariable UUID id) {
+        AuthContext context = currentContext();
+        boolean audit = hasAuditPermission();
+        return draftApplicationService.listReferences(id, context.organizationCode(), audit);
     }
 
     @GetMapping("/{id}")

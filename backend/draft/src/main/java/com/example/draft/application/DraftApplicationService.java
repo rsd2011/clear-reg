@@ -17,6 +17,8 @@ import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
 import com.example.draft.application.notification.DraftNotificationService;
+import com.example.draft.application.response.DraftHistoryResponse;
+import com.example.draft.application.response.DraftReferenceResponse;
 import com.example.draft.domain.ApprovalGroup;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
@@ -36,6 +38,8 @@ import com.example.common.security.RowScopeSpecifications;
 import com.example.draft.application.response.DraftTemplateSuggestionResponse;
 import com.example.draft.domain.BusinessTemplateMapping;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
+import com.example.draft.domain.repository.DraftHistoryRepository;
+import com.example.draft.domain.repository.DraftReferenceRepository;
 
 @Service
 public class DraftApplicationService {
@@ -46,6 +50,8 @@ public class DraftApplicationService {
     private final ApprovalGroupRepository approvalGroupRepository;
     private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
     private final BusinessTemplateMappingRepository mappingRepository;
+    private final DraftHistoryRepository draftHistoryRepository;
+    private final DraftReferenceRepository draftReferenceRepository;
     private final DraftNotificationService notificationService;
     private final Clock clock;
 
@@ -55,6 +61,8 @@ public class DraftApplicationService {
                                    ApprovalGroupRepository approvalGroupRepository,
                                    ApprovalGroupMemberRepository approvalGroupMemberRepository,
                                    BusinessTemplateMappingRepository mappingRepository,
+                                   DraftHistoryRepository draftHistoryRepository,
+                                   DraftReferenceRepository draftReferenceRepository,
                                    DraftNotificationService notificationService,
                                    Clock clock) {
         this.draftRepository = draftRepository;
@@ -63,6 +71,8 @@ public class DraftApplicationService {
         this.approvalGroupRepository = approvalGroupRepository;
         this.approvalGroupMemberRepository = approvalGroupMemberRepository;
         this.mappingRepository = mappingRepository;
+        this.draftHistoryRepository = draftHistoryRepository;
+        this.draftReferenceRepository = draftReferenceRepository;
         this.notificationService = notificationService;
         this.clock = clock;
     }
@@ -197,6 +207,26 @@ public class DraftApplicationService {
                 .or(() -> mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(businessFeatureCode))
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기본 매핑된 템플릿이 없습니다."));
         return DraftTemplateSuggestionResponse.from(mapping);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DraftHistoryResponse> listHistory(UUID draftId, String organizationCode, boolean auditAccess) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, auditAccess);
+        return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId)
+                .stream()
+                .map(DraftHistoryResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<DraftReferenceResponse> listReferences(UUID draftId, String organizationCode, boolean auditAccess) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, auditAccess);
+        return draftReferenceRepository.findByDraftIdAndActiveTrue(draftId)
+                .stream()
+                .map(DraftReferenceResponse::from)
+                .toList();
     }
 
     private Draft loadDraft(UUID id) {

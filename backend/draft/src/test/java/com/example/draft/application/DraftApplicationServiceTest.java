@@ -42,7 +42,9 @@ import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
 import com.example.draft.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
+import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftReferenceRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.draft.application.notification.DraftNotificationService;
 import com.example.common.security.RowScope;
@@ -74,6 +76,12 @@ class DraftApplicationServiceTest {
     @Mock
     private BusinessTemplateMappingRepository mappingRepository;
 
+    @Mock
+    private DraftHistoryRepository draftHistoryRepository;
+
+    @Mock
+    private DraftReferenceRepository draftReferenceRepository;
+
     private Clock clock;
 
     @InjectMocks
@@ -83,7 +91,8 @@ class DraftApplicationServiceTest {
     void setUp() {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
-                approvalGroupRepository, approvalGroupMemberRepository, mappingRepository, notificationService, clock);
+                approvalGroupRepository, approvalGroupMemberRepository, mappingRepository,
+                draftHistoryRepository, draftReferenceRepository, notificationService, clock);
     }
 
     @Test
