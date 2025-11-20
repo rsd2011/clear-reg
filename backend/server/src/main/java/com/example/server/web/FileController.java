@@ -32,6 +32,8 @@ import com.example.file.FileUploadCommand;
 import com.example.file.api.FileUploadRequest;
 import com.example.file.port.FileManagementPort;
 import com.example.server.file.FileMetadataResponse;
+import com.example.draft.application.response.DraftReferenceResponse;
+import com.example.draft.application.response.DraftResponse;
 
 import jakarta.validation.Valid;
 
@@ -88,11 +90,19 @@ public class FileController {
     public ResponseEntity<Resource> download(@PathVariable UUID id,
                                              @RequestParam(value = "draftId", required = false) UUID draftId) {
         String actor = currentUsername();
-        java.util.List<String> allowed = java.util.List.of(actor);
+        java.util.List<String> allowed = new java.util.ArrayList<>();
+        allowed.add(actor);
         if (draftId != null) {
             AuthContext context = AuthContextHolder.current()
                     .orElseThrow(() -> new com.example.auth.permission.PermissionDeniedException("인증 정보가 없습니다."));
-            var draft = draftApplicationService.getDraft(draftId, context.organizationCode(), actor, false);
+            DraftResponse draft = draftApplicationService.getDraft(draftId, context.organizationCode(), actor, false);
+            java.util.List<DraftReferenceResponse> refs = draftApplicationService.listReferences(draftId, context.organizationCode(), actor, false);
+            allowed.add(draft.createdBy());
+            draft.approvalSteps().forEach(step -> {
+                if (step.actedBy() != null) allowed.add(step.actedBy());
+                if (step.delegatedTo() != null) allowed.add(step.delegatedTo());
+            });
+            refs.forEach(r -> allowed.add(r.referencedUserId()));
             boolean attached = draft.attachments().stream().anyMatch(a -> a.fileId().equals(id));
             if (!attached) {
                 throw new com.example.file.FilePolicyViolationException("해당 기안에 첨부되지 않은 파일입니다.");
