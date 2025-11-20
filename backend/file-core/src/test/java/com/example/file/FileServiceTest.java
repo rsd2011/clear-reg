@@ -30,6 +30,7 @@ import com.example.common.file.FileDownload;
 import com.example.common.file.FileStatus;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
 
 @org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -167,6 +168,11 @@ class FileServiceTest {
                     List.of("txt", "pdf", "zip"),
                     true,
                     30);
+        }
+
+        @Bean
+        FileScanner fileScanner() {
+            return (filename, inputStream) -> ScanStatus.CLEAN;
         }
     }
 

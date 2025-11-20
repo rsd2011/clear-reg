@@ -29,6 +29,7 @@ import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
 
 @Service
@@ -44,6 +45,7 @@ public class FileService {
     private final FileAccessLogRepository accessLogRepository;
     private final FileStorageClient storageClient;
     private final PolicySettingsProvider policySettingsProvider;
+    private final FileScanner fileScanner;
     private final Clock clock;
     private final Tika tika = new Tika();
     private final MimeTypes mimeTypes = MimeTypes.getDefaultMimeTypes();
@@ -53,12 +55,14 @@ public class FileService {
                        FileAccessLogRepository accessLogRepository,
                        FileStorageClient storageClient,
                        PolicySettingsProvider policySettingsProvider,
+                       FileScanner fileScanner,
                        Clock clock) {
         this.storedFileRepository = storedFileRepository;
         this.versionRepository = versionRepository;
         this.accessLogRepository = accessLogRepository;
         this.storageClient = storageClient;
         this.policySettingsProvider = policySettingsProvider;
+        this.fileScanner = fileScanner;
         this.clock = clock;
     }
 
@@ -77,9 +81,14 @@ public class FileService {
         StoredFileVersion version = createVersion(file, command, command.ownerUsername(), now);
         file.addVersion(version);
         file.setChecksum(version.getChecksum());
+        ScanStatus scanStatus = runScan(command.originalName(), command.inputStreamSupplier());
         file.setSha256(version.getChecksum());
-        file.setScanStatus(ScanStatus.CLEAN); // TODO: 실제 AV 스캔 연동 시 결과로 대체
+        file.setScanStatus(scanStatus);
         file.setScannedAt(now);
+        if (scanStatus == ScanStatus.BLOCKED || scanStatus == ScanStatus.FAILED) {
+            file.setBlockedReason("Scan result: " + scanStatus);
+            throw new FilePolicyViolationException("업로드가 차단되었습니다. 상태: " + scanStatus);
+        }
         StoredFile persisted = storedFileRepository.save(file);
         logAccess(persisted, "UPLOAD", command.ownerUsername(), "v" + version.getVersionNumber(), now);
         return persisted;
@@ -102,6 +111,9 @@ public class FileService {
                 .orElseThrow(() -> new StoredFileNotFoundException(id));
         if (file.isDeleted()) {
             throw new StoredFileNotFoundException(id);
+        }
+        if (!file.getOwnerUsername().equals(actor)) {
+            throw new FilePolicyViolationException("첨부 열람 권한이 없습니다.");
         }
         if (file.getScanStatus() == ScanStatus.BLOCKED) {
             throw new FilePolicyViolationException("위험 파일로 차단된 첨부입니다.");
@@ -246,6 +258,14 @@ public class FileService {
                 .anyMatch(ext -> ext.equalsIgnoreCase(extension));
         if (!allowed) {
             throw new FilePolicyViolationException("허용되지 않은 파일 확장자입니다.");
+        }
+    }
+
+    private ScanStatus runScan(String filename, java.util.function.Supplier<InputStream> supplier) {
+        try (InputStream stream = supplier.get()) {
+            return fileScanner.scan(filename, stream);
+        } catch (IOException e) {
+            return ScanStatus.FAILED;
         }
     }
 
