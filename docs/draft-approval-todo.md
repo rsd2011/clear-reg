@@ -23,8 +23,8 @@
 | T7 | 서비스 | 참조자 등록 및 알림 트리거 | High | T2 선행; 생성/상신 시 참조자 등록 및 이벤트 발행 |
 | T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ApprovalGroup/LineTemplate/FormTemplate CRUD, UI/REST |
 | T9 | API/컨트롤러 | 이력/참조 조회 API | Medium | DraftHistory, 참조자 목록/열람 로그 제공; T2 이후 |
-| T10 | 뷰/Thymeleaf | 기안 작성/조회 화면 | Medium | 레이아웃/fragment, 템플릿 선택·폼 바인딩·검증 |
-| T11 | 뷰/Thymeleaf | 결재 진행 화면 | Medium | 단계 승인/반려/회수/전달 UI, 참조/첨부 표시; T5 |
+| T10 | 뷰/Thymeleaf | 기안 작성/조회 화면 | Medium | ✅ 목록/작성/상세 뷰, 레이아웃 적용, 상태 배지 i18n 완료 |
+| T11 | 뷰/Thymeleaf | 결재 진행 화면 | Medium | ✅ 상태별 액션 버튼(승인/반려/회수/재상신) 및 참조/이력 표시 완료 |
 | T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | Kafka/RabbitMQ 어댑터, 이메일/푸시 플러그인; T7 |
 | T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
 | T14 | 보안 | 열람/권한 세분화 | High | 작성자/결재자/참조자/관리자 액션 검증, RowScope 확장; T2 |

@@ -20,7 +20,7 @@
         <tr th:each="draft : ${drafts}">
             <td><a th:href="@{|/drafts/${draft.id}|}" th:text="${draft.title}">제목</a></td>
             <td th:text="${draft.businessFeatureCode}">업무</td>
-            <td><span class="badge" th:text="${draft.status}">상태</span></td>
+            <td><span class="badge" th:text="#{status.${draft.status}}">상태</span></td>
             <td th:text="${draft.organizationCode}">조직</td>
             <td th:text="${draft.createdBy}">작성자</td>
         </tr>

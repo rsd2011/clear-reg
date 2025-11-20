@@ -3,7 +3,7 @@
 <div th:fragment="view">
     <h2 th:text="${draft.title}">기안 상세</h2>
     <p><strong>업무:</strong> <span th:text="${draft.businessFeatureCode}"></span></p>
-    <p><strong>상태:</strong> <span class="badge" th:text="${draft.status}"></span></p>
+    <p><strong>상태:</strong> <span class="badge" th:text="#{status.${draft.status}}"></span></p>
     <p><strong>조직:</strong> <span th:text="${draft.organizationCode}"></span></p>
     <p><strong>작성자:</strong> <span th:text="${draft.createdBy}"></span></p>
 
@@ -16,7 +16,7 @@
         <tr th:each="step : ${draft.approvalSteps}">
             <td th:text="${step.stepOrder}"></td>
             <td th:text="${step.approvalGroupCode}"></td>
-            <td><span class="badge" th:text="${step.state}"></span></td>
+            <td><span class="badge" th:text="#{status.${step.state}}"></span></td>
             <td th:text="${step.actedBy}"></td>
             <td th:text="${step.delegatedTo}"></td>
             <td th:text="${step.comment}"></td>
