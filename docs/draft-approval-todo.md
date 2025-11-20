@@ -4,7 +4,7 @@
 - Module: draft + approval + template + reference/notification flows
 - Source baseline: draft domain/services in `backend/draft`, REST in `backend/server/web/DraftController`, migrations `2024-09-24`~`2024-09-27`
 - Goal: meet electronic approval requirements (업무별 기안, 템플릿, 결재선, 참조, 알림, 감사)
-- Frontend: Nuxt4로 전환 예정 → 서버 측 Thymeleaf 템플릿/뷰 컨트롤러 제거 완료, JSON API만 유지
+ - Frontend: Nuxt4로 전환 예정 → 서버 측 Thymeleaf 템플릿/뷰 컨트롤러 및 관련 레이아웃/정적 리소스 제거 완료, JSON API만 유지
 
 ## Gaps (요약)
 - 업무↔템플릿 매핑과 기본 결재선 자동 추천 미비
