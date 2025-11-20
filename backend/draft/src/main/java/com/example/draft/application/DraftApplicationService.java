@@ -180,6 +180,7 @@ public class DraftApplicationService {
     public DraftResponse getDraft(UUID draftId, String organizationCode, boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
+        enforceReadAccess(draft, organizationCode, auditAccess);
         return DraftResponse.from(draft);
     }
 
@@ -191,6 +192,7 @@ public class DraftApplicationService {
         if (rowScope == RowScope.CUSTOM) {
             throw new UnsupportedOperationException("CUSTOM RowScope는 별도 전략이 필요합니다.");
         }
+        rowScope = normalizeRowScope(rowScope);
         Specification<Draft> specification = RowScopeSpecifications.organizationScoped(
                 "organizationCode",
                 rowScope,
@@ -269,6 +271,27 @@ public class DraftApplicationService {
         notificationService.notify(action, draft, actor, stepId, delegatedTo, comment, now());
     }
 
+    /**
+     * 열람 허용 주체: 작성자, 결재선 참여자(멤버/위임 포함), 참조자, 감사(AUDIT) 권한 보유자.
+     * 현재는 organizationCode로만 구분되므로, 호출부에서 사용자 ID 전달 확장이 필요함.
+     */
+    private void enforceReadAccess(Draft draft, String organizationCode, boolean auditAccess) {
+        if (auditAccess) {
+            return;
+        }
+        String requester = organizationCode; // TODO: 사용자 ID 전달 시 교체
+        boolean allowed = draft.getCreatedBy().equals(requester)
+                || draft.getApprovalSteps().stream().anyMatch(step -> {
+                    if (step.getActedBy() != null && step.getActedBy().equals(requester)) return true;
+                    return step.getDelegatedTo() != null && step.getDelegatedTo().equals(requester);
+                })
+                || draftReferenceRepository.findByDraftIdAndActiveTrue(draft.getId()).stream()
+                .anyMatch(ref -> ref.getReferencedUserId().equals(requester));
+        if (!allowed) {
+            throw new DraftAccessDeniedException("열람 권한이 없습니다.");
+        }
+    }
+
     private TemplateSelection selectTemplates(DraftCreateRequest request, String organizationCode) {
         if (request.templateId() != null && request.formTemplateId() != null) {
             ApprovalLineTemplate template = templateRepository.findByIdAndActiveTrue(request.templateId())
@@ -291,5 +314,15 @@ public class DraftApplicationService {
     }
 
     private record TemplateSelection(ApprovalLineTemplate approvalTemplate, DraftFormTemplate formTemplate) {
+    }
+
+    private RowScope normalizeRowScope(RowScope rowScope) {
+        if (rowScope == null) {
+            return RowScope.ORG;
+        }
+        if (rowScope == RowScope.OWN) {
+            return RowScope.ORG;
+        }
+        return rowScope;
     }
 }
