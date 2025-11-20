@@ -34,5 +34,5 @@
   2) 업로드/다운로드/삭제 감사 이벤트를 outbox/Kafka/SIEM으로 퍼블리시  
      - 현황: NoOp 기본, `file.audit.publisher=log|kafka|outbox|siem` 선택 가능, outbox 테이블(`docs/migrations/2025-11-20-file-audit-outbox.sql`) 추가  
      - TODO: outbox 릴레이/브로커 소비자 구현, SIEM 전송 실제 어댑터 교체  
-  3) 설정 프로퍼티 정리: `file.security.scan-enabled`, `file.security.max-size-bytes`, `file.security.scan-timeout-ms`, `file.security.signed-url-ttl-seconds` (`FileSecurityProperties`)  
+  3) 설정 프로퍼티 적용: `file.security.scan-enabled`, `file.security.max-size-bytes`, `file.security.scan-timeout-ms`, `file.security.signed-url-ttl-seconds` (`FileSecurityProperties`) → 스캔 토글, 최대 크기, 타임아웃을 FileService에 반영 완료  
   4) 스캔 실패 재시도/큐 정책 및 보존 TTL 문서화
