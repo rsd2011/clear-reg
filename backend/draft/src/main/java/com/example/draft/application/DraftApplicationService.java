@@ -16,8 +16,7 @@ import com.example.draft.application.request.DraftAttachmentRequest;
 import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
-import com.example.draft.application.notification.DraftNotificationPayload;
-import com.example.draft.application.notification.DraftNotificationPublisher;
+import com.example.draft.application.notification.DraftNotificationService;
 import com.example.draft.domain.ApprovalGroup;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
@@ -43,7 +42,7 @@ public class DraftApplicationService {
     private final DraftFormTemplateRepository formTemplateRepository;
     private final ApprovalGroupRepository approvalGroupRepository;
     private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
-    private final DraftNotificationPublisher notificationPublisher;
+    private final DraftNotificationService notificationService;
     private final Clock clock;
 
     public DraftApplicationService(DraftRepository draftRepository,
@@ -51,14 +50,14 @@ public class DraftApplicationService {
                                    DraftFormTemplateRepository formTemplateRepository,
                                    ApprovalGroupRepository approvalGroupRepository,
                                    ApprovalGroupMemberRepository approvalGroupMemberRepository,
-                                   DraftNotificationPublisher notificationPublisher,
+                                   DraftNotificationService notificationService,
                                    Clock clock) {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
         this.formTemplateRepository = formTemplateRepository;
         this.approvalGroupRepository = approvalGroupRepository;
         this.approvalGroupMemberRepository = approvalGroupMemberRepository;
-        this.notificationPublisher = notificationPublisher;
+        this.notificationService = notificationService;
         this.clock = clock;
     }
 
@@ -229,16 +228,6 @@ public class DraftApplicationService {
     }
 
     private void publish(String action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {
-        notificationPublisher.publish(new DraftNotificationPayload(
-                draft.getId(),
-                action,
-                actor,
-                draft.getOrganizationCode(),
-                draft.getBusinessFeatureCode(),
-                stepId,
-                delegatedTo,
-                comment,
-                now()
-        ));
+        notificationService.notify(action, draft, actor, stepId, delegatedTo, comment, now());
     }
 }

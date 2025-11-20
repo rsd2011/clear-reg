@@ -42,7 +42,7 @@ import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
 import com.example.draft.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
-import com.example.draft.application.notification.DraftNotificationPublisher;
+import com.example.draft.application.notification.DraftNotificationService;
 import com.example.common.security.RowScope;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,7 +67,7 @@ class DraftApplicationServiceTest {
     private ApprovalGroupMemberRepository approvalGroupMemberRepository;
 
     @Mock
-    private DraftNotificationPublisher notificationPublisher;
+    private DraftNotificationService notificationService;
 
     private Clock clock;
 
@@ -78,7 +78,7 @@ class DraftApplicationServiceTest {
     void setUp() {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
-                approvalGroupRepository, approvalGroupMemberRepository, notificationPublisher, clock);
+                approvalGroupRepository, approvalGroupMemberRepository, notificationService, clock);
     }
 
     @Test
