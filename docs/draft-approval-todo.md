@@ -27,7 +27,7 @@
 | T10 | 프런트/계약 | Nuxt4 전환 대비 UI 계약서(작성/조회) 정의 | High | ✅ OpenAPI 초안 작성(`docs/draft/openapi-draft-approval.md`); SSR 미사용 Nuxt4 SPA 기준 |
 | T11 | API/컨트롤러 | 뷰 제거 및 JSON 전용 엔드포인트 정돈 | High | ✅ Thymeleaf 컨트롤러/템플릿 삭제, `/drafts` 라우팅 제거, OpenAPI로 응답 스키마 고정 |
 | T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | ✅ 이벤트/로그/Kafka 퍼블리셔 플러그형 구현(`draft.notification.publisher`), Outbox 이벤트 리스너 연계 |
-| T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
+| T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 진행: 기본/글로벌 템플릿 자동 선택·예외 케이스 단위 테스트 추가(`DraftApplicationServiceTest`), 커버리지 유지. 다음: 컨트롤러 통합 및 동시성(락) 시나리오 보강 |
 | T14 | 보안 | 열람/권한 세분화 | High | ✅ RowScope 기본 ORG/OWN승격, 열람 권한(작성자/결재선/위임/참조/AUDIT) 검증, API 호출자 username 기반 체크, 테스트 통과 |
 | T15 | 데이터/성능 | 검색 필터·인덱스 보강 | Medium | ✅ 목록 조회 필터(status/business/createdBy/title) 추가 및 OpenAPI 반영 |
 | T16 | 감사 | 감사 로그/감사 이벤트 | Medium | ✅ 감사 이벤트 퍼블리셔 + 감사 이력 API(`/api/drafts/{id}/audit` 필터: action/actor/from/to), IP/UA 필드 포함, `draft.audit.publisher=event|kafka|siem|outbox` 지원, outbox 테이블/릴레이, 신뢰 프록시 헤더 검증, 보존/TTL 정책 명시 |
