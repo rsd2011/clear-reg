@@ -22,7 +22,7 @@
 | T5 | 서비스 | 회수/재상신/전달 플로우 추가 | High | ✅ 회수/재상신/위임(Delegation) 완료. 위임 대상 기록 및 이력 추가 |
 | T6 | 서비스 | 기본 결재선 자동 선택 | Medium | T1 선행; 조직/업무별 기본 템플릿 조회, 제한적 커스터마이즈 |
 | T7 | 서비스 | 참조자 등록 및 알림 트리거 | High | T2 선행; 생성/상신 시 참조자 등록 및 이벤트 발행 |
-| T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ApprovalGroup/LineTemplate/FormTemplate CRUD, UI/REST |
+| T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ✅ DraftTemplateAdminController JSON API 추가 (그룹/결재선/양식 CRUD) |
 | T9 | API/컨트롤러 | 이력/참조 조회 API | Medium | DraftHistory, 참조자 목록/열람 로그 제공; T2 이후 |
 | T10 | 프런트/계약 | Nuxt4 전환 대비 UI 계약서(작성/조회) 정의 | High | ✅ OpenAPI 초안 작성(`docs/draft/openapi-draft-approval.md`); SSR 미사용 Nuxt4 SPA 기준 |
 | T11 | API/컨트롤러 | 뷰 제거 및 JSON 전용 엔드포인트 정돈 | High | 기존 Thymeleaf 컨트롤러/템플릿 삭제, `/drafts` 페이지 라우팅 제거, API 응답 스키마 고정 |

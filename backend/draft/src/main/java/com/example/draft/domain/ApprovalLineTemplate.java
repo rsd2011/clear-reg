@@ -97,6 +97,12 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
         this.updatedAt = now;
     }
 
+    public void replaceSteps(List<ApprovalTemplateStep> newSteps) {
+        this.steps.clear();
+        this.steps.addAll(newSteps);
+        this.steps.sort(Comparator.comparingInt(ApprovalTemplateStep::getStepOrder));
+    }
+
     public void addStep(int stepOrder, String approvalGroupCode, String description) {
         ApprovalTemplateStep step = new ApprovalTemplateStep(this, stepOrder, approvalGroupCode, description);
         this.steps.add(step);

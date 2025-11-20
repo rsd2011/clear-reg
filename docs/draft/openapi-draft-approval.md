@@ -153,6 +153,12 @@
 - 권한: `DRAFT_CREATE`
 - 응답: `DraftTemplateSuggestionResponse`
 
+### 7) 템플릿/그룹 관리 (Admin, Nuxt 콘솔 연동)
+- `POST /api/draft-admin/approval-groups` / `PUT /{id}` / `GET` (조직별 그룹 관리)
+- `POST /api/draft-admin/approval-line-templates` / `PUT /{id}` / `GET` (결재선 템플릿 + 스텝)
+- `POST /api/draft-admin/form-templates` / `PUT /{id}` / `GET` (폼 스키마/버전 관리)
+- 권한: `DRAFT_AUDIT` (관리자용)
+
 ## 주요 스키마 요약
 - `DraftResponse`
   - `id: UUID`

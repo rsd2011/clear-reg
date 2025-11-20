@@ -86,6 +86,14 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
         }
     }
 
+    public void update(String name, String schemaJson, boolean active, OffsetDateTime now) {
+        this.name = name;
+        this.schemaJson = schemaJson;
+        this.active = active;
+        this.version += 1;
+        this.updatedAt = now;
+    }
+
     public boolean matchesBusiness(String businessFeatureCode) {
         return this.businessType.equalsIgnoreCase(businessFeatureCode);
     }
