@@ -104,6 +104,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.submit(actor, now());
         publish("SUBMITTED", draft, actor, null, null, null);
+        audit("SUBMITTED", draft, actor, null, organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -118,6 +119,7 @@ public class DraftApplicationService {
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.approveStep(request.stepId(), actor, request.comment(), now());
         publish("APPROVED", draft, actor, request.stepId(), null, request.comment());
+        audit("APPROVED", draft, actor, request.comment(), organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -132,6 +134,7 @@ public class DraftApplicationService {
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
         publish("REJECTED", draft, actor, request.stepId(), null, request.comment());
+        audit("REJECTED", draft, actor, request.comment(), organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -141,6 +144,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.cancel(actor, now());
         publish("CANCELLED", draft, actor, null, null, null);
+        audit("CANCELLED", draft, actor, null, organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -150,6 +154,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.withdraw(actor, now());
         publish("WITHDRAWN", draft, actor, null, null, null);
+        audit("WITHDRAWN", draft, actor, null, organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -159,6 +164,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.resubmit(actor, now());
         publish("RESUBMITTED", draft, actor, null, null, null);
+        audit("RESUBMITTED", draft, actor, null, organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -174,6 +180,7 @@ public class DraftApplicationService {
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
         publish("DELEGATED", draft, actor, request.stepId(), delegatedTo, request.comment());
+        audit("DELEGATED", draft, actor, request.comment(), organizationCode);
         return DraftResponse.from(draft);
     }
 
@@ -276,6 +283,14 @@ public class DraftApplicationService {
 
     private void publish(String action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {
         notificationService.notify(action, draft, actor, stepId, delegatedTo, comment, now());
+    }
+
+    private void audit(String action, Draft draft, String actor, String comment, String organizationCode) {
+        // TODO: hook into central audit logger / outbox
+        String details = "%s by %s".formatted(action, actor);
+        draftHistoryRepository.save(
+                com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action, actor,
+                        comment != null ? comment : details, now()));
     }
 
     /**
