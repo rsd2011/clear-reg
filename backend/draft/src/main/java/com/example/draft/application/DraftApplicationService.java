@@ -16,9 +16,11 @@ import com.example.draft.application.request.DraftAttachmentRequest;
 import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
+import com.example.draft.application.notification.DraftNotificationPayload;
+import com.example.draft.application.notification.DraftNotificationPublisher;
+import com.example.draft.domain.ApprovalGroup;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
-import com.example.draft.domain.ApprovalGroup;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftAttachment;
 import com.example.draft.domain.DraftFormTemplate;
@@ -41,6 +43,7 @@ public class DraftApplicationService {
     private final DraftFormTemplateRepository formTemplateRepository;
     private final ApprovalGroupRepository approvalGroupRepository;
     private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
+    private final DraftNotificationPublisher notificationPublisher;
     private final Clock clock;
 
     public DraftApplicationService(DraftRepository draftRepository,
@@ -48,12 +51,14 @@ public class DraftApplicationService {
                                    DraftFormTemplateRepository formTemplateRepository,
                                    ApprovalGroupRepository approvalGroupRepository,
                                    ApprovalGroupMemberRepository approvalGroupMemberRepository,
+                                   DraftNotificationPublisher notificationPublisher,
                                    Clock clock) {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
         this.formTemplateRepository = formTemplateRepository;
         this.approvalGroupRepository = approvalGroupRepository;
         this.approvalGroupMemberRepository = approvalGroupMemberRepository;
+        this.notificationPublisher = notificationPublisher;
         this.clock = clock;
     }
 
@@ -88,6 +93,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.submit(actor, now());
+        publish("SUBMITTED", draft, actor, null, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -101,6 +107,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.approveStep(request.stepId(), actor, request.comment(), now());
+        publish("APPROVED", draft, actor, request.stepId(), null, request.comment());
         return DraftResponse.from(draft);
     }
 
@@ -114,6 +121,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
+        publish("REJECTED", draft, actor, request.stepId(), null, request.comment());
         return DraftResponse.from(draft);
     }
 
@@ -122,6 +130,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.cancel(actor, now());
+        publish("CANCELLED", draft, actor, null, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -130,6 +139,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.withdraw(actor, now());
+        publish("WITHDRAWN", draft, actor, null, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -138,6 +148,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.resubmit(actor, now());
+        publish("RESUBMITTED", draft, actor, null, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -152,6 +163,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
+        publish("DELEGATED", draft, actor, request.stepId(), delegatedTo, request.comment());
         return DraftResponse.from(draft);
     }
 
@@ -214,5 +226,19 @@ public class DraftApplicationService {
         if (!permitted) {
             throw new DraftAccessDeniedException("결재 권한이 없습니다.");
         }
+    }
+
+    private void publish(String action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {
+        notificationPublisher.publish(new DraftNotificationPayload(
+                draft.getId(),
+                action,
+                actor,
+                draft.getOrganizationCode(),
+                draft.getBusinessFeatureCode(),
+                stepId,
+                delegatedTo,
+                comment,
+                now()
+        ));
     }
 }
