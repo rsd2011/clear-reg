@@ -5,13 +5,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.reflect.Field;
 import java.util.Set;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.common.security.RowScope;
 
+@DisplayName("PermissionGroup 도메인 테스트")
 class PermissionGroupTest {
 
     @Test
+    @DisplayName("Given 권한/마스킹 규칙 When 조회하면 Then 해당 규칙이 반환된다")
     void givenAssignments_whenLookup_thenReturnMatchingPermission() throws Exception {
         PermissionGroup group = new PermissionGroup("AUDIT", "Auditor");
         Field assignments = PermissionGroup.class.getDeclaredField("assignments");

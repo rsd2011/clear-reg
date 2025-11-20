@@ -12,6 +12,8 @@ dependencies {
     implementation libs.spring.boot.starter.validation
     implementation libs.bundles.spring.boot.security
     implementation libs.jackson.databind
+    implementation libs.jackson.datatype.jsr310
+    implementation libs.jackson.dataformat.yaml
     implementation libs.jjwt.api
     runtimeOnly libs.jjwt.impl
     runtimeOnly libs.jjwt.jackson
@@ -20,6 +22,7 @@ dependencies {
     testCompileOnly libs.lombok
     testAnnotationProcessor libs.lombok
     testImplementation libs.bundles.spring.test
+    testImplementation libs.h2.database
     testImplementation libs.spring.boot.testcontainers
     testImplementation libs.testcontainers.junit
     testImplementation libs.junit.platform.launcher

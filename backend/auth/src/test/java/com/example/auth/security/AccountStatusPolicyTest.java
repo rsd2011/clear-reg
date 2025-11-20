@@ -16,7 +16,7 @@ import com.example.auth.config.AuthPolicyProperties;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
 
-@DisplayName("AccountStatusPolicy")
+@DisplayName("AccountStatusPolicy 테스트")
 class AccountStatusPolicyTest {
 
     @Mock
@@ -43,7 +43,7 @@ class AccountStatusPolicyTest {
     }
 
     @Test
-    @DisplayName("Given locked account When ensureLoginAllowed Then throw")
+    @DisplayName("Given 계정이 잠금 상태일 때 When ensureLoginAllowed 호출 Then 예외를 던진다")
     void givenLockedAccountWhenEnsureThenThrow() {
         UserAccount account = UserAccount.builder()
                 .username("locked")
@@ -57,7 +57,7 @@ class AccountStatusPolicyTest {
     }
 
     @Test
-    @DisplayName("Given inactive account When ensureLoginAllowed Then throw")
+    @DisplayName("Given 비활성화 계정 When ensureLoginAllowed 호출 Then 예외를 던진다")
     void givenInactiveAccountWhenEnsureThenThrow() {
         UserAccount account = UserAccount.builder()
                 .username("inactive")
@@ -71,7 +71,7 @@ class AccountStatusPolicyTest {
     }
 
     @Test
-    @DisplayName("Given failed login When onFailedLogin Then lock account")
+    @DisplayName("Given 로그인 실패 When onFailedLogin 호출 Then 계정을 잠근다")
     void givenFailedLoginWhenOnFailedLoginThenLock() {
         UserAccount account = UserAccount.builder()
                 .username("user")
@@ -85,7 +85,7 @@ class AccountStatusPolicyTest {
     }
 
     @Test
-    @DisplayName("Given locked account When onSuccessfulLogin Then unlock")
+    @DisplayName("Given 잠금 계정 When onSuccessfulLogin 호출 Then 계정을 해제한다")
     void givenLockedAccountWhenSuccessThenUnlock() {
         UserAccount account = UserAccount.builder()
                 .username("user")
@@ -101,7 +101,7 @@ class AccountStatusPolicyTest {
     }
 
     @Test
-    @DisplayName("Given expired password When ensureLoginAllowed Then throw")
+    @DisplayName("Given 비밀번호가 만료되었을 때 When ensureLoginAllowed 호출 Then 예외를 던진다")
     void givenExpiredPasswordWhenEnsureThenThrow() {
         UserAccount account = UserAccount.builder()
                 .username("expired")

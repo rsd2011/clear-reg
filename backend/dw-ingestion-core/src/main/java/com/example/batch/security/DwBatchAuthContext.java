@@ -1,0 +1,31 @@
+package com.example.batch.security;
+
+import java.util.Map;
+
+import com.example.auth.permission.ActionCode;
+import com.example.auth.permission.FeatureCode;
+import com.example.auth.permission.context.AuthContext;
+import com.example.common.security.RowScope;
+
+/**
+ * Provides a stable {@link AuthContext} for DW 배치 및 Quartz 작업.
+ */
+public final class DwBatchAuthContext {
+
+    private static final AuthContext DW_SYSTEM_CONTEXT = new AuthContext(
+            "dw-batch",
+            "ROOT",
+            "DEFAULT",
+            FeatureCode.HR_IMPORT,
+            ActionCode.UPDATE,
+            RowScope.ALL,
+            Map.of()
+    );
+
+    private DwBatchAuthContext() {
+    }
+
+    public static AuthContext systemContext() {
+        return DW_SYSTEM_CONTEXT;
+    }
+}

@@ -19,7 +19,7 @@ import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.LoginRequest;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ActiveDirectoryAuthenticationStrategy")
+@DisplayName("ActiveDirectoryAuthenticationStrategy 테스트")
 class ActiveDirectoryAuthenticationStrategyTest {
 
     @Mock
@@ -36,7 +36,7 @@ class ActiveDirectoryAuthenticationStrategyTest {
     }
 
     @Test
-    @DisplayName("Given valid AD user When authenticate Then return account")
+    @DisplayName("Given 유효한 AD 사용자 When authenticate 호출 Then UserAccount를 반환한다")
     void givenValidUserWhenAuthenticateThenReturnAccount() {
         var account = UserAccount.builder()
                 .username("ad-user")
@@ -52,7 +52,7 @@ class ActiveDirectoryAuthenticationStrategyTest {
     }
 
     @Test
-    @DisplayName("Given invalid AD credentials When authenticate Then throw exception")
+    @DisplayName("Given 잘못된 AD 자격 When authenticate 호출 Then InvalidCredentialsException을 던진다")
     void givenInvalidCredentialsWhenAuthenticateThenThrow() {
         given(activeDirectoryClient.authenticate("ad-user", "bad")).willReturn(false);
 

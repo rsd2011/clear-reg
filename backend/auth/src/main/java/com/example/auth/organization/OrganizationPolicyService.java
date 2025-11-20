@@ -5,30 +5,34 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
+import com.example.auth.organization.OrganizationPolicyCache.OrganizationPolicySnapshot;
+
 @Service
 public class OrganizationPolicyService {
 
-    private final OrganizationPolicyRepository repository;
+    private final OrganizationPolicyCache cache;
 
-    public OrganizationPolicyService(OrganizationPolicyRepository repository) {
-        this.repository = repository;
+    public OrganizationPolicyService(OrganizationPolicyCache cache) {
+        this.cache = cache;
     }
 
     public String defaultPermissionGroup(String organizationCode) {
-        return repository.findByOrganizationCode(organizationCode)
-                .map(OrganizationPolicy::getDefaultPermissionGroupCode)
-                .orElse("DEFAULT");
+        return policy(organizationCode).defaultPermissionGroupCode();
     }
 
     public List<String> approvalFlow(String organizationCode) {
-        return repository.findByOrganizationCode(organizationCode)
-                .map(OrganizationPolicy::getApprovalFlow)
-                .orElse(List.of());
+        return policy(organizationCode).approvalFlow();
     }
 
     public Set<String> availableGroups(String organizationCode) {
-        return repository.findByOrganizationCode(organizationCode)
-                .map(OrganizationPolicy::getAdditionalPermissionGroups)
-                .orElse(Set.of());
+        return policy(organizationCode).additionalPermissionGroups();
+    }
+
+    public void evictPolicy(String organizationCode) {
+        cache.evict(organizationCode);
+    }
+
+    private OrganizationPolicySnapshot policy(String organizationCode) {
+        return cache.fetch(organizationCode);
     }
 }

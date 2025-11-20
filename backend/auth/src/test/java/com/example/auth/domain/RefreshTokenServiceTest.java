@@ -23,7 +23,7 @@ import com.example.auth.config.SessionPolicyProperties;
 import com.example.auth.security.JwtProperties;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("RefreshTokenService")
+@DisplayName("RefreshTokenService 테스트")
 class RefreshTokenServiceTest {
 
     @Mock

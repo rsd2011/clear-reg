@@ -1,0 +1,89 @@
+permissionGroups:
+  - code: DEFAULT
+    name: 기본 사용자
+    description: 일반 직원이 사용하는 표준 권한 그룹
+    defaultRowScope: OWN
+    assignments:
+      - feature: ORGANIZATION
+        action: READ
+        rowScope: OWN
+      - feature: EMPLOYEE
+        action: READ
+        rowScope: ORG
+        condition: "roles.contains('HR_VIEWER')"
+      - feature: NOTICE
+        action: READ
+        rowScope: ALL
+      - feature: NOTICE
+        action: DRAFT_CREATE
+        rowScope: OWN
+      - feature: FILE
+        action: READ
+        rowScope: OWN
+      - feature: FILE
+        action: DOWNLOAD
+        rowScope: OWN
+      - feature: ALERT
+        action: READ
+        rowScope: OWN
+      - feature: COMMON_CODE
+        action: READ
+        rowScope: ALL
+      - feature: DRAFT
+        action: DRAFT_READ
+        rowScope: OWN
+    maskRules:
+      - tag: ORG_NAME
+        maskWith: "***"
+        requiredAction: UNMASK
+        audit: true
+  - code: AUDIT
+    name: 감사지원
+    description: 감사를 수행하는 전사 감사팀
+    defaultRowScope: ALL
+    assignments:
+      - feature: AUDIT_LOG
+        action: READ
+        rowScope: ALL
+      - feature: ORGANIZATION
+        action: READ
+        rowScope: ALL
+      - feature: EMPLOYEE
+        action: READ
+        rowScope: ORG
+        condition: "organizationCode == 'ROOT'"
+      - feature: NOTICE
+        action: UPDATE
+        rowScope: ALL
+      - feature: FILE
+        action: READ
+        rowScope: ALL
+      - feature: FILE
+        action: DOWNLOAD
+        rowScope: ALL
+      - feature: FILE
+        action: UPLOAD
+        rowScope: ALL
+      - feature: FILE
+        action: UPDATE
+        rowScope: ALL
+      - feature: FILE
+        action: DELETE
+        rowScope: ALL
+      - feature: ALERT
+        action: UPDATE
+        rowScope: ALL
+      - feature: COMMON_CODE
+        action: UPDATE
+        rowScope: ALL
+      - feature: NOTICE
+        action: DRAFT_CREATE
+        rowScope: ORG
+      - feature: DRAFT
+        action: DRAFT_AUDIT
+        rowScope: ALL
+    maskRules:
+      - tag: SALARY
+        maskWith: "***"
+        requiredAction: UNMASK
+        audit: true

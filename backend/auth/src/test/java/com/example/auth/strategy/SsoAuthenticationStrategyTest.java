@@ -17,7 +17,7 @@ import com.example.auth.dto.LoginRequest;
 import com.example.auth.sso.SsoClient;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("SsoAuthenticationStrategy")
+@DisplayName("SsoAuthenticationStrategy 테스트")
 class SsoAuthenticationStrategyTest {
 
     @Mock
@@ -34,7 +34,7 @@ class SsoAuthenticationStrategyTest {
     }
 
     @Test
-    @DisplayName("Given SSO token When authenticate Then resolve username")
+    @DisplayName("Given SSO 토큰 When authenticate 호출 Then 사용자 이름을 해석한다")
     void givenTokenWhenAuthenticateThenResolveUsername() {
         var account = UserAccount.builder()
                 .username("test-user")

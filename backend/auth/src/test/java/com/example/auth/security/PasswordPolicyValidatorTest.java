@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.config.AuthPolicyProperties;
 
-@DisplayName("PasswordPolicyValidator")
+@DisplayName("PasswordPolicyValidator 테스트")
 class PasswordPolicyValidatorTest {
 
     private final PasswordPolicyValidator validator;
@@ -43,21 +43,21 @@ class PasswordPolicyValidatorTest {
     }
 
     @Test
-    @DisplayName("Given weak password When validate Then throw")
+    @DisplayName("Given 약한 비밀번호 When validate 호출 Then 예외를 던진다")
     void givenWeakPasswordWhenValidateThenThrow() {
         assertThatThrownBy(() -> validator.validate("short"))
                 .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test
-    @DisplayName("Given strong password When validate Then pass")
+    @DisplayName("Given 강한 비밀번호 When validate 호출 Then 검증을 통과한다")
     void givenStrongPasswordWhenValidateThenPass() {
         assertThatCode(() -> validator.validate("Abcd!2345"))
                 .doesNotThrowAnyException();
     }
 
     @Test
-    @DisplayName("Given disabled policy When validate Then skip checks")
+    @DisplayName("Given 정책 비활성화 When validate 호출 Then 검사를 생략한다")
     void givenDisabledPolicyWhenValidateThenSkip() {
         PolicyToggleProvider disabled = new PolicyToggleProvider() {
             @Override

@@ -6,5 +6,9 @@ public record PolicyView(boolean passwordPolicyEnabled,
                          boolean passwordHistoryEnabled,
                          boolean accountLockEnabled,
                          List<String> enabledLoginTypes,
+                         long maxFileSizeBytes,
+                         List<String> allowedFileExtensions,
+                         boolean strictMimeValidation,
+                         int fileRetentionDays,
                          String yaml) {
 }

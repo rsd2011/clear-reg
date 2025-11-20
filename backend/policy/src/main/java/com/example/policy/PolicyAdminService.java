@@ -109,6 +109,10 @@ public class PolicyAdminService {
                 state.passwordHistoryEnabled(),
                 state.accountLockEnabled(),
                 state.enabledLoginTypes(),
+                state.maxFileSizeBytes(),
+                state.allowedFileExtensions(),
+                state.strictMimeValidation(),
+                state.fileRetentionDays(),
                 snapshot.yaml());
     }
 
@@ -118,29 +122,49 @@ public class PolicyAdminService {
         private final boolean passwordHistoryEnabled;
         private final boolean accountLockEnabled;
         private final List<String> enabledLoginTypes;
+        private final long maxFileSizeBytes;
+        private final List<String> allowedFileExtensions;
+        private final boolean strictMimeValidation;
+        private final int fileRetentionDays;
 
         private PolicyState(boolean passwordPolicyEnabled,
                             boolean passwordHistoryEnabled,
                             boolean accountLockEnabled,
-                            List<String> enabledLoginTypes) {
+                            List<String> enabledLoginTypes,
+                            long maxFileSizeBytes,
+                            List<String> allowedFileExtensions,
+                            boolean strictMimeValidation,
+                            int fileRetentionDays) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
             this.passwordHistoryEnabled = passwordHistoryEnabled;
             this.accountLockEnabled = accountLockEnabled;
             this.enabledLoginTypes = List.copyOf(enabledLoginTypes);
+            this.maxFileSizeBytes = maxFileSizeBytes;
+            this.allowedFileExtensions = List.copyOf(allowedFileExtensions == null ? List.of() : allowedFileExtensions);
+            this.strictMimeValidation = strictMimeValidation;
+            this.fileRetentionDays = fileRetentionDays;
         }
 
         public static PolicyState from(PolicyToggleSettings settings) {
             return new PolicyState(settings.passwordPolicyEnabled(),
                     settings.passwordHistoryEnabled(),
                     settings.accountLockEnabled(),
-                    settings.enabledLoginTypes());
+                    settings.enabledLoginTypes(),
+                    settings.maxFileSizeBytes(),
+                    settings.allowedFileExtensions(),
+                    settings.strictMimeValidation(),
+                    settings.fileRetentionDays());
         }
 
         public PolicyToggleSettings toSettings() {
             return new PolicyToggleSettings(passwordPolicyEnabled,
                     passwordHistoryEnabled,
                     accountLockEnabled,
-                    enabledLoginTypes);
+                    enabledLoginTypes,
+                    maxFileSizeBytes,
+                    allowedFileExtensions,
+                    strictMimeValidation,
+                    fileRetentionDays);
         }
 
         public PolicyState merge(PolicyUpdateRequest request) {
@@ -148,7 +172,16 @@ public class PolicyAdminService {
             boolean newPasswordHistoryEnabled = request.passwordHistoryEnabled() != null ? request.passwordHistoryEnabled() : passwordHistoryEnabled;
             boolean newAccountLockEnabled = request.accountLockEnabled() != null ? request.accountLockEnabled() : accountLockEnabled;
             List<String> newTypes = request.enabledLoginTypes() != null ? request.enabledLoginTypes() : enabledLoginTypes;
-            return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes);
+            long newMaxFileSize = request.maxFileSizeBytes() != null && request.maxFileSizeBytes() > 0
+                    ? request.maxFileSizeBytes()
+                    : maxFileSizeBytes;
+            List<String> newExtensions = request.allowedFileExtensions() != null
+                    ? request.allowedFileExtensions().stream().map(String::toLowerCase).toList()
+                    : allowedFileExtensions;
+            boolean newStrictMime = request.strictMimeValidation() != null ? request.strictMimeValidation() : strictMimeValidation;
+            int newRetention = request.fileRetentionDays() != null ? request.fileRetentionDays() : fileRetentionDays;
+            return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes,
+                    newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0));
         }
 
         public boolean passwordPolicyEnabled() {
@@ -165,6 +198,22 @@ public class PolicyAdminService {
 
         public List<String> enabledLoginTypes() {
             return enabledLoginTypes;
+        }
+
+        public long maxFileSizeBytes() {
+            return maxFileSizeBytes;
+        }
+
+        public List<String> allowedFileExtensions() {
+            return allowedFileExtensions;
+        }
+
+        public boolean strictMimeValidation() {
+            return strictMimeValidation;
+        }
+
+        public int fileRetentionDays() {
+            return fileRetentionDays;
         }
     }
 

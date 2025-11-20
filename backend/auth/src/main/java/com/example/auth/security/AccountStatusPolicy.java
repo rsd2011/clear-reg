@@ -2,6 +2,7 @@ package com.example.auth.security;
 
 import java.time.Instant;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,6 +10,7 @@ import com.example.auth.config.AuthPolicyProperties;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
 import com.example.auth.InvalidCredentialsException;
+import com.example.common.cache.CacheNames;
 
 @Component
 public class AccountStatusPolicy {
@@ -41,6 +43,7 @@ public class AccountStatusPolicy {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
     public void onSuccessfulLogin(UserAccount account) {
         if (!policyToggleProvider.isAccountLockEnabled()) {
             return;
@@ -53,6 +56,7 @@ public class AccountStatusPolicy {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
     public void onFailedLogin(UserAccount account) {
         if (!policyToggleProvider.isAccountLockEnabled()) {
             throw new InvalidCredentialsException();
@@ -67,12 +71,14 @@ public class AccountStatusPolicy {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
     public void deactivate(UserAccount account) {
         account.deactivate();
         repository.save(account);
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
     public void activate(UserAccount account) {
         account.activate();
         repository.save(account);

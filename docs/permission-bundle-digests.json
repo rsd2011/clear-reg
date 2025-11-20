@@ -1,0 +1,14 @@
+[
+  {
+    "path": "backend/auth/src/main/resources/permission-groups.yml",
+    "description": "Production permission catalog",
+    "updatedAt": "2024-10-28",
+    "sha256": "50bad96031c640145cd1c341d0e1ceb892a494860cbd5ed4b7e2b2bfca8ea710"
+  },
+  {
+    "path": "backend/auth/src/test/resources/permissions/test-permission-groups.yml",
+    "description": "Test permission catalog used in auth module tests",
+    "updatedAt": "2024-10-28",
+    "sha256": "af9c174e024122645c1b61414c08b705b9fb45a7fe448c4da8ed8655712c21c7"
+  }
+]

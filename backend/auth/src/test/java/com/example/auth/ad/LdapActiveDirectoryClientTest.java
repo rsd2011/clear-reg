@@ -15,14 +15,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ldap.core.LdapTemplate;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("LdapActiveDirectoryClient")
+@DisplayName("LdapActiveDirectoryClient 테스트")
 class LdapActiveDirectoryClientTest {
 
     @Mock
     private LdapTemplate ldapTemplate;
 
     @Test
-    @DisplayName("Given LDAP template When authenticate Then delegate to template")
+    @DisplayName("Given LDAP 템플릿 When authenticate 호출 Then 템플릿으로 위임한다")
     void givenTemplateWhenAuthenticateThenDelegate() {
         given(ldapTemplate.authenticate(anyString(), anyString(), anyString())).willReturn(true);
         LdapActiveDirectoryClient client = new LdapActiveDirectoryClient(Optional.of(ldapTemplate));
@@ -31,7 +31,7 @@ class LdapActiveDirectoryClientTest {
     }
 
     @Test
-    @DisplayName("Given no template When authenticate Then use fallback")
+    @DisplayName("Given 템플릿이 없을 때 When authenticate 호출 Then 폴백 인증을 사용한다")
     void givenNoTemplateWhenAuthenticateThenFallback() {
         LdapActiveDirectoryClient client = new LdapActiveDirectoryClient(Optional.empty());
 

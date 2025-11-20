@@ -11,7 +11,15 @@ public enum ActionCode {
     DELETE,
     APPROVE,
     EXPORT,
-    UNMASK;
+    UNMASK,
+    UPLOAD,
+    DOWNLOAD,
+    DRAFT_CREATE,
+    DRAFT_SUBMIT,
+    DRAFT_APPROVE,
+    DRAFT_READ,
+    DRAFT_CANCEL,
+    DRAFT_AUDIT;
 
     public boolean satisfies(ActionCode required) {
         if (required == null) {
@@ -24,6 +32,11 @@ public enum ActionCode {
     }
 
     public boolean isDataFetch() {
-        return this == READ || this == EXPORT || this == UNMASK;
+        return this == READ
+                || this == EXPORT
+                || this == UNMASK
+                || this == DOWNLOAD
+                || this == DRAFT_READ
+                || this == DRAFT_AUDIT;
     }
 }

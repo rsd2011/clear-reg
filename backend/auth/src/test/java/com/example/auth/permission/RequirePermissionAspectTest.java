@@ -10,6 +10,7 @@ import java.util.Set;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,6 +23,7 @@ import com.example.auth.permission.context.PermissionDecision;
 import com.example.common.security.RowScope;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("RequirePermissionAspect 테스트")
 class RequirePermissionAspectTest {
 
     @Mock
@@ -46,6 +48,7 @@ class RequirePermissionAspectTest {
     }
 
     @Test
+    @DisplayName("Given @RequirePermission 메서드 When 실행하면 Then 컨텍스트를 설정하고 해제한다")
     void givenAnnotatedMethod_whenProceeding_thenContextBoundAndCleared() throws Throwable {
         given(joinPoint.getSignature()).willReturn(methodSignature);
         given(methodSignature.getMethod()).willReturn(SecuredComponent.class.getDeclaredMethod("annotated"));
@@ -62,6 +65,7 @@ class RequirePermissionAspectTest {
     }
 
     @Test
+    @DisplayName("Given 대상 메서드가 예외를 던질 때 When enforce 호출 Then 감사 로그와 함께 예외를 전파한다")
     void givenProceedingThrows_whenEnforce_thenAuditDeniedAndPropagate() throws Throwable {
         given(joinPoint.getSignature()).willReturn(methodSignature);
         given(methodSignature.getMethod()).willReturn(SecuredComponent.class.getDeclaredMethod("annotated"));

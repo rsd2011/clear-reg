@@ -51,7 +51,7 @@ import com.example.server.security.RestAuthenticationEntryPoint;
                         RestAuthenticationEntryPoint.class, RestAccessDeniedHandler.class,
                         JpaConfig.class}))
 @AutoConfigureMockMvc(addFilters = false)
-@DisplayName("AuthController")
+@DisplayName("AuthController 테스트")
 class AuthControllerTest {
 
     @Autowired
@@ -64,7 +64,7 @@ class AuthControllerTest {
     private AuthService authService;
 
     @Test
-    @DisplayName("Given login request When posting to /api/auth/login Then return JWT payload")
+    @DisplayName("Given 로그인 요청 When /api/auth/login 호출 Then JWT 응답을 반환한다")
     void givenLoginRequestWhenPostThenReturnTokens() throws Exception {
         TokenResponse tokens = new TokenResponse("access", Instant.now().plusSeconds(60), "refresh", Instant.now().plusSeconds(120));
         given(authService.login(any())).willReturn(new LoginResponse("tester", LoginType.PASSWORD, tokens));
@@ -81,7 +81,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Given refresh request When posting to /api/auth/refresh Then return refreshed tokens")
+    @DisplayName("Given 리프레시 요청 When /api/auth/refresh 호출 Then 갱신된 토큰을 반환한다")
     void givenRefreshRequestWhenPostThenReturnNewTokens() throws Exception {
         TokenResponse tokens = new TokenResponse("new-access", Instant.now().plusSeconds(60), "new-refresh", Instant.now().plusSeconds(120));
         given(authService.refreshTokens("refresh-token")).willReturn(tokens);
@@ -94,7 +94,7 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Given logout request When posting to /api/auth/logout Then return 204")
+    @DisplayName("Given 로그아웃 요청 When /api/auth/logout 호출 Then 204 응답을 반환한다")
     void givenLogoutRequestWhenPostThenReturnNoContent() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -104,7 +104,7 @@ class AuthControllerTest {
 
     @Test
     @WithMockUser(username = "tester", roles = "USER")
-    @DisplayName("Given password change request When authenticated user calls endpoint Then return 204")
+    @DisplayName("Given 비밀번호 변경 요청 When 인증된 사용자가 호출하면 Then 204 응답을 반환한다")
     void givenPasswordChangeWhenAuthenticatedThenReturnNoContent() throws Exception {
         mockMvc.perform(patch("/api/auth/password")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -116,7 +116,7 @@ class AuthControllerTest {
 
     @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
-    @DisplayName("Given account status patch When admin calls endpoint Then delegate to service")
+    @DisplayName("Given 계정 상태 변경 요청 When 관리자가 호출하면 Then 서비스로 위임한다")
     void givenAccountStatusPatchWhenAdminThenDelegate() throws Exception {
         AccountStatusChangeRequest request = new AccountStatusChangeRequest("user1", false);
 

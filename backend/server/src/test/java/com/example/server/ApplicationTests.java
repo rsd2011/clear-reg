@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-@DisplayName("Application context")
+@DisplayName("서버 애플리케이션 컨텍스트 테스트")
 class ApplicationTests {
 
     @Test
-    @DisplayName("Given application When starting Then context loads")
+    @DisplayName("Given 애플리케이션 When 시작하면 Then 컨텍스트가 정상 로드된다")
     void contextLoads() {
     }
 }

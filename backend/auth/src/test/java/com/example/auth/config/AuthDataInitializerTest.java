@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
+import com.example.auth.domain.UserAccountService;
 import com.example.auth.security.PasswordHistoryService;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,13 +33,18 @@ class AuthDataInitializerTest {
     @Mock
     private PasswordHistoryService passwordHistoryService;
 
+    @Mock
+    private UserAccountService userAccountService;
+
     private AuthDataInitializer initializer;
 
     @BeforeEach
     void setUp() {
         org.mockito.Mockito.lenient().when(passwordEncoder.encode(any()))
                 .thenAnswer(invocation -> "encoded-" + invocation.getArgument(0));
-        initializer = new AuthDataInitializer(repository, passwordEncoder, passwordHistoryService);
+        org.mockito.Mockito.lenient().when(userAccountService.save(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        initializer = new AuthDataInitializer(repository, passwordEncoder, passwordHistoryService, userAccountService);
     }
 
     @Test
@@ -49,7 +55,7 @@ class AuthDataInitializerTest {
         initializer.run();
 
         ArgumentCaptor<UserAccount> captor = ArgumentCaptor.forClass(UserAccount.class);
-        verify(repository, org.mockito.Mockito.times(3)).save(captor.capture());
+        verify(userAccountService, org.mockito.Mockito.times(3)).save(captor.capture());
         assertThat(captor.getAllValues()).hasSize(3);
     }
 
@@ -60,6 +66,6 @@ class AuthDataInitializerTest {
 
         initializer.run();
 
-        verify(repository, never()).save(any());
+        verify(userAccountService, never()).save(any());
     }
 }

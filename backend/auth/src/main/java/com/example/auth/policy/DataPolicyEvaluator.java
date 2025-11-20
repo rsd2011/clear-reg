@@ -2,19 +2,17 @@ package com.example.auth.policy;
 
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FieldMaskRule;
 import com.example.auth.permission.context.AuthContext;
 import com.example.auth.permission.context.AuthContextHolder;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class DataPolicyEvaluator {
-
-    private static final Logger log = LoggerFactory.getLogger(DataPolicyEvaluator.class);
 
     public Object mask(String tag, Object rawValue) {
         Optional<AuthContext> maybeContext = AuthContextHolder.current();

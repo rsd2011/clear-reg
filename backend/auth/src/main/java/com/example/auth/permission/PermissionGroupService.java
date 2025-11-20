@@ -6,18 +6,29 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationEventPublisherAware;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 
+import com.example.auth.permission.event.PermissionSetChangedEvent;
+
 @Service
-public class PermissionGroupService {
+public class PermissionGroupService implements ApplicationEventPublisherAware {
 
     private static final Duration CACHE_TTL = Duration.ofMinutes(5);
 
     private final PermissionGroupRepository repository;
     private final Map<String, CachedPermissionGroup> cache = new ConcurrentHashMap<>();
+    private ApplicationEventPublisher eventPublisher;
 
     public PermissionGroupService(PermissionGroupRepository repository) {
         this.repository = repository;
+    }
+
+    @Override
+    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        this.eventPublisher = applicationEventPublisher;
     }
 
     public PermissionGroup getByCodeOrThrow(String code) {
@@ -34,6 +45,13 @@ public class PermissionGroupService {
 
     public void evict(String code) {
         cache.remove(code);
+        publishChange(null);
+    }
+
+    public void publishChange(@Nullable String principalId) {
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new PermissionSetChangedEvent(principalId));
+        }
     }
 
     private static final class CachedPermissionGroup {

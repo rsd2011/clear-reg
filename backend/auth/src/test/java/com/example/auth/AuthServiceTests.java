@@ -30,9 +30,10 @@ import com.example.auth.security.AccountStatusPolicy;
 import com.example.auth.security.PasswordPolicyValidator;
 import com.example.auth.security.PolicyToggleProvider;
 import com.example.auth.strategy.AuthenticationStrategy;
+import com.example.auth.strategy.AuthenticationStrategyResolver;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AuthService")
+@DisplayName("AuthService 테스트")
 class AuthServiceTests {
 
     private AuthService authService;
@@ -59,12 +60,13 @@ class AuthServiceTests {
         properties.setAccessTokenSeconds(3600);
         properties.setRefreshTokenSeconds(7200);
         JwtTokenProvider provider = new JwtTokenProvider(properties);
-        this.authService = new AuthService(List.of(new StubStrategy()), provider, refreshTokenService,
+        AuthenticationStrategyResolver resolver = new AuthenticationStrategyResolver(List.of(new StubStrategy()));
+        this.authService = new AuthService(resolver, provider, refreshTokenService,
                 userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
     }
 
     @Test
-    @DisplayName("Given password login When authentication succeeds Then issue access and refresh tokens")
+    @DisplayName("Given 비밀번호 로그인 When 인증 성공 Then 액세스·리프레시 토큰을 발급한다")
     void givenPasswordLoginWhenAuthenticatedThenIssueTokens() {
         var user = UserAccount.builder()
                 .username("test")
@@ -87,7 +89,7 @@ class AuthServiceTests {
     }
 
     @Test
-    @DisplayName("Given unsupported login type When login requested Then throw InvalidCredentialsException")
+    @DisplayName("Given 지원하지 않는 로그인 타입 When 로그인 요청 Then InvalidCredentialsException을 던진다")
     void givenUnsupportedTypeWhenLoginThenThrow() {
         given(policyToggleProvider.enabledLoginTypes()).willReturn(List.of(LoginType.SSO));
 
@@ -96,7 +98,7 @@ class AuthServiceTests {
     }
 
     @Test
-    @DisplayName("Given disabled login type When login requested Then throw")
+    @DisplayName("Given 비활성화된 로그인 타입 When 로그인 요청 Then InvalidCredentialsException을 던진다")
     void givenDisabledTypeWhenLoginThenThrow() {
         given(policyToggleProvider.enabledLoginTypes()).willReturn(List.of(LoginType.SSO));
 
@@ -105,7 +107,7 @@ class AuthServiceTests {
     }
 
     @Test
-    @DisplayName("Given refresh token When rotate requested Then provide new token pair")
+    @DisplayName("Given 리프레시 토큰 When rotate 요청 Then 새 토큰 쌍을 반환한다")
     void givenRefreshTokenWhenRotateThenReturnNewPair() {
         var user = UserAccount.builder()
                 .username("test")
@@ -124,7 +126,7 @@ class AuthServiceTests {
     }
 
     @Test
-    @DisplayName("Given refresh token When logout Then revoke token")
+    @DisplayName("Given 리프레시 토큰 When 로그아웃 호출 Then 토큰을 폐기한다")
     void givenRefreshTokenWhenLogoutThenRevoke() {
         authService.logout("refresh-token");
 
@@ -132,7 +134,7 @@ class AuthServiceTests {
     }
 
     @Test
-    @DisplayName("Given valid credentials When changePassword Then enforce policies")
+    @DisplayName("Given 현재 비밀번호가 유효할 때 When changePassword 호출 Then 정책을 준수하며 변경한다")
     void givenValidCredentialsWhenChangePasswordThenUpdate() {
         UserAccount account = UserAccount.builder()
                 .username("test")
@@ -151,7 +153,7 @@ class AuthServiceTests {
     }
 
     @Test
-    @DisplayName("Given invalid current password When changePassword Then fail and lock")
+    @DisplayName("Given 현재 비밀번호가 틀릴 때 When changePassword 호출 Then 실패 후 계정을 잠근다")
     void givenInvalidCurrentPasswordWhenChangePasswordThenThrow() {
         UserAccount account = UserAccount.builder()
                 .username("test")

@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.testing.bdd.Scenario;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("PermissionGroupService 테스트")
 class PermissionGroupServiceTest {
 
     @Mock
@@ -31,6 +33,7 @@ class PermissionGroupServiceTest {
     }
 
     @Test
+    @DisplayName("Given 그룹 정보가 저장소에 있을 때 When 반복 조회하면 Then 캐시가 활용된다")
     void givenGroupInRepository_whenFetchingMultipleTimes_thenUsesCache() {
         PermissionGroup group = new PermissionGroup("AUDITOR", "Auditor");
         given(repository.findByCode("AUDITOR")).willReturn(Optional.of(group));
@@ -46,6 +49,7 @@ class PermissionGroupServiceTest {
     }
 
     @Test
+    @DisplayName("Given 존재하지 않는 그룹 When 조회하면 Then 예외를 던진다")
     void givenUnknownGroup_whenFetching_thenThrow() {
         given(repository.findByCode("MISSING")).willReturn(Optional.empty());
 
@@ -54,6 +58,7 @@ class PermissionGroupServiceTest {
     }
 
     @Test
+    @DisplayName("Given 캐시된 그룹 When evict 호출 후 재조회하면 Then 저장소를 다시 조회한다")
     void givenCache_whenEvicted_thenReloadFromRepository() {
         PermissionGroup group = new PermissionGroup("ANALYST", "Analyst");
         given(repository.findByCode("ANALYST")).willReturn(Optional.of(group));

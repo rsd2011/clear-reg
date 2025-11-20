@@ -7,19 +7,27 @@ dependencies {
     implementation platform(libs.spring.boot.bom)
     testImplementation platform(libs.spring.boot.bom)
 
-    implementation project(':backend:hr-core')
+    implementation project(':backend:dw-integration')
     implementation project(':backend:platform')
+    implementation project(':backend:auth')
+    implementation project(':backend:dw-ingestion-core')
+    implementation project(':backend:dw-gateway-client')
     implementation libs.spring.boot.starter
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.boot.starter.validation
     implementation libs.spring.boot.starter.cache
     implementation libs.spring.boot.starter.data.redis
+    implementation libs.spring.boot.starter.batch
+    implementation libs.spring.boot.starter.quartz
+    implementation libs.spring.boot.starter.actuator
 
     runtimeOnly libs.h2.database
 
     testImplementation libs.bundles.spring.test
+    testImplementation libs.spring.batch.test
     testImplementation libs.junit.platform.launcher
     testImplementation testFixtures(project(':backend:platform'))
+    testImplementation project(':backend:auth')
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

@@ -27,6 +27,18 @@ spring:
     username: ""
     password: ""
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 cache:
   redis:
     enabled: false
@@ -61,16 +73,31 @@ security:
       - SSO
       - AD
 
-hr:
+dw:
+  gateway:
+    client:
+      base-uri: ${DW_GATEWAY_BASE_URI:http://localhost:8090}
   ingestion:
     enabled: false
     batch-cron: "0 30 2 * * *"
     timezone: Asia/Seoul
-    incoming-dir: "${HR_INCOMING_DIR:build/hr/incoming}"
-    archive-dir: "${HR_ARCHIVE_DIR:build/hr/archive}"
-    error-dir: "${HR_ERROR_DIR:build/hr/error}"
+    incoming-dir: "${DW_INCOMING_DIR:build/dw/incoming}"
+    archive-dir: "${DW_ARCHIVE_DIR:build/dw/archive}"
+    error-dir: "${DW_ERROR_DIR:build/dw/error}"
     reconciliation-lookback: "30d"
     retention: "90d"
+    job-schedules:
+      - job-key: DW_INGESTION
+        enabled: true
+        cron-expression: "0 30 2 * * *"
+        timezone: Asia/Seoul
     database:
       enabled: false
       batch-size: 1000
+
+readmodel:
+  organization:
+    enabled: false
+    key-prefix: rm:org
+    tenant-id: default
+    ttl: 30m

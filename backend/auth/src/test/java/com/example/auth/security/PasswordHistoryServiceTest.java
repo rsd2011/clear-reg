@@ -22,7 +22,7 @@ import com.example.auth.domain.PasswordHistory;
 import com.example.auth.domain.PasswordHistoryRepository;
 import com.example.auth.domain.UserAccount;
 
-@DisplayName("PasswordHistoryService")
+@DisplayName("PasswordHistoryService 테스트")
 class PasswordHistoryServiceTest {
 
     @Mock
@@ -54,7 +54,7 @@ class PasswordHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("Given history When ensureNotReused Then throw on match")
+    @DisplayName("Given 비밀번호 이력 When ensureNotReused 호출 Then 중복 시 예외를 던진다")
     void givenHistoryWhenEnsureThenThrow() {
         PasswordHistory history = new PasswordHistory(user, "encoded");
         given(repository.findByUserOrderByChangedAtDesc(user)).willReturn(List.of(history));
@@ -65,7 +65,7 @@ class PasswordHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("Given new password When record Then prune extras")
+    @DisplayName("Given 새로운 비밀번호 When record 호출 Then 이력 저장 및 초과분 삭제가 이뤄진다")
     void givenPasswordWhenRecordThenPrune() {
         PasswordHistory retained = new PasswordHistory(user, "keep");
         PasswordHistory toDelete = new PasswordHistory(user, "old");
@@ -78,7 +78,7 @@ class PasswordHistoryServiceTest {
     }
 
     @Test
-    @DisplayName("Given expiry threshold When checked Then detect expiration")
+    @DisplayName("Given 비밀번호 만료 정책 When isExpired 검사 Then 만료 여부를 판별한다")
     void givenExpiryWhenCheckedThenExpire() {
         AuthPolicyProperties properties = new AuthPolicyProperties();
         properties.setPasswordExpiryDays(1);

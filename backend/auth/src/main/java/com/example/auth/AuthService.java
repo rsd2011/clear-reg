@@ -1,9 +1,5 @@
 package com.example.auth;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.stereotype.Service;
 
 import com.example.auth.domain.RefreshTokenService;
@@ -21,11 +17,12 @@ import com.example.auth.security.AccountStatusPolicy;
 import com.example.auth.security.PasswordPolicyValidator;
 import com.example.auth.security.PolicyToggleProvider;
 import com.example.auth.strategy.AuthenticationStrategy;
+import com.example.auth.strategy.AuthenticationStrategyResolver;
 
 @Service
 public class AuthService {
 
-    private final Map<LoginType, AuthenticationStrategy> strategies;
+    private final AuthenticationStrategyResolver strategyResolver;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
     private final UserAccountService userAccountService;
@@ -33,15 +30,14 @@ public class AuthService {
     private final PasswordPolicyValidator passwordPolicyValidator;
     private final PolicyToggleProvider policyToggleProvider;
 
-    public AuthService(List<AuthenticationStrategy> strategies,
+    public AuthService(AuthenticationStrategyResolver strategyResolver,
                        JwtTokenProvider jwtTokenProvider,
                        RefreshTokenService refreshTokenService,
                        UserAccountService userAccountService,
                        AccountStatusPolicy accountStatusPolicy,
                        PasswordPolicyValidator passwordPolicyValidator,
                        PolicyToggleProvider policyToggleProvider) {
-        this.strategies = new EnumMap<>(LoginType.class);
-        strategies.forEach(strategy -> this.strategies.put(strategy.supportedType(), strategy));
+        this.strategyResolver = strategyResolver;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
         this.userAccountService = userAccountService;
@@ -54,10 +50,8 @@ public class AuthService {
         if (request.type() == null || !policyToggleProvider.enabledLoginTypes().contains(request.type())) {
             throw new InvalidCredentialsException();
         }
-        AuthenticationStrategy strategy = strategies.get(request.type());
-        if (strategy == null) {
-            throw new InvalidCredentialsException();
-        }
+        AuthenticationStrategy strategy = strategyResolver.resolve(request.type())
+                .orElseThrow(InvalidCredentialsException::new);
         UserAccount account = strategy.authenticate(request);
         return assembleResponse(account, request.type(), refreshTokenService.issue(account));
     }

@@ -1,5 +1,6 @@
 package com.example.auth.permission;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,6 +58,24 @@ public class PermissionGroup extends PrimaryKeyEntity {
         return code;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public RowScope getDefaultRowScope() {
+        return defaultRowScope;
+    }
+
+    public void updateDetails(String name, String description, RowScope defaultRowScope) {
+        this.name = name;
+        this.description = description;
+        this.defaultRowScope = defaultRowScope == null ? RowScope.OWN : defaultRowScope;
+    }
+
     public Set<PermissionAssignment> getAssignments() {
         return Collections.unmodifiableSet(assignments);
     }
@@ -73,5 +92,19 @@ public class PermissionGroup extends PrimaryKeyEntity {
             map.put(rule.getTag(), rule);
         }
         return Collections.unmodifiableMap(map);
+    }
+
+    public void replaceAssignments(Collection<PermissionAssignment> replacements) {
+        assignments.clear();
+        if (replacements != null) {
+            assignments.addAll(replacements);
+        }
+    }
+
+    public void replaceMaskRules(Collection<FieldMaskRule> replacements) {
+        maskRules.clear();
+        if (replacements != null) {
+            maskRules.addAll(replacements);
+        }
     }
 }

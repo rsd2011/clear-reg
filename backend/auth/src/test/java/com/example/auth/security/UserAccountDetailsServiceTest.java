@@ -18,14 +18,14 @@ import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserAccountDetailsService")
+@DisplayName("UserAccountDetailsService 테스트")
 class UserAccountDetailsServiceTest {
 
     @Mock
     private UserAccountRepository repository;
 
     @Test
-    @DisplayName("Given existing user When loadUserByUsername Then return details")
+    @DisplayName("Given 존재하는 사용자 When loadUserByUsername 호출 Then UserDetails를 반환한다")
     void givenExistingUserWhenLoadThenReturnDetails() {
         var account = UserAccount.builder()
                 .username("tester")
@@ -43,7 +43,7 @@ class UserAccountDetailsServiceTest {
     }
 
     @Test
-    @DisplayName("Given unknown user When loadUserByUsername Then throw exception")
+    @DisplayName("Given 존재하지 않는 사용자 When loadUserByUsername 호출 Then UsernameNotFoundException을 던진다")
     void givenUnknownUserWhenLoadThenThrow() {
         given(repository.findByUsername("missing")).willReturn(Optional.empty());
         UserAccountDetailsService service = new UserAccountDetailsService(repository);

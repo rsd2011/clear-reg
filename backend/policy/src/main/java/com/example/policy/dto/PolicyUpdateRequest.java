@@ -2,12 +2,19 @@ package com.example.policy.dto;
 
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 
 public record PolicyUpdateRequest(
         Boolean passwordPolicyEnabled,
         Boolean passwordHistoryEnabled,
         Boolean accountLockEnabled,
-        List<@NotNull String> enabledLoginTypes) {
+        List<@NotNull String> enabledLoginTypes,
+        @Positive Long maxFileSizeBytes,
+        List<@NotBlank String> allowedFileExtensions,
+        Boolean strictMimeValidation,
+        @PositiveOrZero Integer fileRetentionDays) {
 
 }

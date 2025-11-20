@@ -11,12 +11,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import com.example.auth.InvalidCredentialsException;
 
+@DisplayName("GlobalExceptionHandler 테스트")
 class GlobalExceptionHandlerTest {
 
     private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
     @Test
-    @DisplayName("Given invalid credentials When handled Then returns 401")
+    @DisplayName("Given 잘못된 자격 증명 When 처리하면 Then 401 응답을 반환한다")
     void givenInvalidCredentialsWhenHandledThenUnauthorized() {
         InvalidCredentialsException exception = new InvalidCredentialsException();
 
@@ -27,7 +28,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("Given validation failure When handled Then returns 400")
+    @DisplayName("Given 검증 실패 When 처리하면 Then 400 응답과 필드 정보를 반환한다")
     void givenValidationFailureWhenHandledThenBadRequest() throws NoSuchMethodException {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "request");
         bindingResult.addError(new FieldError("request", "username", "is required"));

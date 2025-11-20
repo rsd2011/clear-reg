@@ -2,6 +2,8 @@ package com.example.auth.permission;
 
 import com.example.common.security.RowScope;
 
+import java.util.Optional;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -22,13 +24,26 @@ public class PermissionAssignment {
     @Column(name = "row_scope", nullable = false)
     private RowScope rowScope = RowScope.OWN;
 
+    @Column(name = "row_condition_expression")
+    private String rowConditionExpression;
+
     protected PermissionAssignment() {
     }
 
     public PermissionAssignment(FeatureCode feature, ActionCode action, RowScope rowScope) {
+        this(feature, action, rowScope, null);
+    }
+
+    public PermissionAssignment(FeatureCode feature,
+                                ActionCode action,
+                                RowScope rowScope,
+                                String rowConditionExpression) {
         this.feature = feature;
         this.action = action;
         this.rowScope = rowScope == null ? RowScope.OWN : rowScope;
+        this.rowConditionExpression = (rowConditionExpression == null || rowConditionExpression.isBlank())
+                ? null
+                : rowConditionExpression;
     }
 
     public FeatureCode getFeature() {
@@ -41,5 +56,9 @@ public class PermissionAssignment {
 
     public RowScope getRowScope() {
         return rowScope;
+    }
+
+    public Optional<String> getRowConditionExpression() {
+        return Optional.ofNullable(rowConditionExpression);
     }
 }

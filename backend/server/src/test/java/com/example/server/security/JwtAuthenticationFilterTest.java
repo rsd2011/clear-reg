@@ -25,7 +25,7 @@ import jakarta.servlet.ServletException;
 import java.io.IOException;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("JwtAuthenticationFilter")
+@DisplayName("JwtAuthenticationFilter 테스트")
 class JwtAuthenticationFilterTest {
 
     @Mock
@@ -46,7 +46,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("Given valid token When filtering request Then sets authentication")
+    @DisplayName("Given 유효한 토큰 When 필터링하면 Then 인증 정보가 설정된다")
     void givenValidTokenWhenFilterThenAuthenticate() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader("Authorization", "Bearer abc.def");
@@ -66,7 +66,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    @DisplayName("Given no token When filtering Then skip authentication")
+    @DisplayName("Given 토큰이 없을 때 When 필터링하면 Then 인증을 생략한다")
     void givenNoTokenWhenFilterThenSkip() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();

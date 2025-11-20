@@ -8,11 +8,20 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import com.example.auth.security.JwtProperties;
 import com.example.auth.config.AuthPolicyProperties;
 import com.example.auth.config.SessionPolicyProperties;
-import com.example.hr.config.HrIngestionProperties;
+import com.example.dw.config.DwIngestionProperties;
 
-@SpringBootApplication(scanBasePackages = "com.example")
+@SpringBootApplication(scanBasePackages = {
+        "com.example.server",
+        "com.example.auth",
+        "com.example.common",
+        "com.example.dw",
+        "com.example.draft",
+        "com.example.file",
+        "com.example.policy",
+        "com.example.platform"
+})
 @EnableConfigurationProperties({JwtProperties.class, AuthPolicyProperties.class, SessionPolicyProperties.class,
-        HrIngestionProperties.class})
+        DwIngestionProperties.class})
 @EnableScheduling
 public class Application {
 

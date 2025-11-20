@@ -1,0 +1,107 @@
+package com.example.server.web;
+
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.example.auth.permission.ActionCode;
+import com.example.auth.permission.FeatureCode;
+import com.example.auth.permission.RequirePermission;
+import com.example.auth.permission.context.AuthContextHolder;
+import com.example.auth.permission.context.AuthContext;
+import com.example.common.file.FileDownload;
+import com.example.common.file.FileMetadataDto;
+import com.example.file.FileUploadCommand;
+import com.example.file.api.FileUploadRequest;
+import com.example.file.port.FileManagementPort;
+import com.example.server.file.FileMetadataResponse;
+
+import jakarta.validation.Valid;
+
+@RestController
+@Validated
+@RequestMapping("/api/files")
+public class FileController {
+
+    private final FileManagementPort fileManagementPort;
+
+    public FileController(FileManagementPort fileManagementPort) {
+        this.fileManagementPort = fileManagementPort;
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.UPLOAD)
+    public FileMetadataResponse uploadFile(@RequestPart("file") MultipartFile file,
+                                           @Valid @RequestPart(value = "metadata", required = false) FileUploadRequest request)
+            throws IOException {
+        String actor = currentUsername();
+        String originalName = file.getOriginalFilename() != null ? file.getOriginalFilename() : "attachment";
+        FileUploadCommand command = new FileUploadCommand(
+                originalName,
+                file.getContentType(),
+                file.getSize(),
+                () -> {
+                    try {
+                        return file.getInputStream();
+                    }
+                    catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                },
+                request != null ? request.retentionUntil() : null,
+                actor);
+        FileMetadataDto metadata = fileManagementPort.upload(command);
+        return FileMetadataResponse.fromDto(metadata);
+    }
+
+    @GetMapping
+    @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.READ)
+    public java.util.List<FileMetadataResponse> listFiles() {
+        return fileManagementPort.list()
+                .stream()
+                .map(FileMetadataResponse::fromDto)
+                .toList();
+    }
+
+    @GetMapping("/{id}")
+    @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.DOWNLOAD)
+    public ResponseEntity<Resource> download(@PathVariable UUID id) {
+        FileDownload download = fileManagementPort.download(id, currentUsername());
+        String filename = URLEncoder.encode(download.metadata().originalName(), StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
+                .contentType(MediaType.parseMediaType(
+                        download.metadata().contentType() != null ? download.metadata().contentType()
+                                : MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .contentLength(download.metadata().size())
+                .body(download.resource());
+    }
+
+    @DeleteMapping("/{id}")
+    @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.DELETE)
+    public FileMetadataResponse delete(@PathVariable UUID id) {
+        return FileMetadataResponse.fromDto(fileManagementPort.delete(id, currentUsername()));
+    }
+
+    private String currentUsername() {
+        return AuthContextHolder.current()
+                .map(AuthContext::username)
+                .orElse("system");
+    }
+}

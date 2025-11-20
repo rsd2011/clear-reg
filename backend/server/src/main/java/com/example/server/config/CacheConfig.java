@@ -6,6 +6,8 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import java.util.List;
+
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
@@ -18,6 +20,7 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.example.common.cache.CacheNames;
 
 @Configuration
 @EnableCaching
@@ -33,7 +36,17 @@ public class CacheConfig {
 
     @Bean
     public CaffeineCacheManager caffeineCacheManager(Caffeine<Object, Object> caffeine) {
-        CaffeineCacheManager manager = new CaffeineCacheManager("userDetails", "greetings");
+        CaffeineCacheManager manager = new CaffeineCacheManager(CacheNames.USER_DETAILS,
+                CacheNames.GREETINGS,
+                CacheNames.ORGANIZATION_POLICIES,
+                CacheNames.USER_ACCOUNTS,
+                CacheNames.LATEST_DW_BATCH,
+                CacheNames.ORGANIZATION_ROW_SCOPE,
+                CacheNames.DW_EMPLOYEES,
+                CacheNames.DW_ORG_TREE,
+                CacheNames.DW_COMMON_CODES,
+                CacheNames.SYSTEM_COMMON_CODES,
+                CacheNames.COMMON_CODE_AGGREGATES);
         manager.setCaffeine(caffeine);
         return manager;
     }

@@ -34,6 +34,10 @@ public class PolicyProviderConfig {
         return new PolicyToggleSettings(properties.isPasswordPolicyEnabled(),
                 properties.isPasswordHistoryEnabled(),
                 properties.isAccountLockEnabled(),
-                enabled);
+                enabled,
+                properties.getMaxFileSizeBytes(),
+                properties.getAllowedFileExtensions().stream().map(String::toLowerCase).toList(),
+                properties.isStrictMimeValidation(),
+                properties.getFileRetentionDays());
     }
 }

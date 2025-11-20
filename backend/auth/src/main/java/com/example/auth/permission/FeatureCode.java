@@ -8,5 +8,10 @@ public enum FeatureCode {
     EMPLOYEE,
     MENU,
     POLICY,
-    HR_IMPORT;
+    HR_IMPORT,
+    NOTICE,
+    FILE,
+    ALERT,
+    COMMON_CODE,
+    DRAFT;
 }

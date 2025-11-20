@@ -2,6 +2,10 @@ package com.example.auth.domain;
 
 import java.util.Optional;
 
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -9,8 +13,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.security.PasswordHistoryService;
+import com.example.common.cache.CacheNames;
 
 @Service
+@CacheConfig(cacheNames = CacheNames.USER_ACCOUNTS)
 public class UserAccountService {
 
     private final UserAccountRepository repository;
@@ -25,6 +31,7 @@ public class UserAccountService {
         this.passwordHistoryService = passwordHistoryService;
     }
 
+    @Cacheable(key = "#root.args[0]", sync = true)
     public UserAccount getByUsernameOrThrow(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(InvalidCredentialsException::new);
@@ -35,11 +42,13 @@ public class UserAccountService {
     }
 
     @Transactional
+    @CachePut(key = "#result.username", condition = "#result != null && #result.username != null")
     public UserAccount save(UserAccount account) {
         return repository.save(account);
     }
 
     @Transactional
+    @CacheEvict(key = "#root.args[0].username")
     public void changePassword(UserAccount account, String rawPassword) {
         passwordHistoryService.ensureNotReused(account, rawPassword);
         String encoded = passwordEncoder.encode(rawPassword);

@@ -23,7 +23,7 @@ import com.example.auth.security.AccountStatusPolicy;
 import com.example.auth.security.PasswordPolicyValidator;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("PasswordAuthenticationStrategy")
+@DisplayName("PasswordAuthenticationStrategy 테스트")
 class PasswordAuthenticationStrategyTest {
 
     @Mock
@@ -47,7 +47,7 @@ class PasswordAuthenticationStrategyTest {
     }
 
     @Test
-    @DisplayName("Given valid credentials When authenticate Then return account")
+    @DisplayName("Given 올바른 자격 When authenticate 호출 Then UserAccount를 반환한다")
     void givenValidCredentialsWhenAuthenticateThenReturnAccount() {
         var account = UserAccount.builder()
                 .username("tester")
@@ -65,7 +65,7 @@ class PasswordAuthenticationStrategyTest {
     }
 
     @Test
-    @DisplayName("Given invalid credentials When authenticate Then throw exception")
+    @DisplayName("Given 잘못된 자격 When authenticate 호출 Then InvalidCredentialsException을 던진다")
     void givenInvalidCredentialsWhenAuthenticateThenThrow() {
         var account = UserAccount.builder()
                 .username("tester")

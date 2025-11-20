@@ -1,0 +1,31 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    implementation platform(libs.spring.boot.bom)
+    testImplementation platform(libs.spring.boot.bom)
+
+    implementation project(':backend:dw-integration')
+    implementation project(':backend:platform')
+    implementation project(':backend:auth')
+
+    implementation libs.spring.boot.starter
+    implementation libs.spring.boot.starter.data.jpa
+    implementation libs.spring.boot.starter.validation
+    implementation libs.spring.boot.starter.batch
+    implementation libs.spring.kafka
+    implementation libs.jackson.databind
+
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+
+    testImplementation libs.bundles.spring.test
+    testImplementation libs.spring.batch.test
+    testImplementation libs.junit.platform.launcher
+    testImplementation testFixtures(project(':backend:platform'))
+    testImplementation project(':backend:auth')
+    testRuntimeOnly libs.h2.database
+}

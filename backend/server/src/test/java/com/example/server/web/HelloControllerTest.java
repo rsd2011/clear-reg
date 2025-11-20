@@ -37,7 +37,7 @@ import com.example.common.GreetingService;
                         RestAuthenticationEntryPoint.class,
                         RestAccessDeniedHandler.class}))
 @AutoConfigureMockMvc(addFilters = false)
-@DisplayName("HelloController")
+@DisplayName("HelloController 테스트")
 class HelloControllerTest {
 
     @Autowired
@@ -48,7 +48,7 @@ class HelloControllerTest {
 
     @Test
     @WithMockUser(roles = "USER")
-    @DisplayName("Given authenticated user When greeting endpoint invoked Then return greeting text")
+    @DisplayName("Given 인증된 사용자 When 인사 API 호출 Then 환영 메시지를 반환한다")
     void givenUserWhenGreetingThenReturnText() throws Exception {
         org.mockito.BDDMockito.given(greetingService.greet("test"))
                 .willReturn("Hello test!");

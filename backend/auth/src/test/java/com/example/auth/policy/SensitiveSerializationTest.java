@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.auth.permission.ActionCode;
@@ -16,6 +17,7 @@ import com.example.auth.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@DisplayName("SensitiveSerialization 테스트")
 class SensitiveSerializationTest {
 
     private final DataPolicyEvaluator evaluator = new DataPolicyEvaluator();
@@ -26,6 +28,7 @@ class SensitiveSerializationTest {
     }
 
     @Test
+    @DisplayName("Given 민감 필드 When 직렬화 Then 권한에 따라 마스킹 여부가 결정된다")
     void givenSensitiveField_whenSerializing_thenMaskUnlessAllowed() throws Exception {
         FieldMaskRule rule = new FieldMaskRule("SECRET", "MASKED", ActionCode.UNMASK, true);
         AuthContextHolder.set(new AuthContext("auditor", "ORG", "AUDIT",
@@ -41,6 +44,7 @@ class SensitiveSerializationTest {
     }
 
     @Test
+    @DisplayName("Given READ 권한만 있는 경우 When 직렬화 Then 마스킹된 값으로 출력된다")
     void givenReadOnlyContext_whenSerializing_thenMaskSecret() throws Exception {
         FieldMaskRule rule = new FieldMaskRule("SECRET", "MASKED", ActionCode.UNMASK, true);
         AuthContextHolder.set(new AuthContext("auditor", "ORG", "AUDIT",
@@ -75,6 +79,7 @@ class SensitiveSerializationTest {
     }
 
     @Test
+    @DisplayName("Given 데이터 정책 설정 When MaskingModule 생성 Then 모듈을 재사용할 수 있다")
     void givenConfiguration_whenCreatingModule_thenReusable() {
         DataPolicyConfiguration configuration = new DataPolicyConfiguration();
         SensitiveDataMaskingModule module = configuration.sensitiveDataMaskingModule(new DataPolicyEvaluator());

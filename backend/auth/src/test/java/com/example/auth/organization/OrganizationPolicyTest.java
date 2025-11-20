@@ -6,11 +6,14 @@ import java.lang.reflect.Field;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("OrganizationPolicy 도메인 테스트")
 class OrganizationPolicyTest {
 
     @Test
+    @DisplayName("Given 정책 객체 When 컬렉션 접근 Then 불변 컬렉션으로 반환된다")
     void givenPolicy_whenAccessingCollections_thenUnmodifiable() throws Exception {
         OrganizationPolicy policy = new OrganizationPolicy("ORG", "DEFAULT");
 

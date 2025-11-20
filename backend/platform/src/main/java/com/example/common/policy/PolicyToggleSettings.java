@@ -2,12 +2,33 @@ package com.example.common.policy;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+/**
+ * Immutable DTO describing organization level policy toggles that other modules consume.
+ */
 public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                    boolean passwordHistoryEnabled,
                                    boolean accountLockEnabled,
-                                   List<String> enabledLoginTypes) {
+                                   List<String> enabledLoginTypes,
+                                   @JsonProperty(defaultValue = "20971520") long maxFileSizeBytes,
+                                   List<String> allowedFileExtensions,
+                                   @JsonProperty(defaultValue = "true") boolean strictMimeValidation,
+                                   @JsonProperty(defaultValue = "365") int fileRetentionDays) {
+
+    private static final long DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024;
 
     public PolicyToggleSettings {
         enabledLoginTypes = enabledLoginTypes == null ? List.of() : List.copyOf(enabledLoginTypes);
+        allowedFileExtensions = allowedFileExtensions == null ? List.of() : allowedFileExtensions.stream()
+                .map(ext -> ext.toLowerCase())
+                .distinct()
+                .toList();
+        if (maxFileSizeBytes <= 0) {
+            maxFileSizeBytes = DEFAULT_MAX_FILE_SIZE;
+        }
+        if (fileRetentionDays < 0) {
+            fileRetentionDays = 0;
+        }
     }
 }

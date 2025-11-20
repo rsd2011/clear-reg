@@ -33,7 +33,8 @@ class PolicyAdminServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        PolicyToggleSettings defaults = new PolicyToggleSettings(true, true, true, List.of("PASSWORD"));
+        PolicyToggleSettings defaults = new PolicyToggleSettings(true, true, true, List.of("PASSWORD"),
+                10_485_760L, List.of("pdf"), true, 365);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         given(repository.findByCode("security.policy")).willReturn(Optional.empty());
         service = new PolicyAdminService(repository, mapper, defaults);
@@ -43,7 +44,7 @@ class PolicyAdminServiceTest {
     @DisplayName("Given update request When update Then persist merged state")
     void givenRequestWhenUpdateThenPersist() {
         PolicyUpdateRequest request = new PolicyUpdateRequest(
-                false, null, true, List.of("SSO"));
+                false, null, true, List.of("SSO"), 5_000_000L, List.of("pdf", "png"), true, 90);
 
         PolicyAdminService.PolicySnapshot snapshot = service.update(request);
 
@@ -57,7 +58,7 @@ class PolicyAdminServiceTest {
     @Test
     @DisplayName("Given YAML When applyYaml Then refresh cache")
     void givenYamlWhenApplyThenRefresh() {
-        String yaml = "passwordPolicyEnabled: false\naccountLockEnabled: false\npasswordHistoryEnabled: false\nenabledLoginTypes:\n  - SSO\n";
+        String yaml = "passwordPolicyEnabled: false\naccountLockEnabled: false\npasswordHistoryEnabled: false\nenabledLoginTypes:\n  - SSO\nmaxFileSizeBytes: 1048576\nallowedFileExtensions:\n  - pdf\nstrictMimeValidation: true\n";
 
         PolicyAdminService.PolicySnapshot snapshot = service.applyYaml(yaml);
 
@@ -78,13 +79,14 @@ class PolicyAdminServiceTest {
         PolicyView view = service.currentView();
         assertThat(view.passwordPolicyEnabled()).isTrue();
         assertThat(view.enabledLoginTypes()).contains("PASSWORD");
+        assertThat(view.allowedFileExtensions()).contains("pdf");
     }
 
     @Test
     @DisplayName("Given update request When updateView Then include rendered yaml")
     void givenUpdateRequestWhenUpdateViewThenIncludeYaml() {
         PolicyUpdateRequest request = new PolicyUpdateRequest(true, true, false,
-                List.of("AD"));
+                List.of("AD"), null, null, null, null);
 
         PolicyView view = service.updateView(request);
 

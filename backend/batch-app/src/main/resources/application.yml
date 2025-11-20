@@ -1,7 +1,32 @@
 spring:
   application:
     name: batch-app
+  batch:
+    job:
+      enabled: false
+    jdbc:
+      initialize-schema: never
 
-hr:
+dw:
+  gateway:
+    client:
+      base-uri: ${DW_GATEWAY_BASE_URI:http://localhost:8090}
   ingestion:
     enabled: true
+    job-schedules:
+      - job-key: DW_INGESTION
+        enabled: true
+        cron-expression: "0 30 2 * * *"
+        timezone: Asia/Seoul
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}

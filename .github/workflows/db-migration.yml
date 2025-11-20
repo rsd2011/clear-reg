@@ -1,0 +1,41 @@
+name: db-migration-check
+
+on:
+  pull_request:
+    paths:
+      - "docs/migrations/**"
+      - "scripts/verify-migrations.sh"
+  push:
+    branches: [ main ]
+    paths:
+      - "docs/migrations/**"
+      - "scripts/verify-migrations.sh"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Verify migrations (apply + rollback simulation)
+        env:
+          DB_URL: postgres://postgres:postgres@localhost:5432/postgres
+        run: ./scripts/verify-migrations.sh

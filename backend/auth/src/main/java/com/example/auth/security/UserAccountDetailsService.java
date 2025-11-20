@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.example.auth.domain.UserAccountRepository;
+import com.example.common.cache.CacheNames;
 
 @Service
 public class UserAccountDetailsService implements UserDetailsService {
@@ -19,7 +20,7 @@ public class UserAccountDetailsService implements UserDetailsService {
     }
 
     @Override
-    @Cacheable(cacheNames = "userDetails", key = "#username")
+    @Cacheable(cacheNames = CacheNames.USER_DETAILS, key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return repository.findByUsername(username)
                 .map(account -> User.withUsername(account.getUsername())

@@ -7,10 +7,11 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+@DisplayName("JwtTokenProvider 테스트")
 class JwtTokenProviderTest {
 
     @Test
-    @DisplayName("Given subject and roles When generating token Then it can be parsed back")
+    @DisplayName("Given 사용자와 역할 When 토큰 생성 Then 파싱을 통해 동일 정보를 확인할 수 있다")
     void givenSubjectWhenGeneratingTokenThenParse() {
         JwtProperties properties = new JwtProperties();
         properties.setSecret("0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF");

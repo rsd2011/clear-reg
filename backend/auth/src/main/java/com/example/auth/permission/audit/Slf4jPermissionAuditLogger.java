@@ -1,15 +1,13 @@
 package com.example.auth.permission.audit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.example.auth.permission.context.AuthContext;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
+@Slf4j
 public class Slf4jPermissionAuditLogger implements PermissionAuditLogger {
-
-    private static final Logger log = LoggerFactory.getLogger(Slf4jPermissionAuditLogger.class);
 
     @Override
     public void onAccessGranted(AuthContext context) {
