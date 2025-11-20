@@ -44,6 +44,19 @@ public class StoredFile extends PrimaryKeyEntity {
     @Column(name = "owner_username", nullable = false, length = 100)
     private String ownerUsername;
 
+    @Column(name = "sha256", length = 128)
+    private String sha256;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "scan_status", nullable = false, length = 20)
+    private ScanStatus scanStatus = ScanStatus.PENDING;
+
+    @Column(name = "scanned_at")
+    private OffsetDateTime scannedAt;
+
+    @Column(name = "blocked_reason", length = 500)
+    private String blockedReason;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     private FileStatus status = FileStatus.ACTIVE;

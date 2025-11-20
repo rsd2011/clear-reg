@@ -77,6 +77,9 @@ public class FileService {
         StoredFileVersion version = createVersion(file, command, command.ownerUsername(), now);
         file.addVersion(version);
         file.setChecksum(version.getChecksum());
+        file.setSha256(version.getChecksum());
+        file.setScanStatus(ScanStatus.CLEAN); // TODO: 실제 AV 스캔 연동 시 결과로 대체
+        file.setScannedAt(now);
         StoredFile persisted = storedFileRepository.save(file);
         logAccess(persisted, "UPLOAD", command.ownerUsername(), "v" + version.getVersionNumber(), now);
         return persisted;
@@ -99,6 +102,12 @@ public class FileService {
                 .orElseThrow(() -> new StoredFileNotFoundException(id));
         if (file.isDeleted()) {
             throw new StoredFileNotFoundException(id);
+        }
+        if (file.getScanStatus() == ScanStatus.BLOCKED) {
+            throw new FilePolicyViolationException("위험 파일로 차단된 첨부입니다.");
+        }
+        if (file.getScanStatus() != ScanStatus.CLEAN) {
+            throw new FilePolicyViolationException("파일 스캔이 완료되지 않았습니다.");
         }
         StoredFileVersion version = versionRepository.findFirstByFileIdOrderByVersionNumberDesc(file.getId())
                 .orElseThrow(() -> new StoredFileNotFoundException(id));
