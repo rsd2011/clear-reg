@@ -148,6 +148,7 @@
 - `GET /api/drafts/{id}/history` → `[DraftHistoryResponse]`
 - `GET /api/drafts/{id}/references` → `[DraftReferenceResponse]`
 - 권한: `DRAFT_READ`
+- 감사 이력: `GET /api/drafts/{id}/audit` → `[DraftHistoryResponse]` (eventType `AUDIT:*`), 권한 `DRAFT_AUDIT`
 - 이력 응답 예시
 ```json
 [

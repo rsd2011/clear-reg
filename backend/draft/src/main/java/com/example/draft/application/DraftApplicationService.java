@@ -109,7 +109,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.submit(actor, now());
         publish("SUBMITTED", draft, actor, null, null, null);
-        audit("SUBMITTED", draft, actor, null, organizationCode);
+        audit("SUBMITTED", draft, actor, null, organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -124,7 +124,7 @@ public class DraftApplicationService {
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.approveStep(request.stepId(), actor, request.comment(), now());
         publish("APPROVED", draft, actor, request.stepId(), null, request.comment());
-        audit("APPROVED", draft, actor, request.comment(), organizationCode);
+        audit("APPROVED", draft, actor, request.comment(), organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -139,7 +139,7 @@ public class DraftApplicationService {
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
         publish("REJECTED", draft, actor, request.stepId(), null, request.comment());
-        audit("REJECTED", draft, actor, request.comment(), organizationCode);
+        audit("REJECTED", draft, actor, request.comment(), organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -149,7 +149,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.cancel(actor, now());
         publish("CANCELLED", draft, actor, null, null, null);
-        audit("CANCELLED", draft, actor, null, organizationCode);
+        audit("CANCELLED", draft, actor, null, organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -159,7 +159,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.withdraw(actor, now());
         publish("WITHDRAWN", draft, actor, null, null, null);
-        audit("WITHDRAWN", draft, actor, null, organizationCode);
+        audit("WITHDRAWN", draft, actor, null, organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -169,7 +169,7 @@ public class DraftApplicationService {
         draft.assertOrganizationAccess(organizationCode, false);
         draft.resubmit(actor, now());
         publish("RESUBMITTED", draft, actor, null, null, null);
-        audit("RESUBMITTED", draft, actor, null, organizationCode);
+        audit("RESUBMITTED", draft, actor, null, organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -185,7 +185,7 @@ public class DraftApplicationService {
         ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
         publish("DELEGATED", draft, actor, request.stepId(), delegatedTo, request.comment());
-        audit("DELEGATED", draft, actor, request.comment(), organizationCode);
+        audit("DELEGATED", draft, actor, request.comment(), organizationCode, null, null);
         return DraftResponse.from(draft);
     }
 
@@ -250,6 +250,17 @@ public class DraftApplicationService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<DraftHistoryResponse> listAudit(UUID draftId, String organizationCode, String requester, boolean auditAccess) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, auditAccess);
+        enforceReadAccess(draft, requester, auditAccess);
+        return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId).stream()
+                .filter(h -> h.getEventType().startsWith("AUDIT:"))
+                .map(DraftHistoryResponse::from)
+                .toList();
+    }
+
     private Draft loadDraft(UUID id) {
         return draftRepository.findById(id)
                 .orElseThrow(() -> new DraftNotFoundException("기안을 찾을 수 없습니다."));
@@ -290,12 +301,12 @@ public class DraftApplicationService {
         notificationService.notify(action, draft, actor, stepId, delegatedTo, comment, now());
     }
 
-    private void audit(String action, Draft draft, String actor, String comment, String organizationCode) {
+    private void audit(String action, Draft draft, String actor, String comment, String organizationCode, String ip, String userAgent) {
         String details = comment != null ? comment : "%s by %s".formatted(action, actor);
         OffsetDateTime occurredAt = now();
         draftHistoryRepository.save(
                 com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action, actor, details, occurredAt));
-        auditPublisher.publish(new DraftAuditEvent(action, draft.getId(), actor, organizationCode, comment, occurredAt));
+        auditPublisher.publish(new DraftAuditEvent(action, draft.getId(), actor, organizationCode, comment, ip, userAgent, occurredAt));
     }
 
     /**

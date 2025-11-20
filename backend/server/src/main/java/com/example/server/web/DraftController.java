@@ -170,6 +170,13 @@ public class DraftController {
         return draftApplicationService.listReferences(id, context.organizationCode(), context.username(), audit);
     }
 
+    @GetMapping("/{id}/audit")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    public List<DraftHistoryResponse> audit(@PathVariable UUID id) {
+        AuthContext context = currentContext();
+        return draftApplicationService.listAudit(id, context.organizationCode(), context.username(), true);
+    }
+
     @GetMapping("/{id}")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_READ)
     public DraftResponse getDraft(@PathVariable UUID id) {

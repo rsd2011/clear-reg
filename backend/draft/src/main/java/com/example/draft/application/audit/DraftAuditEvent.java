@@ -9,6 +9,8 @@ public record DraftAuditEvent(
         String actor,
         String organizationCode,
         String comment,
+        String ip,
+        String userAgent,
         OffsetDateTime occurredAt
 ) {
 }
