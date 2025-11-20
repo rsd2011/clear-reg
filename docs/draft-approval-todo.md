@@ -31,7 +31,7 @@
 | T14 | 보안 | 열람/권한 세분화 | High | ✅ RowScope 기본 ORG/OWN승격, 열람 권한(작성자/결재선/위임/참조/AUDIT) 검증, API 호출자 username 기반 체크, 테스트 통과 |
 | T15 | 데이터/성능 | 검색 필터·인덱스 보강 | Medium | ✅ 목록 조회 필터(status/business/createdBy/title) 추가 및 OpenAPI 반영 |
 | T16 | 감사 | 감사 로그/감사 이벤트 | Medium | ✅ 감사 이벤트 퍼블리셔 + 감사 이력 API(`/api/drafts/{id}/audit` 필터: action/actor/from/to), IP/UA 필드 포함, `draft.audit.publisher=event|kafka|siem|outbox` 지원, outbox 테이블/릴레이, 신뢰 프록시 헤더 검증, 보존/TTL 정책 명시 |
-| T17 | 파일 | 첨부 다운로드/삭제 정책 강화 | Medium | 진행: 스캔 포트/메타 필드/마이그레이션 완료, FileAuditPublisher 훅(Logging/NoOp) 추가, 다운로드에 draftId 컨텍스트 검증 추가, 정책 문서 업데이트. 다음: 결재자/참조자 권한 체크 확장, 감사 outbox/Kafka/SIEM 어댑터, 스캔 설정/재시도/TTL 적용 |
+| T17 | 파일 | 첨부 다운로드/삭제 정책 강화 | Medium | 진행: 스캔 포트/메타 필드/마이그레이션 완료, FileAuditPublisher 훅(log/kafka/outbox/siem) + outbox 릴레이 추가, 다운로드에 draftId 컨텍스트 검증 추가, 스캔 설정(max-size/timeout/toggle) 적용, 정책 문서 업데이트. 다음: 결재자/참조자 권한 체크 세부 검증, 서명 URL TTL 적용, 스캔 재시도/TTL 정책 보완 |
 ## Document Follow-ups
 - `docs/permissions.md`: 결재자/참조자 권한, 상태 전이 정책 추가 (T4, T5, T14)
 - `docs/architecture-todo.md`: 아키텍처 전반 TODO에 본 모듈 링크 추가, Nuxt4 프런트 전환 계획 반영
