@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StoredFileRepository extends JpaRepository<StoredFile, UUID> {
 
     List<FileSummaryView> findAllByOrderByCreatedAtDesc();
+
+    List<StoredFile> findTop20ByScanStatusInOrderByCreatedAtAsc(List<ScanStatus> statuses);
 }

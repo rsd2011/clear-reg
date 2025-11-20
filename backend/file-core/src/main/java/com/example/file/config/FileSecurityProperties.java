@@ -25,6 +25,16 @@ public class FileSecurityProperties {
      */
     private long signedUrlTtlSeconds = 300;
 
+    /**
+    * 스캔 재시도 활성화 여부.
+    */
+    private boolean rescanEnabled = true;
+
+    /**
+    * 재시도 주기(ms). 기본 60초.
+    */
+    private long rescanIntervalMs = 60_000;
+
     public boolean isScanEnabled() {
         return scanEnabled;
     }
@@ -55,5 +65,21 @@ public class FileSecurityProperties {
 
     public void setSignedUrlTtlSeconds(long signedUrlTtlSeconds) {
         this.signedUrlTtlSeconds = signedUrlTtlSeconds;
+    }
+
+    public boolean isRescanEnabled() {
+        return rescanEnabled;
+    }
+
+    public void setRescanEnabled(boolean rescanEnabled) {
+        this.rescanEnabled = rescanEnabled;
+    }
+
+    public long getRescanIntervalMs() {
+        return rescanIntervalMs;
+    }
+
+    public void setRescanIntervalMs(long rescanIntervalMs) {
+        this.rescanIntervalMs = rescanIntervalMs;
     }
 }
