@@ -226,7 +226,6 @@ class DraftApplicationServiceTest {
     void givenWithdrawnDraft_whenResubmit_thenRestartFlow() {
         Draft draft = inReviewDraft();
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
-        stubGroupMember("GROUP-A", "writer"); // allow resubmit start step actor check not required but safe
         service.withdraw(draft.getId(), "writer", ORG);
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
 
@@ -295,7 +294,6 @@ class DraftApplicationServiceTest {
     private void stubGroupMember(String groupCode, String memberUserId) {
         ApprovalGroup group = ApprovalGroup.create(groupCode, groupCode + " name", null, ORG, null, NOW);
         ApprovalGroupMember member = ApprovalGroupMember.create(memberUserId, ORG, null, NOW);
-        member.attachTo(group);
         given(approvalGroupRepository.findByGroupCode(groupCode)).willReturn(Optional.of(group));
         given(approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId()))
                 .willReturn(List.of(member));
