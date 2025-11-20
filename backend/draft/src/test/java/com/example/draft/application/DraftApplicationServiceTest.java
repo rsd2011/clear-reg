@@ -38,6 +38,7 @@ import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.DraftStatus;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
+import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
 import com.example.draft.domain.repository.ApprovalGroupRepository;
@@ -166,6 +167,34 @@ class DraftApplicationServiceTest {
 
         assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
         assertThat(response.formTemplateCode()).isEqualTo(formTemplate.getTemplateCode());
+    }
+
+    @Test
+    void givenGlobalFallback_whenSuggestTemplate_thenReturnsGlobalMapping() {
+        ApprovalLineTemplate template = sampleTemplate("GLOBAL");
+        DraftFormTemplate formTemplate = sampleFormTemplate("GLOBAL");
+        com.example.draft.domain.BusinessTemplateMapping global = com.example.draft.domain.BusinessTemplateMapping.create(
+                "NOTICE", null, template, formTemplate, NOW);
+        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
+                .willReturn(Optional.empty());
+        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue("NOTICE"))
+                .willReturn(Optional.of(global));
+
+        var suggestion = service.suggestTemplate("NOTICE", ORG);
+
+        assertThat(suggestion.approvalTemplateId()).isEqualTo(template.getId());
+        assertThat(suggestion.formTemplateId()).isEqualTo(formTemplate.getId());
+    }
+
+    @Test
+    void givenNoMapping_whenSuggestTemplate_thenThrows() {
+        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
+                .willReturn(Optional.empty());
+        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue("NOTICE"))
+                .willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.suggestTemplate("NOTICE", ORG))
+                .isInstanceOf(DraftTemplateNotFoundException.class);
     }
 
     @Test
