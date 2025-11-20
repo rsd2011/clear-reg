@@ -9,6 +9,7 @@
 1. Favor modular boundaries (auth/policy/dw) with clear interfaces before splitting services.
 2. Keep `docs/permissions.md` and DW ingestion doc as source of truth; update alongside any change.
 3. Every backlog item must map to measurable outcomes (coverage, latency, deployment uptime, etc.).
+4. 프런트는 Nuxt4(SPA/SSR)로 통일하고, 서버는 JSON API만 제공하도록 단계적 제거(Thymeleaf) 진행.
 
 ## 2025-11-19 Architecture Review Snapshot
 - 강점: 모듈 간 포트 구조 정립, 권한/RowScope 파이프라인 표준화, CI 품질 게이트와 Actuator/Prometheus 기반 관측성 확보.
@@ -95,7 +96,7 @@
 - [ ] 기안/결재/템플릿/참조/알림 백로그 정리 및 실행
   - [ ] 상세 TODO 및 우선순위는 `docs/draft-approval-todo.md` 참조 (T1~T17).
   - [ ] 진행 시 `docs/permissions.md`와 Thymeleaf 뷰 가이드, 관측성 문서 업데이트 필요.
-  - 현재 완료: T1(업무-템플릿 매핑), T2(참조자), T3(결재 그룹 멤버십), T4(결재자 검증+락), T5(회수/재상신/위임), T6(기본 템플릿 자동 선택), T7(알림 퍼블리셔/채널 플러그형), T10/T11(Thymeleaf 목록/작성/상세 + 상태별 액션 UI) 도메인/서비스/컨트롤러/뷰 반영. 다음: T8~T9, T12 이후 항목 실행.
+  - 현재 완료: T1(업무-템플릿 매핑), T2(참조자), T3(결재 그룹 멤버십), T4(결재자 검증+락), T5(회수/재상신/위임), T6(기본 템플릿 자동 선택), T7(알림 퍼블리셔/채널 플러그형). 프런트는 Nuxt4로 전환 예정 → T10/T11을 Thymeleaf 제거 및 API 계약 정비로 재정의(Thymeleaf 템플릿/컨트롤러 이미 제거). 다음: T8~T9, T10~T12 이후 항목 실행.
 
 ## Tracking & Review
 - Weekly architecture sync reviews progress on sections A-D.

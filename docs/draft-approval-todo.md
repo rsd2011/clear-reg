@@ -4,6 +4,7 @@
 - Module: draft + approval + template + reference/notification flows
 - Source baseline: draft domain/services in `backend/draft`, REST in `backend/server/web/DraftController`, migrations `2024-09-24`~`2024-09-27`
 - Goal: meet electronic approval requirements (업무별 기안, 템플릿, 결재선, 참조, 알림, 감사)
+- Frontend: Nuxt4로 전환 예정 → 서버 측 Thymeleaf 템플릿/뷰 컨트롤러 제거 완료, JSON API만 유지
 
 ## Gaps (요약)
 - 업무↔템플릿 매핑과 기본 결재선 자동 추천 미비
@@ -23,8 +24,8 @@
 | T7 | 서비스 | 참조자 등록 및 알림 트리거 | High | T2 선행; 생성/상신 시 참조자 등록 및 이벤트 발행 |
 | T8 | API/컨트롤러 | 템플릿/그룹 CRUD 및 활성/버전 관리 | Medium | ApprovalGroup/LineTemplate/FormTemplate CRUD, UI/REST |
 | T9 | API/컨트롤러 | 이력/참조 조회 API | Medium | DraftHistory, 참조자 목록/열람 로그 제공; T2 이후 |
-| T10 | 뷰/Thymeleaf | 기안 작성/조회 화면 | Medium | ✅ 목록/작성/상세 뷰, 레이아웃 적용, 상태 배지 i18n 완료 |
-| T11 | 뷰/Thymeleaf | 결재 진행 화면 | Medium | ✅ 상태별 액션 버튼(승인/반려/회수/재상신) 및 참조/이력 표시 완료 |
+| T10 | 프런트/계약 | Nuxt4 전환 대비 UI 계약서(작성/조회) 정의 | High | 기존 Thymeleaf를 제거하고 OpenAPI/DTO 스키마 명세로 전환; Nuxt4 폼/목록/상세 화면 계약 확정 |
+| T11 | API/컨트롤러 | 뷰 제거 및 JSON 전용 엔드포인트 정돈 | High | 기존 Thymeleaf 컨트롤러/템플릿 삭제, `/drafts` 페이지 라우팅 제거, API 응답 스키마 고정 |
 | T12 | 인프라/운영 | 알림 이벤트 퍼블리셔(outbox) | Medium | Kafka/RabbitMQ 어댑터, 이메일/푸시 플러그인; T7 |
 | T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
 | T14 | 보안 | 열람/권한 세분화 | High | 작성자/결재자/참조자/관리자 액션 검증, RowScope 확장; T2 |
@@ -33,6 +34,6 @@
 | T17 | 파일 | 첨부 다운로드/삭제 정책 강화 | Medium | file-core 연동, 권한, 바이러스 스캔 후크 |
 ## Document Follow-ups
 - `docs/permissions.md`: 결재자/참조자 권한, 상태 전이 정책 추가 (T4, T5, T14)
-- `docs/architecture-todo.md`: 아키텍처 전반 TODO에 본 모듈 링크 추가
+- `docs/architecture-todo.md`: 아키텍처 전반 TODO에 본 모듈 링크 추가, Nuxt4 프런트 전환 계획 반영
 - `docs/observability.md` + OTEL 설정: 결재 리드타임/반려율 등 비즈니스 메트릭 노출 (T12, T16)
-- 새 뷰 가이드: Thymeleaf 레이아웃/fragment 규칙 정리 (T10, T11)
+- 프런트 전환 가이드: Nuxt4 기반 UI 계약/폼 검증/i18n 전략 정리 (T10, T11)
