@@ -178,6 +178,67 @@ class DraftControllerTest {
     }
 
     @Test
+    @DisplayName("Given 회수 요청 When POST 호출 Then 기안이 WITHDRAWN 된다")
+    void givenWithdrawRequest_whenPosting_thenWithdrawn() throws Exception {
+        DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
+        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_CANCEL)).willReturn(null);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        DraftResponse withdrawn = sampleResponse(DraftStatus.WITHDRAWN);
+        given(draftApplicationService.withdraw(any(), eq("writer"), eq("ORG-001"))).willReturn(withdrawn);
+        denyAuditAccess();
+
+        mockMvc.perform(post("/api/drafts/" + snapshot.id() + "/withdraw"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(DraftStatus.WITHDRAWN.name()));
+
+        verify(draftApplicationService).withdraw(snapshot.id(), "writer", "ORG-001");
+    }
+
+    @Test
+    @DisplayName("Given 재상신 요청 When POST 호출 Then 기안이 재상신된다")
+    void givenResubmitRequest_whenPosting_thenResubmits() throws Exception {
+        DraftResponse snapshot = sampleResponse(DraftStatus.WITHDRAWN);
+        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_SUBMIT)).willReturn(null);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        DraftResponse resubmitted = sampleResponse(DraftStatus.IN_REVIEW);
+        given(draftApplicationService.resubmit(any(), eq("writer"), eq("ORG-001"))).willReturn(resubmitted);
+        denyAuditAccess();
+
+        mockMvc.perform(post("/api/drafts/" + snapshot.id() + "/resubmit"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(DraftStatus.IN_REVIEW.name()));
+
+        verify(draftApplicationService).resubmit(snapshot.id(), "writer", "ORG-001");
+    }
+
+    @Test
+    @DisplayName("Given 위임 요청 When POST 호출 Then 위임 대상이 설정된다")
+    void givenDelegateRequest_whenPosting_thenDelegates() throws Exception {
+        DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
+        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_APPROVE)).willReturn(null);
+        given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
+        DraftApprovalStepResponse delegatedStep = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
+                "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), "위임", "delegatee", OffsetDateTime.now(ZoneOffset.UTC));
+        DraftResponse delegated = new DraftResponse(snapshot.id(), "제목", "본문", "NOTICE", "ORG-001",
+                DraftStatus.IN_REVIEW, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
+                OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC),
+                null, null, null, null, List.of(delegatedStep), snapshot.attachments());
+        given(draftApplicationService.delegate(any(), any(), eq("delegatee"), eq("writer"), eq("ORG-001"), eq(false)))
+                .willReturn(delegated);
+        denyAuditAccess();
+
+        mockMvc.perform(post("/api/drafts/" + snapshot.id() + "/delegate")
+                        .param("delegatedTo", "delegatee")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftDecisionRequest(
+                                UUID.randomUUID(), "위임 부탁"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.approvalSteps[0].delegatedTo").value("delegatee"));
+
+        verify(draftApplicationService).delegate(eq(snapshot.id()), any(), eq("delegatee"), eq("writer"), eq("ORG-001"), eq(false));
+    }
+
+    @Test
     @DisplayName("Given 감사 권한이 없을 때 When GET 호출 Then 자신의 조직 기안만 조회된다")
     void givenGetRequest_whenAuditDenied_thenReadsOwnOrg() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.DRAFT);
@@ -227,7 +288,7 @@ class DraftControllerTest {
 
     private DraftResponse sampleResponse(DraftStatus status) {
         DraftApprovalStepResponse step = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
-                "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), null);
+                "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), null, null, null);
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         List<DraftAttachmentResponse> attachments = List.of(
                 new DraftAttachmentResponse(UUID.randomUUID(), "evidence.pdf", "application/pdf", 1024L,
@@ -235,12 +296,12 @@ class DraftControllerTest {
         return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", "ORG-001",
                 status, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
                 now, now,
-                null, null, null, List.of(step), attachments);
+                null, null, null, null, List.of(step), attachments);
     }
 
     private DraftResponse sampleResponseWithOrg(String org, DraftStatus status) {
         DraftApprovalStepResponse step = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
-                "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), null);
+                "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), null, null, null);
         OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
         List<DraftAttachmentResponse> attachments = List.of(
                 new DraftAttachmentResponse(UUID.randomUUID(), "plan.xlsx", "application/vnd.ms-excel", 2048L,
@@ -248,7 +309,7 @@ class DraftControllerTest {
         return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", org,
                 status, "TEMPLATE", "FORM", 2, "{\"schema\":true}", "{\"value\":true}",
                 now, now,
-                null, null, null, List.of(step), attachments);
+                null, null, null, null, List.of(step), attachments);
     }
 
     private DwOrganizationNode sampleOrgNode(String code) {
