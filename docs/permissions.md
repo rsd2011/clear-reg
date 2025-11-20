@@ -17,7 +17,7 @@
   - 결재자 검증: ApprovalGroupMember 기반 단계별 승인/반려 권한 검증을 추가(T4).
   - 참조자 권한: DraftReference로 열람/알림만 허용, 수정/결재 권한은 부여하지 않음(T2/T14).
   - RowScope 확장: 작성자/결재자/참조자 스코프 필터를 지원하도록 list API 스펙을 확장(T14/T15).
-  - 감사: `DRAFT_AUDIT` 보유자만 모든 조직/기안 감사 이력(`/api/drafts/{id}/audit`) 열람 가능. 감사 이벤트에 IP/UA 포함, 퍼블리셔로 SIEM 연계(`draft.audit.publisher=siem`) 가능.
+  - 감사: `DRAFT_AUDIT` 보유자만 모든 조직/기안 감사 이력(`/api/drafts/{id}/audit`) 열람 가능(필터: action/actor/from/to). 감사 이벤트에 IP/UA 포함, 퍼블리셔(`draft.audit.publisher=event|kafka|siem|outbox`)로 중앙 적재/연계. 보존 정책: 감사 로그 최소 1년, outbox 재전송/TTL 관리.
 - 공통 코드 서비스(`FeatureCode.COMMON_CODE`)는 시스템/ DW 양쪽 테이블을 통합 조회하며,
   관리자만이 시스템 코드 값을 생성/수정(`ActionCode.UPDATE`)할 수 있다. 일반 사용자는 `READ`만 부여된다.
 

@@ -30,7 +30,7 @@
 | T13 | 테스트 | 통합/리포지토리/동시성 테스트 확장 | High | 상태 전이, 락, 컨트롤러, 커버리지 ≥80% 유지 |
 | T14 | 보안 | 열람/권한 세분화 | High | ✅ RowScope 기본 ORG/OWN승격, 열람 권한(작성자/결재선/위임/참조/AUDIT) 검증, API 호출자 username 기반 체크, 테스트 통과 |
 | T15 | 데이터/성능 | 검색 필터·인덱스 보강 | Medium | ✅ 목록 조회 필터(status/business/createdBy/title) 추가 및 OpenAPI 반영 |
-| T16 | 감사 | 감사 로그/감사 이벤트 | Medium | ✅ 감사 이벤트 퍼블리셔 + 감사 이력 API(`/api/drafts/{id}/audit` 필터: action/actor/from/to), IP/UA 필드 포함, `draft.audit.publisher=siem|kafka|event` 지원, 신뢰 프록시 헤더 검증 |
+| T16 | 감사 | 감사 로그/감사 이벤트 | Medium | ✅ 감사 이벤트 퍼블리셔 + 감사 이력 API(`/api/drafts/{id}/audit` 필터: action/actor/from/to), IP/UA 필드 포함, `draft.audit.publisher=event|kafka|siem|outbox` 지원, 신뢰 프록시 헤더 검증. 보존 정책/DB outbox 추가 |
 | T17 | 파일 | 첨부 다운로드/삭제 정책 강화 | Medium | file-core 연동, 권한, 바이러스 스캔 후크 |
 ## Document Follow-ups
 - `docs/permissions.md`: 결재자/참조자 권한, 상태 전이 정책 추가 (T4, T5, T14)
