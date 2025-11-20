@@ -27,9 +27,10 @@
 - 파일 메타/히스토리 보존: 1년 이상 (규제에 맞춰 조정).
 - AV 시그니처 업데이트 모니터링, 스캔 실패 재시도 큐.
 
-## 다음 작업(TODO)
-1) FileManagementPort 어댑터에 AV 스캔 훅 추가 (동기 or 비동기 폴러)  
-2) 파일 메타에 `sha256`, `scannedAt`, `scanStatus`, `blockedReason` 필드 추가 + 마이그레이션  
-3) FileController 다운로드 시 요청자 검증 로직에 기안 맥락 권한 체크 추가 (작성자/결재자/참조자)  
-4) 감사 퍼블리셔 연계: 업로드/다운로드/삭제 감사 outbox 기록  
-5) 설정: `file.scan.enabled`, `file.scan.max-size`, `file.scan.timeout-ms`, `file.signed-url.ttl` 등 프로퍼티 추가  
+## 진행 현황 (T17)
+- 완료: AV 스캔 훅 추가(`FileScanner` 포트, 기본 NoOp/Disabled 스캐너), 파일 메타 필드(`sha256`, `scanStatus`, `scannedAt`, `blockedReason`) 및 마이그레이션 적용
+- 진행 예정:
+  1) FileController 다운로드 권한을 기안 맥락(작성자/결재자/참조자/관리자) 기준으로 확장  
+  2) 업로드/다운로드/삭제 감사 이벤트를 outbox/Kafka/SIEM으로 퍼블리시  
+  3) 설정 프로퍼티 정리: `file.scan.enabled`, `file.scan.max-size`, `file.scan.timeout-ms`, `file.signed-url.ttl`  
+  4) 스캔 실패 재시도/큐 정책 및 보존 TTL 문서화
