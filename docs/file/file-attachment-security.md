@@ -31,6 +31,8 @@
 - 완료: AV 스캔 훅 추가(`FileScanner` 포트, 기본 NoOp/Disabled 스캐너), 파일 메타 필드(`sha256`, `scanStatus`, `scannedAt`, `blockedReason`) 및 마이그레이션 적용, 파일 감사 퍼블리셔 훅(`FileAuditPublisher`, NoOp 기본) 추가
 - 진행 예정/진행 중:
   1) (부분) FileController 다운로드에 `draftId` 컨텍스트 추가, 기안에 첨부된 파일인지 검증 후 비소유자도 다운로드 가능하게 허용. 결재자/참조자 권한 체크는 Draft 서비스가 수행.  
-  2) 업로드/다운로드/삭제 감사 이벤트를 outbox/Kafka/SIEM으로 퍼블리시 (현재 NoOp, 어댑터 필요)  
+  2) 업로드/다운로드/삭제 감사 이벤트를 outbox/Kafka/SIEM으로 퍼블리시  
+     - 현황: 기본 NoOp + `file.audit.publisher=log` 로깅 퍼블리셔 추가  
+     - TODO: outbox row 적재 + Kafka/SIEM 커넥터 구현  
   3) 설정 프로퍼티 정리: `file.scan.enabled`, `file.scan.max-size`, `file.scan.timeout-ms`, `file.signed-url.ttl`  
   4) 스캔 실패 재시도/큐 정책 및 보존 TTL 문서화
