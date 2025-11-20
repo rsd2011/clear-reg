@@ -35,4 +35,4 @@
      - 현황: NoOp 기본, `file.audit.publisher=log|kafka|outbox|siem` 선택 가능, outbox 테이블(`docs/migrations/2025-11-20-file-audit-outbox.sql`) + 스케줄 릴레이(`FileAuditOutboxRelay`) 동작  
      - TODO: SIEM 전송 실제 어댑터 교체 및 브로커 소비자 통합 테스트  
   3) 설정 프로퍼티 적용: `file.security.scan-enabled`, `file.security.max-size-bytes`, `file.security.scan-timeout-ms`, `file.security.signed-url-ttl-seconds` (`FileSecurityProperties`) → 스캔 토글, 최대 크기, 타임아웃을 FileService에 반영 완료  
-  4) 스캔 실패 재시도/큐 정책 및 보존 TTL 문서화
+  4) 스캔 실패 재시도/큐 정책: PENDING/FAILED 재스캔 스케줄러(`FileScanRescheduler`, `file.security.rescan-enabled/rescan-interval-ms`) 적용. 추가로 TTL/보존 정책은 운영 결정 후 반영 필요
