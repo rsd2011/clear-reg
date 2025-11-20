@@ -181,7 +181,7 @@ class DraftControllerTest {
     @DisplayName("Given 회수 요청 When POST 호출 Then 기안이 WITHDRAWN 된다")
     void givenWithdrawRequest_whenPosting_thenWithdrawn() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
-        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_CANCEL)).willReturn(null);
+        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_WITHDRAW)).willReturn(null);
         given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
         DraftResponse withdrawn = sampleResponse(DraftStatus.WITHDRAWN);
         given(draftApplicationService.withdraw(any(), eq("writer"), eq("ORG-001"))).willReturn(withdrawn);
@@ -198,7 +198,7 @@ class DraftControllerTest {
     @DisplayName("Given 재상신 요청 When POST 호출 Then 기안이 재상신된다")
     void givenResubmitRequest_whenPosting_thenResubmits() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.WITHDRAWN);
-        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_SUBMIT)).willReturn(null);
+        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_RESUBMIT)).willReturn(null);
         given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
         DraftResponse resubmitted = sampleResponse(DraftStatus.IN_REVIEW);
         given(draftApplicationService.resubmit(any(), eq("writer"), eq("ORG-001"))).willReturn(resubmitted);
@@ -215,7 +215,7 @@ class DraftControllerTest {
     @DisplayName("Given 위임 요청 When POST 호출 Then 위임 대상이 설정된다")
     void givenDelegateRequest_whenPosting_thenDelegates() throws Exception {
         DraftResponse snapshot = sampleResponse(DraftStatus.IN_REVIEW);
-        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_APPROVE)).willReturn(null);
+        given(permissionEvaluator.evaluate(FeatureCode.NOTICE, ActionCode.DRAFT_DELEGATE)).willReturn(null);
         given(draftApplicationService.getDraft(snapshot.id(), "ORG-001", false)).willReturn(snapshot);
         DraftApprovalStepResponse delegatedStep = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
                 "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), "위임", "delegatee", OffsetDateTime.now(ZoneOffset.UTC));

@@ -114,32 +114,32 @@ public class DraftController {
     }
 
     @PostMapping("/{id}/withdraw")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CANCEL)
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_WITHDRAW)
     public DraftResponse withdrawDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
         DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
-        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_CANCEL);
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_WITHDRAW);
         return draftApplicationService.withdraw(id, context.username(), context.organizationCode());
     }
 
     @PostMapping("/{id}/resubmit")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_SUBMIT)
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_RESUBMIT)
     public DraftResponse resubmitDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
         DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), hasAuditPermission());
-        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_SUBMIT);
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_RESUBMIT);
         return draftApplicationService.resubmit(id, context.username(), context.organizationCode());
     }
 
     @PostMapping("/{id}/delegate")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_APPROVE)
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_DELEGATE)
     public DraftResponse delegateDraft(@PathVariable UUID id,
                                        @Valid @RequestBody DraftDecisionRequest request,
                                        @RequestParam("delegatedTo") String delegatedTo) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
         DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), audit);
-        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_DELEGATE);
         return draftApplicationService.delegate(id, request, delegatedTo, context.username(), context.organizationCode(), audit);
     }
 
