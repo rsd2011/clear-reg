@@ -4,6 +4,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.example.file.port.FileScanner;
 import com.example.file.port.NoOpFileScanner;
@@ -13,6 +14,7 @@ import com.example.file.config.FileSecurityProperties;
 
 @Configuration
 @EnableConfigurationProperties(FileSecurityProperties.class)
+@EnableScheduling
 public class FileCoreAutoConfiguration {
 
     @Bean
