@@ -43,7 +43,7 @@ import redis.embedded.RedisServer;
         "readmodel.menu.enabled=false",
         "readmodel.permission-menu.enabled=false"
 })
-@Import(ReadModelWorkerE2ETest.ReadModelTestConfig.class)
+@Import({ReadModelWorkerE2ETest.ReadModelTestConfig.class, com.example.server.TestDraftAuditConfig.class})
 @DisplayName("ReadModelWorker E2E (embedded Redis)")
 class ReadModelWorkerE2ETest {
 
