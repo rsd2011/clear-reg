@@ -106,7 +106,7 @@ public class DraftApplicationService {
         attachFiles(request.attachments(), draft, actor, now);
         draft.initializeWorkflow(now);
         Draft saved = draftRepository.save(draft);
-        businessPolicy.afterStateChanged(saved, DraftAction.CREATED);
+        businessPolicy.afterStateChanged(saved.getId(), saved.getBusinessFeatureCode(), saved.getStatus(), DraftAction.CREATED, actor);
         return DraftResponse.from(saved);
     }
 
@@ -117,7 +117,7 @@ public class DraftApplicationService {
         draft.submit(actor, now());
         publish(DraftAction.SUBMITTED, draft, actor, null, null, null);
         audit(DraftAction.SUBMITTED, draft, actor, null, organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.SUBMITTED);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.SUBMITTED, actor);
         return DraftResponse.from(draft);
     }
 
@@ -133,7 +133,7 @@ public class DraftApplicationService {
         draft.approveStep(request.stepId(), actor, request.comment(), now());
         publish(DraftAction.APPROVED, draft, actor, request.stepId(), null, request.comment());
         audit(DraftAction.APPROVED, draft, actor, request.comment(), organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.APPROVED);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.APPROVED, actor);
         return DraftResponse.from(draft);
     }
 
@@ -149,7 +149,7 @@ public class DraftApplicationService {
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
         publish(DraftAction.REJECTED, draft, actor, request.stepId(), null, request.comment());
         audit(DraftAction.REJECTED, draft, actor, request.comment(), organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.REJECTED);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.REJECTED, actor);
         return DraftResponse.from(draft);
     }
 
@@ -160,7 +160,7 @@ public class DraftApplicationService {
         draft.cancel(actor, now());
         publish(DraftAction.CANCELLED, draft, actor, null, null, null);
         audit(DraftAction.CANCELLED, draft, actor, null, organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.CANCELLED);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.CANCELLED, actor);
         return DraftResponse.from(draft);
     }
 
@@ -171,7 +171,7 @@ public class DraftApplicationService {
         draft.withdraw(actor, now());
         publish(DraftAction.WITHDRAWN, draft, actor, null, null, null);
         audit(DraftAction.WITHDRAWN, draft, actor, null, organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.WITHDRAWN);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.WITHDRAWN, actor);
         return DraftResponse.from(draft);
     }
 
@@ -182,7 +182,7 @@ public class DraftApplicationService {
         draft.resubmit(actor, now());
         publish(DraftAction.RESUBMITTED, draft, actor, null, null, null);
         audit(DraftAction.RESUBMITTED, draft, actor, null, organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.RESUBMITTED);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.RESUBMITTED, actor);
         return DraftResponse.from(draft);
     }
 
@@ -199,7 +199,7 @@ public class DraftApplicationService {
         draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
         publish(DraftAction.DELEGATED, draft, actor, request.stepId(), delegatedTo, request.comment());
         audit(DraftAction.DELEGATED, draft, actor, request.comment(), organizationCode, null, null);
-        businessPolicy.afterStateChanged(draft, DraftAction.DELEGATED);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.DELEGATED, actor);
         return DraftResponse.from(draft);
     }
 
