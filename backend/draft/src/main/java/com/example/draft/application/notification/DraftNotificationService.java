@@ -9,6 +9,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.draft.domain.Draft;
+import com.example.draft.domain.DraftApprovalState;
+import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
+import com.example.draft.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 @Service
@@ -16,11 +19,17 @@ public class DraftNotificationService {
 
     private final DraftNotificationPublisher publisher;
     private final DraftReferenceRepository referenceRepository;
+    private final ApprovalGroupRepository approvalGroupRepository;
+    private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
 
     public DraftNotificationService(DraftNotificationPublisher publisher,
-                                    DraftReferenceRepository referenceRepository) {
+                                    DraftReferenceRepository referenceRepository,
+                                    ApprovalGroupRepository approvalGroupRepository,
+                                    ApprovalGroupMemberRepository approvalGroupMemberRepository) {
         this.publisher = publisher;
         this.referenceRepository = referenceRepository;
+        this.approvalGroupRepository = approvalGroupRepository;
+        this.approvalGroupMemberRepository = approvalGroupMemberRepository;
     }
 
     @Transactional(readOnly = true)
@@ -59,6 +68,20 @@ public class DraftNotificationService {
         }
         referenceRepository.findByDraftIdAndActiveTrue(draft.getId())
                 .forEach(ref -> recipients.add(ref.getReferencedUserId()));
+        resolveNextApprovers(draft).forEach(recipients::add);
         return recipients.stream().distinct().toList();
+    }
+
+    private List<String> resolveNextApprovers(Draft draft) {
+        return draft.getApprovalSteps().stream()
+                .filter(step -> step.getState() == DraftApprovalState.WAITING)
+                .findFirst()
+                .map(step -> approvalGroupRepository.findByGroupCode(step.getApprovalGroupCode())
+                        .map(group -> approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId())
+                                .stream()
+                                .map(com.example.draft.domain.ApprovalGroupMember::getMemberUserId)
+                                .toList())
+                        .orElse(List.of()))
+                .orElse(List.of());
     }
 }
