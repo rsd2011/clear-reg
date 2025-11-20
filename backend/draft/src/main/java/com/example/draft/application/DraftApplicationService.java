@@ -19,6 +19,8 @@ import com.example.draft.application.response.DraftResponse;
 import com.example.draft.application.notification.DraftNotificationService;
 import com.example.draft.application.response.DraftHistoryResponse;
 import com.example.draft.application.response.DraftReferenceResponse;
+import com.example.draft.application.audit.DraftAuditEvent;
+import com.example.draft.application.audit.DraftAuditPublisher;
 import com.example.draft.domain.ApprovalGroup;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
@@ -54,6 +56,7 @@ public class DraftApplicationService {
     private final DraftHistoryRepository draftHistoryRepository;
     private final DraftReferenceRepository draftReferenceRepository;
     private final DraftNotificationService notificationService;
+    private final DraftAuditPublisher auditPublisher;
     private final Clock clock;
 
     public DraftApplicationService(DraftRepository draftRepository,
@@ -65,6 +68,7 @@ public class DraftApplicationService {
                                    DraftHistoryRepository draftHistoryRepository,
                                    DraftReferenceRepository draftReferenceRepository,
                                    DraftNotificationService notificationService,
+                                   DraftAuditPublisher auditPublisher,
                                    Clock clock) {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
@@ -75,6 +79,7 @@ public class DraftApplicationService {
         this.draftHistoryRepository = draftHistoryRepository;
         this.draftReferenceRepository = draftReferenceRepository;
         this.notificationService = notificationService;
+        this.auditPublisher = auditPublisher;
         this.clock = clock;
     }
 
@@ -286,11 +291,11 @@ public class DraftApplicationService {
     }
 
     private void audit(String action, Draft draft, String actor, String comment, String organizationCode) {
-        // TODO: hook into central audit logger / outbox
-        String details = "%s by %s".formatted(action, actor);
+        String details = comment != null ? comment : "%s by %s".formatted(action, actor);
+        OffsetDateTime occurredAt = now();
         draftHistoryRepository.save(
-                com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action, actor,
-                        comment != null ? comment : details, now()));
+                com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action, actor, details, occurredAt));
+        auditPublisher.publish(new DraftAuditEvent(action, draft.getId(), actor, organizationCode, comment, occurredAt));
     }
 
     /**

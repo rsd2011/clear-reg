@@ -83,6 +83,9 @@ class DraftApplicationServiceTest {
     @Mock
     private DraftReferenceRepository draftReferenceRepository;
 
+    @Mock
+    private com.example.draft.application.audit.DraftAuditPublisher auditPublisher;
+
     private Clock clock;
 
     @InjectMocks
@@ -93,7 +96,7 @@ class DraftApplicationServiceTest {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
                 approvalGroupRepository, approvalGroupMemberRepository, mappingRepository,
-                draftHistoryRepository, draftReferenceRepository, notificationService, clock);
+                draftHistoryRepository, draftReferenceRepository, notificationService, auditPublisher, clock);
     }
 
     @Test
