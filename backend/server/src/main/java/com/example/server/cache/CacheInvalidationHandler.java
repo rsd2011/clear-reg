@@ -13,6 +13,7 @@ import com.example.common.cache.CacheInvalidationEvent;
 import com.example.common.cache.CacheInvalidationType;
 import com.example.common.cache.CacheNames;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
+import com.example.dw.application.readmodel.MenuReadModelPort;
 
 @Component
 public class CacheInvalidationHandler {
@@ -22,11 +23,15 @@ public class CacheInvalidationHandler {
     private final CacheManager cacheManager;
     @Nullable
     private final OrganizationReadModelPort organizationReadModelPort;
+    @Nullable
+    private final MenuReadModelPort menuReadModelPort;
 
     public CacheInvalidationHandler(CacheManager cacheManager,
-                                    @Nullable OrganizationReadModelPort organizationReadModelPort) {
+                                    @Nullable OrganizationReadModelPort organizationReadModelPort,
+                                    @Nullable MenuReadModelPort menuReadModelPort) {
         this.cacheManager = cacheManager;
         this.organizationReadModelPort = organizationReadModelPort;
+        this.menuReadModelPort = menuReadModelPort;
     }
 
     public void handle(CacheInvalidationEvent event) {
@@ -44,7 +49,13 @@ public class CacheInvalidationHandler {
                     organizationReadModelPort.rebuild();
                 }
             }
-            case PERMISSION_MENU -> evict(CacheNames.USER_DETAILS); // 최소 영향: 사용자 권한 캐시만 무효화
+            case PERMISSION_MENU -> {
+                evict(CacheNames.USER_DETAILS);
+                if (menuReadModelPort != null && menuReadModelPort.isEnabled()) {
+                    menuReadModelPort.evict();
+                    menuReadModelPort.rebuild();
+                }
+            }
             case MASKING -> evict(CacheNames.COMMON_CODE_AGGREGATES);
             default -> log.debug("Unhandled cache invalidation type {}", type);
         }

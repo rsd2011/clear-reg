@@ -9,6 +9,8 @@ import com.example.auth.security.JwtProperties;
 import com.example.auth.config.AuthPolicyProperties;
 import com.example.auth.config.SessionPolicyProperties;
 import com.example.dw.config.DwIngestionProperties;
+import com.example.server.readmodel.MenuReadModelProperties;
+import com.example.server.readmodel.OrganizationReadModelProperties;
 
 @SpringBootApplication(scanBasePackages = {
         "com.example.server",
@@ -21,7 +23,7 @@ import com.example.dw.config.DwIngestionProperties;
         "com.example.platform"
 })
 @EnableConfigurationProperties({JwtProperties.class, AuthPolicyProperties.class, SessionPolicyProperties.class,
-        DwIngestionProperties.class})
+        DwIngestionProperties.class, OrganizationReadModelProperties.class, MenuReadModelProperties.class})
 @EnableScheduling
 public class Application {
 

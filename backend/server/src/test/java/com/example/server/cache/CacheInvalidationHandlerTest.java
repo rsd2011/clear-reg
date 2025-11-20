@@ -15,12 +15,14 @@ import com.example.common.cache.CacheInvalidationEvent;
 import com.example.common.cache.CacheInvalidationType;
 import com.example.common.cache.CacheNames;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
+import com.example.dw.application.readmodel.MenuReadModelPort;
 
 class CacheInvalidationHandlerTest {
 
     private final CacheManager cacheManager = Mockito.mock(CacheManager.class);
     private final OrganizationReadModelPort readModelPort = Mockito.mock(OrganizationReadModelPort.class);
-    private final CacheInvalidationHandler handler = new CacheInvalidationHandler(cacheManager, readModelPort);
+    private final MenuReadModelPort menuReadModelPort = Mockito.mock(MenuReadModelPort.class);
+    private final CacheInvalidationHandler handler = new CacheInvalidationHandler(cacheManager, readModelPort, menuReadModelPort);
 
     @Test
     void evictsRowScopeCache() {
@@ -49,9 +51,12 @@ class CacheInvalidationHandlerTest {
     void permissionMenuClearsUserCache() {
         Cache cache = Mockito.mock(Cache.class);
         when(cacheManager.getCache(CacheNames.USER_DETAILS)).thenReturn(cache);
+        when(menuReadModelPort.isEnabled()).thenReturn(true);
 
         handler.handle(new CacheInvalidationEvent(CacheInvalidationType.PERMISSION_MENU, "t1", "s1", 1L, Instant.now()));
 
         verify(cache, times(1)).clear();
+        verify(menuReadModelPort).evict();
+        verify(menuReadModelPort).rebuild();
     }
 }
