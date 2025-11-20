@@ -10,6 +10,7 @@ jackson = "2.17.1"
 testcontainers = "1.20.1"
 tika = "2.9.2"
 archunit = "1.2.1"
+micrometer-tracing = "1.2.0"
 
 [libraries]
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
@@ -51,6 +52,8 @@ spring-batch-test = { module = "org.springframework.batch:spring-batch-test" }
 archunit-junit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 spring-kafka = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-boot" }
 embedded-redis = { module = "it.ozimov:embedded-redis", version = "0.7.3" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version = "1.43.0" }
+micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }
 
 [bundles]
 spring-boot-core = ["spring-boot-starter", "spring-boot-starter-validation"]

@@ -21,6 +21,8 @@ dependencies {
     implementation libs.spring.kafka
     implementation libs.jackson.databind
     implementation libs.spring.boot.starter.data.redis
+    implementation libs.micrometer.tracing.bridge.otel
+    implementation libs.opentelemetry.exporter.otlp
 
     runtimeOnly libs.h2.database
 

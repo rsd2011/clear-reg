@@ -19,6 +19,8 @@ dependencies {
     implementation libs.spring.boot.starter.validation
     implementation libs.bundles.spring.boot.security
     implementation libs.springdoc.openapi.starter
+    implementation libs.micrometer.tracing.bridge.otel
+    implementation libs.opentelemetry.exporter.otlp
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

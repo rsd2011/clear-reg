@@ -25,6 +25,8 @@ dependencies {
     implementation libs.caffeine
     implementation libs.tika.core
     implementation libs.jackson.dataformat.yaml
+    implementation libs.micrometer.tracing.bridge.otel
+    implementation libs.opentelemetry.exporter.otlp
     runtimeOnly libs.h2.database
     compileOnly libs.lombok
     annotationProcessor libs.lombok
