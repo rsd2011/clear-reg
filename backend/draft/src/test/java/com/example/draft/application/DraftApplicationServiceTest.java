@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -174,6 +175,8 @@ class DraftApplicationServiceTest {
         DraftResponse response = service.submitDraft(draft.getId(), "writer", ORG);
 
         assertThat(response.status()).isEqualTo(DraftStatus.IN_REVIEW);
+        verify(notificationService).notify(eq("SUBMITTED"), any(Draft.class), eq("writer"),
+                isNull(), isNull(), isNull(), any());
     }
 
     @Test
@@ -188,6 +191,8 @@ class DraftApplicationServiceTest {
 
         assertThat(response.status()).isEqualTo(DraftStatus.IN_REVIEW);
         assertThat(response.approvalSteps()).anyMatch(step -> step.stepOrder() == 2 && step.state().name().equals("IN_PROGRESS"));
+        verify(notificationService).notify(eq("APPROVED"), any(Draft.class), eq("approver"),
+                eq(firstStep), isNull(), eq("ok"), any());
     }
 
     @Test
@@ -206,6 +211,8 @@ class DraftApplicationServiceTest {
 
         assertThat(response.status()).isEqualTo(DraftStatus.APPROVED);
         assertThat(response.completedAt()).isNotNull();
+        verify(notificationService).notify(eq("APPROVED"), any(Draft.class), eq("approver2"),
+                eq(secondStep), isNull(), eq("second"), any());
     }
 
     @Test
@@ -220,6 +227,8 @@ class DraftApplicationServiceTest {
 
         assertThat(response.status()).isEqualTo(DraftStatus.REJECTED);
         assertThat(response.completedAt()).isNotNull();
+        verify(notificationService).notify(eq("REJECTED"), any(Draft.class), eq("approver"),
+                eq(stepId), isNull(), eq("반려"), any());
     }
 
     @Test
@@ -231,6 +240,8 @@ class DraftApplicationServiceTest {
 
         assertThat(response.status()).isEqualTo(DraftStatus.CANCELLED);
         assertThat(response.cancelledAt()).isNotNull();
+        verify(notificationService).notify(eq("CANCELLED"), any(Draft.class), eq("writer"),
+                isNull(), isNull(), isNull(), any());
     }
 
     @Test
@@ -243,6 +254,8 @@ class DraftApplicationServiceTest {
         assertThat(response.status()).isEqualTo(DraftStatus.WITHDRAWN);
         assertThat(response.cancelledAt()).isNull();
         assertThat(response.approvalSteps()).allMatch(step -> step.state().isCompleted());
+        verify(notificationService).notify(eq("WITHDRAWN"), any(Draft.class), eq("writer"),
+                isNull(), isNull(), isNull(), any());
     }
 
     @Test
@@ -257,6 +270,8 @@ class DraftApplicationServiceTest {
         assertThat(response.status()).isEqualTo(DraftStatus.IN_REVIEW);
         assertThat(response.submittedAt()).isNotNull();
         assertThat(response.approvalSteps()).anyMatch(step -> step.state().name().equals("IN_PROGRESS"));
+        verify(notificationService).notify(eq("RESUBMITTED"), any(Draft.class), eq("writer"),
+                isNull(), isNull(), isNull(), any());
     }
 
     @Test
@@ -271,6 +286,8 @@ class DraftApplicationServiceTest {
 
         assertThat(response.approvalSteps())
                 .anyMatch(step -> step.id().equals(stepId) && "delegatee".equals(step.delegatedTo()));
+        verify(notificationService).notify(eq("DELEGATED"), any(Draft.class), eq("approver"),
+                eq(stepId), eq("delegatee"), eq("please handle"), any());
     }
 
     @Test
