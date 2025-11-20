@@ -3,9 +3,9 @@
 <div th:fragment="view">
     <h2 th:text="${draft.title}">기안 상세</h2>
     <p><strong>업무:</strong> <span th:text="${draft.businessFeatureCode}"></span></p>
-    <p><strong>상태:</strong> <span th:text="${draft.status}"></span></p>
+    <p><strong>상태:</strong> <span class="badge" th:text="${draft.status}"></span></p>
     <p><strong>조직:</strong> <span th:text="${draft.organizationCode}"></span></p>
-    <p><strong>작성자:</strong> <span th:text="${draft.formTemplateCode}"></span></p>
+    <p><strong>작성자:</strong> <span th:text="${draft.createdBy}"></span></p>
 
     <h3>결재선</h3>
     <table>
@@ -16,7 +16,7 @@
         <tr th:each="step : ${draft.approvalSteps}">
             <td th:text="${step.stepOrder}"></td>
             <td th:text="${step.approvalGroupCode}"></td>
-            <td th:text="${step.state}"></td>
+            <td><span class="badge" th:text="${step.state}"></span></td>
             <td th:text="${step.actedBy}"></td>
             <td th:text="${step.delegatedTo}"></td>
             <td th:text="${step.comment}"></td>
@@ -45,24 +45,26 @@
     </ul>
 
     <h3>액션</h3>
-    <form class="inline" th:action="@{|/api/drafts/${draft.id}/submit|}" method="post">
-        <button type="submit">상신</button>
-    </form>
-    <form class="inline" th:action="@{|/api/drafts/${draft.id}/withdraw|}" method="post">
-        <button type="submit">회수</button>
-    </form>
-    <form class="inline" th:action="@{|/api/drafts/${draft.id}/resubmit|}" method="post">
-        <button type="submit">재상신</button>
-    </form>
-    <form class="inline" th:action="@{|/api/drafts/${draft.id}/approve|}" method="post">
-        <input type="hidden" name="stepId" th:value="${draft.approvalSteps[0].id}"/>
-        <input type="hidden" name="comment" value="승인"/>
-        <button type="submit">승인</button>
-    </form>
-    <form class="inline" th:action="@{|/api/drafts/${draft.id}/reject|}" method="post">
-        <input type="hidden" name="stepId" th:value="${draft.approvalSteps[0].id}"/>
-        <input type="hidden" name="comment" value="반려"/>
-        <button type="submit">반려</button>
-    </form>
+    <div th:with="waitingStep=${#lists.find(draft.approvalSteps, s -> s.state.name() == 'IN_PROGRESS' or s.state.name() == 'WAITING')}">
+        <form class="inline" th:if="${draft.status.name() == 'DRAFT'}" th:action="@{|/api/drafts/${draft.id}/submit|}" method="post">
+            <button type="submit">상신</button>
+        </form>
+        <form class="inline" th:if="${draft.status.name() == 'IN_REVIEW'}" th:action="@{|/api/drafts/${draft.id}/withdraw|}" method="post">
+            <button type="submit">회수</button>
+        </form>
+        <form class="inline" th:if="${draft.status.name() == 'WITHDRAWN'}" th:action="@{|/api/drafts/${draft.id}/resubmit|}" method="post">
+            <button type="submit">재상신</button>
+        </form>
+        <form class="inline" th:if="${waitingStep != null and draft.status.name() == 'IN_REVIEW'}" th:action="@{|/api/drafts/${draft.id}/approve|}" method="post">
+            <input type="hidden" name="stepId" th:value="${waitingStep.id}"/>
+            <input type="hidden" name="comment" value="승인"/>
+            <button type="submit">승인</button>
+        </form>
+        <form class="inline" th:if="${waitingStep != null and draft.status.name() == 'IN_REVIEW'}" th:action="@{|/api/drafts/${draft.id}/reject|}" method="post">
+            <input type="hidden" name="stepId" th:value="${waitingStep.id}"/>
+            <input type="hidden" name="comment" value="반려"/>
+            <button type="submit">반려</button>
+        </form>
+    </div>
 </div>
 </html>
