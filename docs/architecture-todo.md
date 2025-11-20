@@ -36,7 +36,7 @@
   - [x] Policy, DW ingestion policy, and DW batch ports now covered by adapter tests.
 - [x] Audit `backend/server` for direct entity cross-usage; replace with DTOs or service calls.
   - [x] Completed dependency audit (`docs/module-decoupling/server-audit.md`); server now uses only port DTOs.
-ㅔ- [x] Port 호환성 회귀 방지를 위해 `backend/dw-gateway-client` 기반 MockServer/contract 테스트 보강 (policy/file/DW 전 포트 대상).
+  - [x] Port 호환성 회귀 방지를 위해 `backend/dw-gateway-client` 기반 MockServer/contract 테스트 보강 (policy/file/DW 전 포트 대상).
 
 ### C. Data & DW Pipeline (Weeks 4-10)
 - [x] Separate DW ingestion REST API from main server (new Spring Boot app or dedicated profile) and align with batch workers.
@@ -64,20 +64,20 @@
   - [x] dw-worker 분리/큐 설계 문서화 (`docs/dw/dw-worker-plan.md`).
   - [x] Outbox 폴러 + Kafka 연동(플래그 기반) 구현, JSON 스키마 표준화. SQS 프로바이더는 후속.
   - [x] `dw-worker` 컨테이너라이징 및 독립 스케일링 파이프라인 설계/매니페스트 추가 (`docs/dw/dw-worker-deploy.md`, Dockerfile 포함).
-- [ ] Materialize read models (Redis/Elasticache) for organization tree, menu, and permission menus (CQRS pattern).
+- [x] Materialize read models (Redis/Elasticache) for organization tree, menu, and permission menus (CQRS pattern).
   - [x] 설계/로드맵 문서화 완료 (`docs/data/read-model-plan.md`).
   - [x] Redis/Elasticache 스키마 + TTL/무효화 정책 구현, API fallback 시나리오 검증 (`docs/data/organization-read-model.md`).
   - [x] RowScope/권한 변경 이벤트 기반 read-model 갱신 파이프라인 및 회귀 테스트 작성 (PermissionSetChanged → read model rebuild).
-- [ ] Adopt GitOps-managed policy repo; automate deployment + rollback of YAML changes.
+- [x] Adopt GitOps-managed policy repo; automate deployment + rollback of YAML changes.
   - [x] GitOps 저장소/파이프라인 설계 문서화 (`docs/policy/gitops-repo-plan.md`).
   - [x] 정책 repo → Jenkins/GitHub Actions 자동 검증 + diff 시각화 + 승인 플로우 구현 (`.github/workflows/policy-gitops.yml`, `docs/policy/gitops-pipeline.md`).
   - [x] 실패 시 자동 롤백/알림 시나리오 테스트 (workflow_dispatch rollback + 공용 배포 스크립트).
-- [ ] Implement centralized cache invalidation channel (Redis pub/sub) for RowScope/org caches.
+- [x] Implement centralized cache invalidation channel (Redis pub/sub) for RowScope/org caches.
   - [x] 설계안/전파 플로우 문서화 (`docs/data/cache-invalidation-plan.md`).
-  - [x] Redis pub/sub 기반 캐시 무효화 채널 MVP 구현, server에 적용 (구독/핸들러/퍼블리셔). dw-worker/batch는 후속 적용.
-- [ ] Define CI-managed database migration strategy (Flyway/Liquibase) including rollback verification.
+  - [x] Redis pub/sub 기반 캐시 무효화 채널 MVP 구현, server/dw-worker/batch에 적용(구독/핸들러/퍼블리셔).
+- [x] Define CI-managed database migration strategy (Flyway/Liquibase) including rollback verification.
   - [x] Flyway 기반 CI/rollback 전략 문서화 (`docs/data/db-migration-ci-plan.md`).
-  - [x] Rollback 시뮬레이션을 CI 파이프라인에 추가 (`.github/workflows/db-migration.yml`, `scripts/verify-migrations.sh`). 주요 모듈 smoke 테스트는 후속.
+  - [x] Rollback 시뮬레이션을 CI 파이프라인에 추가 (`.github/workflows/db-migration.yml`, `scripts/verify-migrations.sh`). 주요 모듈 smoke 테스트 포함.
 
 ### F. Long-term Vision (>12 Months)
 - [ ] Gradually peel off bounded contexts (Auth, Policy, File, DW Query) into independent Spring Boot services or Modulith slices with separate scaling policies.
