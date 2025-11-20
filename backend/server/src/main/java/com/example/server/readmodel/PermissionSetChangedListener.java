@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.example.auth.permission.event.PermissionSetChangedEvent;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
 import com.example.dw.application.readmodel.MenuReadModelPort;
+import com.example.dw.application.readmodel.PermissionMenuReadModelPort;
 
 @Component
 public class PermissionSetChangedListener {
@@ -17,11 +18,14 @@ public class PermissionSetChangedListener {
 
     private final OrganizationReadModelPort organizationReadModelPort;
     private final MenuReadModelPort menuReadModelPort;
+    private final PermissionMenuReadModelPort permissionMenuReadModelPort;
 
     public PermissionSetChangedListener(@Nullable OrganizationReadModelPort organizationReadModelPort,
-                                        @Nullable MenuReadModelPort menuReadModelPort) {
+                                        @Nullable MenuReadModelPort menuReadModelPort,
+                                        @Nullable PermissionMenuReadModelPort permissionMenuReadModelPort) {
         this.organizationReadModelPort = organizationReadModelPort;
         this.menuReadModelPort = menuReadModelPort;
+        this.permissionMenuReadModelPort = permissionMenuReadModelPort;
     }
 
     @EventListener
@@ -36,6 +40,11 @@ public class PermissionSetChangedListener {
         if (menuReadModelPort != null && menuReadModelPort.isEnabled()) {
             menuReadModelPort.rebuild();
             log.info("Menu read model rebuilt due to permission change (principal={})", event.principalId());
+        }
+
+        if (permissionMenuReadModelPort != null && permissionMenuReadModelPort.isEnabled() && event.principalId() != null) {
+            permissionMenuReadModelPort.rebuild(event.principalId());
+            log.info("Permission menu read model rebuilt due to permission change (principal={})", event.principalId());
         }
     }
 }

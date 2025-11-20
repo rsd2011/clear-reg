@@ -14,6 +14,7 @@ import com.example.common.cache.CacheInvalidationType;
 import com.example.common.cache.CacheNames;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
 import com.example.dw.application.readmodel.MenuReadModelPort;
+import com.example.dw.application.readmodel.PermissionMenuReadModelPort;
 
 @Component
 public class CacheInvalidationHandler {
@@ -25,13 +26,17 @@ public class CacheInvalidationHandler {
     private final OrganizationReadModelPort organizationReadModelPort;
     @Nullable
     private final MenuReadModelPort menuReadModelPort;
+    @Nullable
+    private final PermissionMenuReadModelPort permissionMenuReadModelPort;
 
     public CacheInvalidationHandler(CacheManager cacheManager,
                                     @Nullable OrganizationReadModelPort organizationReadModelPort,
-                                    @Nullable MenuReadModelPort menuReadModelPort) {
+                                    @Nullable MenuReadModelPort menuReadModelPort,
+                                    @Nullable PermissionMenuReadModelPort permissionMenuReadModelPort) {
         this.cacheManager = cacheManager;
         this.organizationReadModelPort = organizationReadModelPort;
         this.menuReadModelPort = menuReadModelPort;
+        this.permissionMenuReadModelPort = permissionMenuReadModelPort;
     }
 
     public void handle(CacheInvalidationEvent event) {
@@ -54,6 +59,10 @@ public class CacheInvalidationHandler {
                 if (menuReadModelPort != null && menuReadModelPort.isEnabled()) {
                     menuReadModelPort.evict();
                     menuReadModelPort.rebuild();
+                }
+                if (permissionMenuReadModelPort != null && permissionMenuReadModelPort.isEnabled() && event.scopeId() != null) {
+                    permissionMenuReadModelPort.evict(event.scopeId());
+                    permissionMenuReadModelPort.rebuild(event.scopeId());
                 }
             }
             case MASKING -> evict(CacheNames.COMMON_CODE_AGGREGATES);
