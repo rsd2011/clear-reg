@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko" th:replace="layout/main :: content(title='기안 작성', view='this')">
+<div th:fragment="view">
+    <h2>새 기안 작성</h2>
+    <form th:action="@{/drafts}" method="post">
+        <label>제목 <input type="text" name="title" required/></label><br/>
+        <label>업무 Feature <input type="text" name="businessFeatureCode" required/></label><br/>
+        <label>내용 <textarea name="content" rows="6" cols="60" required></textarea></label><br/>
+        <label>결재선 템플릿 ID <input type="text" name="templateId"/></label><br/>
+        <label>기안 양식 템플릿 ID <input type="text" name="formTemplateId"/></label><br/>
+        <label>양식 Payload <textarea name="formPayload" rows="6" cols="60" required>{}</textarea></label><br/>
+        <button type="submit">작성</button>
+    </form>
+</div>
+</html>

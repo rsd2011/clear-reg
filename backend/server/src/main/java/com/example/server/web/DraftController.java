@@ -6,8 +6,11 @@ import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -170,6 +173,30 @@ public class DraftController {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
         return draftApplicationService.getDraft(id, context.organizationCode(), audit);
+    }
+
+    // === Thymeleaf views ===
+    @Controller
+    @RequestMapping("/drafts")
+    public static class DraftViewController {
+        private final DraftApplicationService draftApplicationService;
+
+        public DraftViewController(DraftApplicationService draftApplicationService) {
+            this.draftApplicationService = draftApplicationService;
+        }
+
+        @GetMapping
+        public String listView(Model model) {
+            Page<DraftResponse> drafts = draftApplicationService.listDrafts(Pageable.unpaged(), RowScope.ALL, "", List.of());
+            model.addAttribute("drafts", drafts.getContent());
+            return "draft/list";
+        }
+
+        @GetMapping("/new")
+        public String newDraftForm(Model model) {
+            model.addAttribute("draft", new DraftCreateRequest("", "", "", null, null, "{}", List.of()));
+            return "draft/form";
+        }
     }
 
     private AuthContext currentContext() {
