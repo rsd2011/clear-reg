@@ -303,6 +303,11 @@ public class DraftApplicationService {
 
     private void audit(String action, Draft draft, String actor, String comment, String organizationCode, String ip, String userAgent) {
         String details = comment != null ? comment : "%s by %s".formatted(action, actor);
+        if (ip == null || userAgent == null) {
+            var ctx = com.example.draft.application.audit.AuditRequestContextHolder.current();
+            ip = ip == null ? ctx.map(com.example.draft.application.audit.AuditRequestContext::ip).orElse(null) : ip;
+            userAgent = userAgent == null ? ctx.map(com.example.draft.application.audit.AuditRequestContext::userAgent).orElse(null) : userAgent;
+        }
         OffsetDateTime occurredAt = now();
         draftHistoryRepository.save(
                 com.example.draft.domain.DraftHistory.entry(draft, "AUDIT:" + action, actor, details, occurredAt));

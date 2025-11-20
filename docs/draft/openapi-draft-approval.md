@@ -149,6 +149,7 @@
 - `GET /api/drafts/{id}/references` → `[DraftReferenceResponse]`
 - 권한: `DRAFT_READ`
 - 감사 이력: `GET /api/drafts/{id}/audit` → `[DraftHistoryResponse]` (eventType `AUDIT:*`), 권한 `DRAFT_AUDIT`
+- 감사 이벤트 필드: `ip`, `userAgent` 포함해 SIEM 전송 가능 (`draft.audit.publisher=siem` 설정 시 SIEM 로거로 출력)
 - 이력 응답 예시
 ```json
 [

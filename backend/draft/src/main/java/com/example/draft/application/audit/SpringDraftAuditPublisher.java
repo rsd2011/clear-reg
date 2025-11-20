@@ -1,9 +1,11 @@
 package com.example.draft.application.audit;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnMissingBean(DraftAuditPublisher.class)
 public class SpringDraftAuditPublisher implements DraftAuditPublisher {
 
     private final ApplicationEventPublisher publisher;
