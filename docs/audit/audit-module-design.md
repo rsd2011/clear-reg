@@ -208,7 +208,7 @@ audit:
 ### 마이그레이션
 - P2 △ `auth` 로그인/비밀번호 변경 로그 → AuditPort dual-write 후 레거시 제거
 - P2 △ `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거
-- P2 ☐ `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거
+- P2 ☐ `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(스켈레톤 추가, 적용 대상 선정 필요)**
 - P2 ☐ `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
 - P3 ☐ 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
 
