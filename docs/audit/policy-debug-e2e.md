@@ -28,6 +28,15 @@
   2) 정책에 `maskRule=NONE` 설정 후 동일 호출 → 마스킹 해제 응답 비교
 - 정책 캐시 무효화 테스트(필요 시): 정책 변경 → 디버그 API로 변경 반영 확인 → 동일 API 응답 마스킹 변화 확인
 
+### 추가 시나리오
+- 정책 업데이트 후 캐시/적용 확인
+  1) `/api/admin/policies/effective`로 기존 match 확인
+  2) 정책 DB 업데이트(또는 관리 API) 후 동일 호출 → rowScope/maskRule 변경 확인
+  3) 동일 비즈니스 API 호출해 마스킹/필수 reason 적용 변화 확인
+- SENSITIVE API reason 검증
+  - 헤더 `X-SENSITIVE-API: true` 또는 정책에서 sensitive로 지정된 엔드포인트 호출
+  - `reasonCode` 미포함 시 400 기대, 포함 시 200/성공 기대
+
 ## 4. UI 적용 가이드(요약)
 - 화면에서 민감 필드 표시 전 디버그 API를 호출하거나, 서버 응답의 마스킹 결과를 그대로 렌더링(서버가 결정)
 - “마스킹 상태 배지” 표시: `maskRule` / `rowScope` 값을 함께 노출해 운영자가 즉시 확인 가능
