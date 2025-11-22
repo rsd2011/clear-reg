@@ -119,3 +119,10 @@ audit:
     validation-enabled: true
     reason-parameter: reasonCode
     legal-basis-parameter: legalBasisCode
+    endpoints:
+      - /api/accounts/**
+      - /api/customers/**
+      - /api/files/download/**
+  hash-chain:
+    hmac-enabled: false
+    secret: ""

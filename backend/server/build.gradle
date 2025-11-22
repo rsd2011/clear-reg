@@ -24,6 +24,7 @@ dependencies {
     implementation libs.spring.boot.starter.cache
     implementation libs.spring.boot.starter.data.redis
     implementation libs.caffeine
+    implementation libs.spring.kafka
     implementation libs.tika.core
     implementation libs.jackson.dataformat.yaml
     implementation libs.micrometer.tracing.bridge.otel

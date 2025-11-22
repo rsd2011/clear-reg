@@ -21,6 +21,7 @@ public record PolicyUpdateRequest(
         Boolean auditSensitiveApiDefaultOn,
         @PositiveOrZero Integer auditRetentionDays,
         Boolean auditStrictMode,
-        String auditRiskLevel) {
+        String auditRiskLevel,
+        List<String> auditSensitiveEndpoints) {
 
 }

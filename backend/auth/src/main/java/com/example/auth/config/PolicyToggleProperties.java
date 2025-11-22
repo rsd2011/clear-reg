@@ -25,6 +25,7 @@ public class PolicyToggleProperties {
     private int auditRetentionDays = 730;
     private boolean auditStrictMode = true;
     private String auditRiskLevel = "MEDIUM";
+    private List<String> auditSensitiveEndpoints = new ArrayList<>();
 
     public boolean isPasswordPolicyEnabled() {
         return passwordPolicyEnabled;
@@ -136,5 +137,13 @@ public class PolicyToggleProperties {
 
     public void setAuditRiskLevel(String auditRiskLevel) {
         this.auditRiskLevel = auditRiskLevel;
+    }
+
+    public List<String> getAuditSensitiveEndpoints() {
+        return auditSensitiveEndpoints;
+    }
+
+    public void setAuditSensitiveEndpoints(List<String> auditSensitiveEndpoints) {
+        this.auditSensitiveEndpoints = auditSensitiveEndpoints;
     }
 }

@@ -20,6 +20,9 @@ import com.example.audit.infra.policy.AuditPolicyResolver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
 
 @Service
 public class AuditRecordService implements AuditPort {
@@ -31,17 +34,23 @@ public class AuditRecordService implements AuditPort {
     private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final String topic;
+    private final boolean hmacEnabled;
+    private final String hmacSecret;
 
     public AuditRecordService(AuditLogRepository repository,
                               AuditPolicyResolver policyResolver,
                               ObjectMapper objectMapper,
                               @Nullable KafkaTemplate<String, String> kafkaTemplate,
-                              @Value("${audit.kafka.topic:audit.events.v1}") String topic) {
+                              @Value("${audit.kafka.topic:audit.events.v1}") String topic,
+                              @Value("${audit.hash-chain.hmac-enabled:false}") boolean hmacEnabled,
+                              @Value("${audit.hash-chain.secret:}") String hmacSecret) {
         this.repository = repository;
         this.policyResolver = policyResolver;
         this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
         this.kafkaTemplate = kafkaTemplate;
         this.topic = topic;
+        this.hmacEnabled = hmacEnabled;
+        this.hmacSecret = hmacSecret;
     }
 
     @Override
@@ -97,6 +106,11 @@ public class AuditRecordService implements AuditPort {
             log.warn("Failed to serialize audit extra payload: {}", ex.getMessage());
         }
 
+        String prevHash = repository.findTopByOrderByEventTimeDesc()
+                .map(AuditLogEntity::getHashChain)
+                .orElse("");
+        String hashChain = computeHash(prevHash, event);
+
         return new AuditLogEntity(event.getEventId(),
                 event.getEventTime(),
                 event.getEventType(),
@@ -121,6 +135,35 @@ public class AuditRecordService implements AuditPort {
                 event.getBeforeSummary(),
                 event.getAfterSummary(),
                 extraJson,
-                event.getHashChain());
+                hashChain);
+    }
+
+    private String computeHash(String prevHash, AuditEvent event) {
+        try {
+            String payload = prevHash + "|" + event.getEventId() + "|" + event.getEventTime()
+                    + "|" + event.getEventType() + "|" + event.getAction()
+                    + "|" + (event.getActor() != null ? event.getActor().getId() : "")
+                    + "|" + (event.getSubject() != null ? event.getSubject().getKey() : "");
+            byte[] hash;
+            if (hmacEnabled && hmacSecret != null && !hmacSecret.isBlank()) {
+                var mac = javax.crypto.Mac.getInstance("HmacSHA256");
+                mac.init(new javax.crypto.spec.SecretKeySpec(hmacSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
+                hash = mac.doFinal(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            } else {
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                hash = digest.digest(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            }
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hash) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            log.warn("SHA-256 not available, skipping hash chain");
+            return prevHash;
+        } catch (Exception e) {
+            log.warn("Hash chain calculation failed: {}", e.getMessage());
+            return prevHash;
+        }
     }
 }

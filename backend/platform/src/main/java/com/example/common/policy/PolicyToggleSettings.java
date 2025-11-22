@@ -20,7 +20,8 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                    @JsonProperty(defaultValue = "true") boolean auditSensitiveApiDefaultOn,
                                    @JsonProperty(defaultValue = "730") int auditRetentionDays,
                                    @JsonProperty(defaultValue = "true") boolean auditStrictMode,
-                                   @JsonProperty(defaultValue = "MEDIUM") String auditRiskLevel) {
+                                   @JsonProperty(defaultValue = "MEDIUM") String auditRiskLevel,
+                                   List<String> auditSensitiveEndpoints) {
 
     private static final long DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -40,6 +41,7 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
             auditRetentionDays = 0;
         }
         auditRiskLevel = auditRiskLevel == null ? "MEDIUM" : auditRiskLevel.toUpperCase();
+        auditSensitiveEndpoints = auditSensitiveEndpoints == null ? List.of() : List.copyOf(auditSensitiveEndpoints);
     }
 
     /** 기존 시그니처 호환을 위한 편의 생성자. */
@@ -53,6 +55,6 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                 int fileRetentionDays) {
         this(passwordPolicyEnabled, passwordHistoryEnabled, accountLockEnabled, enabledLoginTypes, maxFileSizeBytes,
                 allowedFileExtensions, strictMimeValidation, fileRetentionDays,
-                true, true, true, 730, true, "MEDIUM");
+                true, true, true, 730, true, "MEDIUM", List.of());
     }
 }

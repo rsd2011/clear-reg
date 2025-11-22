@@ -5,14 +5,18 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.audit.AuditPolicySnapshot;
 import com.example.audit.AuditPort;
+import com.example.server.config.SensitiveApiProperties;
 
 /**
  * 민감 응답 API 호출 시 reason/legalBasis 필수 여부를 검사하는 필터.
@@ -22,15 +26,12 @@ import com.example.audit.AuditPort;
 public class SensitiveApiFilter extends OncePerRequestFilter {
 
     private final AuditPort auditPort;
-    private final String reasonParam;
-    private final String legalBasisParam;
+    private final SensitiveApiProperties properties;
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
-    public SensitiveApiFilter(AuditPort auditPort,
-                              String reasonParam,
-                              String legalBasisParam) {
+    public SensitiveApiFilter(AuditPort auditPort, SensitiveApiProperties properties) {
         this.auditPort = auditPort;
-        this.reasonParam = reasonParam;
-        this.legalBasisParam = legalBasisParam;
+        this.properties = properties;
     }
 
     @Override
@@ -39,13 +40,20 @@ public class SensitiveApiFilter extends OncePerRequestFilter {
 
         // 간단한 heuristic: 헤더 X-SENSITIVE-API: true 또는 정책상 sensitiveApi=true
         boolean headerSensitive = "true".equalsIgnoreCase(request.getHeader("X-SENSITIVE-API"));
+        var policyEndpoints = auditPort.resolve(request.getRequestURI(), request.getMethod())
+                .flatMap(s -> Optional.ofNullable((java.util.List<String>) s.getAttributes().get("sensitiveEndpoints")))
+                .orElse(List.of());
+
+        boolean pathSensitive = properties.getEndpoints().stream()
+                .anyMatch(p -> pathMatcher.match(p, request.getRequestURI()));
+        boolean policyPathSensitive = policyEndpoints.stream().anyMatch(p -> pathMatcher.match(p, request.getRequestURI()));
         boolean policySensitive = auditPort.resolve(request.getRequestURI(), request.getMethod())
                 .map(AuditPolicySnapshot::isSensitiveApi)
                 .orElse(true); // secure-by-default
 
-        if (headerSensitive || policySensitive) {
-            String reason = extract(request, reasonParam);
-            String legal = extract(request, legalBasisParam);
+        if (headerSensitive || pathSensitive || policyPathSensitive || policySensitive) {
+            String reason = extract(request, properties.getReasonParameter());
+            String legal = extract(request, properties.getLegalBasisParameter());
             boolean reasonRequired = auditPort.resolve(request.getRequestURI(), request.getMethod())
                     .map(AuditPolicySnapshot::isReasonRequired)
                     .orElse(true);
