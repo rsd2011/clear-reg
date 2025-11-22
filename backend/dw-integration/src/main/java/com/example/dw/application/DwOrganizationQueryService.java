@@ -31,6 +31,11 @@ public class DwOrganizationQueryService {
     public Page<DwOrganizationNode> getOrganizations(Pageable pageable,
                                                      RowScope rowScope,
                                                      String organizationCode) {
+        var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
+        if (policyMatch != null && policyMatch.getRowScope() != null) {
+            rowScope = RowScope.valueOf(policyMatch.getRowScope());
+        }
+
         if (rowScope == null) {
             throw new IllegalArgumentException("Row scope must be provided");
         }
