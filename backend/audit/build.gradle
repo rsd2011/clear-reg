@@ -23,4 +23,5 @@ dependencies {
     testImplementation libs.bundles.spring.test
     testImplementation libs.junit.platform.launcher
     testImplementation libs.spring.kafka.test
+    testImplementation 'com.h2database:h2'
 }

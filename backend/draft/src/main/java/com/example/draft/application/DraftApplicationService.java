@@ -262,9 +262,10 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.DataPolicyContextHolder.get());
         return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId)
                 .stream()
-                .map(DraftHistoryResponse::from)
+                .map(h -> DraftHistoryResponse.from(h, masker))
                 .toList();
     }
 
@@ -273,9 +274,10 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.DataPolicyContextHolder.get());
         return draftReferenceRepository.findByDraftIdAndActiveTrue(draftId)
                 .stream()
-                .map(DraftReferenceResponse::from)
+                .map(ref -> DraftReferenceResponse.from(ref, masker))
                 .toList();
     }
 
