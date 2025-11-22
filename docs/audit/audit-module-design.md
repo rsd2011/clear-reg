@@ -203,12 +203,12 @@ audit:
 - [x] `@Audit` 대체용 필터/인터셉터 등록(server)
 - [x] PolicyClient + Caffeine 캐시(secure-by-default) 구현
 - [x] SENSITIVE_API reason/legalBasis 검증 필터(server)
-- [ ] (P2) DRM 이벤트 전용 서비스/DTO 추가
+- [x] (P2) DRM 이벤트 전용 서비스/DTO 추가
 
 ### 마이그레이션
 - [~] (P2) `auth` 로그인/비밀번호 변경 로그 → AuditPort dual-write 후 레거시 제거
 - [~] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거
-- [ ] (P2) `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(스켈레톤 추가, 적용 대상 선정 필요)**
+- [~] (P2) `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 조회는 AuditPort 연동 완료, 추가 대량 처리 전환 필요)**
 - [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
 - [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
 
