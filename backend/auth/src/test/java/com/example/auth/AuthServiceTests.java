@@ -55,6 +55,9 @@ class AuthServiceTests {
     @Mock
     private PolicyToggleProvider policyToggleProvider;
 
+    @Mock
+    private com.example.audit.AuditPort auditPort;
+
     @BeforeEach
     void setUp() {
         JwtProperties properties = new JwtProperties();
@@ -64,7 +67,7 @@ class AuthServiceTests {
         JwtTokenProvider provider = new JwtTokenProvider(properties);
         AuthenticationStrategyResolver resolver = new AuthenticationStrategyResolver(List.of(new StubStrategy()));
         this.authService = new AuthService(resolver, provider, refreshTokenService,
-                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider, auditPort);
     }
 
     @Test
@@ -162,7 +165,7 @@ class AuthServiceTests {
         };
         AuthenticationStrategyResolver resolver = new AuthenticationStrategyResolver(List.of(new StubStrategy(), ssoStrategy));
         AuthService ssoAuthService = new AuthService(resolver, provider, refreshTokenService,
-                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider, auditPort);
 
         var issued = new RefreshTokenService.IssuedRefreshToken("refresh-token", Instant.now().plusSeconds(3600),
                 UserAccount.builder().username("sso-user").password("pw").organizationCode("ORG").permissionGroupCode("PG").build());
@@ -201,7 +204,7 @@ class AuthServiceTests {
         properties.setRefreshTokenSeconds(7200);
         JwtTokenProvider provider = new JwtTokenProvider(properties);
         AuthService adAuthService = new AuthService(resolver, provider, refreshTokenService,
-                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider, auditPort);
 
         var issued = new RefreshTokenService.IssuedRefreshToken("ad-refresh", Instant.now().plusSeconds(3600),
                 UserAccount.builder().username("ad-user").password("pw").organizationCode("ORG").permissionGroupCode("PG").build());
@@ -235,7 +238,7 @@ class AuthServiceTests {
         properties.setRefreshTokenSeconds(7200);
         JwtTokenProvider provider = new JwtTokenProvider(properties);
         AuthService adAuthService = new AuthService(resolver, provider, refreshTokenService,
-                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider, auditPort);
 
         given(policyToggleProvider.enabledLoginTypes()).willReturn(List.of(LoginType.AD, LoginType.PASSWORD));
 

@@ -44,7 +44,8 @@ class PolicyAdminServiceTest {
     @DisplayName("Given update request When update Then persist merged state")
     void givenRequestWhenUpdateThenPersist() {
         PolicyUpdateRequest request = new PolicyUpdateRequest(
-                false, null, true, List.of("SSO"), 5_000_000L, List.of("pdf", "png"), true, 90);
+                false, null, true, List.of("SSO"), 5_000_000L, List.of("pdf", "png"), true, 90,
+                null, null, null, null, null, null);
 
         PolicyAdminService.PolicySnapshot snapshot = service.update(request);
 
@@ -86,7 +87,7 @@ class PolicyAdminServiceTest {
     @DisplayName("Given update request When updateView Then include rendered yaml")
     void givenUpdateRequestWhenUpdateViewThenIncludeYaml() {
         PolicyUpdateRequest request = new PolicyUpdateRequest(true, true, false,
-                List.of("AD"), null, null, null, null);
+                List.of("AD"), null, null, null, null, null, null, null, null, null, null);
 
         PolicyView view = service.updateView(request);
 

@@ -18,6 +18,12 @@ import com.example.auth.security.PasswordPolicyValidator;
 import com.example.auth.security.PolicyToggleProvider;
 import com.example.auth.strategy.AuthenticationStrategy;
 import com.example.auth.strategy.AuthenticationStrategyResolver;
+import com.example.audit.Actor;
+import com.example.audit.ActorType;
+import com.example.audit.AuditEvent;
+import com.example.audit.AuditMode;
+import com.example.audit.AuditPort;
+import com.example.audit.RiskLevel;
 
 @Service
 public class AuthService {
@@ -29,6 +35,7 @@ public class AuthService {
     private final AccountStatusPolicy accountStatusPolicy;
     private final PasswordPolicyValidator passwordPolicyValidator;
     private final PolicyToggleProvider policyToggleProvider;
+    private final AuditPort auditPort;
 
     public AuthService(AuthenticationStrategyResolver strategyResolver,
                        JwtTokenProvider jwtTokenProvider,
@@ -36,7 +43,8 @@ public class AuthService {
                        UserAccountService userAccountService,
                        AccountStatusPolicy accountStatusPolicy,
                        PasswordPolicyValidator passwordPolicyValidator,
-                       PolicyToggleProvider policyToggleProvider) {
+                       PolicyToggleProvider policyToggleProvider,
+                       AuditPort auditPort) {
         this.strategyResolver = strategyResolver;
         this.jwtTokenProvider = jwtTokenProvider;
         this.refreshTokenService = refreshTokenService;
@@ -44,6 +52,7 @@ public class AuthService {
         this.accountStatusPolicy = accountStatusPolicy;
         this.passwordPolicyValidator = passwordPolicyValidator;
         this.policyToggleProvider = policyToggleProvider;
+        this.auditPort = auditPort;
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -53,7 +62,9 @@ public class AuthService {
         AuthenticationStrategy strategy = strategyResolver.resolve(request.type())
                 .orElseThrow(InvalidCredentialsException::new);
         UserAccount account = strategy.authenticate(request);
-        return assembleResponse(account, request.type(), refreshTokenService.issue(account));
+        LoginResponse response = assembleResponse(account, request.type(), refreshTokenService.issue(account));
+        recordAudit("AUTH", "LOGIN", account, true, "OK");
+        return response;
     }
 
     public TokenResponse refreshTokens(String refreshTokenValue) {
@@ -75,6 +86,7 @@ public class AuthService {
         passwordPolicyValidator.validate(request.newPassword());
         userAccountService.changePassword(account, request.newPassword());
         accountStatusPolicy.onSuccessfulLogin(account);
+        recordAudit("AUTH", "PASSWORD_CHANGE", account, true, "OK");
     }
 
     public void updateAccountStatus(AccountStatusChangeRequest request) {
@@ -95,5 +107,31 @@ public class AuthService {
     private TokenResponse buildTokenResponse(UserAccount account, IssuedRefreshToken refreshToken) {
         JwtToken accessToken = jwtTokenProvider.generateAccessToken(account.getUsername(), account.getRoles());
         return new TokenResponse(accessToken.value(), accessToken.expiresAt(), refreshToken.value(), refreshToken.expiresAt());
+    }
+
+    private void recordAudit(String eventType, String action, UserAccount account, boolean success, String resultCode) {
+        try {
+            AuditEvent event = AuditEvent.builder()
+                    .eventType(eventType)
+                    .moduleName("auth")
+                    .action(action)
+                    .actor(Actor.builder()
+                            .id(account.getUsername())
+                            .type(ActorType.HUMAN)
+                            .role(account.getRoles().stream().findFirst().orElse("USER"))
+                            .dept(account.getOrganizationCode())
+                            .build())
+                    .subject(com.example.audit.Subject.builder()
+                            .type("USER")
+                            .key(account.getUsername())
+                            .build())
+                    .success(success)
+                    .resultCode(resultCode)
+                    .riskLevel(RiskLevel.LOW)
+                    .build();
+            auditPort.record(event, AuditMode.ASYNC_FALLBACK);
+        } catch (RuntimeException ex) {
+            // dual-write: 감사 실패는 업무 흐름에 영향 없이 무시
+        }
     }
 }

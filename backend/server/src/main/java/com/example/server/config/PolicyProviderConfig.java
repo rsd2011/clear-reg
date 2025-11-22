@@ -38,6 +38,12 @@ public class PolicyProviderConfig {
                 properties.getMaxFileSizeBytes(),
                 properties.getAllowedFileExtensions().stream().map(String::toLowerCase).toList(),
                 properties.isStrictMimeValidation(),
-                properties.getFileRetentionDays());
+                properties.getFileRetentionDays(),
+                properties.isAuditEnabled(),
+                properties.isAuditReasonRequired(),
+                properties.isAuditSensitiveApiDefaultOn(),
+                properties.getAuditRetentionDays(),
+                properties.isAuditStrictMode(),
+                properties.getAuditRiskLevel());
     }
 }

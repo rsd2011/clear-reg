@@ -57,4 +57,27 @@ class PolicyToggleSettingsTest {
         assertThatThrownBy(() -> settings.allowedFileExtensions().add("txt"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
+
+    @Test
+    void auditFields_haveSecureDefaultsAndNormalization() {
+        PolicyToggleSettings settings = new PolicyToggleSettings(true, true, false,
+                List.of("PASSWORD"),
+                1024L,
+                List.of("pdf"),
+                true,
+                30,
+                false,
+                false,
+                true,
+                -1,
+                false,
+                "high");
+
+        assertThat(settings.auditEnabled()).isFalse();
+        assertThat(settings.auditReasonRequired()).isFalse();
+        assertThat(settings.auditSensitiveApiDefaultOn()).isTrue();
+        assertThat(settings.auditRetentionDays()).isZero();
+        assertThat(settings.auditStrictMode()).isFalse();
+        assertThat(settings.auditRiskLevel()).isEqualTo("HIGH");
+    }
 }

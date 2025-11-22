@@ -15,6 +15,12 @@ public record PolicyUpdateRequest(
         @Positive Long maxFileSizeBytes,
         List<@NotBlank String> allowedFileExtensions,
         Boolean strictMimeValidation,
-        @PositiveOrZero Integer fileRetentionDays) {
+        @PositiveOrZero Integer fileRetentionDays,
+        Boolean auditEnabled,
+        Boolean auditReasonRequired,
+        Boolean auditSensitiveApiDefaultOn,
+        @PositiveOrZero Integer auditRetentionDays,
+        Boolean auditStrictMode,
+        String auditRiskLevel) {
 
 }
