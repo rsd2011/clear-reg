@@ -60,4 +60,23 @@ class SensitiveApiFilterTest {
 
         assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_OK);
     }
+
+    @Test
+    void enforcesReasonWhenPolicyMissing_secureByDefault() throws ServletException, IOException {
+        AuditPort auditPort = Mockito.mock(AuditPort.class);
+        Mockito.when(auditPort.resolve(Mockito.anyString(), Mockito.anyString()))
+                .thenReturn(java.util.Optional.empty()); // 정책 미정의
+
+        SensitiveApiProperties props = new SensitiveApiProperties();
+        props.setEndpoints(List.of("/api/customers/**"));
+
+        SensitiveApiFilter filter = new SensitiveApiFilter(auditPort, props);
+
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/customers/2");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilter(request, response, new MockFilterChain());
+
+        assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_BAD_REQUEST);
+    }
 }
