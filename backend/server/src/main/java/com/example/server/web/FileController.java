@@ -79,9 +79,11 @@ public class FileController {
     @GetMapping
     @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.READ)
     public java.util.List<FileMetadataResponse> listFiles() {
+        var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
+        java.util.function.UnaryOperator<String> masker = com.example.common.masking.MaskingFunctions.masker(policyMatch);
         return fileManagementPort.list()
                 .stream()
-                .map(FileMetadataResponse::fromDto)
+                .map(meta -> FileMetadataResponse.fromDto(meta, masker))
                 .toList();
     }
 
