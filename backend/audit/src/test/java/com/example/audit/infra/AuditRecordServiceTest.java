@@ -78,6 +78,33 @@ class AuditRecordServiceTest {
     }
 
     @Test
+    void sanitize_removesRawSensitivePatterns() {
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+
+        AuditEvent event = AuditEvent.builder()
+                .eventType("VIEW")
+                .beforeSummary("RRN 990101-1234567, card 4111-1111-1111-1111")
+                .afterSummary("account 110-123-456789")
+                .reasonText("주민번호 990101-1234567")
+                .extraEntry("acct", "110-123-456789")
+                .build();
+
+        service.record(event, AuditMode.ASYNC_FALLBACK);
+
+        ArgumentCaptor<AuditLogEntity> captor = ArgumentCaptor.forClass(AuditLogEntity.class);
+        verify(repository).save(captor.capture());
+        AuditLogEntity saved = captor.getValue();
+
+        String aggregated = String.join(" ", saved.getBeforeSummary(), saved.getAfterSummary(), saved.getReasonText(), saved.getExtraJson());
+        // 민감 패턴이 그대로 노출되지 않았는지 확인
+        assertThat(aggregated).doesNotContain("990101-1234567");
+        assertThat(aggregated).doesNotContain("4111-1111-1111-1111");
+        assertThat(aggregated).doesNotContain("110-123-456789");
+    }
+
+    @Test
     void sanitize_skipsMaskingWhenPolicyDisablesIt() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).maskingEnabled(false).build()));
