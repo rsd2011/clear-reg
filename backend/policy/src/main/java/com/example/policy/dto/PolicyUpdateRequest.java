@@ -22,6 +22,8 @@ public record PolicyUpdateRequest(
         @PositiveOrZero Integer auditRetentionDays,
         Boolean auditStrictMode,
         String auditRiskLevel,
-        List<String> auditSensitiveEndpoints) {
+        Boolean auditMaskingEnabled,
+        List<String> auditSensitiveEndpoints,
+        List<String> auditUnmaskRoles) {
 
 }

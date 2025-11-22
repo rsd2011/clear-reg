@@ -24,7 +24,7 @@ class AuditPolicyResolverTest {
     void resolve_appliesProviderValues() {
         PolicySettingsProvider provider = () -> new PolicyToggleSettings(true, true, true,
                 java.util.List.of(), 1L, java.util.List.of(), true, 30,
-                false, false, true, 90, false, "HIGH", java.util.List.of("/api/customers/**"));
+                false, false, true, 90, false, "HIGH", true, java.util.List.of("/api/customers/**"), java.util.List.of("AUDIT_ADMIN"));
 
         AuditPolicyResolver resolver = new AuditPolicyResolver(provider);
 

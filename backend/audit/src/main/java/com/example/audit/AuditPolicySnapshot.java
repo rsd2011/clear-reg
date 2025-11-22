@@ -19,6 +19,9 @@ public class AuditPolicySnapshot {
     boolean reasonRequired = true;
 
     @Builder.Default
+    boolean maskingEnabled = true;
+
+    @Builder.Default
     AuditMode mode = AuditMode.STRICT;
 
     Integer retentionDays;

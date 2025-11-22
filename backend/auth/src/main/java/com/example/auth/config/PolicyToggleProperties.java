@@ -26,6 +26,8 @@ public class PolicyToggleProperties {
     private boolean auditStrictMode = true;
     private String auditRiskLevel = "MEDIUM";
     private List<String> auditSensitiveEndpoints = new ArrayList<>();
+    private boolean auditMaskingEnabled = true;
+    private java.util.List<String> auditUnmaskRoles = new java.util.ArrayList<>();
 
     public boolean isPasswordPolicyEnabled() {
         return passwordPolicyEnabled;
@@ -145,5 +147,21 @@ public class PolicyToggleProperties {
 
     public void setAuditSensitiveEndpoints(List<String> auditSensitiveEndpoints) {
         this.auditSensitiveEndpoints = auditSensitiveEndpoints;
+    }
+
+    public boolean isAuditMaskingEnabled() {
+        return auditMaskingEnabled;
+    }
+
+    public void setAuditMaskingEnabled(boolean auditMaskingEnabled) {
+        this.auditMaskingEnabled = auditMaskingEnabled;
+    }
+
+    public java.util.List<String> getAuditUnmaskRoles() {
+        return auditUnmaskRoles;
+    }
+
+    public void setAuditUnmaskRoles(java.util.List<String> auditUnmaskRoles) {
+        this.auditUnmaskRoles = auditUnmaskRoles;
     }
 }

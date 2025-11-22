@@ -9,7 +9,9 @@ import com.example.auth.LoginType;
 import com.example.auth.config.PolicyToggleProperties;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.common.policy.DataPolicyProvider;
 import com.example.policy.PolicyAdminService;
+import com.example.policy.datapolicy.DataPolicyProviderAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -19,6 +21,11 @@ public class PolicyProviderConfig {
     @Bean
     public PolicySettingsProvider policySettingsProvider(PolicyAdminService policyAdminService) {
         return new PolicyAdminService.DatabasePolicySettingsProvider(policyAdminService);
+    }
+
+    @Bean
+    public DataPolicyProvider dataPolicyProvider(DataPolicyProviderAdapter adapter) {
+        return adapter;
     }
 
     @Bean(name = "yamlObjectMapper")
@@ -45,6 +52,8 @@ public class PolicyProviderConfig {
                 properties.getAuditRetentionDays(),
                 properties.isAuditStrictMode(),
                 properties.getAuditRiskLevel(),
-                properties.getAuditSensitiveEndpoints());
+                properties.isAuditMaskingEnabled(),
+                properties.getAuditSensitiveEndpoints(),
+                properties.getAuditUnmaskRoles());
     }
 }

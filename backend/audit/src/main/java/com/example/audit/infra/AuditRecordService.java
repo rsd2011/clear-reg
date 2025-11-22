@@ -17,6 +17,7 @@ import com.example.audit.AuditPort;
 import com.example.audit.infra.persistence.AuditLogEntity;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.policy.AuditPolicyResolver;
+import com.example.audit.infra.masking.MaskingProperties;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -37,6 +38,7 @@ public class AuditRecordService implements AuditPort {
     private final boolean hmacEnabled;
     private final String hmacSecret;
     private final String hmacKeyId;
+    private final MaskingProperties maskingProperties;
 
     public AuditRecordService(AuditLogRepository repository,
                               AuditPolicyResolver policyResolver,
@@ -45,7 +47,8 @@ public class AuditRecordService implements AuditPort {
                               @Value("${audit.kafka.topic:audit.events.v1}") String topic,
                               @Value("${audit.hash-chain.hmac-enabled:false}") boolean hmacEnabled,
                               @Value("${audit.hash-chain.secret:}") String hmacSecret,
-                              @Value("${audit.hash-chain.key-id:default}") String hmacKeyId) {
+                              @Value("${audit.hash-chain.key-id:default}") String hmacKeyId,
+                              MaskingProperties maskingProperties) {
         this.repository = repository;
         this.policyResolver = policyResolver;
         this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
@@ -54,6 +57,7 @@ public class AuditRecordService implements AuditPort {
         this.hmacEnabled = hmacEnabled;
         this.hmacSecret = hmacSecret;
         this.hmacKeyId = hmacKeyId;
+        this.maskingProperties = maskingProperties;
     }
 
     @Override
@@ -64,7 +68,7 @@ public class AuditRecordService implements AuditPort {
         if (!policy.isEnabled()) {
             return;
         }
-        persist(event, mode);
+        persist(event, mode, policy);
         publish(event, mode);
     }
 
@@ -73,8 +77,8 @@ public class AuditRecordService implements AuditPort {
         return policyResolver.resolve(endpoint, eventType);
     }
 
-    private void persist(AuditEvent event, AuditMode mode) {
-        AuditLogEntity entity = toEntity(event);
+    private void persist(AuditEvent event, AuditMode mode, AuditPolicySnapshot policy) {
+        AuditLogEntity entity = toEntity(event, policy.isMaskingEnabled());
         try {
             repository.save(entity);
         } catch (RuntimeException ex) {
@@ -99,11 +103,12 @@ public class AuditRecordService implements AuditPort {
         }
     }
 
-    private AuditLogEntity toEntity(AuditEvent event) {
+    private AuditLogEntity toEntity(AuditEvent event, boolean maskingEnabled) {
         String extraJson = null;
         try {
             if (event.getExtra() != null && !event.getExtra().isEmpty()) {
-                extraJson = objectMapper.writeValueAsString(event.getExtra());
+                extraJson = maskingEnabled ? sanitizeSerialized(objectMapper.writeValueAsString(event.getExtra()))
+                        : objectMapper.writeValueAsString(event.getExtra());
             }
         } catch (JsonProcessingException ex) {
             log.warn("Failed to serialize audit extra payload: {}", ex.getMessage());
@@ -132,11 +137,11 @@ public class AuditRecordService implements AuditPort {
                 event.isSuccess(),
                 event.getResultCode(),
                 event.getReasonCode(),
-                event.getReasonText(),
+                maskingEnabled ? sanitize(event.getReasonText()) : event.getReasonText(),
                 event.getLegalBasisCode(),
                 event.getRiskLevel() != null ? event.getRiskLevel().name() : null,
-                event.getBeforeSummary(),
-                event.getAfterSummary(),
+                maskingEnabled ? sanitize(event.getBeforeSummary()) : event.getBeforeSummary(),
+                maskingEnabled ? sanitize(event.getAfterSummary()) : event.getAfterSummary(),
                 extraJson,
                 hashChain);
     }
@@ -169,5 +174,19 @@ public class AuditRecordService implements AuditPort {
             log.warn("Hash chain calculation failed: {}", e.getMessage());
             return prevHash;
         }
+    }
+
+    private String sanitize(String text) {
+        if (text == null) return null;
+        String masked = maskingProperties.applyAll(text);
+        if (masked.length() > 1024) {
+            return masked.substring(0, 1024);
+        }
+        return masked;
+    }
+
+    private String sanitizeSerialized(String json) {
+        if (json == null) return null;
+        return sanitize(json);
     }
 }

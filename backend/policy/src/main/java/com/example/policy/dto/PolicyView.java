@@ -16,6 +16,8 @@ public record PolicyView(boolean passwordPolicyEnabled,
                          int auditRetentionDays,
                          boolean auditStrictMode,
                          String auditRiskLevel,
+                         boolean auditMaskingEnabled,
                          List<String> auditSensitiveEndpoints,
+                         List<String> auditUnmaskRoles,
                          String yaml) {
 }

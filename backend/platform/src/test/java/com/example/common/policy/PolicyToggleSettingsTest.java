@@ -72,7 +72,9 @@ class PolicyToggleSettingsTest {
                 -1,
                 false,
                 "high",
-                List.of("/api/accounts/**"));
+                true,
+                List.of("/api/accounts/**"),
+                List.of("AUDIT_ADMIN"));
 
         assertThat(settings.auditEnabled()).isFalse();
         assertThat(settings.auditReasonRequired()).isFalse();
@@ -80,6 +82,8 @@ class PolicyToggleSettingsTest {
         assertThat(settings.auditRetentionDays()).isZero();
         assertThat(settings.auditStrictMode()).isFalse();
         assertThat(settings.auditRiskLevel()).isEqualTo("HIGH");
+        assertThat(settings.auditMaskingEnabled()).isTrue();
         assertThat(settings.auditSensitiveEndpoints()).contains("/api/accounts/**");
+        assertThat(settings.auditUnmaskRoles()).contains("AUDIT_ADMIN");
     }
 }
