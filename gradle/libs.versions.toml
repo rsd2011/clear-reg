@@ -51,6 +51,7 @@ tika-core = { module = "org.apache.tika:tika-core", version.ref = "tika" }
 spring-batch-test = { module = "org.springframework.batch:spring-batch-test" }
 archunit-junit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
 spring-kafka = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-boot" }
+spring-kafka-test = { module = "org.springframework.kafka:spring-kafka-test", version.ref = "spring-boot" }
 embedded-redis = { module = "it.ozimov:embedded-redis", version = "0.7.3" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp", version = "1.43.0" }
 micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-bridge-otel", version.ref = "micrometer-tracing" }

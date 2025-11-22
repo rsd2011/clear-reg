@@ -44,6 +44,7 @@ public class PolicyProviderConfig {
                 properties.isAuditSensitiveApiDefaultOn(),
                 properties.getAuditRetentionDays(),
                 properties.isAuditStrictMode(),
-                properties.getAuditRiskLevel());
+                properties.getAuditRiskLevel(),
+                properties.getAuditSensitiveEndpoints());
     }
 }

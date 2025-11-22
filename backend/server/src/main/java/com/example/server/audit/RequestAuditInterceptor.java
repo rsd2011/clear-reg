@@ -38,7 +38,7 @@ public class RequestAuditInterceptor implements HandlerInterceptor {
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, @Nullable Exception ex) {
-        var ctxOpt = AuthContextHolder.getContext();
+        var ctxOpt = AuthContextHolder.current();
         if (ctxOpt.isEmpty()) {
             return;
         }
@@ -54,7 +54,7 @@ public class RequestAuditInterceptor implements HandlerInterceptor {
                 .actor(Actor.builder()
                         .id(ctx.username())
                         .type(ActorType.HUMAN)
-                        .role(String.join(",", ctx.roles()))
+                        .role(ctx.permissionGroupCode())
                         .dept(ctx.organizationCode())
                         .build())
                 .subject(Subject.builder()

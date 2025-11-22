@@ -2,11 +2,13 @@ package com.example.audit.infra.persistence;
 
 import java.time.Instant;
 import com.example.common.jpa.PrimaryKeyEntity;
+import lombok.Getter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+@Getter
 @Entity
 @Table(name = "audit_log")
 public class AuditLogEntity extends PrimaryKeyEntity {

@@ -119,6 +119,7 @@ public class PolicyAdminService {
                 state.auditRetentionDays(),
                 state.auditStrictMode(),
                 state.auditRiskLevel(),
+                state.auditSensitiveEndpoints(),
                 snapshot.yaml());
     }
 
@@ -138,6 +139,7 @@ public class PolicyAdminService {
         private final int auditRetentionDays;
         private final boolean auditStrictMode;
         private final String auditRiskLevel;
+        private final List<String> auditSensitiveEndpoints;
 
         private PolicyState(boolean passwordPolicyEnabled,
                             boolean passwordHistoryEnabled,
@@ -152,7 +154,8 @@ public class PolicyAdminService {
                             boolean auditSensitiveApiDefaultOn,
                             int auditRetentionDays,
                             boolean auditStrictMode,
-                            String auditRiskLevel) {
+                            String auditRiskLevel,
+                            List<String> auditSensitiveEndpoints) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
             this.passwordHistoryEnabled = passwordHistoryEnabled;
             this.accountLockEnabled = accountLockEnabled;
@@ -167,6 +170,7 @@ public class PolicyAdminService {
             this.auditRetentionDays = auditRetentionDays;
             this.auditStrictMode = auditStrictMode;
             this.auditRiskLevel = auditRiskLevel;
+            this.auditSensitiveEndpoints = List.copyOf(auditSensitiveEndpoints == null ? List.of() : auditSensitiveEndpoints);
         }
 
         public static PolicyState from(PolicyToggleSettings settings) {
@@ -183,7 +187,8 @@ public class PolicyAdminService {
                     settings.auditSensitiveApiDefaultOn(),
                     settings.auditRetentionDays(),
                     settings.auditStrictMode(),
-                    settings.auditRiskLevel());
+                    settings.auditRiskLevel(),
+                    settings.auditSensitiveEndpoints());
         }
 
         public PolicyToggleSettings toSettings() {
@@ -200,7 +205,8 @@ public class PolicyAdminService {
                     auditSensitiveApiDefaultOn,
                     auditRetentionDays,
                     auditStrictMode,
-                    auditRiskLevel);
+                    auditRiskLevel,
+                    auditSensitiveEndpoints);
         }
 
         public PolicyState merge(PolicyUpdateRequest request) {
@@ -223,11 +229,12 @@ public class PolicyAdminService {
             int newAuditRetention = request.auditRetentionDays() != null ? request.auditRetentionDays() : auditRetentionDays;
             boolean newAuditStrictMode = request.auditStrictMode() != null ? request.auditStrictMode() : auditStrictMode;
             String newAuditRiskLevel = request.auditRiskLevel() != null ? request.auditRiskLevel().toUpperCase() : auditRiskLevel;
+            List<String> newAuditSensitiveEndpoints = request.auditSensitiveEndpoints() != null ? request.auditSensitiveEndpoints() : auditSensitiveEndpoints;
 
             return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes,
                     newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0),
                     newAuditEnabled, newAuditReasonRequired, newAuditSensitiveApiDefaultOn,
-                    Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel);
+                    Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel, newAuditSensitiveEndpoints);
         }
 
         public boolean passwordPolicyEnabled() {
@@ -284,6 +291,10 @@ public class PolicyAdminService {
 
         public String auditRiskLevel() {
             return auditRiskLevel;
+        }
+
+        public List<String> auditSensitiveEndpoints() {
+            return auditSensitiveEndpoints;
         }
     }
 

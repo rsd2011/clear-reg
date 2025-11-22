@@ -14,10 +14,19 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
+import com.example.audit.AuditPort;
+import com.example.audit.NoopAuditPort;
+
 @Configuration
 @ConditionalOnClass(KafkaTemplate.class)
 @EnableConfigurationProperties(AuditKafkaProperties.class)
 public class AuditKafkaConfig {
+
+    @Bean
+    @ConditionalOnMissingBean(AuditPort.class)
+    public AuditPort auditPortFallback() {
+        return new NoopAuditPort();
+    }
 
     @Bean
     @ConditionalOnProperty(prefix = "audit.kafka", name = "bootstrap-servers")

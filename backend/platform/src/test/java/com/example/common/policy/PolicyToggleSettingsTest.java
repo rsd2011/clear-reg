@@ -71,7 +71,8 @@ class PolicyToggleSettingsTest {
                 true,
                 -1,
                 false,
-                "high");
+                "high",
+                List.of("/api/accounts/**"));
 
         assertThat(settings.auditEnabled()).isFalse();
         assertThat(settings.auditReasonRequired()).isFalse();
@@ -79,5 +80,6 @@ class PolicyToggleSettingsTest {
         assertThat(settings.auditRetentionDays()).isZero();
         assertThat(settings.auditStrictMode()).isFalse();
         assertThat(settings.auditRiskLevel()).isEqualTo("HIGH");
+        assertThat(settings.auditSensitiveEndpoints()).contains("/api/accounts/**");
     }
 }

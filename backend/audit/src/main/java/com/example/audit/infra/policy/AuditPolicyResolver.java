@@ -53,6 +53,7 @@ public class AuditPolicyResolver {
                 .mode(settings.auditStrictMode() ? AuditMode.STRICT : AuditMode.ASYNC_FALLBACK)
                 .retentionDays(settings.auditRetentionDays())
                 .riskLevel(toRiskLevel(settings.auditRiskLevel()))
+                .attribute("sensitiveEndpoints", settings.auditSensitiveEndpoints())
                 .build();
     }
 
