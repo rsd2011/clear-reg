@@ -36,6 +36,7 @@ public class AuditRecordService implements AuditPort {
     private final String topic;
     private final boolean hmacEnabled;
     private final String hmacSecret;
+    private final String hmacKeyId;
 
     public AuditRecordService(AuditLogRepository repository,
                               AuditPolicyResolver policyResolver,
@@ -43,7 +44,8 @@ public class AuditRecordService implements AuditPort {
                               @Nullable KafkaTemplate<String, String> kafkaTemplate,
                               @Value("${audit.kafka.topic:audit.events.v1}") String topic,
                               @Value("${audit.hash-chain.hmac-enabled:false}") boolean hmacEnabled,
-                              @Value("${audit.hash-chain.secret:}") String hmacSecret) {
+                              @Value("${audit.hash-chain.secret:}") String hmacSecret,
+                              @Value("${audit.hash-chain.key-id:default}") String hmacKeyId) {
         this.repository = repository;
         this.policyResolver = policyResolver;
         this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
@@ -51,6 +53,7 @@ public class AuditRecordService implements AuditPort {
         this.topic = topic;
         this.hmacEnabled = hmacEnabled;
         this.hmacSecret = hmacSecret;
+        this.hmacKeyId = hmacKeyId;
     }
 
     @Override
@@ -149,6 +152,7 @@ public class AuditRecordService implements AuditPort {
                 var mac = javax.crypto.Mac.getInstance("HmacSHA256");
                 mac.init(new javax.crypto.spec.SecretKeySpec(hmacSecret.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256"));
                 hash = mac.doFinal(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                payload += "|keyId=" + hmacKeyId;
             } else {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 hash = digest.digest(payload.getBytes(java.nio.charset.StandardCharsets.UTF_8));
