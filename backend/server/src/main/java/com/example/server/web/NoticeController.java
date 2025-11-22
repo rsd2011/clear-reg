@@ -32,7 +32,7 @@ public class NoticeController {
         var match = com.example.common.policy.DataPolicyContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return noticeService.listActiveNotices(audience).stream()
-                .map(n -> NoticeResponse.from(n, masker))
+                .map(n -> NoticeResponse.apply(n, masker))
                 .toList();
     }
 }

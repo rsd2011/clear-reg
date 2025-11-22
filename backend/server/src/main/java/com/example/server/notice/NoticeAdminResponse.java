@@ -2,6 +2,7 @@ package com.example.server.notice;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 public record NoticeAdminResponse(UUID id,
                                   String displayNumber,
@@ -19,11 +20,16 @@ public record NoticeAdminResponse(UUID id,
                                   String updatedBy) {
 
     public static NoticeAdminResponse from(Notice notice) {
+        return from(notice, UnaryOperator.identity());
+    }
+
+    public static NoticeAdminResponse from(Notice notice, UnaryOperator<String> masker) {
+        UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
         return new NoticeAdminResponse(
                 notice.getId(),
-                notice.getDisplayNumber(),
-                notice.getTitle(),
-                notice.getContent(),
+                fn.apply(notice.getDisplayNumber()),
+                fn.apply(notice.getTitle()),
+                fn.apply(notice.getContent()),
                 notice.getSeverity(),
                 notice.getAudience(),
                 notice.getStatus(),
@@ -34,5 +40,25 @@ public record NoticeAdminResponse(UUID id,
                 notice.getUpdatedAt(),
                 notice.getCreatedBy(),
                 notice.getUpdatedBy());
+    }
+
+    public static NoticeAdminResponse apply(NoticeAdminResponse response, UnaryOperator<String> masker) {
+        UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
+        return new NoticeAdminResponse(
+                response.id(),
+                fn.apply(response.displayNumber()),
+                fn.apply(response.title()),
+                fn.apply(response.content()),
+                response.severity(),
+                response.audience(),
+                response.status(),
+                response.pinned(),
+                response.publishAt(),
+                response.expireAt(),
+                response.createdAt(),
+                response.updatedAt(),
+                response.createdBy(),
+                response.updatedBy()
+        );
     }
 }

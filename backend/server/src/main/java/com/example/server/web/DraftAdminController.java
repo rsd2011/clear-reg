@@ -10,6 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
 import com.example.auth.permission.RequirePermission;
+import com.example.auth.permission.context.AuthContextHolder;
+import com.example.common.masking.MaskingFunctions;
+import com.example.common.policy.DataPolicyContextHolder;
+import com.example.common.security.RowScope;
+import com.example.common.security.RowScopeContextHolder;
 import com.example.draft.domain.ApprovalGroup;
 import com.example.draft.domain.ApprovalLineTemplate;
 import com.example.draft.domain.DraftFormTemplate;
@@ -36,28 +41,65 @@ public class DraftAdminController {
     @GetMapping("/templates/approval")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public List<ApprovalLineTemplateSummary> listApprovalTemplates(@RequestParam(required = false) String businessType) {
+        var match = DataPolicyContextHolder.get();
+        var masker = MaskingFunctions.masker(match);
+        RowScope scope = effectiveScope(match);
+        var orgs = allowedOrganizations(scope);
         return approvalLineTemplateRepository.findAll().stream()
                 .filter(t -> businessType == null || t.getBusinessType().equalsIgnoreCase(businessType))
-                .map(ApprovalLineTemplateSummary::from)
+                .filter(t -> filterOrg(scope, orgs, t.getOrganizationCode()))
+                .map(t -> ApprovalLineTemplateSummary.from(t, masker))
                 .toList();
     }
 
     @GetMapping("/templates/form")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public List<DraftFormTemplateSummary> listFormTemplates(@RequestParam(required = false) String businessType) {
+        var match = DataPolicyContextHolder.get();
+        var masker = MaskingFunctions.masker(match);
+        RowScope scope = effectiveScope(match);
+        var orgs = allowedOrganizations(scope);
         return draftFormTemplateRepository.findAll().stream()
                 .filter(t -> businessType == null || t.getBusinessType().equalsIgnoreCase(businessType))
-                .map(DraftFormTemplateSummary::from)
+                .filter(t -> filterOrg(scope, orgs, t.getOrganizationCode()))
+                .map(t -> DraftFormTemplateSummary.from(t, masker))
                 .toList();
     }
 
     @GetMapping("/groups")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public List<ApprovalGroupSummary> listGroups(@RequestParam(required = false) String organizationCode) {
+        var match = DataPolicyContextHolder.get();
+        var masker = MaskingFunctions.masker(match);
+        RowScope scope = effectiveScope(match);
+        var orgs = allowedOrganizations(scope);
         return approvalGroupRepository.findAll().stream()
                 .filter(g -> organizationCode == null || g.getOrganizationCode().equalsIgnoreCase(organizationCode))
-                .map(ApprovalGroupSummary::from)
+                .filter(g -> filterOrg(scope, orgs, g.getOrganizationCode()))
+                .map(g -> ApprovalGroupSummary.from(g, masker))
                 .toList();
+    }
+
+    private RowScope effectiveScope(com.example.common.policy.DataPolicyMatch match) {
+        if (match != null && match.getRowScope() != null) {
+            return RowScope.valueOf(match.getRowScope());
+        }
+        return AuthContextHolder.current().map(c -> c.rowScope() != null ? c.rowScope() : RowScope.ALL).orElse(RowScope.ALL);
+    }
+
+    private java.util.Collection<String> allowedOrganizations(RowScope scope) {
+        var ctx = RowScopeContextHolder.get();
+        return ctx != null && ctx.organizationHierarchy() != null && !ctx.organizationHierarchy().isEmpty()
+                ? ctx.organizationHierarchy()
+                : ctx != null && ctx.organizationCode() != null ? java.util.List.of(ctx.organizationCode()) : java.util.List.of();
+    }
+
+    private boolean filterOrg(RowScope scope, java.util.Collection<String> orgs, String targetOrg) {
+        return switch (scope) {
+            case OWN -> targetOrg != null && orgs.contains(targetOrg);
+            case ORG -> targetOrg != null && (orgs.isEmpty() || orgs.contains(targetOrg));
+            default -> true;
+        };
     }
 
     public record ApprovalLineTemplateSummary(java.util.UUID id,
@@ -67,10 +109,11 @@ public class DraftAdminController {
                                               String scope,
                                               String organizationCode,
                                               boolean active) {
-        public static ApprovalLineTemplateSummary from(ApprovalLineTemplate template) {
+        public static ApprovalLineTemplateSummary from(ApprovalLineTemplate template, java.util.function.UnaryOperator<String> masker) {
+            java.util.function.UnaryOperator<String> fn = masker == null ? java.util.function.UnaryOperator.identity() : masker;
             return new ApprovalLineTemplateSummary(template.getId(),
-                    template.getTemplateCode(),
-                    template.getName(),
+                    fn.apply(template.getTemplateCode()),
+                    fn.apply(template.getName()),
                     template.getBusinessType(),
                     template.getScope().name(),
                     template.getOrganizationCode(),
@@ -86,10 +129,11 @@ public class DraftAdminController {
                                            String organizationCode,
                                            boolean active,
                                            int version) {
-        public static DraftFormTemplateSummary from(DraftFormTemplate template) {
+        public static DraftFormTemplateSummary from(DraftFormTemplate template, java.util.function.UnaryOperator<String> masker) {
+            java.util.function.UnaryOperator<String> fn = masker == null ? java.util.function.UnaryOperator.identity() : masker;
             return new DraftFormTemplateSummary(template.getId(),
-                    template.getTemplateCode(),
-                    template.getName(),
+                    fn.apply(template.getTemplateCode()),
+                    fn.apply(template.getName()),
                     template.getBusinessType(),
                     template.getScope().name(),
                     template.getOrganizationCode(),
@@ -103,10 +147,11 @@ public class DraftAdminController {
                                        String name,
                                        String organizationCode,
                                        boolean active) {
-        public static ApprovalGroupSummary from(ApprovalGroup group) {
+        public static ApprovalGroupSummary from(ApprovalGroup group, java.util.function.UnaryOperator<String> masker) {
+            java.util.function.UnaryOperator<String> fn = masker == null ? java.util.function.UnaryOperator.identity() : masker;
             return new ApprovalGroupSummary(group.getId(),
-                    group.getGroupCode(),
-                    group.getName(),
+                    fn.apply(group.getGroupCode()),
+                    fn.apply(group.getName()),
                     group.getOrganizationCode(),
                     true);
         }

@@ -31,4 +31,18 @@ public record NoticeResponse(UUID id,
                 notice.getPublishAt(),
                 notice.getExpireAt());
     }
+
+    public static NoticeResponse apply(NoticeResponse response, UnaryOperator<String> masker) {
+        UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
+        return new NoticeResponse(
+                response.id(),
+                fn.apply(response.displayNumber()),
+                fn.apply(response.title()),
+                fn.apply(response.content()),
+                response.severity(),
+                response.audience(),
+                response.pinned(),
+                response.publishAt(),
+                response.expireAt());
+    }
 }

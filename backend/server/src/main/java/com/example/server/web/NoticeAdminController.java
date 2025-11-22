@@ -39,21 +39,27 @@ public class NoticeAdminController {
     @PostMapping
     @RequirePermission(feature = FeatureCode.NOTICE, action = ActionCode.UPDATE)
     public NoticeAdminResponse createNotice(@Valid @RequestBody NoticeCreateRequest request) {
-        return noticeService.createNotice(request, currentUsername());
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return NoticeAdminResponse.apply(noticeService.createNotice(request, currentUsername()), masker);
     }
 
     @PutMapping("/{id}")
     @RequirePermission(feature = FeatureCode.NOTICE, action = ActionCode.UPDATE)
     public NoticeAdminResponse updateNotice(@PathVariable UUID id,
                                             @Valid @RequestBody NoticeUpdateRequest request) {
-        return noticeService.updateNotice(id, request, currentUsername());
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return NoticeAdminResponse.apply(noticeService.updateNotice(id, request, currentUsername()), masker);
     }
 
     @PostMapping("/{id}/publish")
     @RequirePermission(feature = FeatureCode.NOTICE, action = ActionCode.UPDATE)
     public NoticeAdminResponse publishNotice(@PathVariable UUID id,
                                              @Valid @RequestBody NoticePublishRequest request) {
-        return noticeService.publishNotice(id, request, currentUsername());
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return NoticeAdminResponse.apply(noticeService.publishNotice(id, request, currentUsername()), masker);
     }
 
     @PostMapping("/{id}/archive")
@@ -61,13 +67,19 @@ public class NoticeAdminController {
     public NoticeAdminResponse archiveNotice(@PathVariable UUID id,
                                              @RequestBody(required = false) NoticeArchiveRequest request) {
         NoticeArchiveRequest payload = request == null ? new NoticeArchiveRequest(null) : request;
-        return noticeService.archiveNotice(id, payload, currentUsername());
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return NoticeAdminResponse.apply(noticeService.archiveNotice(id, payload, currentUsername()), masker);
     }
 
     @GetMapping
     @RequirePermission(feature = FeatureCode.NOTICE, action = ActionCode.UPDATE)
     public List<NoticeAdminResponse> listNotices() {
-        return noticeService.listNotices();
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return noticeService.listNotices().stream()
+                .map(n -> NoticeAdminResponse.apply(n, masker))
+                .toList();
     }
 
     private String currentUsername() {

@@ -45,7 +45,9 @@ public class DraftTemplateAdminController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public ApprovalGroupResponse createGroup(@Valid @RequestBody ApprovalGroupRequest request) {
         AuthContext context = currentContext();
-        return templateAdminService.createApprovalGroup(request, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return ApprovalGroupResponse.apply(templateAdminService.createApprovalGroup(request, context, true), masker);
     }
 
     @PutMapping("/approval-groups/{id}")
@@ -53,14 +55,20 @@ public class DraftTemplateAdminController {
     public ApprovalGroupResponse updateGroup(@PathVariable UUID id,
                                              @Valid @RequestBody ApprovalGroupRequest request) {
         AuthContext context = currentContext();
-        return templateAdminService.updateApprovalGroup(id, request, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return ApprovalGroupResponse.apply(templateAdminService.updateApprovalGroup(id, request, context, true), masker);
     }
 
     @GetMapping("/approval-groups")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public List<ApprovalGroupResponse> listGroups(@RequestParam(required = false) String organizationCode) {
         AuthContext context = currentContext();
-        return templateAdminService.listApprovalGroups(organizationCode, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return templateAdminService.listApprovalGroups(organizationCode, context, true).stream()
+                .map(g -> ApprovalGroupResponse.apply(g, masker))
+                .toList();
     }
 
     // Approval Line Templates
@@ -68,7 +76,9 @@ public class DraftTemplateAdminController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public ApprovalLineTemplateResponse createApprovalLineTemplate(@Valid @RequestBody ApprovalLineTemplateRequest request) {
         AuthContext context = currentContext();
-        return templateAdminService.createApprovalLineTemplate(request, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return ApprovalLineTemplateResponse.apply(templateAdminService.createApprovalLineTemplate(request, context, true), masker);
     }
 
     @PutMapping("/approval-line-templates/{id}")
@@ -76,7 +86,9 @@ public class DraftTemplateAdminController {
     public ApprovalLineTemplateResponse updateApprovalLineTemplate(@PathVariable UUID id,
                                                                     @Valid @RequestBody ApprovalLineTemplateRequest request) {
         AuthContext context = currentContext();
-        return templateAdminService.updateApprovalLineTemplate(id, request, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return ApprovalLineTemplateResponse.apply(templateAdminService.updateApprovalLineTemplate(id, request, context, true), masker);
     }
 
     @GetMapping("/approval-line-templates")
@@ -85,7 +97,11 @@ public class DraftTemplateAdminController {
                                                                          @RequestParam(required = false) String organizationCode,
                                                                          @RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
-        return templateAdminService.listApprovalLineTemplates(businessType, organizationCode, activeOnly, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return templateAdminService.listApprovalLineTemplates(businessType, organizationCode, activeOnly, context, true).stream()
+                .map(t -> ApprovalLineTemplateResponse.apply(t, masker))
+                .toList();
     }
 
     // Draft Form Templates
@@ -93,7 +109,9 @@ public class DraftTemplateAdminController {
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public DraftFormTemplateResponse createDraftFormTemplate(@Valid @RequestBody DraftFormTemplateRequest request) {
         AuthContext context = currentContext();
-        return templateAdminService.createDraftFormTemplate(request, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return DraftFormTemplateResponse.apply(templateAdminService.createDraftFormTemplate(request, context, true), masker);
     }
 
     @PutMapping("/form-templates/{id}")
@@ -101,7 +119,9 @@ public class DraftTemplateAdminController {
     public DraftFormTemplateResponse updateDraftFormTemplate(@PathVariable UUID id,
                                                              @Valid @RequestBody DraftFormTemplateRequest request) {
         AuthContext context = currentContext();
-        return templateAdminService.updateDraftFormTemplate(id, request, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return DraftFormTemplateResponse.apply(templateAdminService.updateDraftFormTemplate(id, request, context, true), masker);
     }
 
     @GetMapping("/form-templates")
@@ -110,7 +130,11 @@ public class DraftTemplateAdminController {
                                                                   @RequestParam(required = false) String organizationCode,
                                                                   @RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
-        return templateAdminService.listDraftFormTemplates(businessType, organizationCode, activeOnly, context, true);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return templateAdminService.listDraftFormTemplates(businessType, organizationCode, activeOnly, context, true).stream()
+                .map(t -> DraftFormTemplateResponse.apply(t, masker))
+                .toList();
     }
 
     private AuthContext currentContext() {
