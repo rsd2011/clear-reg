@@ -29,7 +29,7 @@ class DraftAdminControllerSummaryTest {
         when(template.getOrganizationCode()).thenReturn("ORG1");
         when(template.isActive()).thenReturn(true);
 
-        DraftAdminController.ApprovalLineTemplateSummary summary = DraftAdminController.ApprovalLineTemplateSummary.from(template);
+        DraftAdminController.ApprovalLineTemplateSummary summary = DraftAdminController.ApprovalLineTemplateSummary.from(template, java.util.function.UnaryOperator.identity());
 
         assertThat(summary.id()).isEqualTo(id);
         assertThat(summary.templateCode()).isEqualTo("TPL-1");
@@ -50,7 +50,7 @@ class DraftAdminControllerSummaryTest {
         when(template.isActive()).thenReturn(false);
         when(template.getVersion()).thenReturn(2);
 
-        DraftAdminController.DraftFormTemplateSummary summary = DraftAdminController.DraftFormTemplateSummary.from(template);
+        DraftAdminController.DraftFormTemplateSummary summary = DraftAdminController.DraftFormTemplateSummary.from(template, java.util.function.UnaryOperator.identity());
 
         assertThat(summary.id()).isEqualTo(id);
         assertThat(summary.active()).isFalse();
@@ -67,11 +67,10 @@ class DraftAdminControllerSummaryTest {
         when(group.getName()).thenReturn("조직");
         when(group.getOrganizationCode()).thenReturn("ORG1");
 
-        DraftAdminController.ApprovalGroupSummary summary = DraftAdminController.ApprovalGroupSummary.from(group);
+        DraftAdminController.ApprovalGroupSummary summary = DraftAdminController.ApprovalGroupSummary.from(group, java.util.function.UnaryOperator.identity());
 
         assertThat(summary.id()).isEqualTo(id);
         assertThat(summary.groupCode()).isEqualTo("GRP");
         assertThat(summary.organizationCode()).isEqualTo("ORG1");
     }
 }
-
