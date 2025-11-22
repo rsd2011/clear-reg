@@ -4,6 +4,8 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.example.audit.Actor;
 import com.example.audit.ActorType;
@@ -22,9 +24,15 @@ import com.example.auth.permission.context.AuthContextHolder;
 public class AuditLogAccessAspect {
 
     private final AuditPort auditPort;
+    private final java.util.Set<String> allowedRoles;
 
-    public AuditLogAccessAspect(AuditPort auditPort) {
+    public AuditLogAccessAspect(AuditPort auditPort,
+                                @Value("${audit.access.allowed-roles:AUDIT_VIEWER}") String allowedRoles) {
         this.auditPort = auditPort;
+        this.allowedRoles = java.util.Arrays.stream(allowedRoles.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     @AfterReturning("execution(* com.example.audit.infra.persistence.AuditLogRepository.find*(..)) || " +
@@ -33,6 +41,9 @@ public class AuditLogAccessAspect {
             "execution(* com.example.audit.infra.persistence.AuditLogRepository.exists*(..))")
     public void afterAccess(JoinPoint joinPoint) {
         var ctx = AuthContextHolder.current().orElse(null);
+        if (ctx == null || ctx.permissionGroupCode() == null || !allowedRoles.contains(ctx.permissionGroupCode())) {
+            throw new AccessDeniedException("AUDIT_LOG access denied");
+        }
         AuditEvent event = AuditEvent.builder()
                 .eventType("AUDIT_ACCESS")
                 .moduleName("audit")
