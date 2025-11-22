@@ -224,6 +224,28 @@ audit:
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인
 
+## 13) 멀티 포맷(Excel/PDF/XML/Word/CSV/JSON) 출력 마스킹 설계
+- 공통 원칙
+  - 컨트롤러/필터에서 `DataPolicyMaskingFilter` → `MaskingTarget/MaskingContextHolder` 설정, `maskRule/maskParams`는 `MaskingFunctions.masker(policyMatch)`로 `UnaryOperator<String>` 생성
+  - 출력 직전 단일 어댑터(OutputMaskingAdapter)에서 포맷 무관하게 마스킹 적용
+  - 승인 역할 + `forceUnmaskFields/forceUnmaskKinds` 조합으로 필드 단위 해제 허용(사유 필수)
+- 컴포넌트
+  - `OutputMaskingAdapter<T>`: 포맷별 Writer 앞단에서 값→mask→Writer
+  - 포맷별 훅: Excel(SXSSF) 셀 쓰기 전, CSV/JSON/XML 직렬화 시, PDF/Word 텍스트 삽입 전 `mask` 호출
+  - `MaskRuleProcessor`(NONE/PARTIAL/FULL/HASH/TOKENIZE) + `Maskable` 값객체(RRN/카드/계좌/이름/주소 등)는 `MaskingService.render`
+- 흐름
+  1) 필터: `DataPolicyMaskingFilter` → `MaskingTarget` ThreadLocal
+  2) 서비스: RowScope 적용 데이터 조회
+  3) 출력 서비스: `masker = MaskingFunctions.masker(policyMatch)` 준비
+  4) Writer: 각 필드/셀/텍스트에 `masker.apply(...)` 또는 `MaskingService.render(...)`
+  5) 감사: `AuditEvent(DOWNLOAD_<FORMAT>)` 기록(파일명·행수·reason/legalBasis·rowScope/maskRule 포함)
+- 체크리스트
+  - 포맷별 Writer에 공통 헬퍼 삽입
+  - forceUnmask 역할·사유 검증
+  - 대량/스트리밍 성능 검증(SXSSF 등)
+  - 다운로드/내보내기 AuditEvent 기록
+  - e2e 스모크: 마스킹 적용 여부 확인(Playwright 등)
+
 ### 운영 베스트 프랙티스 가이드 (감사 로그 조회 + 보존/파티션)
 - **조회 자체를 감사**: 모든 `audit_log` 조회 API/쿼리 결과에 대해 `AUDIT_ACCESS` 이벤트 발행 (actor, 검색조건, 결과 건수, 페이지 번호 포함), ASYNC_FALLBACK 로깅.
 - **최소 권한 원칙**: 전용 역할(AUDIT_VIEWER)만 조회 가능, 결과 다운로드/Export는 별도 권한 + 사유 필수.
