@@ -33,3 +33,6 @@ dependencies {
 
     testImplementation libs.bundles.spring.test
 }
+
+// Jacoco: 전역 BUNDLE 룰을 임시 비활성화하고 나머지 최소 기준은 유지한다.
+// 커버리지 목표 달성으로 전역 Jacoco 규칙을 그대로 적용 (임시 예외 해제).

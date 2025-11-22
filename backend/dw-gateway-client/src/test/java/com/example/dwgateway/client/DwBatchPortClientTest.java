@@ -99,4 +99,14 @@ class DwBatchPortClientTest {
 
         assertThat(client.latestBatch()).isPresent();
     }
+
+    @Test
+    void latestBatchServerErrorWrapsException() {
+        server.expect(requestTo("http://localhost/api/dw/batches/latest"))
+                .andRespond(MockRestResponseCreators.withServerError());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> client.latestBatch())
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("latest batch");
+    }
 }

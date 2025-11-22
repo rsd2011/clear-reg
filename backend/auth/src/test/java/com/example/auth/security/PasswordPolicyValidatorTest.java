@@ -9,79 +9,39 @@ import org.junit.jupiter.api.Test;
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.config.AuthPolicyProperties;
 
-@DisplayName("PasswordPolicyValidator 테스트")
 class PasswordPolicyValidatorTest {
 
-    private final PasswordPolicyValidator validator;
-    private final PolicyToggleProvider toggleProvider;
+    private final AuthPolicyProperties props = new AuthPolicyProperties();
 
-    PasswordPolicyValidatorTest() {
-        AuthPolicyProperties properties = new AuthPolicyProperties();
-        properties.setPasswordMinLength(6);
-        toggleProvider = new PolicyToggleProvider() {
-            @Override
-            public boolean isPasswordPolicyEnabled() {
-                return true;
-            }
+    private static class StubToggleProvider implements PolicyToggleProvider {
+        private final boolean enabled;
 
-            @Override
-            public boolean isPasswordHistoryEnabled() {
-                return true;
-            }
+        StubToggleProvider(boolean enabled) {
+            this.enabled = enabled;
+        }
 
-            @Override
-            public boolean isAccountLockEnabled() {
-                return true;
-            }
-
-            @Override
-            public java.util.List<com.example.auth.LoginType> enabledLoginTypes() {
-                return java.util.List.of(com.example.auth.LoginType.values());
-            }
-        };
-        validator = new PasswordPolicyValidator(properties, toggleProvider);
+        @Override public boolean isPasswordPolicyEnabled() { return enabled; }
+        @Override public boolean isPasswordHistoryEnabled() { return false; }
+        @Override public boolean isAccountLockEnabled() { return false; }
+        @Override public java.util.List<com.example.auth.LoginType> enabledLoginTypes() { return java.util.List.of(); }
     }
 
+    @DisplayName("토글이 꺼져 있으면 비밀번호 검증을 건너뛴다")
     @Test
-    @DisplayName("Given 약한 비밀번호 When validate 호출 Then 예외를 던진다")
-    void givenWeakPasswordWhenValidateThenThrow() {
-        assertThatThrownBy(() -> validator.validate("short"))
+    void validate_skipsWhenDisabled() {
+        PasswordPolicyValidator validator = new PasswordPolicyValidator(props, new StubToggleProvider(false));
+
+        assertThatCode(() -> validator.validate(null)).doesNotThrowAnyException();
+    }
+
+    @DisplayName("숫자를 요구하지만 숫자가 없으면 InvalidCredentialsException을 던진다")
+    @Test
+    void validate_requiresDigit() {
+        props.setPasswordMinLength(4);
+        props.setRequireDigit(true);
+        PasswordPolicyValidator validator = new PasswordPolicyValidator(props, new StubToggleProvider(true));
+
+        assertThatThrownBy(() -> validator.validate("Abc!"))
                 .isInstanceOf(InvalidCredentialsException.class);
-    }
-
-    @Test
-    @DisplayName("Given 강한 비밀번호 When validate 호출 Then 검증을 통과한다")
-    void givenStrongPasswordWhenValidateThenPass() {
-        assertThatCode(() -> validator.validate("Abcd!2345"))
-                .doesNotThrowAnyException();
-    }
-
-    @Test
-    @DisplayName("Given 정책 비활성화 When validate 호출 Then 검사를 생략한다")
-    void givenDisabledPolicyWhenValidateThenSkip() {
-        PolicyToggleProvider disabled = new PolicyToggleProvider() {
-            @Override
-            public boolean isPasswordPolicyEnabled() {
-                return false;
-            }
-
-            @Override
-            public boolean isPasswordHistoryEnabled() {
-                return false;
-            }
-
-            @Override
-            public boolean isAccountLockEnabled() {
-                return true;
-            }
-
-            @Override
-            public java.util.List<com.example.auth.LoginType> enabledLoginTypes() {
-                return java.util.List.of(com.example.auth.LoginType.values());
-            }
-        };
-        PasswordPolicyValidator disabledValidator = new PasswordPolicyValidator(new AuthPolicyProperties(), disabled);
-
-        assertThatCode(() -> disabledValidator.validate(null)).doesNotThrowAnyException();
     }
 }

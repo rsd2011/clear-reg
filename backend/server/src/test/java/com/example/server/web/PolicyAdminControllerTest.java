@@ -95,4 +95,15 @@ class PolicyAdminControllerTest {
 
         then(cacheMaintenanceService).should().clearCaches(List.of("DW_EMPLOYEES"));
     }
+
+    @Test
+    @DisplayName("캐시 목록이 없으면 null로 호출한다")
+    void givenNoBodyWhenClearingThenUsesNull() throws Exception {
+        given(cacheMaintenanceService.clearCaches(null)).willReturn(List.of());
+
+        mockMvc.perform(post("/api/admin/policies/caches/clear"))
+                .andExpect(status().isAccepted());
+
+        then(cacheMaintenanceService).should().clearCaches(null);
+    }
 }

@@ -147,7 +147,4 @@ typings/
 src/main/resources/upload
 src/main/resources/manual
 
-# 스크립트 파일
-*.sh
-
 .vscode

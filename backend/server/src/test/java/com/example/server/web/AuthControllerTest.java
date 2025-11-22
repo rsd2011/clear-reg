@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 
@@ -23,6 +24,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -81,6 +83,15 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("로그인 요청이 유효하지 않으면 400을 반환한다")
+    void givenInvalidLoginRequestWhenPostThen400() throws Exception {
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("Given 리프레시 요청 When /api/auth/refresh 호출 Then 갱신된 토큰을 반환한다")
     void givenRefreshRequestWhenPostThenReturnNewTokens() throws Exception {
         TokenResponse tokens = new TokenResponse("new-access", Instant.now().plusSeconds(60), "new-refresh", Instant.now().plusSeconds(120));
@@ -126,5 +137,16 @@ class AuthControllerTest {
                 .andExpect(status().isNoContent());
 
         then(authService).should().updateAccountStatus(request);
+    }
+
+    @Test
+    @DisplayName("인증되지 않은 사용자가 비밀번호 변경을 호출하면 AccessDeniedException이 발생한다")
+    void changePasswordWithoutAuthThrowsAccessDenied() {
+        SecurityContextHolder.clearContext();
+        AuthController controller = new AuthController(authService);
+
+        assertThatThrownBy(() -> controller.changePassword(new PasswordChangeRequest("oldPw1!", "NewPw2@")))
+                .isInstanceOf(org.springframework.security.access.AccessDeniedException.class)
+                .hasMessageContaining("Authentication required");
     }
 }

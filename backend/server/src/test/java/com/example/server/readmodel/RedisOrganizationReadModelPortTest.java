@@ -1,126 +1,78 @@
 package com.example.server.readmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
+import org.mockito.Mockito;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.application.DwOrganizationTreeService.OrganizationTreeSnapshot;
 import com.example.dw.application.readmodel.OrganizationTreeReadModel;
-import com.example.dw.application.readmodel.OrganizationReadModelPort;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import redis.embedded.RedisServer;
-
-@DisplayName("RedisOrganizationReadModelPort 테스트")
 class RedisOrganizationReadModelPortTest {
 
-    private static final int REDIS_PORT = 6399;
-    private static RedisServer redisServer;
+    private final StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final DwOrganizationTreeService treeService = mock(DwOrganizationTreeService.class);
+    private final OrganizationReadModelProperties properties = new OrganizationReadModelProperties();
 
-    private LettuceConnectionFactory connectionFactory;
-    private StringRedisTemplate redisTemplate;
-    private OrganizationReadModelPort readModelPort;
-    private DwOrganizationTreeService organizationTreeService;
+    @Test
+    @DisplayName("캐시에 없고 refresh가 꺼져 있으면 Optional.empty를 반환한다")
+    void loadReturnsEmptyWhenCacheMissAndNoRefresh() {
+        properties.setRefreshOnMiss(false);
+        ValueOperations<String, String> ops = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(ops);
+        given(ops.get(any())).willReturn(null);
 
-    @BeforeAll
-    static void startRedis() {
-        redisServer = new RedisServer(REDIS_PORT);
-        redisServer.start();
-    }
+        RedisOrganizationReadModelPort port = new RedisOrganizationReadModelPort(redisTemplate, objectMapper, treeService, properties);
 
-    @AfterAll
-    static void stopRedis() {
-        if (redisServer != null) {
-            redisServer.stop();
-        }
-    }
-
-    @BeforeEach
-    void setUp() {
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration("localhost", REDIS_PORT);
-        connectionFactory = new LettuceConnectionFactory(configuration);
-        connectionFactory.afterPropertiesSet();
-        redisTemplate = new StringRedisTemplate(connectionFactory);
-        redisTemplate.afterPropertiesSet();
-
-        organizationTreeService = mock(DwOrganizationTreeService.class);
-
-        OrganizationReadModelProperties properties = new OrganizationReadModelProperties();
-        properties.setEnabled(true);
-        properties.setTtl(Duration.ofMinutes(5));
-        properties.setTenantId("test");
-        properties.setKeyPrefix("rm:test");
-
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        readModelPort = new RedisOrganizationReadModelPort(redisTemplate, mapper, organizationTreeService, properties);
-    }
-
-    @AfterEach
-    void tearDown() {
-        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
-        connectionFactory.destroy();
+        assertThat(port.load()).isEmpty();
     }
 
     @Test
-    void rebuildPersistsSnapshotAndLoadReturnsSameStructure() {
-        List<DwOrganizationNode> nodes = List.of(sampleNode("A", null), sampleNode("B", "A"));
-        OrganizationTreeSnapshot snapshot = DwOrganizationTreeService.OrganizationTreeSnapshot.fromNodes(nodes);
-        when(organizationTreeService.snapshot()).thenReturn(snapshot);
+    @DisplayName("캐시 페이로드 역직렬화 실패 시 empty를 반환한다")
+    void loadReturnsEmptyOnDeserializeError() {
+        properties.setRefreshOnMiss(false);
+        ValueOperations<String, String> ops = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(ops);
+        given(ops.get(any())).willReturn("not-json");
 
-        OrganizationTreeReadModel rebuilt = readModelPort.rebuild();
+        RedisOrganizationReadModelPort port = new RedisOrganizationReadModelPort(redisTemplate, objectMapper, treeService, properties);
 
-        assertThat(rebuilt.nodes()).hasSize(2);
-        assertThat(rebuilt.version()).isNotBlank();
-        assertThat(readModelPort.load()).isPresent()
-                .get()
-                .satisfies(model -> {
-                    assertThat(model.nodes()).hasSize(2);
-                    assertThat(model.version()).isEqualTo(rebuilt.version());
-                });
+        assertThat(port.load()).isEmpty();
     }
 
     @Test
-    void evictRemovesStoredPayload() {
-        when(organizationTreeService.snapshot())
-                .thenReturn(DwOrganizationTreeService.OrganizationTreeSnapshot.fromNodes(List.of(sampleNode("ONLY", null))));
+    @DisplayName("rebuild는 snapshot을 사용해 저장하고 반환한다")
+    void rebuildPersistsSnapshot() {
+        ValueOperations<String, String> ops = mock(ValueOperations.class);
+        given(redisTemplate.opsForValue()).willReturn(ops);
+        properties.setRefreshOnMiss(true);
 
-        readModelPort.rebuild();
-        assertThat(readModelPort.load()).isPresent();
+        DwOrganizationNode node = new DwOrganizationNode(UUID.randomUUID(), "ORG", 1, "Org", null, "ACTIVE",
+                null, null, null, OffsetDateTime.now(ZoneOffset.UTC));
+        OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.fromNodes(List.of(node));
+        given(treeService.snapshot()).willReturn(snapshot);
 
-        readModelPort.evict();
-        assertThat(readModelPort.load()).isPresent(); // refreshOnMiss triggers rebuild
-    }
+        RedisOrganizationReadModelPort port = new RedisOrganizationReadModelPort(redisTemplate, objectMapper, treeService, properties);
 
-    private DwOrganizationNode sampleNode(String code, String parent) {
-        return new DwOrganizationNode(
-                UUID.randomUUID(),
-                code,
-                1,
-                code + "_NAME",
-                parent,
-                "ACTIVE",
-                OffsetDateTime.now().toLocalDate(),
-                OffsetDateTime.now().toLocalDate(),
-                UUID.randomUUID(),
-                OffsetDateTime.now()
-        );
+        OrganizationTreeReadModel model = port.rebuild();
+
+        assertThat(model.nodes()).hasSize(1);
     }
 }

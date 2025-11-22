@@ -20,10 +20,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.auth.domain.RefreshTokenService;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
+import com.example.auth.dto.LoginResponse;
+import com.example.auth.LoginType;
 import com.example.auth.dto.LoginRequest;
-import com.example.auth.dto.TokenResponse;
 import com.example.auth.dto.PasswordChangeRequest;
 import com.example.auth.dto.AccountStatusChangeRequest;
+import com.example.auth.dto.TokenResponse;
 import com.example.auth.security.JwtProperties;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.auth.security.AccountStatusPolicy;
@@ -131,6 +133,114 @@ class AuthServiceTests {
         authService.logout("refresh-token");
 
         then(refreshTokenService).should().revoke("refresh-token");
+    }
+
+    @Test
+    @DisplayName("Given SSO 로그인 When 인증 성공 Then 토큰을 발급한다")
+    void givenSsoLoginWhenAuthenticatedThenIssueTokens() {
+        JwtProperties properties = new JwtProperties();
+        properties.setSecret("test-secret-test-secret-test-secret");
+        properties.setAccessTokenSeconds(3600);
+        properties.setRefreshTokenSeconds(7200);
+        JwtTokenProvider provider = new JwtTokenProvider(properties);
+
+        AuthenticationStrategy ssoStrategy = new AuthenticationStrategy() {
+            @Override
+            public LoginType supportedType() {
+                return LoginType.SSO;
+            }
+
+            @Override
+            public UserAccount authenticate(LoginRequest request) {
+                return UserAccount.builder()
+                        .username("sso-user")
+                        .password("pw")
+                        .email("sso@example.com")
+                        .roles(Set.of("ROLE_USER"))
+                        .build();
+            }
+        };
+        AuthenticationStrategyResolver resolver = new AuthenticationStrategyResolver(List.of(new StubStrategy(), ssoStrategy));
+        AuthService ssoAuthService = new AuthService(resolver, provider, refreshTokenService,
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+
+        var issued = new RefreshTokenService.IssuedRefreshToken("refresh-token", Instant.now().plusSeconds(3600),
+                UserAccount.builder().username("sso-user").password("pw").organizationCode("ORG").permissionGroupCode("PG").build());
+        given(refreshTokenService.issue(any())).willReturn(issued);
+        given(policyToggleProvider.enabledLoginTypes()).willReturn(List.of(LoginType.SSO, LoginType.PASSWORD));
+
+        LoginResponse response = ssoAuthService.login(new LoginRequest(LoginType.SSO, null, null, "token"));
+
+        assertThat(response.tokens().accessToken()).isNotBlank();
+        assertThat(response.tokens().refreshToken()).isEqualTo("refresh-token");
+    }
+
+    @Test
+    @DisplayName("Given AD 로그인 When 인증 성공 Then 토큰을 발급한다")
+    void givenAdLoginWhenAuthenticatedThenIssueTokens() {
+        AuthenticationStrategy adStrategy = new AuthenticationStrategy() {
+            @Override
+            public LoginType supportedType() {
+                return LoginType.AD;
+            }
+
+            @Override
+            public UserAccount authenticate(LoginRequest request) {
+                return UserAccount.builder()
+                        .username("ad-user")
+                        .password("pw")
+                        .email("ad@example.com")
+                        .roles(Set.of("ROLE_USER"))
+                        .build();
+            }
+        };
+        AuthenticationStrategyResolver resolver = new AuthenticationStrategyResolver(List.of(new StubStrategy(), adStrategy));
+        JwtProperties properties = new JwtProperties();
+        properties.setSecret("test-secret-test-secret-test-secret");
+        properties.setAccessTokenSeconds(3600);
+        properties.setRefreshTokenSeconds(7200);
+        JwtTokenProvider provider = new JwtTokenProvider(properties);
+        AuthService adAuthService = new AuthService(resolver, provider, refreshTokenService,
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+
+        var issued = new RefreshTokenService.IssuedRefreshToken("ad-refresh", Instant.now().plusSeconds(3600),
+                UserAccount.builder().username("ad-user").password("pw").organizationCode("ORG").permissionGroupCode("PG").build());
+        given(refreshTokenService.issue(any())).willReturn(issued);
+        given(policyToggleProvider.enabledLoginTypes()).willReturn(List.of(LoginType.AD, LoginType.PASSWORD));
+
+        var response = adAuthService.login(new LoginRequest(LoginType.AD, "ad-user", "pw", null));
+
+        assertThat(response.tokens().refreshToken()).isEqualTo("ad-refresh");
+        assertThat(response.username()).isEqualTo("ad-user");
+    }
+
+    @Test
+    @DisplayName("Given AD 로그인 When 인증 실패 Then InvalidCredentialsException을 던진다")
+    void givenAdLoginWhenFailsThenThrows() {
+        AuthenticationStrategy failingAd = new AuthenticationStrategy() {
+            @Override
+            public LoginType supportedType() {
+                return LoginType.AD;
+            }
+
+            @Override
+            public UserAccount authenticate(LoginRequest request) {
+                throw new InvalidCredentialsException();
+            }
+        };
+        AuthenticationStrategyResolver resolver = new AuthenticationStrategyResolver(List.of(new StubStrategy(), failingAd));
+        JwtProperties properties = new JwtProperties();
+        properties.setSecret("test-secret-test-secret-test-secret");
+        properties.setAccessTokenSeconds(3600);
+        properties.setRefreshTokenSeconds(7200);
+        JwtTokenProvider provider = new JwtTokenProvider(properties);
+        AuthService adAuthService = new AuthService(resolver, provider, refreshTokenService,
+                userAccountService, accountStatusPolicy, passwordPolicyValidator, policyToggleProvider);
+
+        given(policyToggleProvider.enabledLoginTypes()).willReturn(List.of(LoginType.AD, LoginType.PASSWORD));
+
+        assertThatThrownBy(() -> adAuthService.login(new LoginRequest(LoginType.AD, "user", "pw", null)))
+                .isInstanceOf(InvalidCredentialsException.class);
     }
 
     @Test

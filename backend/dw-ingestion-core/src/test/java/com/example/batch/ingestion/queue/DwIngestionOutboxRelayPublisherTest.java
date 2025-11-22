@@ -36,4 +36,34 @@ class DwIngestionOutboxRelayPublisherTest {
         verify(jobQueue).enqueue(any());
         verify(publisher, times(1)).publish(entry);
     }
+
+    @Test
+    void relayDoesNothingWhenNoEntries() {
+        DwIngestionOutboxService outboxService = Mockito.mock(DwIngestionOutboxService.class);
+        DwIngestionJobQueue jobQueue = Mockito.mock(DwIngestionJobQueue.class);
+        OutboxMessagePublisher publisher = Mockito.mock(OutboxMessagePublisher.class);
+        DwIngestionOutboxRelay relay = new DwIngestionOutboxRelay(outboxService, jobQueue, publisher, 5);
+
+        org.assertj.core.api.Assertions.assertThatNoException().isThrownBy(relay::relay);
+        Mockito.verify(outboxService).claimPending(5);
+        Mockito.verifyNoInteractions(jobQueue, publisher);
+    }
+
+    @Test
+    void relayMarksFailedWhenPublisherThrows() {
+        DwIngestionOutboxService outboxService = Mockito.mock(DwIngestionOutboxService.class);
+        DwIngestionJobQueue jobQueue = Mockito.mock(DwIngestionJobQueue.class);
+        OutboxMessagePublisher publisher = Mockito.mock(OutboxMessagePublisher.class);
+        DwIngestionOutboxRelay relay = new DwIngestionOutboxRelay(outboxService, jobQueue, publisher, 10);
+
+        DwIngestionOutbox entry = new DwIngestionOutbox(com.example.dw.application.job.DwIngestionJobType.FETCH_NEXT,
+                java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now());
+        entry.markSending(java.time.Clock.systemUTC(), "test");
+        when(outboxService.claimPending(10)).thenReturn(List.of(entry));
+        org.mockito.Mockito.doThrow(new IllegalStateException("pub fail")).when(publisher).publish(entry);
+
+        relay.relay();
+
+        verify(outboxService).markFailed(entry);
+    }
 }

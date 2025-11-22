@@ -30,4 +30,49 @@ class PermissionSetChangedListenerTest {
         verify(menuReadModelPort).rebuild();
         verify(permissionMenuReadModelPort).rebuild("user-1");
     }
+
+    @Test
+    void skipsWhenOrganizationReadModelDisabled() {
+        when(readModelPort.isEnabled()).thenReturn(false);
+
+        listener.onPermissionChanged(new PermissionSetChangedEvent("user-2"));
+
+        Mockito.verifyNoInteractions(menuReadModelPort, permissionMenuReadModelPort);
+        Mockito.verify(readModelPort, Mockito.never()).rebuild();
+    }
+
+    @Test
+    void permissionMenuSkippedWhenPrincipalMissing() {
+        when(readModelPort.isEnabled()).thenReturn(true);
+        when(menuReadModelPort.isEnabled()).thenReturn(true);
+        when(permissionMenuReadModelPort.isEnabled()).thenReturn(true);
+
+        listener.onPermissionChanged(new PermissionSetChangedEvent(null));
+
+        verify(readModelPort).rebuild();
+        verify(menuReadModelPort).rebuild();
+        Mockito.verify(permissionMenuReadModelPort, Mockito.never()).rebuild(Mockito.any());
+    }
+
+    @Test
+    void skipsWhenOrganizationReadModelPortIsNull() {
+        PermissionSetChangedListener listener = new PermissionSetChangedListener(null, menuReadModelPort, permissionMenuReadModelPort);
+
+        listener.onPermissionChanged(new PermissionSetChangedEvent("user3"));
+
+        Mockito.verifyNoInteractions(menuReadModelPort, permissionMenuReadModelPort);
+    }
+
+    @Test
+    void menuReadModelDisabledDoesNotRebuild() {
+        when(readModelPort.isEnabled()).thenReturn(true);
+        when(menuReadModelPort.isEnabled()).thenReturn(false);
+        when(permissionMenuReadModelPort.isEnabled()).thenReturn(false);
+
+        listener.onPermissionChanged(new PermissionSetChangedEvent("user4"));
+
+        verify(readModelPort).rebuild();
+        Mockito.verify(menuReadModelPort, Mockito.never()).rebuild();
+        Mockito.verify(permissionMenuReadModelPort, Mockito.never()).rebuild(Mockito.any());
+    }
 }

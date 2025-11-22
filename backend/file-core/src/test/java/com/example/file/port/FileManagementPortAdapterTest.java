@@ -74,6 +74,67 @@ class FileManagementPortAdapterTest {
         then(fileService).should().listSummaries();
     }
 
+    @Test
+    @DisplayName("상태가 null이면 ACTIVE로 매핑한다")
+    void listMapsNullStatusToActive() {
+        FileSummaryView view = new FileSummaryView() {
+            @Override public UUID getId() { return UUID.randomUUID(); }
+            @Override public String getOriginalName() { return "test.txt"; }
+            @Override public String getContentType() { return "text/plain"; }
+            @Override public long getSize() { return 10; }
+            @Override public String getOwnerUsername() { return "tester"; }
+            @Override public FileStatus getStatus() { return null; }
+            @Override public OffsetDateTime getCreatedAt() { return OffsetDateTime.now(); }
+            @Override public OffsetDateTime getUpdatedAt() { return null; }
+        };
+        given(fileService.listSummaries()).willReturn(List.of(view));
+
+        List<FileMetadataDto> list = adapter.list();
+
+        assertThat(list).hasSize(1);
+        assertThat(list.get(0).status()).isEqualTo(FileStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("삭제 호출을 위임하고 감사 로그를 남긴다")
+    void deleteDelegatesAndPublishes() {
+        StoredFile file = sampleFile();
+        file.setStatus(FileStatus.DELETED);
+        file.markUpdated("tester", OffsetDateTime.now());
+        UUID id = UUID.randomUUID();
+        given(fileService.delete(id, "tester")).willReturn(file);
+
+        FileMetadataDto metadata = adapter.delete(id, "tester");
+
+        assertThat(metadata.status()).isEqualTo(FileStatus.DELETED);
+        then(auditPublisher).should().publish(Mockito.argThat(event ->
+                event.action().equals("DELETE") && event.fileId().equals(id)));
+    }
+
+    @Test
+    @DisplayName("다운로드 감사 로그는 updatedAt이 없으면 createdAt을 사용한다")
+    void downloadPublishesUsingCreatedAtWhenUpdatedNull() {
+        FileMetadataDto metadata = new FileMetadataDto(
+                UUID.randomUUID(),
+                "tmp.txt",
+                "text/plain",
+                10,
+                "hash",
+                "tester",
+                FileStatus.ACTIVE,
+                null,
+                OffsetDateTime.now(),
+                null);
+        FileDownload download = new FileDownload(metadata, null);
+        UUID id = metadata.id();
+        given(fileService.download(id, "tester", List.of())).willReturn(download);
+
+        adapter.download(id, "tester");
+
+        then(auditPublisher).should().publish(Mockito.argThat(event ->
+                event.action().equals("DOWNLOAD") && event.fileId().equals(id)));
+    }
+
     private StoredFile sampleFile() {
         StoredFile file = new StoredFile();
         file.setOriginalName("test.txt");

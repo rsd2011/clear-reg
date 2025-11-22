@@ -83,4 +83,18 @@ class ReadModelWorkerIntegrationTest {
         verify(menuReadModelPort).load();
         verify(permissionMenuReadModelPort).load("u");
     }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("ReadModel 비활성화 시 rebuild를 건너뛴다")
+    void skipWhenDisabled() {
+        when(organizationReadModelPort.isEnabled()).thenReturn(false);
+        when(menuReadModelPort.isEnabled()).thenReturn(false);
+        when(permissionMenuReadModelPort.isEnabled()).thenReturn(false);
+
+        ReadModelWorker worker = new ReadModelWorker(organizationReadModelPort, menuReadModelPort, permissionMenuReadModelPort);
+
+        org.assertj.core.api.Assertions.assertThatCode(worker::rebuildOrganization).doesNotThrowAnyException();
+        org.assertj.core.api.Assertions.assertThatCode(worker::rebuildMenu).doesNotThrowAnyException();
+        org.assertj.core.api.Assertions.assertThatCode(() -> worker.rebuildPermissionMenu("u")).doesNotThrowAnyException();
+    }
 }

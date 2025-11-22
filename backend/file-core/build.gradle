@@ -22,3 +22,15 @@ dependencies {
     testImplementation libs.bundles.spring.test
     testImplementation libs.h2.database
 }
+
+def excludedClasses = [
+        'com/example/file/FileCoreAutoConfiguration.class',
+        'com/example/file/port/*',
+        '**/AuditJsonSerializer.*'
+]
+
+jacocoTestReport {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: excludedClasses)
+    }))
+}

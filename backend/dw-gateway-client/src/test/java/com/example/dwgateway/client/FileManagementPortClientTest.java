@@ -16,10 +16,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
@@ -65,6 +69,53 @@ class FileManagementPortClientTest {
     }
 
     @Test
+    void uploadFailsOnServerError() {
+        server.expect(requestTo("http://localhost/api/files"))
+                .andRespond(MockRestResponseCreators.withServerError());
+
+        assertThatThrownBy(() -> client.upload(uploadCommand("err.bin")))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("upload");
+    }
+
+    @Test
+    void uploadFailsWhenInputStreamErrors() {
+        FileUploadCommand badCommand = new FileUploadCommand(
+                "bad.txt", MediaType.TEXT_PLAIN_VALUE, 1,
+                () -> { throw new RuntimeException("io failure"); },
+                null, "tester");
+
+        assertThatThrownBy(() -> client.upload(badCommand))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("io");
+    }
+
+    @Test
+    void uploadFailsWhenRestClientError() {
+        RestTemplate local = new RestTemplateBuilder().rootUri("http://localhost").build();
+        MockRestServiceServer localServer = MockRestServiceServer.bindTo(local).ignoreExpectOrder(true).build();
+        FileManagementPort localClient = new FileManagementPortClient(local,
+                RetryTemplate.builder().maxAttempts(1).fixedBackoff(10).build());
+
+        localServer.expect(requestTo("http://localhost/api/files"))
+                .andRespond(MockRestResponseCreators.withStatus(HttpStatus.BAD_REQUEST));
+
+        assertThatThrownBy(() -> localClient.upload(uploadCommand("fail.bin")))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("upload");
+    }
+
+    @Test
+    void uploadFailsOnNonOkStatus() {
+        server.expect(requestTo("http://localhost/api/files"))
+                .andRespond(MockRestResponseCreators.withStatus(org.springframework.http.HttpStatus.ACCEPTED));
+
+        assertThatThrownBy(() -> client.upload(uploadCommand("foo.bin")))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("upload");
+    }
+
+    @Test
     void listReturnsResponse() {
         server.expect(requestTo("http://localhost/api/files"))
                 .andRespond(MockRestResponseCreators.withSuccess("""
@@ -80,12 +131,45 @@ class FileManagementPortClientTest {
     }
 
     @Test
+    void listReturnsEmptyWhenNoContent() {
+        server.expect(requestTo("http://localhost/api/files"))
+                .andRespond(MockRestResponseCreators.withSuccess("[]", MediaType.APPLICATION_JSON));
+
+        List<FileMetadataDto> files = client.list();
+
+        assertThat(files).isEmpty();
+    }
+
+
+    @Test
     void getMetadataReturnsEntry() {
         UUID id = UUID.randomUUID();
         server.expect(requestTo("http://localhost/api/files/" + id))
                 .andRespond(MockRestResponseCreators.withSuccess(sampleMetadataJson("notes.txt"), MediaType.APPLICATION_JSON));
 
         assertThat(client.getMetadata(id).originalName()).isEqualTo("notes.txt");
+    }
+
+    @Test
+    void getMetadataThrowsWhenBodyMissing() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andRespond(MockRestResponseCreators.withSuccess());
+
+        assertThatThrownBy(() -> client.getMetadata(id))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("response was empty");
+    }
+
+    @Test
+    void getMetadataThrowsOn404() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andRespond(MockRestResponseCreators.withStatus(org.springframework.http.HttpStatus.NOT_FOUND));
+
+        assertThatThrownBy(() -> client.getMetadata(id))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("Failed to fetch file metadata");
     }
 
     @Test
@@ -113,6 +197,91 @@ class FileManagementPortClientTest {
         assertThat(client.delete(id, "tester").originalName()).isEqualTo("report.csv");
     }
 
+    @Test
+    void deleteThrowsWhenRestCallFails() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andExpect(method(org.springframework.http.HttpMethod.DELETE))
+                .andRespond(MockRestResponseCreators.withServerError());
+
+        assertThatThrownBy(() -> client.delete(id, "tester"))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("delete");
+    }
+
+    @Test
+    void downloadFailsWhenContentMissing() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andRespond(MockRestResponseCreators.withSuccess(sampleMetadataJson("archive.zip"), MediaType.APPLICATION_JSON));
+        server.expect(requestTo("http://localhost/api/files/" + id + "/content"))
+                .andRespond(MockRestResponseCreators.withSuccess());
+
+        assertThatThrownBy(() -> client.download(id, "tester"))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("payload was empty");
+    }
+
+    @Test
+    void downloadFailsWhenStatusIsNotActive() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andRespond(MockRestResponseCreators.withSuccess(sampleMetadataJsonWithStatus(id, "archive.zip", FileStatus.DELETED.name()), MediaType.APPLICATION_JSON));
+        server.expect(requestTo("http://localhost/api/files/" + id + "/content"))
+                .andRespond(MockRestResponseCreators.withSuccess("payload", MediaType.APPLICATION_OCTET_STREAM));
+
+        assertThatThrownBy(() -> client.download(id, "tester"))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("status");
+    }
+
+    @Test
+    void downloadFailsWhenRestErrorDuringContentLoad() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andRespond(MockRestResponseCreators.withSuccess(sampleMetadataJson("archive.zip"), MediaType.APPLICATION_JSON));
+        server.expect(requestTo("http://localhost/api/files/" + id + "/content"))
+                .andRespond(MockRestResponseCreators.withServerError());
+
+        assertThatThrownBy(() -> client.download(id, "tester"))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("download");
+    }
+
+    @Test
+    void listThrowsWhenRestError() {
+        server.expect(requestTo("http://localhost/api/files"))
+                .andRespond(MockRestResponseCreators.withServerError());
+
+        assertThatThrownBy(() -> client.list())
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("list");
+    }
+
+    @Test
+    void buildFileResourceExposesFilenameAndLength() throws Exception {
+        FileUploadCommand command = uploadCommand("data.txt");
+
+        @SuppressWarnings("unchecked")
+        HttpEntity<InputStreamResource> entity = ReflectionTestUtils.invokeMethod(client, "buildFileResource", command);
+
+        InputStreamResource resource = entity.getBody();
+        assertThat(resource.getFilename()).isEqualTo("data.txt");
+        assertThat(resource.contentLength()).isEqualTo(4);
+        assertThat(resource.getDescription()).contains("data.txt");
+    }
+
+    @Test
+    void deleteThrowsWhenBodyMissing() {
+        UUID id = UUID.randomUUID();
+        server.expect(requestTo("http://localhost/api/files/" + id))
+                .andRespond(MockRestResponseCreators.withSuccess());
+
+        assertThatThrownBy(() -> client.delete(id, "tester"))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("response body was empty");
+    }
+
     private FileUploadCommand uploadCommand(String filename) {
         return new FileUploadCommand(
                 filename,
@@ -137,5 +306,20 @@ class FileManagementPortClientTest {
                   "updatedAt": "2024-01-01T00:00:00Z"
                 }
                 """.formatted(UUID.randomUUID(), filename, FileStatus.ACTIVE.name());
+    }
+
+    private String sampleMetadataJsonWithStatus(UUID id, String filename, String status) {
+        return """
+                {
+                  "id": "%s",
+                  "originalName": "%s",
+                  "contentType": "application/octet-stream",
+                  "size": 10,
+                  "checksum": "abc",
+                  "status": "%s",
+                  "createdAt": "2024-01-01T00:00:00Z",
+                  "updatedAt": "2024-01-01T00:00:00Z"
+                }
+                """.formatted(id, filename, status);
     }
 }

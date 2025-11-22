@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -91,5 +92,28 @@ class DwIngestionPolicyServiceTest {
         assertThatThrownBy(() -> new DwIngestionPolicyService(repository, defaults, eventPublisher))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Invalid DW ingestion policy");
+    }
+
+    @Test
+    @DisplayName("YAML에 jobSchedules가 비어 있으면 기본 DW_INGESTION 스케줄로 대체한다")
+    void givenEmptyJobSchedulesInYaml_whenInit_thenFallbackScheduleAdded() {
+        String yaml = """
+                batchCron: "0 0 6 * * *"
+                timezone: "Asia/Seoul"
+                retention: "PT72H"
+                jobSchedules: []
+                """;
+        HrIngestionPolicyEntity entity = new HrIngestionPolicyEntity(DOCUMENT_CODE, yaml);
+        given(repository.findByCode(DOCUMENT_CODE)).willReturn(Optional.of(entity));
+
+        DwIngestionPolicyService service = new DwIngestionPolicyService(repository, defaults, eventPublisher);
+
+        DwIngestionPolicyView view = service.view();
+
+        assertThat(view.jobSchedules()).hasSize(1);
+        DwBatchJobScheduleView schedule = view.jobSchedules().getFirst();
+        assertThat(schedule.jobKey()).isEqualTo("DW_INGESTION");
+        assertThat(schedule.cronExpression()).isEqualTo("0 0 6 * * *");
+        assertThat(schedule.timezone()).isEqualTo("Asia/Seoul");
     }
 }

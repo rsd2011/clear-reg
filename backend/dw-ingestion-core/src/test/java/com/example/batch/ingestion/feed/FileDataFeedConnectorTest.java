@@ -63,4 +63,22 @@ class FileDataFeedConnectorTest {
         connector.onFailure(feed, new IllegalStateException("error"));
         verify(storageService).markProcessed(descriptor, false);
     }
+
+    @Test
+    void onSuccessWithUnknownFeedDoesNotCallStorage() {
+        FileDataFeedConnector connector = new FileDataFeedConnector(storageService);
+        DataFeed feed = new DataFeed("missing", DataFeedType.EMPLOYEE, LocalDate.now(), 1, "p", "FILE", java.util.Map.of());
+
+        connector.onSuccess(feed);
+
+        org.mockito.Mockito.verify(storageService, org.mockito.Mockito.never()).markProcessed(org.mockito.Mockito.any(), org.mockito.Mockito.anyBoolean());
+    }
+
+    @Test
+    void givenNoPendingFile_whenNextFeed_thenEmptyAndNoMark() {
+        given(storageService.nextPendingFile()).willReturn(Optional.empty());
+        FileDataFeedConnector connector = new FileDataFeedConnector(storageService);
+
+        assertThat(connector.nextFeed()).isEmpty();
+    }
 }

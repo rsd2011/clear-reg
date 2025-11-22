@@ -49,7 +49,7 @@ public class RowConditionEvaluator {
         }
     }
 
-    private static final class MapPropertyAccessor implements PropertyAccessor {
+    static final class MapPropertyAccessor implements PropertyAccessor {
 
         @Override
         public Class<?>[] getSpecificTargetClasses() {

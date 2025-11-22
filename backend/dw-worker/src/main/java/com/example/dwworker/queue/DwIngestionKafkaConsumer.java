@@ -35,8 +35,16 @@ public class DwIngestionKafkaConsumer {
             autoStartup = "${dw.ingestion.kafka.listener.auto-start:true}")
     public void onMessage(ConsumerRecord<String, String> record) {
         String payload = record.value();
+        if (payload == null || payload.isBlank()) {
+            log.warn("Received empty DW ingestion event payload, key={}", record.key());
+            return;
+        }
         try {
             DwIngestionOutboxEvent event = objectMapper.readValue(payload, DwIngestionOutboxEvent.class);
+            if (event.jobType() == null) {
+                log.error("Invalid DW ingestion event: missing jobType, key={} payload={}", record.key(), payload);
+                return;
+            }
             DwIngestionJob job = DwIngestionJob.fromOutbox(event.outboxId(), event.jobType());
             jobQueue.enqueue(job);
         }

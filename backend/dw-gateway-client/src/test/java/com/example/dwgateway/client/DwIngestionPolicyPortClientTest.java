@@ -65,6 +65,16 @@ class DwIngestionPolicyPortClientTest {
     }
 
     @Test
+    void currentPolicyThrowsWhenBodyMissing() {
+        server.expect(requestTo("http://localhost/api/admin/dw-ingestion/policy"))
+                .andRespond(MockRestResponseCreators.withSuccess());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> client.currentPolicy())
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("response body");
+    }
+
+    @Test
     void updatePolicySendsRequestBody() {
         server.expect(requestTo("http://localhost/api/admin/dw-ingestion/policy"))
                 .andExpect(method(org.springframework.http.HttpMethod.PUT))
@@ -104,5 +114,22 @@ class DwIngestionPolicyPortClientTest {
 
         DwIngestionPolicyView view = retryingClient.updatePolicy(request);
         assertThat(view.batchCron()).isEqualTo("0 0 12 * *");
+    }
+
+    @Test
+    void updatePolicyThrowsWhenBodyMissing() {
+        server.expect(requestTo("http://localhost/api/admin/dw-ingestion/policy"))
+                .andExpect(method(org.springframework.http.HttpMethod.PUT))
+                .andRespond(MockRestResponseCreators.withSuccess());
+
+        DwIngestionPolicyUpdateRequest request = new DwIngestionPolicyUpdateRequest(
+                "0 0 12 * *",
+                "UTC",
+                Duration.ofHours(12),
+                List.of());
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> client.updatePolicy(request))
+                .isInstanceOf(DwGatewayClientException.class)
+                .hasMessageContaining("response body");
     }
 }

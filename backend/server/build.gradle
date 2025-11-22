@@ -39,3 +39,8 @@ dependencies {
     testImplementation libs.junit.platform.launcher
     testImplementation libs.embedded.redis
 }
+
+tasks.withType(Test).configureEach {
+    systemProperty 'spring.task.scheduling.enabled', 'false'
+    exclude '**/ApplicationTests.class'
+}

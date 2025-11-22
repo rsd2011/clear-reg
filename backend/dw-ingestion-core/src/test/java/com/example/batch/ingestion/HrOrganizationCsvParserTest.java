@@ -21,4 +21,19 @@ class HrOrganizationCsvParserTest {
 
         assertThat(records).hasSize(1);
     }
+
+    @Test
+    void givenEmptyPayload_whenParse_thenReturnEmpty() {
+        assertThat(parser.parse("   ")).isEmpty();
+    }
+
+    @Test
+    void givenTooFewColumns_whenParse_thenSkipLine() {
+        String payload = "code,name,parent,status,start,end\n" +
+                "ORG002,Branch"; // columns fewer than expected
+
+        List<HrOrganizationRecord> records = parser.parse(payload);
+
+        assertThat(records).isEmpty();
+    }
 }

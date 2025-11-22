@@ -106,6 +106,9 @@ public class FileManagementPortClient implements FileManagementPort {
     public FileDownload download(UUID id, String actor, List<String> alsoAllowedUsers) {
         // actor is captured via dw-gateway authentication headers; not part of the REST payload
         FileMetadataDto metadata = getMetadata(id);
+        if (metadata.status() != com.example.common.file.FileStatus.ACTIVE) {
+            throw new DwGatewayClientException("File status is not active");
+        }
         try {
             ResponseEntity<Resource> response = retryTemplate.execute(context ->
                     restTemplate.exchange(FILES_PATH + "/" + id + "/content", HttpMethod.GET, HttpEntity.EMPTY, Resource.class));

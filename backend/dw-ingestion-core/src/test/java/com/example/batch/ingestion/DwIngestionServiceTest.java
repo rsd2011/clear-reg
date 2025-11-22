@@ -83,4 +83,23 @@ class DwIngestionServiceTest {
                     verify(primaryConnector).onFailure(feed, error);
                 });
     }
+
+    @Test
+    void givenUnsupportedFeedType_whenTemplateMissing_thenMarkFailedAndContinue() {
+        DataFeed unsupported = new DataFeed("holiday.csv", DataFeedType.HOLIDAY, LocalDate.now(), 3,
+                "csv", "sftp", Map.of());
+        given(primaryConnector.nextFeed()).willReturn(Optional.of(unsupported));
+        given(secondaryConnector.nextFeed()).willReturn(Optional.empty());
+
+        Scenario.given("지원되지 않는 피드 타입", service::ingestNextFile)
+                .then("배치 실패 후 다음 커넥터로 진행", maybeBatch -> {
+                    assertThat(maybeBatch).isEmpty();
+                    verify(primaryConnector).onFailure(any(DataFeed.class), any(IllegalStateException.class));
+                    var captor = org.mockito.ArgumentCaptor.forClass(HrImportBatchEntity.class);
+                    verify(batchRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
+                    HrImportBatchEntity saved = captor.getValue();
+                    assertThat(saved.getStatus()).isEqualTo(HrBatchStatus.FAILED);
+                    assertThat(saved.getFeedType()).isEqualTo(DataFeedType.HOLIDAY);
+                });
+    }
 }

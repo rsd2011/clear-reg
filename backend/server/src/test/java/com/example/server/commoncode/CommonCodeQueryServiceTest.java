@@ -54,4 +54,25 @@ class CommonCodeQueryServiceTest {
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().codeName()).isEqualTo("System Alpha");
     }
+
+    @Test
+    @DisplayName("DW 코드만 포함하도록 요청하면 시스템 코드는 무시한다")
+    void givenOnlyDwRequested_whenAggregate_thenUseDwOnly() {
+        DwCommonCodeSnapshot dwCode = new DwCommonCodeSnapshot("CATEGORY", "B", "DW Beta", 1,
+                true, "DW", "desc", "{}");
+        given(dwCommonCodeDirectoryService.findActive("CATEGORY")).willReturn(List.of(dwCode));
+
+        List<CommonCodeItem> result = service.aggregate("category", false, true);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.getFirst().codeValue()).isEqualTo("B");
+        assertThat(result.getFirst().source()).isEqualTo(com.example.server.commoncode.model.CommonCodeSource.DW);
+    }
+
+    @Test
+    @DisplayName("includeSystem/Dw 둘 다 false이면 빈 리스트를 반환한다")
+    void givenBothSourcesDisabled_thenReturnEmpty() {
+        List<CommonCodeItem> result = service.aggregate("category", false, false);
+        assertThat(result).isEmpty();
+    }
 }

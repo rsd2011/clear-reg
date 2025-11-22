@@ -35,4 +35,19 @@ class HrOrganizationValidatorTest {
         assertThat(result.errors()).hasSize(1);
         assertThat(result.errors().get(0).errorMessage()).contains("Organization code is required");
     }
+
+    @Test
+    void givenDuplicateAndInvalidDates_whenValidate_thenFlagsErrors() {
+        HrOrganizationRecord base = new HrOrganizationRecord("ORG001", "HQ", null, "ACTIVE",
+                LocalDate.of(2024, 1, 1), LocalDate.of(2023, 12, 31), "payload1", 2);
+        HrOrganizationRecord duplicate = new HrOrganizationRecord("ORG001", "HQ2", null, "ACTIVE",
+                LocalDate.of(2024, 1, 1), null, "payload2", 3);
+
+        var result = validator.validate(List.of(base, duplicate));
+
+        assertThat(result.validRecords()).hasSize(0);
+        assertThat(result.errors()).hasSize(2);
+        assertThat(result.errors().get(0).errorMessage()).contains("End date must not be before start date");
+        assertThat(result.errors().get(1).errorMessage()).contains("Duplicate organization snapshot");
+    }
 }

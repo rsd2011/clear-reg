@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -73,6 +74,19 @@ class DwOrganizationQueryServiceTest {
     }
 
     @Test
+    @DisplayName("CUSTOM 스코프에서 전략이 빈 페이지를 반환하면 그대로 전달한다")
+    void customScopePropagatesStrategyResult() {
+        PageRequest pageable = PageRequest.of(0, 5);
+        Page<DwOrganizationNode> customPage = new PageImpl<>(List.of(), pageable, 0);
+        given(organizationRowScopeStrategy.apply(pageable, "ORG-X")).willReturn(customPage);
+
+        Page<DwOrganizationNode> page = service.getOrganizations(pageable, RowScope.CUSTOM, "ORG-X");
+
+        assertThat(page.getTotalElements()).isZero();
+        verify(organizationRowScopeStrategy).apply(pageable, "ORG-X");
+    }
+
+    @Test
     void givenOrgScope_whenQuery_thenIncludeDescendants() {
         PageRequest pageable = PageRequest.of(0, 5);
         OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(
@@ -128,6 +142,70 @@ class DwOrganizationQueryServiceTest {
         PageRequest pageable = PageRequest.of(0, 5);
 
         assertThatThrownBy(() -> service.getOrganizations(pageable, null, "ORG-A"))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("read model이 비어 있으면 트리 스냅샷으로 폴백한다")
+    void fallbackToTreeSnapshotWhenReadModelEmpty() {
+        PageRequest pageable = PageRequest.of(0, 5);
+        OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(sample("ROOT", null)));
+        given(organizationReadModelPort.isEnabled()).willReturn(true);
+        given(organizationReadModelPort.load()).willReturn(Optional.empty());
+        given(treeService.snapshot()).willReturn(snapshot);
+
+        Page<DwOrganizationNode> page = service.getOrganizations(pageable, RowScope.ALL, "ROOT");
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        verify(treeService).snapshot();
+    }
+
+    @Test
+    @DisplayName("페이지 오프셋이 범위를 벗어나면 빈 페이지를 반환한다")
+    void returnsEmptyPageWhenOffsetBeyondSize() {
+        PageRequest pageable = PageRequest.of(2, 10); // offset 20
+        OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(sample("ROOT", null)));
+        given(treeService.snapshot()).willReturn(snapshot);
+
+        Page<DwOrganizationNode> page = service.getOrganizations(pageable, RowScope.ALL, "ROOT");
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("read model 포트가 주입되지 않은 경우 트리 스냅샷을 사용한다")
+    void usesSnapshotWhenReadModelPortIsNull() {
+        PageRequest pageable = PageRequest.of(0, 5);
+        DwOrganizationQueryService noReadModelService =
+                new DwOrganizationQueryService(treeService, organizationRowScopeStrategy, null);
+        OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(sample("ROOT", null)));
+        given(treeService.snapshot()).willReturn(snapshot);
+
+        Page<DwOrganizationNode> page = noReadModelService.getOrganizations(pageable, RowScope.ALL, "ROOT");
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        verify(treeService).snapshot();
+    }
+
+    @Test
+    @DisplayName("ALL 스코프에서는 organizationCode 없이도 전체를 조회한다")
+    void allScopeAllowsNullOrganizationCode() {
+        PageRequest pageable = PageRequest.of(0, 5);
+        OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(sample("ROOT", null)));
+        given(treeService.snapshot()).willReturn(snapshot);
+
+        Page<DwOrganizationNode> page = service.getOrganizations(pageable, RowScope.ALL, null);
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("CUSTOM 스코프에서 organizationCode가 없으면 예외를 던진다")
+    void customScopeWithNullOrganizationCodeThrows() {
+        PageRequest pageable = PageRequest.of(0, 5);
+
+        assertThatThrownBy(() -> service.getOrganizations(pageable, RowScope.CUSTOM, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 

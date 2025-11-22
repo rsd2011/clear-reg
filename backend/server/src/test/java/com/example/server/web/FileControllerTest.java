@@ -1,7 +1,9 @@
 package com.example.server.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -30,6 +32,10 @@ import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.security.RowScope;
 import com.example.server.file.FileMetadataResponse;
+import com.example.draft.application.DraftApplicationService;
+import com.example.draft.application.response.DraftAttachmentResponse;
+import com.example.draft.application.response.DraftApprovalStepResponse;
+import com.example.draft.application.response.DraftResponse;
 import com.example.file.port.FileManagementPort;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +44,9 @@ class FileControllerTest {
 
     @Mock
     private FileManagementPort fileManagementPort;
+
+    @Mock
+    private DraftApplicationService draftApplicationService;
 
     @InjectMocks
     private FileController controller;
@@ -96,6 +105,39 @@ class FileControllerTest {
         assertThat(response).hasSize(1);
     }
 
+    @Test
+    @DisplayName("파일이 없을 때 다운로드하면 예외를 전파한다")
+    void downloadThrowsWhenServiceFails() {
+        setAuth(ActionCode.DOWNLOAD);
+        UUID id = sampleMetadata().id();
+        given(fileManagementPort.download(id, "tester", List.of("tester"))).willThrow(new RuntimeException("fail"));
+
+        assertThatThrownBy(() -> controller.download(id, null))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    @DisplayName("파일 삭제 시 서비스 예외를 전파한다")
+    void deleteThrowsWhenServiceFails() {
+        setAuth(ActionCode.DELETE);
+        UUID id = UUID.randomUUID();
+        given(fileManagementPort.delete(id, "tester")).willThrow(new IllegalStateException("fail"));
+
+        assertThatThrownBy(() -> controller.delete(id))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("목록이 비어 있으면 빈 리스트를 반환한다")
+    void listReturnsEmpty() {
+        setAuth(ActionCode.READ);
+        given(fileManagementPort.list()).willReturn(List.of());
+
+        var response = controller.listFiles();
+
+        assertThat(response).isEmpty();
+    }
+
     private FileMetadataDto sampleMetadata() {
         OffsetDateTime ts = OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
         return new FileMetadataDto(
@@ -109,5 +151,54 @@ class FileControllerTest {
                 null,
                 ts,
                 ts);
+    }
+
+    @Test
+    @DisplayName("draftId 첨부 불일치 시 정책 위반 예외를 던진다")
+    void downloadWithDraftId_whenNotAttached_throwsPolicyViolation() {
+        setAuth(ActionCode.DOWNLOAD);
+        UUID fileId = sampleMetadata().id();
+        DraftResponse draft = new DraftResponse(UUID.randomUUID(), "t", "c", "BF", "ORG",
+                "creator", com.example.draft.domain.DraftStatus.IN_REVIEW, "tmpl", "form", 1,
+                "{}", "{}", java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(), null, null, null, null,
+                List.<DraftApprovalStepResponse>of(), List.of(new DraftAttachmentResponse(UUID.randomUUID(), "other", "name", 1L, java.time.OffsetDateTime.now(), "creator")));
+        given(draftApplicationService.getDraft(any(), any(), any(), org.mockito.ArgumentMatchers.eq(false))).willReturn(draft);
+        given(draftApplicationService.listReferences(any(), any(), any(), org.mockito.ArgumentMatchers.eq(false))).willReturn(List.of());
+
+        assertThatThrownBy(() -> controller.download(fileId, UUID.randomUUID()))
+                .isInstanceOf(com.example.file.FilePolicyViolationException.class)
+                .hasMessageContaining("첨부되지 않은 파일");
+    }
+
+    @Test
+    @DisplayName("파일 삭제 성공 시 메타데이터를 반환한다")
+    void deleteReturnsMetadata() {
+        setAuth(ActionCode.DELETE);
+        FileMetadataDto metadata = sampleMetadata();
+        given(fileManagementPort.delete(metadata.id(), "tester")).willReturn(metadata);
+
+        FileMetadataResponse response = controller.delete(metadata.id());
+
+        assertThat(response.id()).isEqualTo(metadata.id());
+    }
+
+    @Test
+    @DisplayName("draftId가 있고 첨부가 일치하면 다운로드를 허용한다")
+    void downloadWithDraftId_whenAttached_returnsResource() {
+        setAuth(ActionCode.DOWNLOAD);
+        FileMetadataDto metadata = sampleMetadata();
+        UUID draftId = UUID.randomUUID();
+        DraftResponse draft = new DraftResponse(draftId, "t", "c", "BF", "ORG",
+                "tester", com.example.draft.domain.DraftStatus.IN_REVIEW, "tmpl", "form", 1,
+                "{}", "{}", java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(), null, null, null, null,
+                List.<DraftApprovalStepResponse>of(), List.of(new DraftAttachmentResponse(metadata.id(), "name", "name", 1L, java.time.OffsetDateTime.now(), "tester")));
+        given(draftApplicationService.getDraft(eq(draftId), any(), any(), eq(false))).willReturn(draft);
+        given(draftApplicationService.listReferences(eq(draftId), any(), any(), eq(false))).willReturn(List.of());
+        given(fileManagementPort.download(eq(metadata.id()), any(), any()))
+                .willReturn(new FileDownload(metadata, new ByteArrayResource("data".getBytes())));
+
+        var resp = controller.download(metadata.id(), draftId);
+
+        assertThat(resp.getStatusCode().is2xxSuccessful()).isTrue();
     }
 }

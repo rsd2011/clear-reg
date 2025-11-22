@@ -2,6 +2,9 @@ package com.example.server.readmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -37,6 +40,7 @@ class RedisPermissionMenuReadModelPortTest {
     private StringRedisTemplate redisTemplate;
     private PermissionMenuReadModelPort readModelPort;
     private PermissionMenuReadModelSource source;
+    private PermissionMenuReadModelProperties properties;
 
     @BeforeAll
     static void startRedis() {
@@ -61,7 +65,7 @@ class RedisPermissionMenuReadModelPortTest {
 
         source = org.mockito.Mockito.mock(PermissionMenuReadModelSource.class);
 
-        PermissionMenuReadModelProperties properties = new PermissionMenuReadModelProperties();
+        properties = new PermissionMenuReadModelProperties();
         properties.setEnabled(true);
         properties.setKeyPrefix("rm:perm");
         properties.setTenantId("test");
@@ -105,5 +109,37 @@ class RedisPermissionMenuReadModelPortTest {
 
         readModelPort.evict("user2");
         assertThat(readModelPort.load("user2")).isPresent();
+    }
+
+    @Test
+    @DisplayName("비활성화 상태면 아무 것도 로드하지 않는다")
+    void disabledReturnsEmpty() {
+        properties.setEnabled(false);
+        PermissionMenuReadModelPort disabled = new RedisPermissionMenuReadModelPort(redisTemplate, new ObjectMapper(), source, properties);
+
+        assertThat(disabled.load("userX")).isEmpty();
+        verifyNoInteractions(source);
+    }
+
+    @Test
+    @DisplayName("refreshOnMiss=false면 캐시 미스 시 빈 Optional을 반환한다")
+    void cacheMissRefreshOffReturnsEmpty() {
+        properties.setRefreshOnMiss(false);
+        PermissionMenuReadModelPort port = new RedisPermissionMenuReadModelPort(redisTemplate, new ObjectMapper(), source, properties);
+
+        assertThat(port.load("userY")).isEmpty();
+        verifyNoInteractions(source);
+    }
+
+    @Test
+    @DisplayName("역직렬화 실패 시 스냅샷을 다시 저장한다")
+    void deserializeFailureTriggersRebuild() {
+        PermissionMenuReadModel snapshot = new PermissionMenuReadModel("recovered", OffsetDateTime.now(), List.of());
+        when(source.snapshot("userZ")).thenReturn(snapshot);
+        redisTemplate.opsForValue().set("rm:perm:test:userZ", "{not-json}");
+
+        PermissionMenuReadModel model = readModelPort.load("userZ").orElseThrow();
+
+        assertThat(model.version()).isEqualTo("recovered");
     }
 }

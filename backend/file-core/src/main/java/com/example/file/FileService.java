@@ -83,6 +83,7 @@ public class FileService {
     public StoredFile upload(FileUploadCommand command) {
         PolicyToggleSettings settings = policySettingsProvider.currentSettings();
         enforcePolicy(command, settings);
+        ensureNoDuplicateActiveFile(command.originalName());
         OffsetDateTime now = now();
         StoredFile file = new StoredFile();
         file.setOriginalName(command.originalName());
@@ -106,6 +107,16 @@ public class FileService {
         logAccess(persisted, "UPLOAD", command.ownerUsername(), "v" + version.getVersionNumber(), now);
         audit("UPLOAD", persisted.getId(), command.ownerUsername(), now);
         return persisted;
+    }
+
+    private void ensureNoDuplicateActiveFile(String originalName) {
+        List<FileSummaryView> summaries = storedFileRepository.findAllByOrderByCreatedAtDesc();
+        boolean duplicated = summaries.stream()
+                .anyMatch(view -> originalName.equalsIgnoreCase(view.getOriginalName())
+                        && view.getStatus() != FileStatus.DELETED);
+        if (duplicated) {
+            throw new FilePolicyViolationException("동일한 파일명이 이미 존재하므로 덮어쓸 수 없습니다.");
+        }
     }
 
     @Transactional(readOnly = true)

@@ -9,14 +9,20 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.example.dw.domain.DwIngestionOutbox;
 import com.example.dw.domain.DwIngestionOutboxRepository;
 
 @Service
 public class DwIngestionOutboxService {
+
+    private static final Logger log = LoggerFactory.getLogger(DwIngestionOutboxService.class);
+    private static final int MAX_RETRY = 5;
 
     private final DwIngestionOutboxRepository repository;
     private final Clock clock;
@@ -32,7 +38,12 @@ public class DwIngestionOutboxService {
         if (job.payload() != null) {
             entry.setPayload(job.payload());
         }
-        repository.save(entry);
+        try {
+            repository.save(entry);
+        }
+        catch (DataIntegrityViolationException ex) {
+            log.warn("Duplicate outbox entry skipped: {}", job.type(), ex);
+        }
     }
 
     @Transactional
@@ -62,7 +73,13 @@ public class DwIngestionOutboxService {
 
     @Transactional
     public void scheduleRetry(UUID entryId, Duration delay, String lastErrorMessage) {
-        updateEntry(entryId, entity -> entity.markRetry(clock, delay, lastErrorMessage));
+        updateEntry(entryId, entity -> {
+            if (entity.getRetryCount() >= MAX_RETRY) {
+                entity.markDeadLetter(clock, lastErrorMessage);
+            } else {
+                entity.markRetry(clock, delay, lastErrorMessage);
+            }
+        });
     }
 
     @Transactional

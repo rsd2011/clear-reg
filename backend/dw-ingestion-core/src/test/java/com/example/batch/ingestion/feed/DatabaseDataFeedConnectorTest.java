@@ -4,13 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -89,5 +92,18 @@ class DatabaseDataFeedConnectorTest {
 
         assertThat(entity.getStatus()).isEqualTo(HrExternalFeedStatus.FAILED);
         assertThat(entity.getErrorMessage()).isEqualTo("boom");
+    }
+
+    @Test
+    @DisplayName("DB 비활성화 시 onFailure는 리포지토리를 호출하지 않는다")
+    void onFailure_skipped_whenDisabled() {
+        properties.getDatabase().setEnabled(false);
+        DatabaseDataFeedConnector disabledConnector = new DatabaseDataFeedConnector(repository, properties);
+        DataFeed feed = new DataFeed(UUID.randomUUID().toString(), DataFeedType.EMPLOYEE,
+                LocalDate.now(), 1, "payload", "db", Map.of());
+
+        disabledConnector.onFailure(feed, new RuntimeException("err"));
+
+        verify(repository, never()).findById(any());
     }
 }

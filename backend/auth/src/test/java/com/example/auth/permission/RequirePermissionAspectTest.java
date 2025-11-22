@@ -78,6 +78,19 @@ class RequirePermissionAspectTest {
         verify(auditLogger).onAccessDenied(decision.toContext(), failure);
     }
 
+    @Test
+    @DisplayName("Given 권한 거부 시 audit=true이면 onAccessDenied(null, ex)를 호출한다")
+    void deniedDuringEvaluationAudits() throws Throwable {
+        given(joinPoint.getSignature()).willReturn(methodSignature);
+        given(methodSignature.getMethod()).willReturn(SecuredComponent.class.getDeclaredMethod("annotated"));
+        PermissionDeniedException denied = new PermissionDeniedException("denied");
+        given(evaluator.evaluate(FeatureCode.ORGANIZATION, ActionCode.READ)).willThrow(denied);
+
+        assertThatThrownBy(() -> aspect.enforce(joinPoint)).isEqualTo(denied);
+        verify(auditLogger).onAccessDenied(null, denied);
+        assertThat(AuthContextHolder.current()).isEmpty();
+    }
+
     private static PermissionDecision buildDecision() {
         UserAccount account = UserAccount.builder()
                 .username("auditor")

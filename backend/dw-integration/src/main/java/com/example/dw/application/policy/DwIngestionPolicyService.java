@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.support.CronExpression;
 
 import com.example.dw.config.DwIngestionProperties;
 import com.example.dw.config.DwIngestionProperties.JobScheduleProperties;
@@ -198,6 +199,8 @@ public class DwIngestionPolicyService implements DwIngestionPolicyProvider {
                 if (cron == null) {
                     throw new IllegalArgumentException("cronExpression is required for job " + jobKey);
                 }
+                // 사전 검증: 잘못된 cron 표현식이면 거부
+                CronExpression.parse(cron);
                 merged.put(jobKey, new DwBatchJobSchedule(jobKey, enabled, cron, timezone));
             }
             return new ArrayList<>(merged.values());
