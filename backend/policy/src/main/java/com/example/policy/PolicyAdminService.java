@@ -113,6 +113,12 @@ public class PolicyAdminService {
                 state.allowedFileExtensions(),
                 state.strictMimeValidation(),
                 state.fileRetentionDays(),
+                state.auditEnabled(),
+                state.auditReasonRequired(),
+                state.auditSensitiveApiDefaultOn(),
+                state.auditRetentionDays(),
+                state.auditStrictMode(),
+                state.auditRiskLevel(),
                 snapshot.yaml());
     }
 
@@ -126,6 +132,12 @@ public class PolicyAdminService {
         private final List<String> allowedFileExtensions;
         private final boolean strictMimeValidation;
         private final int fileRetentionDays;
+        private final boolean auditEnabled;
+        private final boolean auditReasonRequired;
+        private final boolean auditSensitiveApiDefaultOn;
+        private final int auditRetentionDays;
+        private final boolean auditStrictMode;
+        private final String auditRiskLevel;
 
         private PolicyState(boolean passwordPolicyEnabled,
                             boolean passwordHistoryEnabled,
@@ -134,7 +146,13 @@ public class PolicyAdminService {
                             long maxFileSizeBytes,
                             List<String> allowedFileExtensions,
                             boolean strictMimeValidation,
-                            int fileRetentionDays) {
+                            int fileRetentionDays,
+                            boolean auditEnabled,
+                            boolean auditReasonRequired,
+                            boolean auditSensitiveApiDefaultOn,
+                            int auditRetentionDays,
+                            boolean auditStrictMode,
+                            String auditRiskLevel) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
             this.passwordHistoryEnabled = passwordHistoryEnabled;
             this.accountLockEnabled = accountLockEnabled;
@@ -143,6 +161,12 @@ public class PolicyAdminService {
             this.allowedFileExtensions = List.copyOf(allowedFileExtensions == null ? List.of() : allowedFileExtensions);
             this.strictMimeValidation = strictMimeValidation;
             this.fileRetentionDays = fileRetentionDays;
+            this.auditEnabled = auditEnabled;
+            this.auditReasonRequired = auditReasonRequired;
+            this.auditSensitiveApiDefaultOn = auditSensitiveApiDefaultOn;
+            this.auditRetentionDays = auditRetentionDays;
+            this.auditStrictMode = auditStrictMode;
+            this.auditRiskLevel = auditRiskLevel;
         }
 
         public static PolicyState from(PolicyToggleSettings settings) {
@@ -153,7 +177,13 @@ public class PolicyAdminService {
                     settings.maxFileSizeBytes(),
                     settings.allowedFileExtensions(),
                     settings.strictMimeValidation(),
-                    settings.fileRetentionDays());
+                    settings.fileRetentionDays(),
+                    settings.auditEnabled(),
+                    settings.auditReasonRequired(),
+                    settings.auditSensitiveApiDefaultOn(),
+                    settings.auditRetentionDays(),
+                    settings.auditStrictMode(),
+                    settings.auditRiskLevel());
         }
 
         public PolicyToggleSettings toSettings() {
@@ -164,7 +194,13 @@ public class PolicyAdminService {
                     maxFileSizeBytes,
                     allowedFileExtensions,
                     strictMimeValidation,
-                    fileRetentionDays);
+                    fileRetentionDays,
+                    auditEnabled,
+                    auditReasonRequired,
+                    auditSensitiveApiDefaultOn,
+                    auditRetentionDays,
+                    auditStrictMode,
+                    auditRiskLevel);
         }
 
         public PolicyState merge(PolicyUpdateRequest request) {
@@ -180,8 +216,18 @@ public class PolicyAdminService {
                     : allowedFileExtensions;
             boolean newStrictMime = request.strictMimeValidation() != null ? request.strictMimeValidation() : strictMimeValidation;
             int newRetention = request.fileRetentionDays() != null ? request.fileRetentionDays() : fileRetentionDays;
+            boolean newAuditEnabled = request.auditEnabled() != null ? request.auditEnabled() : auditEnabled;
+            boolean newAuditReasonRequired = request.auditReasonRequired() != null ? request.auditReasonRequired() : auditReasonRequired;
+            boolean newAuditSensitiveApiDefaultOn = request.auditSensitiveApiDefaultOn() != null
+                    ? request.auditSensitiveApiDefaultOn() : auditSensitiveApiDefaultOn;
+            int newAuditRetention = request.auditRetentionDays() != null ? request.auditRetentionDays() : auditRetentionDays;
+            boolean newAuditStrictMode = request.auditStrictMode() != null ? request.auditStrictMode() : auditStrictMode;
+            String newAuditRiskLevel = request.auditRiskLevel() != null ? request.auditRiskLevel().toUpperCase() : auditRiskLevel;
+
             return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes,
-                    newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0));
+                    newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0),
+                    newAuditEnabled, newAuditReasonRequired, newAuditSensitiveApiDefaultOn,
+                    Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel);
         }
 
         public boolean passwordPolicyEnabled() {
@@ -214,6 +260,30 @@ public class PolicyAdminService {
 
         public int fileRetentionDays() {
             return fileRetentionDays;
+        }
+
+        public boolean auditEnabled() {
+            return auditEnabled;
+        }
+
+        public boolean auditReasonRequired() {
+            return auditReasonRequired;
+        }
+
+        public boolean auditSensitiveApiDefaultOn() {
+            return auditSensitiveApiDefaultOn;
+        }
+
+        public int auditRetentionDays() {
+            return auditRetentionDays;
+        }
+
+        public boolean auditStrictMode() {
+            return auditStrictMode;
+        }
+
+        public String auditRiskLevel() {
+            return auditRiskLevel;
         }
     }
 

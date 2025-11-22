@@ -19,6 +19,12 @@ public class PolicyToggleProperties {
     private List<String> allowedFileExtensions = new ArrayList<>(List.of("pdf", "png", "jpg", "jpeg", "txt"));
     private boolean strictMimeValidation = true;
     private int fileRetentionDays = 365;
+    private boolean auditEnabled = true;
+    private boolean auditReasonRequired = true;
+    private boolean auditSensitiveApiDefaultOn = true;
+    private int auditRetentionDays = 730;
+    private boolean auditStrictMode = true;
+    private String auditRiskLevel = "MEDIUM";
 
     public boolean isPasswordPolicyEnabled() {
         return passwordPolicyEnabled;
@@ -82,5 +88,53 @@ public class PolicyToggleProperties {
 
     public void setFileRetentionDays(int fileRetentionDays) {
         this.fileRetentionDays = fileRetentionDays;
+    }
+
+    public boolean isAuditEnabled() {
+        return auditEnabled;
+    }
+
+    public void setAuditEnabled(boolean auditEnabled) {
+        this.auditEnabled = auditEnabled;
+    }
+
+    public boolean isAuditReasonRequired() {
+        return auditReasonRequired;
+    }
+
+    public void setAuditReasonRequired(boolean auditReasonRequired) {
+        this.auditReasonRequired = auditReasonRequired;
+    }
+
+    public boolean isAuditSensitiveApiDefaultOn() {
+        return auditSensitiveApiDefaultOn;
+    }
+
+    public void setAuditSensitiveApiDefaultOn(boolean auditSensitiveApiDefaultOn) {
+        this.auditSensitiveApiDefaultOn = auditSensitiveApiDefaultOn;
+    }
+
+    public int getAuditRetentionDays() {
+        return auditRetentionDays;
+    }
+
+    public void setAuditRetentionDays(int auditRetentionDays) {
+        this.auditRetentionDays = auditRetentionDays;
+    }
+
+    public boolean isAuditStrictMode() {
+        return auditStrictMode;
+    }
+
+    public void setAuditStrictMode(boolean auditStrictMode) {
+        this.auditStrictMode = auditStrictMode;
+    }
+
+    public String getAuditRiskLevel() {
+        return auditRiskLevel;
+    }
+
+    public void setAuditRiskLevel(String auditRiskLevel) {
+        this.auditRiskLevel = auditRiskLevel;
     }
 }

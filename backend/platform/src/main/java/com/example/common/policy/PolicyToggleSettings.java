@@ -14,7 +14,13 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                    @JsonProperty(defaultValue = "20971520") long maxFileSizeBytes,
                                    List<String> allowedFileExtensions,
                                    @JsonProperty(defaultValue = "true") boolean strictMimeValidation,
-                                   @JsonProperty(defaultValue = "365") int fileRetentionDays) {
+                                   @JsonProperty(defaultValue = "365") int fileRetentionDays,
+                                   @JsonProperty(defaultValue = "true") boolean auditEnabled,
+                                   @JsonProperty(defaultValue = "true") boolean auditReasonRequired,
+                                   @JsonProperty(defaultValue = "true") boolean auditSensitiveApiDefaultOn,
+                                   @JsonProperty(defaultValue = "730") int auditRetentionDays,
+                                   @JsonProperty(defaultValue = "true") boolean auditStrictMode,
+                                   @JsonProperty(defaultValue = "MEDIUM") String auditRiskLevel) {
 
     private static final long DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -30,5 +36,23 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
         if (fileRetentionDays < 0) {
             fileRetentionDays = 0;
         }
+        if (auditRetentionDays < 0) {
+            auditRetentionDays = 0;
+        }
+        auditRiskLevel = auditRiskLevel == null ? "MEDIUM" : auditRiskLevel.toUpperCase();
+    }
+
+    /** 기존 시그니처 호환을 위한 편의 생성자. */
+    public PolicyToggleSettings(boolean passwordPolicyEnabled,
+                                boolean passwordHistoryEnabled,
+                                boolean accountLockEnabled,
+                                List<String> enabledLoginTypes,
+                                long maxFileSizeBytes,
+                                List<String> allowedFileExtensions,
+                                boolean strictMimeValidation,
+                                int fileRetentionDays) {
+        this(passwordPolicyEnabled, passwordHistoryEnabled, accountLockEnabled, enabledLoginTypes, maxFileSizeBytes,
+                allowedFileExtensions, strictMimeValidation, fileRetentionDays,
+                true, true, true, 730, true, "MEDIUM");
     }
 }

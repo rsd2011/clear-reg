@@ -10,5 +10,11 @@ public record PolicyView(boolean passwordPolicyEnabled,
                          List<String> allowedFileExtensions,
                          boolean strictMimeValidation,
                          int fileRetentionDays,
+                         boolean auditEnabled,
+                         boolean auditReasonRequired,
+                         boolean auditSensitiveApiDefaultOn,
+                         int auditRetentionDays,
+                         boolean auditStrictMode,
+                         String auditRiskLevel,
                          String yaml) {
 }

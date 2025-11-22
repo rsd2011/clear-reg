@@ -55,7 +55,8 @@ class PolicyAdminControllerTest {
     @DisplayName("Given 정책이 존재할 때 When 조회하면 Then 스냅샷을 반환한다")
     void givenPolicyWhenGetThenReturn() throws Exception {
         PolicyView view = new PolicyView(true, true, true, List.of("PASSWORD"),
-                10_485_760L, List.of("pdf"), true, 365, "yaml");
+                10_485_760L, List.of("pdf"), true, 365,
+                true, true, true, 730, true, "MEDIUM", "yaml");
         given(policyAdminPort.currentPolicy()).willReturn(view);
 
         mockMvc.perform(get("/api/admin/policies"))
@@ -67,8 +68,9 @@ class PolicyAdminControllerTest {
     @DisplayName("Given 업데이트 요청 When PUT 호출 Then 서비스가 정책을 갱신한다")
     void givenUpdateWhenPutThenUpdate() throws Exception {
         PolicyView view = new PolicyView(false, true, true, List.of("SSO"),
-                10_485_760L, List.of("pdf"), true, 365, "yaml");
-        PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"), null, null, null, null);
+                10_485_760L, List.of("pdf"), true, 365,
+                true, true, true, 730, true, "MEDIUM", "yaml");
+        PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"), null, null, null, null, null, null, null, null, null, null);
         given(policyAdminPort.updateToggles(request)).willReturn(view);
 
         mockMvc.perform(put("/api/admin/policies/toggles")
