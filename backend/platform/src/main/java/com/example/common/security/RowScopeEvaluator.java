@@ -13,11 +13,12 @@ public final class RowScopeEvaluator {
     public static <T> Specification<T> toSpecification(DataPolicyMatch match,
                                                        RowScopeContext ctx,
                                                        Specification<T> customSpec) {
+        RowScopeContext effective = ctx != null ? ctx : RowScopeContextHolder.get();
         RowScope rowScope = parse(match.getRowScope());
         return RowScopeSpecifications.organizationScoped("organizationCode",
                 rowScope,
-                ctx != null ? ctx.organizationCode() : null,
-                ctx != null ? ctx.organizationHierarchy() : null,
+                effective != null ? effective.organizationCode() : null,
+                effective != null ? effective.organizationHierarchy() : null,
                 customSpec);
     }
 

@@ -1,5 +1,7 @@
 package com.example.audit.infra;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -14,16 +16,17 @@ import com.example.audit.AuditEvent;
 import com.example.audit.AuditMode;
 import com.example.audit.AuditPolicySnapshot;
 import com.example.audit.AuditPort;
+import com.example.audit.infra.masking.MaskingProperties;
 import com.example.audit.infra.persistence.AuditLogEntity;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.policy.AuditPolicyResolver;
-import com.example.audit.infra.masking.MaskingProperties;
+import com.example.common.masking.Maskable;
+import com.example.common.masking.MaskingService;
+import com.example.common.masking.MaskingTarget;
+import com.example.common.masking.SubjectType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Optional;
 
 @Service
 public class AuditRecordService implements AuditPort {
@@ -39,6 +42,7 @@ public class AuditRecordService implements AuditPort {
     private final String hmacSecret;
     private final String hmacKeyId;
     private final MaskingProperties maskingProperties;
+    private final MaskingService maskingService;
 
     public AuditRecordService(AuditLogRepository repository,
                               AuditPolicyResolver policyResolver,
@@ -48,7 +52,8 @@ public class AuditRecordService implements AuditPort {
                               @Value("${audit.hash-chain.hmac-enabled:false}") boolean hmacEnabled,
                               @Value("${audit.hash-chain.secret:}") String hmacSecret,
                               @Value("${audit.hash-chain.key-id:default}") String hmacKeyId,
-                              MaskingProperties maskingProperties) {
+                              MaskingProperties maskingProperties,
+                              @Nullable MaskingService maskingService) {
         this.repository = repository;
         this.policyResolver = policyResolver;
         this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
@@ -58,17 +63,22 @@ public class AuditRecordService implements AuditPort {
         this.hmacSecret = hmacSecret;
         this.hmacKeyId = hmacKeyId;
         this.maskingProperties = maskingProperties;
+        this.maskingService = maskingService;
     }
 
     @Override
     @Transactional
     public void record(AuditEvent event, AuditMode mode) {
+        record(event, mode, null);
+    }
+
+    public void record(AuditEvent event, AuditMode mode, @Nullable MaskingTarget maskingTarget) {
         AuditPolicySnapshot policy = resolve(event.getAction(), event.getEventType())
                 .orElse(AuditPolicySnapshot.secureDefault());
         if (!policy.isEnabled()) {
             return;
         }
-        persist(event, mode, policy);
+        persist(event, mode, policy, maskingTarget);
         publish(event, mode);
     }
 
@@ -77,8 +87,8 @@ public class AuditRecordService implements AuditPort {
         return policyResolver.resolve(endpoint, eventType);
     }
 
-    private void persist(AuditEvent event, AuditMode mode, AuditPolicySnapshot policy) {
-        AuditLogEntity entity = toEntity(event, policy.isMaskingEnabled());
+    private void persist(AuditEvent event, AuditMode mode, AuditPolicySnapshot policy, @Nullable MaskingTarget maskingTarget) {
+        AuditLogEntity entity = toEntity(event, policy.isMaskingEnabled(), maskingTarget);
         try {
             repository.save(entity);
         } catch (RuntimeException ex) {
@@ -103,12 +113,12 @@ public class AuditRecordService implements AuditPort {
         }
     }
 
-    private AuditLogEntity toEntity(AuditEvent event, boolean maskingEnabled) {
+    private AuditLogEntity toEntity(AuditEvent event, boolean maskingEnabled, @Nullable MaskingTarget maskingTarget) {
         String extraJson = null;
         try {
             if (event.getExtra() != null && !event.getExtra().isEmpty()) {
-                extraJson = maskingEnabled ? sanitizeSerialized(objectMapper.writeValueAsString(event.getExtra()))
-                        : objectMapper.writeValueAsString(event.getExtra());
+                String raw = objectMapper.writeValueAsString(event.getExtra());
+                extraJson = applyMask(raw, maskingEnabled, maskingTarget, "extra");
             }
         } catch (JsonProcessingException ex) {
             log.warn("Failed to serialize audit extra payload: {}", ex.getMessage());
@@ -137,11 +147,11 @@ public class AuditRecordService implements AuditPort {
                 event.isSuccess(),
                 event.getResultCode(),
                 event.getReasonCode(),
-                maskingEnabled ? sanitize(event.getReasonText()) : event.getReasonText(),
+                applyMask(event.getReasonText(), maskingEnabled, maskingTarget, "reasonText"),
                 event.getLegalBasisCode(),
                 event.getRiskLevel() != null ? event.getRiskLevel().name() : null,
-                maskingEnabled ? sanitize(event.getBeforeSummary()) : event.getBeforeSummary(),
-                maskingEnabled ? sanitize(event.getAfterSummary()) : event.getAfterSummary(),
+                applyMask(event.getBeforeSummary(), maskingEnabled, maskingTarget, "beforeSummary"),
+                applyMask(event.getAfterSummary(), maskingEnabled, maskingTarget, "afterSummary"),
                 extraJson,
                 hashChain);
     }
@@ -185,8 +195,21 @@ public class AuditRecordService implements AuditPort {
         return masked;
     }
 
-    private String sanitizeSerialized(String json) {
-        if (json == null) return null;
-        return sanitize(json);
+    private String applyMask(String raw, boolean maskingEnabled, @Nullable MaskingTarget target, String fieldName) {
+        if (raw == null) return null;
+        if (!maskingEnabled) return raw;
+        String masked = sanitize(raw);
+        if (target != null && target.getMaskRule() != null) {
+            masked = com.example.common.masking.MaskRuleProcessor.apply(target.getMaskRule(), masked, target.getMaskParams());
+        }
+        if (maskingService == null) {
+            return masked;
+        }
+        final String maskedFinal = masked;
+        Maskable inline = new Maskable() {
+            @Override public String raw() { return raw; }
+            @Override public String masked() { return maskedFinal; }
+        };
+        return maskingService.render(inline, target, fieldName);
     }
 }

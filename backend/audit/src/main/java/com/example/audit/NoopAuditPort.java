@@ -11,6 +11,11 @@ public class NoopAuditPort implements AuditPort {
     }
 
     @Override
+    public void record(AuditEvent event, AuditMode mode, com.example.common.masking.MaskingTarget maskingTarget) {
+        // no-op
+    }
+
+    @Override
     public Optional<AuditPolicySnapshot> resolve(String endpoint, String eventType) {
         return Optional.empty();
     }

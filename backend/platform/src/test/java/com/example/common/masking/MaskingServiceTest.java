@@ -2,40 +2,67 @@ package com.example.common.masking;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.common.value.PaymentReference;
+import com.example.common.policy.PolicyToggleSettings;
 
 class MaskingServiceTest {
 
     @Test
-    @DisplayName("MaskingService chooses masked/raw based on strategy")
-    void maskingServiceRender() {
-        MaskingStrategy strategy = target -> target != null && target.isDefaultMask();
-        MaskingService service = new MaskingService(strategy);
-        PaymentReference ref = PaymentReference.of("급여 이체 2025-01");
+    @DisplayName("허용된 역할이 forceUnmask 요청 시 감사 싱크가 호출된다")
+    void unmaskAuditSinkCalled() {
+        TestUnmaskSink sink = new TestUnmaskSink();
+        PolicyToggleSettings settings = new PolicyToggleSettings(
+                false, false, false,
+                java.util.List.of(),
+                20_000_000L,
+                java.util.List.of("pdf"),
+                false,
+                0,
+                true,
+                true,
+                true,
+                730,
+                true,
+                "MEDIUM",
+                true,
+                java.util.List.of(),
+                java.util.List.of("AUDIT_ADMIN")
+        );
+        PolicyMaskingStrategy strategy = new PolicyMaskingStrategy(settings);
+        MaskingService service = new MaskingService(strategy, sink);
 
-        MaskingTarget mask = MaskingTarget.builder().defaultMask(true).subjectType(SubjectType.CUSTOMER_INDIVIDUAL).build();
-        MaskingTarget unmask = MaskingTarget.builder().defaultMask(false).subjectType(SubjectType.EMPLOYEE).build();
-        MaskingTarget override = MaskingTarget.builder().defaultMask(true).forceUnmask(true).subjectType(SubjectType.CUSTOMER_INDIVIDUAL).build();
-        MaskingTarget partial = MaskingTarget.builder()
-                .defaultMask(true)
+        MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("PAYMENT_REFERENCE")
-                .forceUnmaskKinds(java.util.Set.of("PAYMENT_REFERENCE"))
-                .build();
-        MaskingTarget fieldOverride = MaskingTarget.builder()
+                .dataKind("RRN")
                 .defaultMask(true)
-                .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .forceUnmaskFields(java.util.Set.of("reasonText"))
+                .forceUnmask(true)
+                .requesterRoles(Set.of("AUDIT_ADMIN"))
                 .build();
 
-        assertThat(service.render(ref, mask)).contains("*");
-        assertThat(service.render(ref, unmask)).contains("급여");
-        assertThat(service.render(ref, override)).contains("급여");
-        assertThat(service.render(ref, partial)).contains("급여");
-        assertThat(service.render(ref, fieldOverride, "reasonText")).contains("급여");
-        assertThat(service.render(ref, fieldOverride, "otherField")).contains("*");
+        Maskable maskable = new Maskable() {
+            @Override public String raw() { return "123456-7890123"; }
+            @Override public String masked() { return "123456-1******"; }
+        };
+
+        String result = service.render(maskable, target, "residentId");
+
+        assertThat(result).isEqualTo("123456-7890123");
+        assertThat(sink.called).isTrue();
+        assertThat(sink.fieldName).isEqualTo("residentId");
+    }
+
+    static class TestUnmaskSink implements UnmaskAuditSink {
+        boolean called = false;
+        String fieldName;
+
+        @Override
+        public void handle(UnmaskAuditEvent event) {
+            this.called = true;
+            this.fieldName = event.getFieldName();
+        }
     }
 }
