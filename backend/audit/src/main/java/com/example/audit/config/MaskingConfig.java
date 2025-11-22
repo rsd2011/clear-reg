@@ -11,6 +11,7 @@ import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 
 @Configuration
+@org.springframework.boot.context.properties.EnableConfigurationProperties(AuditRetentionProperties.class)
 public class MaskingConfig {
 
     @Bean
