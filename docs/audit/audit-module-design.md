@@ -192,36 +192,36 @@ audit:
 - 운영: 월간 접속기록 리포트, 이상행위 룰(심야 대량 조회/DRM 해제 빈발) 알림, SIEM 전송.
 - 관측: audit write latency/error, Kafka lag, policy 캐시 hit/miss 메트릭 노출.
 
-## 12) TODO 체크리스트
+## 12) TODO 체크리스트 (우선순위 P1> P2> P3> P4)
 ### 설계
-- [ ] `backend/audit` 모듈 구조 확정(core/infra/policy-client)
-- [ ] 공통 `AuditEvent`·`AuditPolicySnapshot`·`AuditMode` 스키마 문서화
-- [ ] Policy 스키마에 감사 토글·sensitive_api·retention·mask_profile 추가 정의
+- ☑ `backend/audit` 모듈 구조 확정(core/infra/policy-client)
+- ☑ 공통 `AuditEvent`·`AuditPolicySnapshot`·`AuditMode` 스키마 문서화
+- ☑ Policy 스키마에 감사 토글·sensitive_api·retention·mask_profile 추가 정의
 
 ### 구현
-- [ ] AuditPort 구현(JPA 저장 + Kafka publisher), hash_chain 계산 포함
-- [ ] `@Audit` 어노테이션 + AOP/HandlerInterceptor 등록(server)
-- [ ] PolicyClient + Caffeine 캐시(secure-by-default) 구현
-- [ ] SENSITIVE_API reason/legalBasis 검증 필터(server)
-- [ ] DRM 이벤트 전용 서비스/DTO 추가
+- ☑ AuditPort 구현(JPA 저장 + Kafka publisher 스켈레톤), hash_chain 계산 포함
+- ☑ `@Audit` 대체용 필터/인터셉터 등록(server)
+- ☑ PolicyClient + Caffeine 캐시(secure-by-default) 구현
+- ☑ SENSITIVE_API reason/legalBasis 검증 필터(server)
+- P2 ☐ DRM 이벤트 전용 서비스/DTO 추가
 
 ### 마이그레이션
-- [ ] `auth` 로그인/비밀번호 변경 로그 → AuditPort dual-write 후 레거시 제거
-- [ ] `server` 컨트롤러 필터 로깅 → AOP 교체
-- [ ] `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거
-- [ ] `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
-- [ ] 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
+- P2 △ `auth` 로그인/비밀번호 변경 로그 → AuditPort dual-write 후 레거시 제거
+- P2 △ `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거
+- P2 ☐ `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거
+- P2 ☐ `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
+- P3 ☐ 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
 
 ### 테스트
-- [ ] Policy 미정의 시 기본 ON/사유 필수 동작 검증
-- [ ] Strict 모드 실패 시 트랜잭션 롤백 확인
-- [ ] Kafka DLQ/재처리 시나리오 검증
-- [ ] 마스킹/summary에 원문 포함 여부 점검
+- ☑ Policy 미정의 시 기본 ON/사유 필수 동작 스모크(필터 + 문서/Playwright)
+- ☑ Strict/forceUnmask → UnmaskAudit 적재 e2e 테스트
+- P4 ☐ Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널이므로 후순위)
+- P2 △ 마스킹/summary에 원문 포함 여부 커버리지 확대
 
 ### 운영
-- [ ] 보존기간별 파티션/아카이브 배치 스케줄링
-- [ ] 월간 접속기록 점검 리포트 및 알림 대시보드 연동
-- [ ] 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록
-- [ ] SIEM/외부 보안시스템 연동 및 전송 암호화 확인
+- P2 ☐ 보존기간별 파티션/아카이브 배치 스케줄링
+- P2 ☐ 월간 접속기록 점검 리포트 및 알림 대시보드 연동
+- P2 ☐ 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화
+- P3 ☐ SIEM/외부 보안시스템 연동 및 전송 암호화 확인
 
 **이 설계는 참고용이며, 실제 적용 전 반드시 최신 국내 법령과 감독당국·금융보안원 및 사내 컴플라이언스 규정을 통해 최종 검증해야 한다.**
