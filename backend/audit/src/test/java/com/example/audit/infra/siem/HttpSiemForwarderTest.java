@@ -1,6 +1,7 @@
 package com.example.audit.infra.siem;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,6 +35,7 @@ class HttpSiemForwarderTest {
         HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
         RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
         forwarder.setRestTemplate(restTemplate);
+        var entityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
         Mockito.when(restTemplate.postForEntity(Mockito.anyString(), any(HttpEntity.class), eq(Void.class)))
                 .thenReturn(ResponseEntity.ok().build());
 
@@ -47,7 +50,9 @@ class HttpSiemForwarderTest {
 
         forwarder.forward(event);
 
-        verify(restTemplate).postForEntity(Mockito.anyString(), any(HttpEntity.class), eq(Void.class));
+        verify(restTemplate).postForEntity(Mockito.anyString(), entityCaptor.capture(), eq(Void.class));
+        HttpHeaders headers = entityCaptor.getValue().getHeaders();
+        assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isEqualTo("Bearer token");
     }
 
     @Test
@@ -60,7 +65,7 @@ class HttpSiemForwarderTest {
         RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
         forwarder.setRestTemplate(restTemplate);
         Mockito.doThrow(new RuntimeException("fail"))
-                .when(restTemplate).postForEntity(eq("https://siem.example.com/audit"), any(HttpEntity.class), eq(Void.class));
+                .when(restTemplate).postForEntity(Mockito.anyString(), any(HttpEntity.class), eq(Void.class));
 
         AuditEvent event = AuditEvent.builder()
                 .eventId(UUID.randomUUID())
@@ -69,6 +74,10 @@ class HttpSiemForwarderTest {
                 .action("FORWARD")
                 .build();
 
+        var entityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
         assertThatCode(() -> forwarder.forward(event)).doesNotThrowAnyException();
+        verify(restTemplate).postForEntity(Mockito.anyString(), entityCaptor.capture(), eq(Void.class));
+        HttpHeaders headers = entityCaptor.getValue().getHeaders();
+        assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isNull();
     }
 }

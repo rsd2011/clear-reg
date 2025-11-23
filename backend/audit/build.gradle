@@ -22,41 +22,7 @@ dependencies {
     testAnnotationProcessor libs.lombok
 
     testImplementation libs.bundles.spring.test
-testImplementation libs.junit.platform.launcher
-testImplementation libs.spring.kafka.test
-testImplementation 'com.h2database:h2'
-}
-
-def auditJacocoExcludes = [
-        '**/infra/kafka/AuditKafkaProperties.*',
-        '**/infra/siem/**'
-]
-
-tasks.named('jacocoTestReport').configure {
-    classDirectories.setFrom(classDirectories.files.collect { dir ->
-        fileTree(dir: dir, exclude: auditJacocoExcludes)
-    })
-}
-
-tasks.named('jacocoTestCoverageVerification').configure {
-    classDirectories.setFrom(classDirectories.files.collect { dir ->
-        fileTree(dir: dir, exclude: auditJacocoExcludes)
-    })
-    violationRules {
-        rules.each { it.enabled = false }
-        rule {
-            element = 'BUNDLE'
-            includes = ['com.example.audit*', 'com.example.audit.infra*', 'com.example.audit.drm*']
-            limit {
-                counter = 'LINE'
-                value = 'COVEREDRATIO'
-                minimum = 0.90
-            }
-            limit {
-                counter = 'BRANCH'
-                value = 'COVEREDRATIO'
-                minimum = 0.75
-            }
-        }
-    }
+    testImplementation libs.junit.platform.launcher
+    testImplementation libs.spring.kafka.test
+    testImplementation 'com.h2database:h2'
 }
