@@ -62,6 +62,33 @@ class OutputMaskingAdapterTest {
         assertThat(masked).isEqualTo("900101-1234567");
     }
 
+    @Test
+    @DisplayName("CSV 셀 값도 동일한 마스킹 규칙이 적용된다")
+    void csvCellMasking() {
+        MaskingTarget target = MaskingTarget.builder()
+                .maskRule("PARTIAL")
+                .dataKind("ACCOUNT")
+                .build();
+
+        String masked = OutputMaskingAdapter.mask("accountNumber", "1234-5678-9012-3456", target, "PARTIAL", null);
+
+        assertThat(masked).startsWith("12").contains("*").endsWith("56");
+    }
+
+    @Test
+    @DisplayName("JSON 필드 값에도 Hash 마스킹을 적용한다")
+    void jsonFieldMasking() {
+        MaskingTarget target = MaskingTarget.builder()
+                .maskRule("HASH")
+                .dataKind("EMAIL")
+                .build();
+
+        String masked = OutputMaskingAdapter.mask("email", "user@example.com", target, "HASH", null);
+
+        assertThat(masked).hasSize(64);
+        assertThat(masked).isNotEqualTo("user@example.com");
+    }
+
     private record DummyMaskable(String raw) implements Maskable {
         @Override public String masked() { return "[MASKED]"; }
     }
