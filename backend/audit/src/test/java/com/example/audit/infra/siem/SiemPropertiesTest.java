@@ -29,4 +29,73 @@ class SiemPropertiesTest {
         assertThat(props.getApiKey()).isEqualTo("key");
         assertThat(props.getTimeoutMs()).isEqualTo(5000);
     }
+
+    @Test
+    @DisplayName("equals/hashCode/toString 브랜치를 커버한다")
+    void equalsHashCodeToString() {
+        SiemProperties a = new SiemProperties();
+        a.setEnabled(true);
+        a.setEndpoint("e1");
+        a.setApiKey("k1");
+        a.setTimeoutMs(1);
+
+        SiemProperties b = new SiemProperties();
+        b.setEnabled(true);
+        b.setEndpoint("e1");
+        b.setApiKey("k1");
+        b.setTimeoutMs(1);
+
+        assertThat(a).isEqualTo(b);
+        assertThat(a.hashCode()).isEqualTo(b.hashCode());
+        assertThat(a.toString()).contains("e1").contains("k1");
+
+        b.setEndpoint("e2");
+        assertThat(a).isNotEqualTo(b);
+    }
+
+    @Test
+    @DisplayName("equals는 null/타입 불일치/필드 차이를 모두 구분한다")
+    void equalsNullAndDifferentType() {
+        SiemProperties base = new SiemProperties();
+        base.setEnabled(true);
+        base.setEndpoint("ep");
+        base.setApiKey("k");
+        base.setTimeoutMs(1234);
+
+        assertThat(base.equals(null)).isFalse();
+        assertThat(base.equals("string")).isFalse();
+
+        SiemProperties different = new SiemProperties();
+        different.setEnabled(false); // enabled만 다름
+        different.setEndpoint("ep");
+        different.setApiKey("k");
+        different.setTimeoutMs(1234);
+        assertThat(base).isNotEqualTo(different);
+
+        // canEqual 방어 로직
+        assertThat(base.canEqual("string")).isFalse();
+
+        assertThat(base).isEqualTo(base); // self branch
+    }
+
+    @Test
+    @DisplayName("null 필드 조합도 equals 분기를 커버한다")
+    void equalsHandlesNullFields() {
+        SiemProperties left = new SiemProperties();
+        left.setEnabled(false);
+        left.setEndpoint(null);
+        left.setApiKey(null);
+        left.setTimeoutMs(1000);
+
+        SiemProperties right = new SiemProperties();
+        right.setEnabled(false);
+        right.setEndpoint(null);
+        right.setApiKey(null);
+        right.setTimeoutMs(1000);
+
+        assertThat(left).isEqualTo(right);
+
+        right.setApiKey("diff");
+        assertThat(left).isNotEqualTo(right);
+    }
 }
