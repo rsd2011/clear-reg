@@ -208,8 +208,8 @@ audit:
 ### 마이그레이션
 - [x] (P2) `auth` 로그인/비밀번호 변경/권한 감사 → AuditPort 전환(dual-write 레거시 제거)
 - [x] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거 (`HttpAuditAspect`, 필터 기반 dual-write 제거)
-  - [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, ExportAuditService/OutputMaskingAdapter 멀티포맷 헬퍼·테스트 완료, 실제 대량 export 엔드포인트·잡 연결만 남음)**  
-  - [x] data-integration 내 export 엔드포인트/잡에 `ExportService` 주입해 호출부 래핑 (server `ExportController` 샘플 엔드포인트 적용)  
+  - [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, ExportAuditService/OutputMaskingAdapter 멀티포맷 헬퍼·테스트 완료, HR 직원 CSV 엔드포인트 연동 완료, 기타 대량 export 잡 연결 남음)**  
+  - [x] data-integration 내 export 엔드포인트에 `ExportService/OutputMaskingAdapter` 실연동 (server `HrEmployeeExportController` CSV 예시)  
   - [x] export 결과 직렬화 단계에서 `OutputMaskingAdapter` 적용(Excel/CSV/PDF/JSON 공통) → `ExportMaskingHelper`, `ExcelMaskingAdapter`, `PdfMaskingAdapter` + 멀티포맷 무누출 테스트 추가  
   - [x] ExportCommand에 reason/legalBasis 전달 · Audit 메타 기록 · API 파라미터 검증(사유/법적근거) 연결  
   - [x] export 실패 경로에서도 AuditMode=STRICT/ASYNC_FALLBACK 정책에 맞게 결과 코드/에러를 기록하고 DLQ 재처리 여부 점검.  
