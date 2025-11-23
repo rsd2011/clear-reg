@@ -24,6 +24,9 @@ public record PolicyUpdateRequest(
         String auditRiskLevel,
         Boolean auditMaskingEnabled,
         List<String> auditSensitiveEndpoints,
-        List<String> auditUnmaskRoles) {
+        List<String> auditUnmaskRoles,
+        Boolean auditPartitionEnabled,
+        String auditPartitionCron,
+        @PositiveOrZero Integer auditPartitionPreloadMonths) {
 
 }

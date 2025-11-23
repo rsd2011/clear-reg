@@ -37,7 +37,8 @@ class PolicyAdminServiceUpdateNullsTest {
         given(repository.findByCode("security.policy")).willReturn(Optional.of(doc));
         PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults);
 
-        PolicyUpdateRequest req = new PolicyUpdateRequest(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        PolicyUpdateRequest req = new PolicyUpdateRequest(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null);
         service.update(req);
 
         verify(repository).save(Mockito.argThat(saved ->

@@ -23,7 +23,10 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                    @JsonProperty(defaultValue = "MEDIUM") String auditRiskLevel,
                                    @JsonProperty(defaultValue = "true") boolean auditMaskingEnabled,
                                    List<String> auditSensitiveEndpoints,
-                                   List<String> auditUnmaskRoles) {
+                                   List<String> auditUnmaskRoles,
+                                   @JsonProperty(defaultValue = "false") boolean auditPartitionEnabled,
+                                   @JsonProperty(defaultValue = "0 0 2 1 * *") String auditPartitionCron,
+                                   @JsonProperty(defaultValue = "1") int auditPartitionPreloadMonths) {
 
     private static final long DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -45,6 +48,12 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
         auditRiskLevel = auditRiskLevel == null ? "MEDIUM" : auditRiskLevel.toUpperCase();
         auditSensitiveEndpoints = auditSensitiveEndpoints == null ? List.of() : List.copyOf(auditSensitiveEndpoints);
         auditUnmaskRoles = auditUnmaskRoles == null ? List.of() : List.copyOf(auditUnmaskRoles);
+        if (auditPartitionCron == null || auditPartitionCron.isBlank()) {
+            auditPartitionCron = "0 0 2 1 * *";
+        }
+        if (auditPartitionPreloadMonths < 0) {
+            auditPartitionPreloadMonths = 0;
+        }
     }
 
     /** 기존 시그니처 호환을 위한 편의 생성자. */
@@ -58,7 +67,33 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                 int fileRetentionDays) {
         this(passwordPolicyEnabled, passwordHistoryEnabled, accountLockEnabled, enabledLoginTypes, maxFileSizeBytes,
                 allowedFileExtensions, strictMimeValidation, fileRetentionDays,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of());
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1);
+    }
+
+    /** 이전 시그니처(추가 파티션 필드 이전) 호환용 생성자. */
+    public PolicyToggleSettings(boolean passwordPolicyEnabled,
+                                boolean passwordHistoryEnabled,
+                                boolean accountLockEnabled,
+                                List<String> enabledLoginTypes,
+                                long maxFileSizeBytes,
+                                List<String> allowedFileExtensions,
+                                boolean strictMimeValidation,
+                                int fileRetentionDays,
+                                boolean auditEnabled,
+                                boolean auditReasonRequired,
+                                boolean auditSensitiveApiDefaultOn,
+                                int auditRetentionDays,
+                                boolean auditStrictMode,
+                                String auditRiskLevel,
+                                boolean auditMaskingEnabled,
+                                List<String> auditSensitiveEndpoints,
+                                List<String> auditUnmaskRoles) {
+        this(passwordPolicyEnabled, passwordHistoryEnabled, accountLockEnabled, enabledLoginTypes, maxFileSizeBytes,
+                allowedFileExtensions, strictMimeValidation, fileRetentionDays,
+                auditEnabled, auditReasonRequired, auditSensitiveApiDefaultOn, auditRetentionDays,
+                auditStrictMode, auditRiskLevel, auditMaskingEnabled, auditSensitiveEndpoints, auditUnmaskRoles,
+                false, "0 0 2 1 * *", 1);
     }
 
     public List<String> auditUnmaskRoles() {

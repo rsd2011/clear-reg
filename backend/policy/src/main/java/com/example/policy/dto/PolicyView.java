@@ -19,5 +19,8 @@ public record PolicyView(boolean passwordPolicyEnabled,
                          boolean auditMaskingEnabled,
                          List<String> auditSensitiveEndpoints,
                          List<String> auditUnmaskRoles,
+                         boolean auditPartitionEnabled,
+                         String auditPartitionCron,
+                         int auditPartitionPreloadMonths,
                          String yaml) {
 }

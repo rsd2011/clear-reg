@@ -122,6 +122,9 @@ public class PolicyAdminService {
                 state.auditMaskingEnabled(),
                 state.auditSensitiveEndpoints(),
                 state.auditUnmaskRoles(),
+                state.auditPartitionEnabled(),
+                state.auditPartitionCron(),
+                state.auditPartitionPreloadMonths(),
                 snapshot.yaml());
     }
 
@@ -144,6 +147,9 @@ public class PolicyAdminService {
         private final boolean auditMaskingEnabled;
         private final List<String> auditSensitiveEndpoints;
         private final List<String> auditUnmaskRoles;
+        private final boolean auditPartitionEnabled;
+        private final String auditPartitionCron;
+        private final int auditPartitionPreloadMonths;
 
         private PolicyState(boolean passwordPolicyEnabled,
                             boolean passwordHistoryEnabled,
@@ -161,7 +167,10 @@ public class PolicyAdminService {
                             String auditRiskLevel,
                             boolean auditMaskingEnabled,
                             List<String> auditSensitiveEndpoints,
-                            List<String> auditUnmaskRoles) {
+                            List<String> auditUnmaskRoles,
+                            boolean auditPartitionEnabled,
+                            String auditPartitionCron,
+                            int auditPartitionPreloadMonths) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
             this.passwordHistoryEnabled = passwordHistoryEnabled;
             this.accountLockEnabled = accountLockEnabled;
@@ -179,6 +188,9 @@ public class PolicyAdminService {
             this.auditMaskingEnabled = auditMaskingEnabled;
             this.auditSensitiveEndpoints = List.copyOf(auditSensitiveEndpoints == null ? List.of() : auditSensitiveEndpoints);
             this.auditUnmaskRoles = List.copyOf(auditUnmaskRoles == null ? List.of() : auditUnmaskRoles);
+            this.auditPartitionEnabled = auditPartitionEnabled;
+            this.auditPartitionCron = auditPartitionCron;
+            this.auditPartitionPreloadMonths = auditPartitionPreloadMonths;
         }
 
         public static PolicyState from(PolicyToggleSettings settings) {
@@ -198,7 +210,10 @@ public class PolicyAdminService {
                     settings.auditRiskLevel(),
                     settings.auditMaskingEnabled(),
                     settings.auditSensitiveEndpoints(),
-                    settings.auditUnmaskRoles());
+                    settings.auditUnmaskRoles(),
+                    settings.auditPartitionEnabled(),
+                    settings.auditPartitionCron(),
+                    settings.auditPartitionPreloadMonths());
         }
 
         public PolicyToggleSettings toSettings() {
@@ -244,11 +259,15 @@ public class PolicyAdminService {
             boolean newAuditMaskingEnabled = request.auditMaskingEnabled() != null ? request.auditMaskingEnabled() : auditMaskingEnabled;
             List<String> newAuditSensitiveEndpoints = request.auditSensitiveEndpoints() != null ? request.auditSensitiveEndpoints() : auditSensitiveEndpoints;
             List<String> newAuditUnmaskRoles = request.auditUnmaskRoles() != null ? request.auditUnmaskRoles() : auditUnmaskRoles;
+            boolean newAuditPartitionEnabled = request.auditPartitionEnabled() != null ? request.auditPartitionEnabled() : auditPartitionEnabled;
+            String newAuditPartitionCron = request.auditPartitionCron() != null ? request.auditPartitionCron() : auditPartitionCron;
+            int newAuditPartitionPreloadMonths = request.auditPartitionPreloadMonths() != null ? request.auditPartitionPreloadMonths() : auditPartitionPreloadMonths;
 
             return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes,
                     newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0),
                     newAuditEnabled, newAuditReasonRequired, newAuditSensitiveApiDefaultOn,
-                    Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel, newAuditMaskingEnabled, newAuditSensitiveEndpoints, newAuditUnmaskRoles);
+                    Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel, newAuditMaskingEnabled, newAuditSensitiveEndpoints, newAuditUnmaskRoles,
+                    newAuditPartitionEnabled, newAuditPartitionCron, Math.max(newAuditPartitionPreloadMonths, 0));
         }
 
         public boolean passwordPolicyEnabled() {
@@ -317,6 +336,18 @@ public class PolicyAdminService {
 
         public List<String> auditUnmaskRoles() {
             return auditUnmaskRoles;
+        }
+
+        public boolean auditPartitionEnabled() {
+            return auditPartitionEnabled;
+        }
+
+        public String auditPartitionCron() {
+            return auditPartitionCron;
+        }
+
+        public int auditPartitionPreloadMonths() {
+            return auditPartitionPreloadMonths;
         }
     }
 
