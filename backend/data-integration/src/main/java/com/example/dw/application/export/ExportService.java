@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class ExportService {
 
     private final ExportAuditService auditService;
+    private final ExportFailureNotifier failureNotifier;
 
     /**
      * @param command export 메타 정보
@@ -46,6 +47,11 @@ public class ExportService {
                     false,
                     mode,
                     mergeMeta(command));
+            failureNotifier.notify(new ExportFailureEvent(
+                    command.exportType(),
+                    command.fileName(),
+                    command.recordCount(),
+                    ex.getClass().getSimpleName()));
             throw ex;
         }
     }

@@ -17,8 +17,9 @@ import com.example.audit.AuditPort;
 class ExportServiceTest {
 
     AuditPort auditPort = Mockito.mock(AuditPort.class);
+    ExportFailureNotifier notifier = Mockito.mock(ExportFailureNotifier.class);
     ExportAuditService auditService = new ExportAuditService(auditPort);
-    ExportService exportService = new ExportService(auditService);
+    ExportService exportService = new ExportService(auditService, notifier);
 
     @Test
     @DisplayName("export 성공 시 AuditEvent를 남긴다")
@@ -50,5 +51,8 @@ class ExportServiceTest {
         verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.STRICT));
         assertThat(captor.getValue().isSuccess()).isFalse();
         assertThat(captor.getValue().getResultCode()).isEqualTo("IllegalStateException");
+        ArgumentCaptor<ExportFailureEvent> failureCaptor = ArgumentCaptor.forClass(ExportFailureEvent.class);
+        verify(notifier).notify(failureCaptor.capture());
+        assertThat(failureCaptor.getValue().getFileName()).isEqualTo("fail.xlsx");
     }
 }
