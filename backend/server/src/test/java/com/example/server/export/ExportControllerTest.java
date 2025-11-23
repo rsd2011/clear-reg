@@ -52,5 +52,7 @@ class ExportControllerTest {
         verify(exportService).export(captor.capture(), any());
         assertThat(captor.getValue().exportType()).isEqualTo("csv");
         assertThat(captor.getValue().fileName()).isEqualTo("sample.csv");
+        assertThat(captor.getValue().reasonCode()).isEqualTo("RSN_SAMPLE");
+        assertThat(captor.getValue().legalBasisCode()).isEqualTo("PIPA");
     }
 }

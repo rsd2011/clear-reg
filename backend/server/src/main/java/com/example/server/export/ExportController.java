@@ -38,7 +38,10 @@ public class ExportController {
                 "csv",
                 "sample.csv",
                 1,
-                Map.of("source", "sample-api"));
+                Map.of("source", "sample-api"),
+                "RSN_SAMPLE",
+                "샘플 다운로드",
+                "PIPA");
 
         byte[] body = exportService.export(command, () ->
                 ("accountNumber\n" + masked + "\n").getBytes(StandardCharsets.UTF_8));

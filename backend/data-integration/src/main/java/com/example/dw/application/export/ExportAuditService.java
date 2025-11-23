@@ -29,6 +29,9 @@ public class ExportAuditService {
 
     public void auditExport(String exportType,
                             long recordCount,
+                            String reasonCode,
+                            String reasonText,
+                            String legalBasisCode,
                             boolean success,
                             Map<String, Object> extra) {
         AuditEvent.AuditEventBuilder builder = AuditEvent.builder()
@@ -41,6 +44,19 @@ public class ExportAuditService {
                 .resultCode(success ? "OK" : "FAIL")
                 .riskLevel(RiskLevel.HIGH)
                 .extraEntry("recordCount", recordCount);
+
+        if (reasonCode != null) {
+            builder.reasonCode(reasonCode);
+            builder.extraEntry("reasonCode", reasonCode);
+        }
+        if (reasonText != null) {
+            builder.reasonText(reasonText);
+            builder.extraEntry("reasonText", reasonText);
+        }
+        if (legalBasisCode != null) {
+            builder.legalBasisCode(legalBasisCode);
+            builder.extraEntry("legalBasisCode", legalBasisCode);
+        }
 
         if (extra != null) {
             extra.forEach(builder::extraEntry);

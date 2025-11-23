@@ -27,12 +27,18 @@ public class ExportService {
             T result = exporter.get();
             auditService.auditExport(command.exportType(),
                     command.recordCount(),
+                    command.reasonCode(),
+                    command.reasonText(),
+                    command.legalBasisCode(),
                     true,
                     mergeMeta(command));
             return result;
         } catch (Exception ex) {
             auditService.auditExport(command.exportType(),
                     command.recordCount(),
+                    command.reasonCode(),
+                    command.reasonText(),
+                    command.legalBasisCode(),
                     false,
                     mergeMeta(command));
             throw ex;
