@@ -70,8 +70,17 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
         int months = Math.max(ps != null ? ps.preloadMonths() : settings.auditPartitionPreloadMonths(), 0);
         LocalDate start = LocalDate.now(clock).plusMonths(1).withDayOfMonth(1);
         String tsHot = (ps != null && !ps.tablespaceHot().isBlank()) ? ps.tablespaceHot() : hotTablespace;
+        String tsCold = (ps != null && !ps.tablespaceCold().isBlank()) ? ps.tablespaceCold() : coldTablespace;
+        int hotWindow = ps != null ? ps.hotMonths() : hotMonths;
+        int coldWindow = ps != null ? ps.coldMonths() : coldMonths;
+
         IntStream.rangeClosed(0, months)
                 .forEach(offset -> ensurePartition(start.plusMonths(offset), tsHot));
+
+        // HOT→COLD 이동 대상 파티션 힌트 로그 (실제 이동은 AuditArchiveJob에서 수행)
+        LocalDate coldTarget = LocalDate.now(clock).minusMonths(hotWindow + 1).withDayOfMonth(1);
+        log.debug("[audit-partition] hotWindow={} coldWindow={} tablespaceHot={} tablespaceCold={} nextColdTarget={}",
+                hotWindow, coldWindow, tsHot, tsCold, coldTarget);
     }
 
     void ensurePartition(LocalDate monthStart, String tsHot) {
