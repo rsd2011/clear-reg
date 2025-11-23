@@ -17,6 +17,6 @@ class AuditColdArchiveSchedulerCoverageTest {
                 true, true, true, 0, true, "MEDIUM", true, null, null,
                 true, "0 0 2 1 * *", 1, true, "0 0 4 1 * *");
         AuditColdArchiveScheduler scheduler = new AuditColdArchiveScheduler(clock, () -> settings, true, "", 6);
-        scheduler.onPolicyChanged(new Object());
+        scheduler.onPolicyChanged(new com.example.common.policy.PolicyChangedEvent("security.policy", "yaml"));
     }
 }

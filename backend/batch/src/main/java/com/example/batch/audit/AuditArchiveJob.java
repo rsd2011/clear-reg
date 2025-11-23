@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,10 @@ public class AuditArchiveJob {
     @Value("${audit.archive.retry:3}")
     private int retry;
 
+    @Value("${audit.archive.slack-webhook:}")
+    private String slackWebhook;
+
+    private RestTemplate restTemplate = new RestTemplate();
     /** 테스트 용도 주입 가능한 커맨드 실행자 */
     private CommandInvoker invoker = this::runCommand;
 
@@ -67,6 +72,7 @@ public class AuditArchiveJob {
             }
         }
         log.error("[audit-archive] archive command failed after {} attempts, lastExit={}", attempts, lastExit.get());
+        notifyFailure(target, lastExit.get());
     }
 
     /** 테스트 용도 */
@@ -74,11 +80,31 @@ public class AuditArchiveJob {
         this.invoker = invoker;
     }
 
+    void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     private int runCommand(String command, String targetMonth) throws IOException, InterruptedException {
         ProcessBuilder pb = new ProcessBuilder(command, targetMonth);
+        // 기본 환경 변수 전달 (Object Lock 스크립트에서 사용)
+        pb.environment().putAll(System.getenv());
         Process proc = pb.start();
         int exit = proc.waitFor();
         return exit;
+    }
+
+    private void notifyFailure(LocalDate target, int exitCode) {
+        if (!StringUtils.hasText(slackWebhook)) {
+            return;
+        }
+        try {
+            String payload = """
+                    {"text":"[audit-archive] FAILED target=%s exitCode=%d (host=%s)"}
+                    """.formatted(target, exitCode, java.net.InetAddress.getLocalHost().getHostName());
+            restTemplate.postForEntity(slackWebhook, payload, String.class);
+        } catch (Exception e) {
+            log.warn("[audit-archive] failed to send slack alert: {}", e.getMessage());
+        }
     }
 
     @FunctionalInterface

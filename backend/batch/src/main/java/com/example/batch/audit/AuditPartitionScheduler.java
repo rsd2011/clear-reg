@@ -85,8 +85,8 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
     }
 
     @EventListener
-    public void refreshOnPolicyChange(AuditPartitionPolicyChangedEvent event) {
-        if (AuditPartitionPolicyChangedEvent.AUDIT_POLICY_CODE.equals(event.code())) {
+    public void refreshOnPolicyChange(com.example.common.policy.PolicyChangedEvent event) {
+        if ("security.policy".equals(event.code())) {
             log.info("[audit-partition] policy changed, refreshing partition creation");
             createNextPartitions();
         }

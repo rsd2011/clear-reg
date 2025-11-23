@@ -37,7 +37,7 @@ class AuditPartitionSchedulerFallbackTest {
         setField(scheduler, "preloadMonthsFallback", 1);
         setField(scheduler, "hotTablespace", "audit_hot");
 
-        scheduler.refreshOnPolicyChange(new AuditPartitionPolicyChangedEvent(AuditPartitionPolicyChangedEvent.AUDIT_POLICY_CODE));
+        scheduler.refreshOnPolicyChange(new com.example.common.policy.PolicyChangedEvent("security.policy", "yaml"));
 
         assertThatCode(scheduler::createNextPartitions).doesNotThrowAnyException();
         verify(stmt, Mockito.atLeastOnce()).execute(Mockito.contains("audit_log_2025_04"));

@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.common.policy.AuditPartitionSettings;
+import com.example.common.policy.PolicyChangedEvent;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 import com.example.policy.dto.PolicyUpdateRequest;
@@ -25,14 +27,17 @@ public class PolicyAdminService {
     private final PolicyDocumentRepository repository;
     private final ObjectMapper yamlMapper;
     private final AtomicReference<PolicyState> cache;
+    private final ApplicationEventPublisher eventPublisher;
 
     public PolicyAdminService(PolicyDocumentRepository repository,
                               @Qualifier("yamlObjectMapper") ObjectMapper yamlMapper,
-                              PolicyToggleSettings defaults) {
+                              PolicyToggleSettings defaults,
+                              ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
         this.yamlMapper = yamlMapper.copy();
         PolicyState initial = PolicyState.from(defaults);
         this.cache = new AtomicReference<>(initial);
+        this.eventPublisher = eventPublisher;
         repository.findByCode(DOCUMENT_CODE)
                 .ifPresent(doc -> this.cache.set(readState(doc.getYaml())));
     }
@@ -54,6 +59,7 @@ public class PolicyAdminService {
     public PolicySnapshot update(PolicyUpdateRequest request) {
         PolicyState updated = cache.updateAndGet(current -> current.merge(request));
         persist(updated);
+        publishChange(exportYaml(updated));
         return new PolicySnapshot(updated, exportYaml(updated));
     }
 
@@ -67,6 +73,7 @@ public class PolicyAdminService {
         PolicyState state = readState(yaml);
         cache.set(state);
         persist(state, yaml);
+        publishChange(yaml);
         return new PolicySnapshot(state, yaml);
     }
 
@@ -84,6 +91,12 @@ public class PolicyAdminService {
                 .orElseGet(() -> new PolicyDocument(DOCUMENT_CODE, yaml));
         document.updateYaml(yaml);
         repository.save(document);
+    }
+
+    private void publishChange(String yaml) {
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(new PolicyChangedEvent(DOCUMENT_CODE, yaml));
+        }
     }
 
     private PolicyState readState(String yaml) {

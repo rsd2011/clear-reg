@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # 예시: 월별 파티션을 S3 Object Lock으로 아카이브 후 삭제
 # 사용 전에 PG_URL, S3_BUCKET, S3_PREFIX 환경변수를 설정하세요.
+# (배치 런처에서 audit.archive.command 실행 시 환경 그대로 전달됨. SLACK_WEBHOOK이 설정되어 있으면 실패 알림 전송.)
 # - PG_URL 예: "postgresql://user:pass@db:5432/audit"
 # - Object Lock: COMPLIANCE 모드, 기본 5년 보존 (RETENTION_YEARS로 조정)
 # - 실패 시 리트라이(MAX_RETRY, 기본 3회); 실 운영 적용 전 드라이런 필수
