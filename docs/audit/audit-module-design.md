@@ -234,6 +234,7 @@ audit:
     - [ ] PolicyToggleSettings/Policy YAML/UI에 `auditPartitionEnabled`, `auditPartitionCron`, `auditPartitionPreloadMonths` 필드 추가  
     - [ ] AuditPartitionScheduler를 배치 모듈로 이동, PolicySettings 기반 동적 cron/enable 반영(secure-by-default: off)  
     - [ ] preloadMonths 만큼 월 파티션 루프 생성, cron과 enable을 정책/프로퍼티에서 조정 가능하도록 구현  
+- [x] (P2) 월간 접속기록 점검 리포트 — `AuditMonthlyReportJob`을 정책 기반 동적 cron으로 전환 (`auditMonthlyReportEnabled`, `auditMonthlyReportCron`), 기본 cron=0 0 4 1 * *  
 
 ### 정리/마이그레이션
   - [x] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/2025-11-23-remove-dw-log-tables.sql` 추가 → 배포 전 백업 및 드라이런 계획 수립  
