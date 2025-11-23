@@ -262,7 +262,13 @@ audit:
       # checksum 확인 후 DROP
       psql "$PG_URL" -c "DROP TABLE IF EXISTS audit_log_${part};"
       ```
-- [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장 (Grafana/Loki 혹은 SIEM 쿼리 템플릿 정의 예정)
+- [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장 (Grafana/Loki 혹은 SIEM 쿼리 템플릿 정의 예정)  
+  - [ ] 월간 배치 Cron 설정(yaml/properties) 예시 추가: `0 0 3 1 * *` (매월 1일 03시).  
+  - [ ] 집계 지표 정의: 총 접속 수, 실패 비율, 심야(00-06시) 조회 건수, DRM/다운로드 시도, unmask 요청 건수.  
+  - [ ] 결과 저장 스키마: `audit_monthly_summary` (year_month PK, metric JSON, generated_at).  
+  - [ ] 알림 훅: Slack/Webhook 또는 이메일로 top-3 이상 징후 전송.  
+  - [ ] 대시보드 연계: Grafana/Loki 또는 SIEM 쿼리 템플릿을 별도 MD로 제공하고 링크 첨부.  
+  - [ ] e2e 스모크: H2/pg 테스트에서 지난달 샘플 데이터 삽입 후 배치 실행 → summary row 생성 검증.
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
 
