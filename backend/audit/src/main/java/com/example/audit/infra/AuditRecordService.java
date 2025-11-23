@@ -38,6 +38,8 @@ public class AuditRecordService implements AuditPort {
     private final ObjectMapper objectMapper;
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final String topic;
+    private final KafkaTemplate<String, String> dlqTemplate;
+    private final String dlqTopic;
     private final boolean hmacEnabled;
     private final String hmacSecret;
     private final String hmacKeyId;
@@ -49,6 +51,8 @@ public class AuditRecordService implements AuditPort {
                               ObjectMapper objectMapper,
                               @Nullable KafkaTemplate<String, String> kafkaTemplate,
                               @Value("${audit.kafka.topic:audit.events.v1}") String topic,
+                              @Nullable @Value("${audit.kafka.dlq-topic:}") String dlqTopic,
+                              @Nullable KafkaTemplate<String, String> dlqTemplate,
                               @Value("${audit.hash-chain.hmac-enabled:false}") boolean hmacEnabled,
                               @Value("${audit.hash-chain.secret:}") String hmacSecret,
                               @Value("${audit.hash-chain.key-id:default}") String hmacKeyId,
@@ -59,6 +63,8 @@ public class AuditRecordService implements AuditPort {
         this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
         this.kafkaTemplate = kafkaTemplate;
         this.topic = topic;
+        this.dlqTopic = dlqTopic;
+        this.dlqTemplate = dlqTemplate != null ? dlqTemplate : kafkaTemplate;
         this.hmacEnabled = hmacEnabled;
         this.hmacSecret = hmacSecret;
         this.hmacKeyId = hmacKeyId;
@@ -107,9 +113,23 @@ public class AuditRecordService implements AuditPort {
             kafkaTemplate.send(topic, event.getEventId().toString(), objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException | RuntimeException ex) {
             if (mode == AuditMode.STRICT) {
+                // STRICT 모드에서는 DLQ로도 남겨두고 예외를 전파
+                sendDlq(event);
                 throw new IllegalStateException("Failed to publish audit event", ex);
             }
             log.warn("Audit publish failed in async fallback: {}", ex.getMessage());
+            sendDlq(event);
+        }
+    }
+
+    private void sendDlq(AuditEvent event) {
+        if (dlqTemplate == null || dlqTopic == null || dlqTopic.isBlank()) {
+            return;
+        }
+        try {
+            dlqTemplate.send(dlqTopic, event.getEventId().toString(), objectMapper.writeValueAsString(event));
+        } catch (Exception e) {
+            log.warn("Audit DLQ publish failed: {}", e.getMessage());
         }
     }
 

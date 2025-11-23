@@ -40,7 +40,9 @@ class AuditRecordServiceTest {
     void record_persistsAndPublishes_whenEnabled() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, kafkaTemplate, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                kafkaTemplate, "audit.events.v1", "", kafkaTemplate,
+                false, "", "default", maskingProperties, maskingService);
 
         service.record(sampleEvent(), AuditMode.STRICT);
 
@@ -52,7 +54,9 @@ class AuditRecordServiceTest {
     void sanitize_masksSensitiveDigitsInSummariesAndExtra() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                null, "audit.events.v1", "", null,
+                false, "", "default", maskingProperties, maskingService);
 
         AuditEvent event = AuditEvent.builder()
                 .eventType("VIEW")
@@ -81,7 +85,7 @@ class AuditRecordServiceTest {
     void sanitize_removesRawSensitivePatterns() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", "", null, false, "", "default", maskingProperties, maskingService);
 
         AuditEvent event = AuditEvent.builder()
                 .eventType("VIEW")
@@ -108,7 +112,7 @@ class AuditRecordServiceTest {
     void sanitize_skipsMaskingWhenPolicyDisablesIt() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).maskingEnabled(false).build()));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", "", null, false, "", "default", maskingProperties, maskingService);
 
         AuditEvent event = AuditEvent.builder()
                 .eventType("VIEW")
@@ -132,7 +136,7 @@ class AuditRecordServiceTest {
     void record_skipsWhenPolicyDisabled() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(false).build()));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, kafkaTemplate, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, kafkaTemplate, "audit.events.v1", "", null, false, "", "default", maskingProperties, maskingService);
 
         service.record(sampleEvent(), AuditMode.STRICT);
 
@@ -144,7 +148,7 @@ class AuditRecordServiceTest {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
         given(repository.save(any())).willThrow(new IllegalStateException("fail"));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, kafkaTemplate, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, kafkaTemplate, "audit.events.v1", "", null, false, "", "default", maskingProperties, maskingService);
 
         assertThatThrownBy(() -> service.record(sampleEvent(), AuditMode.STRICT))
                 .isInstanceOf(IllegalStateException.class);
@@ -155,7 +159,7 @@ class AuditRecordServiceTest {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
         given(repository.save(any())).willThrow(new IllegalStateException("fail"));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", "", null, false, "", "default", maskingProperties, maskingService);
 
         service.record(sampleEvent(), AuditMode.ASYNC_FALLBACK);
     }
@@ -180,7 +184,7 @@ class AuditRecordServiceTest {
                 "INTERNAL", "127.0.0.1", "JUnit", "dev-1",
                 true, "OK", "R", "T", "PIPA", "LOW", "before", "after", "{}", "prevhash");
         when(repository.findTopByOrderByEventTimeDesc()).thenReturn(Optional.of(prev));
-        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", false, "", "default", maskingProperties, maskingService);
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper, null, "audit.events.v1", "", null, false, "", "default", maskingProperties, maskingService);
 
         service.record(sampleEvent(), AuditMode.ASYNC_FALLBACK);
 
