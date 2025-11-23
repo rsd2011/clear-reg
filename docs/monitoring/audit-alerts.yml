@@ -1,0 +1,45 @@
+groups:
+  - name: audit-archive
+    rules:
+      - alert: AuditArchiveFailure
+        expr: increase(audit_archive_failure_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Audit archive job failed"
+          description: "Archive command failed on {{ $labels.instance }} within 5m window."
+      - alert: AuditArchiveSlow
+        expr: histogram_quantile(0.95, rate(audit_archive_elapsed_ms_bucket[15m])) > 60
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Audit archive job is slow"
+          description: "P95 archive elapsed exceeds 60s on {{ $labels.instance }}."
+  - name: audit-hot-cold
+    rules:
+      - alert: AuditHotIopsSpike
+        expr: rate(audit_hot_iops_total[5m]) > 1.5 * avg_over_time(audit_hot_iops_total[1h])
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "HOT tablespace IOPS spike"
+          description: "HOT IOPS exceeds 150% of 1h baseline."
+      - alert: AuditColdCostSurge
+        expr: rate(audit_cold_storage_cost_estimate[1d]) > 0.2 * avg_over_time(audit_cold_storage_cost_estimate[7d])
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: "COLD storage cost rising"
+          description: "COLD cost estimate increasing >20% vs 7d average."
+      - alert: ObjectLockDelay
+        expr: rate(audit_archive_objectlock_delay_ms_sum[10m]) / rate(audit_archive_objectlock_delay_ms_count[10m]) > 60000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Object Lock pipeline slow"
+          description: "Average Object Lock delay > 60s."

@@ -11,13 +11,14 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.Trigger;
-import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,13 +31,13 @@ import com.example.common.policy.PolicyToggleSettings;
  * 정책/프로퍼티로 enable/cron/preloadMonths를 조정할 수 있다.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class AuditPartitionScheduler implements SchedulingConfigurer {
 
     private final DataSource dataSource;
     private final Clock clock;
     private final PolicySettingsProvider policySettingsProvider;
+    private final MeterRegistry meterRegistry;
 
     @Value("${audit.partition.enabled:false}")
     private boolean enabledFallback;
@@ -52,6 +53,25 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
     private int hotMonths;
     @Value("${audit.partition.cold-months:60}")
     private int coldMonths;
+
+    private final Counter partitionSuccess;
+    private final Counter partitionFailure;
+    private final Timer partitionLatency;
+
+    public AuditPartitionScheduler(DataSource dataSource,
+                                   Clock clock,
+                                   PolicySettingsProvider policySettingsProvider,
+                                   MeterRegistry meterRegistry) {
+        this.dataSource = dataSource;
+        this.clock = clock;
+        this.policySettingsProvider = policySettingsProvider;
+        this.meterRegistry = meterRegistry;
+        this.partitionSuccess = meterRegistry.counter("audit_partition_create_success_total");
+        this.partitionFailure = meterRegistry.counter("audit_partition_create_failure_total");
+        this.partitionLatency = Timer.builder("audit_partition_create_ms")
+                .publishPercentileHistogram()
+                .register(meterRegistry);
+    }
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar registrar) {
@@ -100,11 +120,17 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
                 CREATE TABLE IF NOT EXISTS %s PARTITION OF audit_log
                 FOR VALUES FROM ('%s') TO ('%s')%s;
                 """.formatted(partitionName, monthStart, monthStart.plusMonths(1), tablespace);
+        long started = System.currentTimeMillis();
         try (Connection conn = dataSource.getConnection()) {
             conn.createStatement().execute(ddl);
             log.info("Audit partition ensured: {}", partitionName);
+            partitionSuccess.increment();
         } catch (SQLException e) {
             log.warn("Failed to create audit partition {}: {}", partitionName, e.getMessage());
+            partitionFailure.increment();
+        } finally {
+            long elapsed = System.currentTimeMillis() - started;
+            partitionLatency.record(elapsed, java.util.concurrent.TimeUnit.MILLISECONDS);
         }
     }
 

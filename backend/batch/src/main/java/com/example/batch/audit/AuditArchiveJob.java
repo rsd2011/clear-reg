@@ -1,20 +1,23 @@
 package com.example.batch.audit;
 
+import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
-
-import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.annotation.PostConstruct;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * HOT→COLD 이동 이후 Object Lock/Glacier 전송을 외부 스크립트/배치로 호출하기 위한 훅.
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class AuditArchiveJob {
 
     private final Clock clock;
+    private final MeterRegistry meterRegistry;
 
     @Value("${audit.archive.enabled:false}")
     private boolean enabled;
@@ -57,6 +61,18 @@ public class AuditArchiveJob {
     private RestTemplate restTemplate = new RestTemplate();
     /** 테스트 용도 주입 가능한 커맨드 실행자 */
     private CommandInvoker invoker = this::runCommand;
+    private Counter successCounter;
+    private Counter failureCounter;
+    private Timer latencyTimer;
+
+    @PostConstruct
+    void initMeters() {
+        successCounter = meterRegistry.counter("audit_archive_success_total");
+        failureCounter = meterRegistry.counter("audit_archive_failure_total");
+        latencyTimer = Timer.builder("audit_archive_elapsed_ms")
+                .publishPercentileHistogram()
+                .register(meterRegistry);
+    }
 
     @Scheduled(cron = "${audit.archive.cron:0 30 3 2 * *}")
     public void archiveColdPartitions() {
@@ -77,7 +93,10 @@ public class AuditArchiveJob {
                 lastExit.set(exit);
                 if (exit == 0) {
                     log.info("[audit-archive] archive command succeeded on attempt {}", i);
-                    maybeAlertDelay(target, start);
+                    long elapsed = System.currentTimeMillis() - start;
+                    latencyTimer.record(elapsed, TimeUnit.MILLISECONDS);
+                    successCounter.increment();
+                    maybeAlertDelay(target, elapsed);
                     return;
                 }
                 log.warn("[audit-archive] command exited {} on attempt {}/{}", exit, i, attempts);
@@ -85,6 +104,9 @@ public class AuditArchiveJob {
                 log.warn("[audit-archive] command failed on attempt {}/{}: {}", i, attempts, e.getMessage());
             }
         }
+        long elapsed = System.currentTimeMillis() - start;
+        latencyTimer.record(elapsed, TimeUnit.MILLISECONDS);
+        failureCounter.increment();
         log.error("[audit-archive] archive command failed after {} attempts, lastExit={}", attempts, lastExit.get());
         notifyFailure(target, lastExit.get());
     }
@@ -111,40 +133,58 @@ public class AuditArchiveJob {
         if (!alertEnabled || !StringUtils.hasText(slackWebhook)) {
             return;
         }
-        try {
-            String payload = """
-                    {
-                      "text":"[audit-archive] :x: FAILED target=%s exitCode=%d (host=%s) %s",
-                      "channel":"%s"
-                    }
-                    """.formatted(target, exitCode, java.net.InetAddress.getLocalHost().getHostName(),
-                    mention(), alertChannel);
-            restTemplate.postForEntity(slackWebhook, payload.replaceAll("\\s+", " "), String.class);
-        } catch (Exception e) {
-            log.warn("[audit-archive] failed to send slack alert: {}", e.getMessage());
-        }
+        String payload = """
+                {
+                  "text":"[audit-archive] :x: FAILED target=%s exitCode=%d (host=%s) %s",
+                  "channel":"%s"
+                }
+                """.formatted(target, exitCode, host(), mention(), alertChannel)
+                .replaceAll("\\s+", " ");
+        sendSlackWithRetry(payload, "failure");
     }
 
-    private void maybeAlertDelay(LocalDate target, long startMs) {
-        long elapsed = System.currentTimeMillis() - startMs;
+    private void maybeAlertDelay(LocalDate target, long elapsed) {
         if (!alertEnabled || !StringUtils.hasText(slackWebhook)) return;
         if (elapsed < delayThresholdMs) return;
-        try {
-            String payload = """
-                    {
-                      "text":"[audit-archive] :warning: SLOW archive target=%s elapsedMs=%d (host=%s) %s",
-                      "channel":"%s"
-                    }
-                    """.formatted(target, elapsed, java.net.InetAddress.getLocalHost().getHostName(),
-                    mention(), alertChannel);
-            restTemplate.postForEntity(slackWebhook, payload.replaceAll("\\s+", " "), String.class);
-        } catch (Exception e) {
-            log.warn("[audit-archive] failed to send slack delay alert: {}", e.getMessage());
-        }
+        String payload = """
+                {
+                  "text":"[audit-archive] :warning: SLOW archive target=%s elapsedMs=%d (host=%s) %s",
+                  "channel":"%s"
+                }
+                """.formatted(target, elapsed, host(), mention(), alertChannel)
+                .replaceAll("\\s+", " ");
+        sendSlackWithRetry(payload, "delay");
     }
 
     private String mention() {
         return StringUtils.hasText(alertMention) ? alertMention : "";
+    }
+
+    private String host() {
+        try {
+            return java.net.InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
+            return "unknown";
+        }
+    }
+
+    private void sendSlackWithRetry(String payload, String type) {
+        int attempts = Math.max(1, retry);
+        for (int i = 1; i <= attempts; i++) {
+            try {
+                restTemplate.postForEntity(slackWebhook, payload, String.class);
+                log.info("[audit-archive] slack {} alert sent (attempt {})", type, i);
+                return;
+            } catch (Exception e) {
+                log.warn("[audit-archive] slack {} alert failed attempt {}/{}: {}", type, i, attempts, e.getMessage());
+                try {
+                    Thread.sleep((long) Math.min(120_000, Math.pow(2, i) * 1000L)); // exponential backoff up to 2m
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
     }
 
     @FunctionalInterface
