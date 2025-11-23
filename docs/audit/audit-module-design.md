@@ -219,8 +219,8 @@ audit:
 - [~] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대 — 멀티포맷(OutputMaskingAdapter) 경로별 샘플 테스트 추가 예정 (Excel/CSV/PDF/JSON 각각 최소 1개 케이스)
 
 ### 운영
-- [ ] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 + HOT/COLD 분리, 만료시 S3 Object Lock/Glacier 이동 배치 설계
-- [ ] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — Grafana/Loki 또는 SIEM 쿼리 템플릿 정의 필요
+- [ ] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 + HOT/COLD 분리, 만료시 S3 Object Lock/Glacier 이동 배치 설계(스케줄러 스켈레톤 추가 필요)
+- [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
 
