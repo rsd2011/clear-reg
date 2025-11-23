@@ -220,7 +220,7 @@ audit:
 
 ### 운영
 - [~] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 사전 생성 스케줄러(`AuditPartitionScheduler`) 추가, HOT/COLD 분리·S3 Object Lock/Glacier 이동 배치 설계는 후속
-- [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장
+- [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장 (Grafana/Loki 혹은 SIEM 쿼리 템플릿 정의 예정)
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
 
