@@ -24,7 +24,9 @@ class AuditMonthlyReportJobTest {
         AuditLogRepository repo = Mockito.mock(AuditLogRepository.class);
         AuditMonthlySummaryRepository summaryRepo = Mockito.mock(AuditMonthlySummaryRepository.class);
         Clock clock = Clock.fixed(LocalDate.of(2025, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditMonthlyReportJob job = new AuditMonthlyReportJob(repo, summaryRepo, clock);
+        var policy = Mockito.mock(com.example.common.policy.PolicySettingsProvider.class);
+        Mockito.when(policy.currentSettings()).thenReturn(defaultSettings());
+        AuditMonthlyReportJob job = new AuditMonthlyReportJob(repo, summaryRepo, clock, policy);
 
         job.report();
 
@@ -51,5 +53,12 @@ class AuditMonthlyReportJobTest {
         org.assertj.core.api.Assertions.assertThat(ent.getYearMonth()).isEqualTo("2025-01");
         org.assertj.core.api.Assertions.assertThat(ent.getTotalCount()).isEqualTo(123L);
         org.assertj.core.api.Assertions.assertThat(ent.getCreatedAt()).isEqualTo(now);
+    }
+
+    private com.example.common.policy.PolicyToggleSettings defaultSettings() {
+        return new com.example.common.policy.PolicyToggleSettings(true, true, true, List.of(), 0L, List.of(), true, 0,
+                true, true, true, 0, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1,
+                true, "0 0 4 1 * *");
     }
 }

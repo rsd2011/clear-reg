@@ -28,6 +28,11 @@ public class PolicyToggleProperties {
     private List<String> auditSensitiveEndpoints = new ArrayList<>();
     private boolean auditMaskingEnabled = true;
     private java.util.List<String> auditUnmaskRoles = new java.util.ArrayList<>();
+    private boolean auditPartitionEnabled = false;
+    private String auditPartitionCron = "0 0 2 1 * *";
+    private int auditPartitionPreloadMonths = 1;
+    private boolean auditMonthlyReportEnabled = true;
+    private String auditMonthlyReportCron = "0 0 4 1 * *";
 
     public boolean isPasswordPolicyEnabled() {
         return passwordPolicyEnabled;
@@ -163,5 +168,45 @@ public class PolicyToggleProperties {
 
     public void setAuditUnmaskRoles(java.util.List<String> auditUnmaskRoles) {
         this.auditUnmaskRoles = auditUnmaskRoles;
+    }
+
+    public boolean isAuditPartitionEnabled() {
+        return auditPartitionEnabled;
+    }
+
+    public void setAuditPartitionEnabled(boolean auditPartitionEnabled) {
+        this.auditPartitionEnabled = auditPartitionEnabled;
+    }
+
+    public String getAuditPartitionCron() {
+        return auditPartitionCron;
+    }
+
+    public void setAuditPartitionCron(String auditPartitionCron) {
+        this.auditPartitionCron = auditPartitionCron;
+    }
+
+    public int getAuditPartitionPreloadMonths() {
+        return auditPartitionPreloadMonths;
+    }
+
+    public void setAuditPartitionPreloadMonths(int auditPartitionPreloadMonths) {
+        this.auditPartitionPreloadMonths = auditPartitionPreloadMonths;
+    }
+
+    public boolean isAuditMonthlyReportEnabled() {
+        return auditMonthlyReportEnabled;
+    }
+
+    public void setAuditMonthlyReportEnabled(boolean auditMonthlyReportEnabled) {
+        this.auditMonthlyReportEnabled = auditMonthlyReportEnabled;
+    }
+
+    public String getAuditMonthlyReportCron() {
+        return auditMonthlyReportCron;
+    }
+
+    public void setAuditMonthlyReportCron(String auditMonthlyReportCron) {
+        this.auditMonthlyReportCron = auditMonthlyReportCron;
     }
 }

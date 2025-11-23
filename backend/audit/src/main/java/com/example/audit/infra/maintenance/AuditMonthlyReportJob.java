@@ -69,12 +69,9 @@ public class AuditMonthlyReportJob implements org.springframework.scheduling.ann
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-        taskRegistrar.addTriggerTask(this::report, new Trigger() {
-            @Override
-            public java.util.Date nextExecutionTime(TriggerContext triggerContext) {
-                String cron = policySettingsProvider.currentSettings().auditMonthlyReportCron();
-                return new CronTrigger(cron).nextExecutionTime(triggerContext);
-            }
+        taskRegistrar.addTriggerTask(this::report, (TriggerContext triggerContext) -> {
+            String cron = policySettingsProvider.currentSettings().auditMonthlyReportCron();
+            return new CronTrigger(cron).nextExecution(triggerContext);
         });
     }
 }
