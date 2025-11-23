@@ -28,6 +28,10 @@ public record PolicyUpdateRequest(
         Boolean auditPartitionEnabled,
         String auditPartitionCron,
         @PositiveOrZero Integer auditPartitionPreloadMonths,
+        String auditPartitionTablespaceHot,
+        String auditPartitionTablespaceCold,
+        @PositiveOrZero Integer auditPartitionHotMonths,
+        @PositiveOrZero Integer auditPartitionColdMonths,
         Boolean auditMonthlyReportEnabled,
         String auditMonthlyReportCron) {
 

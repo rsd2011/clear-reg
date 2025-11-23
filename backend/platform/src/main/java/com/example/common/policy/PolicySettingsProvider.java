@@ -11,4 +11,12 @@ public interface PolicySettingsProvider {
      * @return immutable snapshot
      */
     PolicyToggleSettings currentSettings();
+
+    /**
+     * Optional audit partition tuning settings (HOT/COLD, cron, preload).
+     * Default implementation returns null to preserve binary compatibility.
+     */
+    default AuditPartitionSettings partitionSettings() {
+        return null;
+    }
 }

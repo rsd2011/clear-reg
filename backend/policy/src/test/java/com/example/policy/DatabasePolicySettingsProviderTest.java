@@ -28,4 +28,21 @@ class DatabasePolicySettingsProviderTest {
 
         assertThat(provider.currentSettings()).usingRecursiveComparison().isEqualTo(toggles);
     }
+
+    @Test
+    @DisplayName("partitionSettings도 상태의 값을 그대로 반환한다")
+    void providerReturnsPartitionSettings() {
+        PolicyToggleSettings toggles = new PolicyToggleSettings(true, true, true,
+                java.util.List.of("PASSWORD"), 1_000_000L, java.util.List.of("pdf"), true, 10);
+        var partition = new com.example.common.policy.AuditPartitionSettings(true, "0 5 1 1 * *", 2,
+                "ts_hot", "ts_cold", 12, 48);
+        PolicyState state = PolicyState.from(toggles, partition);
+
+        PolicyAdminService service = mock(PolicyAdminService.class);
+        given(service.currentState()).willReturn(state);
+
+        DatabasePolicySettingsProvider provider = new DatabasePolicySettingsProvider(service);
+
+        assertThat(provider.partitionSettings()).usingRecursiveComparison().isEqualTo(partition);
+    }
 }

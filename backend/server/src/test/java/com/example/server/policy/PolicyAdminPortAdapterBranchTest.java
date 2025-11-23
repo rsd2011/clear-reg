@@ -33,18 +33,22 @@ class PolicyAdminPortAdapterBranchTest {
         PolicyView view = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
                 true, true, true, 30, true, "MEDIUM", true,
-                java.util.List.of("/api/**"), java.util.List.of(), "before");
+                java.util.List.of("/api/**"), java.util.List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                "before");
         PolicyView after = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
                 true, true, true, 30, true, "MEDIUM", true,
-                java.util.List.of("/api/**"), java.util.List.of(), "after");
+                java.util.List.of("/api/**"), java.util.List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                "after");
         Mockito.when(service.currentView()).thenReturn(view);
         Mockito.when(service.updateView(Mockito.any())).thenReturn(after);
 
         PolicyAdminPortAdapter adapter = new PolicyAdminPortAdapter(service, auditPort);
         adapter.updateToggles(new PolicyUpdateRequest(null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null));
+                null, null, null, null, null, null, null, null));
 
         verify(auditPort).record(Mockito.any(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
@@ -57,11 +61,15 @@ class PolicyAdminPortAdapterBranchTest {
         PolicyView view = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
                 true, true, true, 30, true, "MEDIUM", true,
-                java.util.List.of("/api/**"), java.util.List.of(), "before");
+                java.util.List.of("/api/**"), java.util.List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                "before");
         PolicyView after = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
                 true, true, true, 30, true, "MEDIUM", true,
-                java.util.List.of("/api/**"), java.util.List.of(), "after");
+                java.util.List.of("/api/**"), java.util.List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                "after");
         Mockito.when(service.currentView()).thenReturn(view);
         Mockito.when(service.applyYamlView(Mockito.anyString())).thenReturn(after);
         doThrow(new RuntimeException("fail")).when(auditPort).record(Mockito.any(), Mockito.eq(AuditMode.ASYNC_FALLBACK));

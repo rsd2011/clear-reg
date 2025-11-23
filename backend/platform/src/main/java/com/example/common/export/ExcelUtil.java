@@ -143,7 +143,7 @@ public class ExcelUtil {
     }
 
     @Value
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
+    @AllArgsConstructor
     public static class RowContext {
         int rowIndex;
         Map<Integer, Object> rowValues;
@@ -152,6 +152,14 @@ public class ExcelUtil {
         public Object get(String header) {
             Integer idx = headerIndex.get(header);
             return idx == null ? null : rowValues.get(idx);
+        }
+
+        public Object get(int index) {
+            return rowValues.get(index);
+        }
+
+        public int getRowIndex() {
+            return rowIndex;
         }
     }
 

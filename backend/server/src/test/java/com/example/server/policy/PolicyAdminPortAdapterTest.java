@@ -28,7 +28,9 @@ class PolicyAdminPortAdapterTest {
     void currentPolicyDelegates() {
         PolicyView view = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml");
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "yaml");
         given(policyAdminService.currentView()).willReturn(view);
 
         PolicyView result = adapter.currentPolicy();
@@ -42,14 +44,18 @@ class PolicyAdminPortAdapterTest {
     void updateTogglesDelegates() {
         PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"),
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null);
+                null, null, null, null, null, null, null, null);
         PolicyView current = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), false, "0 0 2 1 * *", 1, true, "0 0 4 1 * *", "yaml-current");
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "yaml-current");
         given(policyAdminService.currentView()).willReturn(current);
         given(policyAdminService.updateView(request)).willReturn(new PolicyView(false, true, true,
                 List.of("SSO"), 1_048_576L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), false, "0 0 2 1 * *", 1, true, "0 0 4 1 * *", "yaml"));
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "yaml"));
 
         PolicyView updated = adapter.updateToggles(request);
 
@@ -63,11 +69,15 @@ class PolicyAdminPortAdapterTest {
         PolicyYamlRequest yamlRequest = new PolicyYamlRequest("policy: value");
         PolicyView current = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml-current");
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "yaml-current");
         given(policyAdminService.currentView()).willReturn(current);
         PolicyView view = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "policy: value");
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "policy: value");
         given(policyAdminService.applyYamlView(yamlRequest.yaml())).willReturn(view);
 
         PolicyView result = adapter.updateFromYaml(yamlRequest);

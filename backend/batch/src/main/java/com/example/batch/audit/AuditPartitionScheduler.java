@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import com.example.common.policy.AuditPartitionSettings;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 
@@ -42,6 +43,14 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
     private String cronFallback;
     @Value("${audit.partition.preload-months:1}")
     private int preloadMonthsFallback;
+    @Value("${audit.partition.tablespace.hot:}")
+    private String hotTablespace;
+    @Value("${audit.partition.tablespace.cold:}")
+    private String coldTablespace;
+    @Value("${audit.partition.hot-months:6}")
+    private int hotMonths;
+    @Value("${audit.partition.cold-months:60}")
+    private int coldMonths;
 
     @Override
     public void configureTasks(ScheduledTaskRegistrar registrar) {
@@ -53,22 +62,26 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
 
     void createNextPartitions() {
         PolicyToggleSettings settings = currentSettings();
-        if (!settings.auditPartitionEnabled()) {
+        AuditPartitionSettings ps = policySettingsProvider.partitionSettings();
+        boolean enabled = ps != null ? ps.enabled() : settings.auditPartitionEnabled();
+        if (!enabled) {
             return;
         }
-        int months = Math.max(settings.auditPartitionPreloadMonths(), 0);
+        int months = Math.max(ps != null ? ps.preloadMonths() : settings.auditPartitionPreloadMonths(), 0);
         LocalDate start = LocalDate.now(clock).plusMonths(1).withDayOfMonth(1);
+        String tsHot = (ps != null && !ps.tablespaceHot().isBlank()) ? ps.tablespaceHot() : hotTablespace;
         IntStream.rangeClosed(0, months)
-                .forEach(offset -> ensurePartition(start.plusMonths(offset)));
+                .forEach(offset -> ensurePartition(start.plusMonths(offset), tsHot));
     }
 
-    void ensurePartition(LocalDate monthStart) {
+    void ensurePartition(LocalDate monthStart, String tsHot) {
         String suffix = monthStart.format(DateTimeFormatter.ofPattern("yyyy_MM"));
         String partitionName = "audit_log_" + suffix;
+        String tablespace = tsHot != null && !tsHot.isBlank() ? " TABLESPACE " + tsHot : "";
         String ddl = """
                 CREATE TABLE IF NOT EXISTS %s PARTITION OF audit_log
-                FOR VALUES FROM ('%s') TO ('%s');
-                """.formatted(partitionName, monthStart, monthStart.plusMonths(1));
+                FOR VALUES FROM ('%s') TO ('%s')%s;
+                """.formatted(partitionName, monthStart, monthStart.plusMonths(1), tablespace);
         try (Connection conn = dataSource.getConnection()) {
             conn.createStatement().execute(ddl);
             log.info("Audit partition ensured: {}", partitionName);
@@ -85,10 +98,13 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
                     enabledFallback, cronFallback, preloadMonthsFallback,
                     true, "0 0 4 1 * *");
         }
-        boolean enabled = settings.auditPartitionEnabled();
-        String cron = settings.auditPartitionCron() == null || settings.auditPartitionCron().isBlank()
-                ? cronFallback : settings.auditPartitionCron();
-        int preload = settings.auditPartitionPreloadMonths() < 0 ? preloadMonthsFallback : settings.auditPartitionPreloadMonths();
+        AuditPartitionSettings ps = policySettingsProvider.partitionSettings();
+        boolean enabled = ps != null ? ps.enabled() : settings.auditPartitionEnabled();
+        String cron = ps != null ? ps.cron()
+                : (settings.auditPartitionCron() == null || settings.auditPartitionCron().isBlank()
+                ? cronFallback : settings.auditPartitionCron());
+        int preload = ps != null ? ps.preloadMonths()
+                : (settings.auditPartitionPreloadMonths() < 0 ? preloadMonthsFallback : settings.auditPartitionPreloadMonths());
         return new PolicyToggleSettings(settings.passwordPolicyEnabled(), settings.passwordHistoryEnabled(), settings.accountLockEnabled(),
                 settings.enabledLoginTypes(), settings.maxFileSizeBytes(), settings.allowedFileExtensions(), settings.strictMimeValidation(),
                 settings.fileRetentionDays(), settings.auditEnabled(), settings.auditReasonRequired(), settings.auditSensitiveApiDefaultOn(),

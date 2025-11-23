@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +58,10 @@ class PolicyAdminServiceTest {
                 null, // auditPartitionEnabled
                 null, // auditPartitionCron
                 null, // auditPartitionPreloadMonths
+                null, // auditPartitionTablespaceHot
+                null, // auditPartitionTablespaceCold
+                null, // auditPartitionHotMonths
+                null, // auditPartitionColdMonths
                 null, // auditMonthlyReportEnabled
                 null  // auditMonthlyReportCron
         );
@@ -123,12 +128,174 @@ class PolicyAdminServiceTest {
                 null,
                 null,
                 null,
+                null,
+                null,
+                null,
+                null,
                 null);
 
         PolicyView view = service.updateView(request);
 
         assertThat(view.yaml()).contains("AD");
         assertThat(view.accountLockEnabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("auditPartition 섹션을 YAML로 적용하면 tablespace/hotMonths가 반영된다")
+    void applyYamlWithAuditPartitionSection() {
+        String yaml = """
+                passwordPolicyEnabled: true
+                passwordHistoryEnabled: true
+                accountLockEnabled: true
+                enabledLoginTypes: [PASSWORD]
+                auditPartitionEnabled: true
+                auditPartitionCron: "0 30 2 1 * *"
+                auditPartitionPreloadMonths: 2
+                auditPartition:
+                  enabled: true
+                  cron: "0 30 2 1 * *"
+                  preloadMonths: 2
+                  tablespaceHot: ts_hot
+                  tablespaceCold: ts_cold
+                  hotMonths: 12
+                  coldMonths: 48
+                """;
+
+        PolicyView view = service.applyYamlView(yaml);
+
+        assertThat(view.auditPartitionTablespaceHot()).isEqualTo("ts_hot");
+        assertThat(view.auditPartitionTablespaceCold()).isEqualTo("ts_cold");
+        assertThat(view.auditPartitionHotMonths()).isEqualTo(12);
+        assertThat(view.auditPartitionColdMonths()).isEqualTo(48);
+        assertThat(view.yaml()).contains("tablespaceHot: ts_hot");
+    }
+
+    @Test
+    @DisplayName("auditPartition 상위 필드만 있어도 tablespace/hotMonths를 읽어들인다")
+    void applyYamlWithTopLevelAuditPartitionFields() {
+        String yaml = """
+                passwordPolicyEnabled: true
+                passwordHistoryEnabled: true
+                accountLockEnabled: true
+                enabledLoginTypes: [PASSWORD]
+                auditPartitionEnabled: true
+                auditPartitionCron: "0 15 1 1 * *"
+                auditPartitionPreloadMonths: 3
+                auditPartitionTablespaceHot: ts_hot2
+                auditPartitionTablespaceCold: ts_cold2
+                auditPartitionHotMonths: 9
+                auditPartitionColdMonths: 36
+                """;
+
+        PolicyView view = service.applyYamlView(yaml);
+
+        assertThat(view.auditPartitionTablespaceHot()).isEqualTo("ts_hot2");
+        assertThat(view.auditPartitionTablespaceCold()).isEqualTo("ts_cold2");
+        assertThat(view.auditPartitionHotMonths()).isEqualTo(9);
+        assertThat(view.auditPartitionColdMonths()).isEqualTo(36);
+    }
+
+    @Test
+    @DisplayName("snapshot 내보낼 때 auditPartition 섹션이 포함된다")
+    void snapshotExportsAuditPartitionSection() {
+        String yaml = """
+                passwordPolicyEnabled: true
+                passwordHistoryEnabled: true
+                accountLockEnabled: true
+                enabledLoginTypes: [PASSWORD]
+                auditPartitionEnabled: true
+                auditPartitionCron: "0 0 1 1 * *"
+                auditPartitionPreloadMonths: 2
+                auditPartition:
+                  enabled: true
+                  cron: "0 0 1 1 * *"
+                  preloadMonths: 2
+                  tablespaceHot: ts_hot3
+                  tablespaceCold: ts_cold3
+                  hotMonths: 24
+                  coldMonths: 72
+                """;
+
+        service.applyYaml(yaml);
+        var snapshot = service.snapshot();
+
+        assertThat(snapshot.yaml()).contains("auditPartition:");
+        assertThat(snapshot.yaml()).contains("tablespaceCold: \"ts_cold3\"");
+    }
+
+    @Test
+    @DisplayName("서비스 초기화 시 기존 YAML 문서를 읽어 캐시한다")
+    void loadsExistingDocumentOnStartup() {
+        String yaml = """
+                passwordPolicyEnabled: false
+                accountLockEnabled: false
+                auditPartitionEnabled: true
+                auditPartitionCron: "0 0 1 1 * *"
+                auditPartitionPreloadMonths: 2
+                auditPartition:
+                  enabled: true
+                  cron: "0 0 1 1 * *"
+                  preloadMonths: 2
+                  tablespaceHot: preload_ts_hot
+                  tablespaceCold: preload_ts_cold
+                  hotMonths: 18
+                  coldMonths: 90
+                """;
+
+        var repo = mock(PolicyDocumentRepository.class);
+        given(repo.findByCode("security.policy")).willReturn(java.util.Optional.of(new PolicyDocument("security.policy", yaml)));
+        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        PolicyToggleSettings defaults = new PolicyToggleSettings(true, true, true, List.of("PASSWORD"), 10_485_760L, List.of("pdf"), true, 365);
+
+        PolicyAdminService svc = new PolicyAdminService(repo, mapper, defaults);
+
+        var state = svc.currentState();
+        assertThat(state.auditPartitionEnabled()).isTrue();
+        assertThat(state.auditPartitionCron()).isEqualTo("0 0 1 1 * *");
+        assertThat(state.auditPartitionTablespaceHot()).isEqualTo("preload_ts_hot");
+        assertThat(state.auditPartitionColdMonths()).isEqualTo(90);
+    }
+
+    @Test
+    @DisplayName("auditPartition 섹션이 없으면 기본 partition 설정으로 유지된다")
+    void applyYamlWithoutPartitionKeepsDefaults() {
+        String yaml = """
+                passwordPolicyEnabled: true
+                accountLockEnabled: true
+                enabledLoginTypes: [PASSWORD]
+                """;
+
+        service.applyYaml(yaml);
+
+        var state = service.currentState();
+        assertThat(state.auditPartitionEnabled()).isFalse();
+        assertThat(state.auditPartitionTablespaceHot()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("hotMonths/coldMonths가 0 이하이면 기본값으로 보정된다")
+    void partitionMonthsClampToDefaults() {
+        String yaml = """
+                passwordPolicyEnabled: true
+                accountLockEnabled: true
+                auditPartitionEnabled: true
+                auditPartitionCron: "0 0 1 1 * *"
+                auditPartitionPreloadMonths: 1
+                auditPartition:
+                  enabled: true
+                  cron: "0 0 1 1 * *"
+                  preloadMonths: 1
+                  tablespaceHot: ts_hot4
+                  tablespaceCold: ts_cold4
+                  hotMonths: 0
+                  coldMonths: 0
+                """;
+
+        service.applyYaml(yaml);
+
+        var state = service.currentState();
+        assertThat(state.auditPartitionHotMonths()).isEqualTo(6);
+        assertThat(state.auditPartitionColdMonths()).isEqualTo(60);
     }
 
     @Test
