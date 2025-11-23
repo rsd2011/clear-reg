@@ -222,7 +222,11 @@ audit:
 - [~] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대 — 멀티포맷(OutputMaskingAdapter) 경로별 샘플 테스트 추가 예정 (Excel/CSV/PDF/JSON 각각 최소 1개 케이스)
 
 ### 운영
-- [~] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 사전 생성 스케줄러(`AuditPartitionScheduler`) 추가, HOT/COLD 분리·S3 Object Lock/Glacier 이동 배치 설계는 후속
+- [x] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 사전 생성 스케줄러(`AuditPartitionScheduler`) 구현 및 테스트 완료. **후속 세부 작업**  
+  - [ ] HOT/COLD 테이블스페이스 분리 전략 수립: 최근 6개월 HOT, 이후 COLD로 이동, 인덱스/압축(ZSTD) 정책 차등 적용.  
+  - [ ] S3 Object Lock(Compliance) 또는 Glacier 딥아카이브 전송 배치 스크립트 설계: 파티션 단위 export→Object Lock→DROP 순서 정의.  
+  - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
+  - [ ] 운영 점검: 파티션 생성/아카이브 실패 알림(Slack/Webhook) 및 리트라이 정책 정의.
 - [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장 (Grafana/Loki 혹은 SIEM 쿼리 템플릿 정의 예정)
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
