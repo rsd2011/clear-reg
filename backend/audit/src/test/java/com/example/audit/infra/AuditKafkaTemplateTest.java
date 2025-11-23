@@ -35,7 +35,7 @@ class AuditKafkaTemplateTest {
         ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
         AuditRecordService service = new AuditRecordService(repository, resolver, mapper,
                 template, "audit.events.v1", "", template,
-                false, "", "default", new com.example.audit.infra.masking.MaskingProperties(), null);
+                false, "", "default", new com.example.audit.infra.masking.MaskingProperties(), null, null);
 
         AuditEvent event = AuditEvent.builder()
                 .eventId(UUID.randomUUID())

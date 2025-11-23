@@ -40,6 +40,7 @@ public class AuditRecordService implements AuditPort {
     private final String topic;
     private final KafkaTemplate<String, String> dlqTemplate;
     private final String dlqTopic;
+    private final com.example.audit.infra.siem.SiemForwarder siemForwarder;
     private final boolean hmacEnabled;
     private final String hmacSecret;
     private final String hmacKeyId;
@@ -57,7 +58,8 @@ public class AuditRecordService implements AuditPort {
                               @Value("${audit.hash-chain.secret:}") String hmacSecret,
                               @Value("${audit.hash-chain.key-id:default}") String hmacKeyId,
                               MaskingProperties maskingProperties,
-                              @Nullable MaskingService maskingService) {
+                              @Nullable MaskingService maskingService,
+                              @Nullable com.example.audit.infra.siem.SiemForwarder siemForwarder) {
         this.repository = repository;
         this.policyResolver = policyResolver;
         this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
@@ -70,6 +72,7 @@ public class AuditRecordService implements AuditPort {
         this.hmacKeyId = hmacKeyId;
         this.maskingProperties = maskingProperties;
         this.maskingService = maskingService;
+        this.siemForwarder = siemForwarder;
     }
 
     @Override
@@ -86,6 +89,7 @@ public class AuditRecordService implements AuditPort {
         }
         persist(event, mode, policy, maskingTarget);
         publish(event, mode);
+        forwardSiem(event);
     }
 
     @Override
@@ -130,6 +134,15 @@ public class AuditRecordService implements AuditPort {
             dlqTemplate.send(dlqTopic, event.getEventId().toString(), objectMapper.writeValueAsString(event));
         } catch (Exception e) {
             log.warn("Audit DLQ publish failed: {}", e.getMessage());
+        }
+    }
+
+    private void forwardSiem(AuditEvent event) {
+        if (siemForwarder == null) return;
+        try {
+            siemForwarder.forward(event);
+        } catch (Exception e) {
+            log.warn("SIEM forward failed: {}", e.getMessage());
         }
     }
 

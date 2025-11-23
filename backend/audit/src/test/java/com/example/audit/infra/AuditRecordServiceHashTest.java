@@ -45,7 +45,7 @@ class AuditRecordServiceHashTest {
 
         AuditRecordService service = new AuditRecordService(repository, resolver, mapper, null,
                 "audit.events.v1", "", null,
-                true, "secret", "kid1", maskingProperties, maskingService);
+                true, "secret", "kid1", maskingProperties, maskingService, null);
 
         AuditEvent event = AuditEvent.builder().eventId(UUID.randomUUID()).eventTime(Instant.now()).eventType("TYPE").action("ACT").build();
 
@@ -64,7 +64,7 @@ class AuditRecordServiceHashTest {
 
         AuditRecordService service = new AuditRecordService(repository, resolver, mapper, kafkaTemplate,
                 "topic", "", kafkaTemplate,
-                false, "", "kid", maskingProperties, maskingService);
+                false, "", "kid", maskingProperties, maskingService, null);
 
         AuditEvent event = AuditEvent.builder().eventId(UUID.randomUUID()).eventTime(Instant.now()).eventType("TYPE").action("ACT").build();
 
@@ -79,7 +79,7 @@ class AuditRecordServiceHashTest {
 
         AuditRecordService service = new AuditRecordService(repository, resolver, mapper, null,
                 "audit.events.v1", "", null,
-                false, "", "kid1", maskingProperties, maskingService);
+                false, "", "kid1", maskingProperties, maskingService, null);
 
         AuditEvent event = AuditEvent.builder().eventId(UUID.randomUUID()).eventTime(Instant.now()).eventType("TYPE").action("ACT")
                 .beforeSummary("4111-1111-1111-1111").build();
@@ -93,7 +93,9 @@ class AuditRecordServiceHashTest {
         given(resolver.resolve(any(), any())).willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
         MaskingService realMaskingService = new MaskingService(target -> true); // always mask -> uses maskable.masked()
 
-        AuditRecordService service = new AuditRecordService(repository, resolver, mapper, null, "audit.events.v1", "", null, false, "", "kid1", maskingProperties, realMaskingService);
+        AuditRecordService service = new AuditRecordService(repository, resolver, mapper, null,
+                "audit.events.v1", "", null,
+                false, "", "kid1", maskingProperties, realMaskingService, null);
 
         AuditEvent event = AuditEvent.builder().eventId(UUID.randomUUID()).eventTime(Instant.now()).eventType("TYPE").action("ACT")
                 .beforeSummary("1234567890").build();
@@ -105,7 +107,9 @@ class AuditRecordServiceHashTest {
     @Test
     void applyMaskReturnsRawWhenMaskingDisabled() {
         given(resolver.resolve(any(), any())).willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).maskingEnabled(false).build()));
-        AuditRecordService service = new AuditRecordService(repository, resolver, mapper, null, "audit.events.v1", "", null, false, "", "kid1", maskingProperties, null);
+        AuditRecordService service = new AuditRecordService(repository, resolver, mapper, null,
+                "audit.events.v1", "", null,
+                false, "", "kid1", maskingProperties, null, null);
 
         AuditEvent event = AuditEvent.builder().eventId(UUID.randomUUID()).eventTime(Instant.now()).eventType("TYPE").action("ACT")
                 .beforeSummary("raw-data").build();
@@ -121,7 +125,7 @@ class AuditRecordServiceHashTest {
         given(resolver.resolve(any(), any())).willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
         AuditRecordService serviceRaw = new AuditRecordService(repository, resolver, mapper, null,
                 "topic", "", null,
-                false, "", "kid", maskingProperties, rawService);
+                false, "", "kid", maskingProperties, rawService, null);
         AuditEvent event = AuditEvent.builder().eventId(UUID.randomUUID()).eventTime(Instant.now()).eventType("TYPE").action("ACT")
                 .beforeSummary("SENSITIVE").build();
         serviceRaw.record(event, AuditMode.ASYNC_FALLBACK, MaskingTarget.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).maskRule("FULL").build());
@@ -130,7 +134,7 @@ class AuditRecordServiceHashTest {
         MaskingService maskService = new MaskingService(target -> true);
         AuditRecordService serviceMask = new AuditRecordService(repository, resolver, mapper, null,
                 "topic", "", null,
-                false, "", "kid", maskingProperties, maskService);
+                false, "", "kid", maskingProperties, maskService, null);
         serviceMask.record(event, AuditMode.ASYNC_FALLBACK, MaskingTarget.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).maskRule("FULL").build());
     }
 }
