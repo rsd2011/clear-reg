@@ -90,6 +90,21 @@ class DwOrganizationQueryServiceTest {
     }
 
     @Test
+    @DisplayName("readModel 포트 미주입 + CUSTOM 전략 빈 페이지여도 그대로 반환한다")
+    void customScopeWithoutReadModel() {
+        PageRequest pageable = PageRequest.of(0, 5);
+        Page<DwOrganizationNode> customPage = new PageImpl<>(List.of(), pageable, 0);
+        given(organizationRowScopeStrategy.apply(pageable, "ORG-Y")).willReturn(customPage);
+
+        DwOrganizationQueryService noReadModel =
+                new DwOrganizationQueryService(treeService, organizationRowScopeStrategy, null, auditPort);
+
+        Page<DwOrganizationNode> result = noReadModel.getOrganizations(pageable, RowScope.CUSTOM, "ORG-Y");
+
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
     void givenOrgScope_whenQuery_thenIncludeDescendants() {
         PageRequest pageable = PageRequest.of(0, 5);
         OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(

@@ -30,7 +30,8 @@ public class ExportExecutionHelper {
                             MaskingTarget target,
                             String maskRule,
                             String maskParams) {
-        return exportService.export(command, () -> buildCsv(rows, target, maskRule, maskParams));
+        String effectiveRule = maskRule != null ? maskRule : "PARTIAL";
+        return exportService.export(command, () -> buildCsv(rows, target, effectiveRule, maskParams));
     }
 
     public byte[] exportJson(ExportCommand command,
@@ -38,7 +39,8 @@ public class ExportExecutionHelper {
                              MaskingTarget target,
                              String maskRule,
                              String maskParams) {
-        return exportService.export(command, () -> buildJson(rows, target, maskRule, maskParams));
+        String effectiveRule = maskRule != null ? maskRule : "PARTIAL";
+        return exportService.export(command, () -> buildJson(rows, target, effectiveRule, maskParams));
     }
 
     private byte[] buildCsv(List<Map<String, Object>> rows,
