@@ -212,7 +212,9 @@ audit:
   - [x] data-integration 내 export 엔드포인트/잡에 `ExportService` 주입해 호출부 래핑 (server `ExportController` 샘플 엔드포인트 적용)  
   - [x] export 결과 직렬화 단계에서 `OutputMaskingAdapter` 적용(Excel/CSV/PDF/JSON 공통) → `ExportMaskingHelper`, `ExcelMaskingAdapter`, `PdfMaskingAdapter` 추가  
   - [x] ExportCommand에 reason/legalBasis 전달 · Audit 메타 기록 · API 파라미터 검증(사유/법적근거) 연결  
-  - [ ] export 실패 경로에서도 AuditMode=STRICT/ASYNC_FALLBACK 정책에 맞게 결과 코드/에러를 기록하고 DLQ 재처리 여부 점검.  
+  - [x] export 실패 경로에서도 AuditMode=STRICT/ASYNC_FALLBACK 정책에 맞게 결과 코드/에러를 기록하고 DLQ 재처리 여부 점검.  
+    - ExportFailureEvent/Notifier 추가로 실패 메타(파일명/건수/결과코드) 기록 및 알림 훅 제공(현재 NOOP → 알림 시스템 연동 시 구현).  
+    - AuditEvent.resultCode에 예외 클래스명 저장, AuditMode 전달(STRICT/ASYNC_FALLBACK) 유지.  
 - [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
 - [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트 — `dw_*_log` 레거시 테이블 삭제 계획 수립, 마이그레이션 스크립트 작성 필요
 
