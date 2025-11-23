@@ -6,7 +6,7 @@ dependencies {
     implementation platform(libs.spring.boot.bom)
     testImplementation platform(libs.spring.boot.bom)
 
-    implementation project(':backend:dw-integration')
+    implementation project(':backend:data-integration')
     implementation project(':backend:platform')
     implementation project(':backend:auth')
 
@@ -27,5 +27,6 @@ dependencies {
     testImplementation libs.junit.platform.launcher
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
+    testImplementation project(':backend:audit')
     testRuntimeOnly libs.h2.database
 }

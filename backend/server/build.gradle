@@ -10,7 +10,7 @@ dependencies {
     implementation project(':backend:auth')
     implementation project(':backend:audit')
     implementation project(':backend:draft')
-    implementation project(':backend:dw-integration')
+    implementation project(':backend:data-integration')
     implementation project(':backend:dw-gateway-client')
     implementation project(':backend:file-core')
     implementation project(':backend:policy')

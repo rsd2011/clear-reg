@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.example.audit.AuditPort;
 import com.example.dw.domain.DwIngestionOutbox;
 import com.example.dw.domain.DwIngestionOutboxRepository;
 
@@ -20,7 +21,8 @@ class DwIngestionOutboxServiceMarkCompletedTest {
 
     DwIngestionOutboxRepository repository = Mockito.mock(DwIngestionOutboxRepository.class);
     Clock clock = Clock.fixed(OffsetDateTime.now().toInstant(), ZoneOffset.UTC);
-    DwIngestionOutboxService service = new DwIngestionOutboxService(repository, clock);
+    AuditPort auditPort = Mockito.mock(AuditPort.class);
+    DwIngestionOutboxService service = new DwIngestionOutboxService(repository, clock, auditPort);
 
     @Test
     @DisplayName("markCompleted는 상태를 SENT로 변경한다")
