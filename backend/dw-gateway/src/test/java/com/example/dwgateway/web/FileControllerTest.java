@@ -31,6 +31,7 @@ import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.file.port.FileManagementPort;
 import com.example.file.FileUploadCommand;
+import com.example.audit.AuditPort;
 
 @org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc(addFilters = false)
 @WebMvcTest(FileController.class)
@@ -44,6 +45,9 @@ class FileControllerTest {
 
     @MockBean
     com.example.auth.permission.RequirePermissionAspect requirePermissionAspect;
+
+    @MockBean
+    AuditPort auditPort;
 
 
     private static FileMetadataDto sampleMeta() {

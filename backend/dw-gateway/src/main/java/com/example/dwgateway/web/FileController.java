@@ -20,6 +20,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.example.audit.Actor;
+import com.example.audit.ActorType;
+import com.example.audit.AuditEvent;
+import com.example.audit.AuditMode;
+import com.example.audit.AuditPort;
+import com.example.audit.RiskLevel;
+import com.example.audit.Subject;
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
 import com.example.auth.permission.RequirePermission;
@@ -39,9 +46,12 @@ import jakarta.validation.Valid;
 public class FileController {
 
     private final FileManagementPort fileManagementPort;
+    private final AuditPort auditPort;
 
-    public FileController(FileManagementPort fileManagementPort) {
+    public FileController(FileManagementPort fileManagementPort,
+                          AuditPort auditPort) {
         this.fileManagementPort = fileManagementPort;
+        this.auditPort = auditPort;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -85,6 +95,7 @@ public class FileController {
     public ResponseEntity<Resource> download(@PathVariable UUID id) {
         FileDownload download = fileManagementPort.download(id, currentUsername());
         String filename = URLEncoder.encode(download.metadata().originalName(), StandardCharsets.UTF_8);
+        auditDownload(id, download);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
                 .contentType(MediaType.parseMediaType(
@@ -98,6 +109,28 @@ public class FileController {
     @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.DELETE)
     public FileMetadataDto delete(@PathVariable UUID id) {
         return fileManagementPort.delete(id, currentUsername());
+    }
+
+    private void auditDownload(UUID id, FileDownload download) {
+        String actorId = currentUsername();
+        ActorType actorType = "system".equalsIgnoreCase(actorId) ? ActorType.SYSTEM : ActorType.HUMAN;
+        AuditEvent event = AuditEvent.builder()
+                .eventType("FILE")
+                .moduleName("dw-gateway")
+                .action("DOWNLOAD")
+                .actor(Actor.builder().id(actorId).type(actorType).build())
+                .subject(Subject.builder().type("FILE").key(id.toString()).build())
+                .success(true)
+                .resultCode("OK")
+                .riskLevel(RiskLevel.MEDIUM)
+                .extraEntry("contentType", download.metadata().contentType())
+                .extraEntry("size", download.metadata().size())
+                .build();
+        try {
+            auditPort.record(event, AuditMode.ASYNC_FALLBACK);
+        } catch (Exception ignored) {
+            // 감사 실패가 다운로드를 막지 않음
+        }
     }
 
     private String currentUsername() {
