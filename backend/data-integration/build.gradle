@@ -13,6 +13,8 @@ dependencies {
     implementation libs.spring.boot.starter.validation
     implementation libs.jackson.dataformat.yaml
     implementation libs.jackson.datatype.jsr310
+    implementation libs.poi.ooxml
+    implementation libs.pdfbox
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

@@ -50,7 +50,8 @@ public class ExportExecutionHelper {
         }
         var headers = rows.getFirst().keySet().stream().toList();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(String.join(",", headers).getBytes(StandardCharsets.UTF_8), 0, String.join(",", headers).length());
+        String headerLine = String.join(",", headers);
+        out.write(headerLine.getBytes(StandardCharsets.UTF_8), 0, headerLine.length());
         out.write('\n');
         for (Map<String, Object> row : rows) {
             Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskRule, maskParams);
