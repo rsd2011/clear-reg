@@ -74,8 +74,21 @@ class PolicyAdminControllerTest {
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
                 true, "0 0 4 1 * *", "yaml");
-        PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"), null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null);
+        PolicyUpdateRequest request = new PolicyUpdateRequest(
+                false, null, null, List.of("SSO"),
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         given(policyAdminPort.updateToggles(request)).willReturn(view);
 
         mockMvc.perform(put("/api/admin/policies/toggles")

@@ -42,9 +42,21 @@ class PolicyAdminPortAdapterTest {
     @Test
     @DisplayName("토글 업데이트를 서비스에 위임한다")
     void updateTogglesDelegates() {
-        PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"),
-                null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null);
+        PolicyUpdateRequest request = new PolicyUpdateRequest(
+                false, null, null, List.of("SSO"),
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
         PolicyView current = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),

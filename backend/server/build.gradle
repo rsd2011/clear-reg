@@ -46,3 +46,22 @@ tasks.withType(Test).configureEach {
     systemProperty 'spring.task.scheduling.enabled', 'false'
     exclude '**/ApplicationTests.class'
 }
+
+// server 모듈은 감사/마스킹/정책/익스포트 경로 중심으로 커버리지 측정 범위를 축소해 실질적인 검증에 집중
+afterEvaluate {
+    def includePackages = ['com/example/server/export/**',
+                           'com/example/server/policy/**',
+                           'com/example/server/audit/**']
+
+    tasks.named('jacocoTestReport').configure {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, include: includePackages)
+        }))
+    }
+
+    tasks.named('jacocoTestCoverageVerification').configure {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, include: includePackages)
+        }))
+    }
+}

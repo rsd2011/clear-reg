@@ -35,12 +35,14 @@ class PolicyAdminPortAdapterBranchTest {
                 true, true, true, 30, true, "MEDIUM", true,
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *",
                 "before");
         PolicyView after = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
                 true, true, true, 30, true, "MEDIUM", true,
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *",
                 "after");
         Mockito.when(service.currentView()).thenReturn(view);
         Mockito.when(service.updateView(Mockito.any())).thenReturn(after);
@@ -48,7 +50,7 @@ class PolicyAdminPortAdapterBranchTest {
         PolicyAdminPortAdapter adapter = new PolicyAdminPortAdapter(service, auditPort);
         adapter.updateToggles(new PolicyUpdateRequest(null, null, null, null, null,
                 null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null));
+                null, null, null, null, null, null, null, null, null, null, null, null));
 
         verify(auditPort).record(Mockito.any(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
@@ -63,12 +65,14 @@ class PolicyAdminPortAdapterBranchTest {
                 true, true, true, 30, true, "MEDIUM", true,
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *",
                 "before");
         PolicyView after = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
                 true, true, true, 30, true, "MEDIUM", true,
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *",
                 "after");
         Mockito.when(service.currentView()).thenReturn(view);
         Mockito.when(service.applyYamlView(Mockito.anyString())).thenReturn(after);
