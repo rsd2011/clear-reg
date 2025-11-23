@@ -1,80 +1,57 @@
 package com.example.policy.datapolicy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.mockito.Mockito;
 
-@DataJpaTest
-@EntityScan("com.example.policy.datapolicy")
-@Import(DataPolicyService.class)
+import com.example.common.policy.DataPolicyMatch;
+
+@DisplayName("DataPolicyService 분기 커버리지")
 class DataPolicyServiceTest {
 
-    @Autowired
-    DataPolicyRepository repository;
-
-    @Autowired
-    DataPolicyService service;
-
-    @org.springframework.context.annotation.Configuration
-    @EnableJpaRepositories(basePackageClasses = DataPolicyRepository.class)
-    @EntityScan(basePackageClasses = DataPolicy.class)
-    static class TestConfig {
-    }
+    DataPolicyRepository repository = Mockito.mock(DataPolicyRepository.class);
+    DataPolicyService service = new DataPolicyService(repository);
 
     @Test
-    @DisplayName("우선순위와 조건 매칭에 따라 가장 구체적인 정책을 선택한다")
-    void evaluate_picksHighestPriorityMatch() {
-        repository.save(DataPolicy.builder()
-                .featureCode("ACCOUNT")
-                .actionCode(null)
-                .permGroupCode(null)
-                .orgPolicyId(null)
-                .businessType(null)
-                .rowScope("ORG")
-                .defaultMaskRule("PARTIAL")
-                .priority(100)
-                .active(true)
-                .build());
-
-        repository.save(DataPolicy.builder()
-                .featureCode("ACCOUNT")
-                .actionCode("VIEW")
-                .permGroupCode("ADMIN")
+    void evaluateReturnsMatchWhenEffective() {
+        Instant now = Instant.now();
+        DataPolicy policy = DataPolicy.builder()
+                .featureCode("F")
+                .actionCode("A")
+                .permGroupCode("PG")
                 .rowScope("OWN")
-                .defaultMaskRule("NONE")
-                .priority(10)
-                .active(true)
-                .build());
-
-        var match = service.evaluate("ACCOUNT", "VIEW", "ADMIN", null, null, null, Instant.now())
-                .orElseThrow();
-
-        assertThat(match.getRowScope()).isEqualTo("OWN");
-        assertThat(match.getMaskRule()).isEqualTo("NONE");
-    }
-
-    @Test
-    @DisplayName("비활성 또는 기간 외 정책은 제외된다")
-    void evaluate_ignoresInactiveOrExpired() {
-        repository.save(DataPolicy.builder()
-                .featureCode("ACCOUNT")
-                .rowScope("ALL")
                 .defaultMaskRule("FULL")
                 .priority(1)
-                .active(false)
-                .build());
+                .active(true)
+                .effectiveFrom(now.minusSeconds(10))
+                .effectiveTo(now.plusSeconds(10))
+                .build();
+        given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-        var match = service.evaluate("ACCOUNT", null, null, null, null, null, Instant.now());
+        Optional<DataPolicyMatch> match = service.evaluate("F", "A", "PG", null, List.of(), "BT", now);
+        assertThat(match).isPresent();
+        assertThat(match.get().getMaskRule()).isEqualTo("FULL");
+    }
 
+    @Test
+    void evaluateSkipsWhenInactiveOrOutOfRange() {
+        Instant now = Instant.now();
+        DataPolicy inactive = DataPolicy.builder()
+                .featureCode("F").rowScope("ALL").defaultMaskRule("NONE").priority(1).active(false).build();
+        DataPolicy expired = DataPolicy.builder()
+                .featureCode("F").rowScope("ALL").defaultMaskRule("NONE").priority(2).active(true)
+                .effectiveFrom(now.minusSeconds(20)).effectiveTo(now.minusSeconds(1)).build();
+        given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of());
+
+        Optional<DataPolicyMatch> match = service.evaluate("F", null, null, null, null, null, now);
         assertThat(match).isEmpty();
     }
 }

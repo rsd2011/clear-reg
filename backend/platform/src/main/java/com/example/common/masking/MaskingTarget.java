@@ -17,4 +17,6 @@ public class MaskingTarget {
     java.util.Set<String> forceUnmaskFields; // 특정 필드명(row의 컬럼/속성)만 해제
     java.util.Set<String> requesterRoles; // 해제 요청자 역할/직무
     String rowId; // 특정 row 기준 해제(옵션)
+    String maskRule; // NONE | PARTIAL | FULL | HASH | TOKENIZE 등
+    String maskParams; // JSON or 문자열 파라미터
 }
