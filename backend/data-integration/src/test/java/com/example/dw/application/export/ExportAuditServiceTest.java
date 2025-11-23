@@ -23,7 +23,7 @@ class ExportAuditServiceTest {
     @Test
     @DisplayName("export 감사 이벤트를 기록한다")
     void recordExportAudit() {
-        service.auditExport("excel", 123L, "RSN01", "다운로드 사유", "PIPA", true, Map.of("fileName", "customers.xlsx"));
+        service.auditExport("excel", 123L, "RSN01", "다운로드 사유", "PIPA", "OK", true, AuditMode.ASYNC_FALLBACK, Map.of("fileName", "customers.xlsx"));
 
         ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
@@ -35,5 +35,6 @@ class ExportAuditServiceTest {
         assertThat(event.getReasonCode()).isEqualTo("RSN01");
         assertThat(event.getReasonText()).isEqualTo("다운로드 사유");
         assertThat(event.getLegalBasisCode()).isEqualTo("PIPA");
+        assertThat(event.getResultCode()).isEqualTo("OK");
     }
 }

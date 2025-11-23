@@ -32,7 +32,9 @@ public class ExportAuditService {
                             String reasonCode,
                             String reasonText,
                             String legalBasisCode,
+                            String resultCode,
                             boolean success,
+                            com.example.audit.AuditMode mode,
                             Map<String, Object> extra) {
         AuditEvent.AuditEventBuilder builder = AuditEvent.builder()
                 .eventType("EXPORT")
@@ -41,7 +43,7 @@ public class ExportAuditService {
                 .actor(Actor.builder().id("dw-export").type(ActorType.SYSTEM).build())
                 .subject(Subject.builder().type("EXPORT").key(UUID.randomUUID().toString()).build())
                 .success(success)
-                .resultCode(success ? "OK" : "FAIL")
+                .resultCode(resultCode == null ? (success ? "OK" : "FAIL") : resultCode)
                 .riskLevel(RiskLevel.HIGH)
                 .extraEntry("recordCount", recordCount);
 
@@ -62,7 +64,7 @@ public class ExportAuditService {
             extra.forEach(builder::extraEntry);
         }
         try {
-            auditPort.record(builder.build(), AuditMode.ASYNC_FALLBACK);
+            auditPort.record(builder.build(), mode == null ? AuditMode.ASYNC_FALLBACK : mode);
         } catch (Exception e) {
             log.warn("Export audit logging skipped: {}", e.getMessage());
         }

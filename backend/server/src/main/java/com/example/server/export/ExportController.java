@@ -30,7 +30,10 @@ public class ExportController {
     private final ExportService exportService;
 
     @GetMapping("/api/exports/sample")
-    public ResponseEntity<byte[]> sampleCsv(@RequestParam("accountNumber") String accountNumber) {
+    public ResponseEntity<byte[]> sampleCsv(@RequestParam("accountNumber") String accountNumber,
+                                            @RequestParam("reasonCode") String reasonCode,
+                                            @RequestParam(value = "reasonText", required = false) String reasonText,
+                                            @RequestParam(value = "legalBasisCode", required = false) String legalBasisCode) {
         MaskingTarget target = MaskingContextHolder.get();
         String masked = OutputMaskingAdapter.mask("accountNumber", accountNumber, target, "PARTIAL", "{\"keepEnd\":4}");
 
@@ -39,9 +42,10 @@ public class ExportController {
                 "sample.csv",
                 1,
                 Map.of("source", "sample-api"),
-                "RSN_SAMPLE",
-                "샘플 다운로드",
-                "PIPA");
+                reasonCode,
+                reasonText,
+                legalBasisCode,
+                com.example.audit.AuditMode.ASYNC_FALLBACK);
 
         byte[] body = exportService.export(command, () ->
                 ("accountNumber\n" + masked + "\n").getBytes(StandardCharsets.UTF_8));

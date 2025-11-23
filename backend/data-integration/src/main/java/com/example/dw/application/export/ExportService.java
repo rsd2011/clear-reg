@@ -23,6 +23,7 @@ public class ExportService {
      * @return exporter가 반환한 결과
      */
     public <T> T export(ExportCommand command, Supplier<T> exporter) {
+        var mode = command.auditMode() == null ? com.example.audit.AuditMode.ASYNC_FALLBACK : command.auditMode();
         try {
             T result = exporter.get();
             auditService.auditExport(command.exportType(),
@@ -30,7 +31,9 @@ public class ExportService {
                     command.reasonCode(),
                     command.reasonText(),
                     command.legalBasisCode(),
+                    "OK",
                     true,
+                    mode,
                     mergeMeta(command));
             return result;
         } catch (Exception ex) {
@@ -39,7 +42,9 @@ public class ExportService {
                     command.reasonCode(),
                     command.reasonText(),
                     command.legalBasisCode(),
+                    ex.getClass().getSimpleName(),
                     false,
+                    mode,
                     mergeMeta(command));
             throw ex;
         }

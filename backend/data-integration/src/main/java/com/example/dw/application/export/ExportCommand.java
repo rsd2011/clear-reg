@@ -12,6 +12,7 @@ public record ExportCommand(
         Map<String, Object> meta,   // 추가 메타데이터 (rowScope, orgCode 등)
         String reasonCode,          // 조회/다운로드 사유 코드
         String reasonText,          // 조회/다운로드 사유 텍스트
-        String legalBasisCode       // 법적 근거 코드
+        String legalBasisCode,      // 법적 근거 코드
+        com.example.audit.AuditMode auditMode // STRICT / ASYNC_FALLBACK (null이면 ASYNC_FALLBACK)
 ) {
 }

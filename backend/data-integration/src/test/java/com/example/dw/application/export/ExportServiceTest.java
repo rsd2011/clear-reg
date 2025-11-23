@@ -23,7 +23,7 @@ class ExportServiceTest {
     @Test
     @DisplayName("export 성공 시 AuditEvent를 남긴다")
     void exportSuccessAudits() {
-        ExportCommand cmd = new ExportCommand("csv", "users.csv", 10, Map.of("org", "001"), "RSN01", "고객요청", "PIPA");
+        ExportCommand cmd = new ExportCommand("csv", "users.csv", 10, Map.of("org", "001"), "RSN01", "고객요청", "PIPA", null);
 
         String result = exportService.export(cmd, () -> "ok");
 
@@ -40,14 +40,15 @@ class ExportServiceTest {
     @Test
     @DisplayName("export 실패도 AuditEvent로 남기고 예외를 재던진다")
     void exportFailureAuditsAndThrows() {
-        ExportCommand cmd = new ExportCommand("excel", "fail.xlsx", 0, Map.of(), null, null, null);
+        ExportCommand cmd = new ExportCommand("excel", "fail.xlsx", 0, Map.of(), null, null, null, AuditMode.STRICT);
 
         org.assertj.core.api.Assertions.assertThatThrownBy(
                 () -> exportService.export(cmd, () -> { throw new IllegalStateException("fail"); }))
                 .isInstanceOf(IllegalStateException.class);
 
         ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
+        verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.STRICT));
         assertThat(captor.getValue().isSuccess()).isFalse();
+        assertThat(captor.getValue().getResultCode()).isEqualTo("IllegalStateException");
     }
 }
