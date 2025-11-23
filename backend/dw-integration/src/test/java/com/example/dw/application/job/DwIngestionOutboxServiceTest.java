@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.atLeastOnce;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -26,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 
+import com.example.audit.AuditMode;
+import com.example.audit.AuditPort;
 import com.example.dw.domain.DwIngestionOutbox;
 import com.example.dw.domain.DwIngestionOutboxRepository;
 
@@ -34,15 +37,18 @@ class DwIngestionOutboxServiceTest {
 
     private static final Clock FIXED_CLOCK = Clock.fixed(Instant.parse("2024-01-01T00:00:00Z"), ZoneOffset.UTC);
 
-@Mock
-DwIngestionOutboxRepository repository;
+    @Mock
+    DwIngestionOutboxRepository repository;
 
-private DwIngestionOutboxService service;
+    @Mock
+    AuditPort auditPort;
 
-@org.junit.jupiter.api.BeforeEach
-void setUp() {
-    service = new DwIngestionOutboxService(repository, FIXED_CLOCK);
-}
+    private DwIngestionOutboxService service;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        service = new DwIngestionOutboxService(repository, FIXED_CLOCK, auditPort);
+    }
 
     @Test
     @DisplayName("아웃박스 잡을 큐에 넣을 때 페이로드가 있으면 함께 저장된다")
@@ -56,6 +62,7 @@ void setUp() {
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getJobType()).isEqualTo(job.type());
         assertThat(captor.getValue().getStatus()).isEqualTo(DwIngestionOutboxStatus.PENDING);
+        verify(auditPort).record(any(), org.mockito.Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
 
     @Test
@@ -72,6 +79,7 @@ void setUp() {
         assertThat(result).hasSize(1);
         assertThat(entry.getStatus()).isEqualTo(DwIngestionOutboxStatus.SENDING);
         assertThat(entry.getLockedBy()).isEqualTo("dw-outbox-relay");
+        verify(auditPort).record(any(), org.mockito.Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
 
     @Test
@@ -86,6 +94,7 @@ void setUp() {
         // Then
         verify(repository).save(entry);
         assertThat(entry.getStatus()).isEqualTo(DwIngestionOutboxStatus.SENT);
+        verify(auditPort, atLeastOnce()).record(any(), org.mockito.Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
 
     @Test
@@ -127,6 +136,7 @@ void setUp() {
         verify(repository).save(entry);
         assertThat(entry.getStatus()).isEqualTo(DwIngestionOutboxStatus.DEAD_LETTER);
         assertThat(entry.getLastError()).isEqualTo("fatal error");
+        verify(auditPort, atLeastOnce()).record(any(), org.mockito.Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
 
     @Test
@@ -152,6 +162,7 @@ void setUp() {
         verify(repository).save(entry);
         assertThat(entry.getStatus()).isEqualTo(DwIngestionOutboxStatus.FAILED);
         assertThat(entry.getLastError()).isEqualTo("error");
+        verify(auditPort, atLeastOnce()).record(any(), org.mockito.Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
 
     @Test

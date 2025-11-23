@@ -208,7 +208,7 @@ audit:
 ### 마이그레이션
 - [x] (P2) `auth` 로그인/비밀번호 변경/권한 감사 → AuditPort 전환(dual-write 레거시 제거)
 - [x] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거 (`HttpAuditAspect`, 필터 기반 dual-write 제거)
-- [~] (P2) `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 조회 AuditPort 전환 완료, 대량 처리/추가 배치 경로 전환 남음)**
+- [~] (P2) `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, 나머지 대량 처리 경로 전환 남음)**
 - [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
 - [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
 
