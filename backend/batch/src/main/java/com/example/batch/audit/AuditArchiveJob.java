@@ -7,6 +7,7 @@ import java.time.ZoneOffset;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +29,22 @@ public class AuditArchiveJob {
     @Value("${audit.archive.cron:0 30 3 2 * *}")
     private String cron;
 
+    @Value("${audit.archive.command:}")
+    private String archiveCommand;
+
+    @Value("${audit.archive.retry:3}")
+    private int retry;
+
     @Scheduled(cron = "${audit.archive.cron:0 30 3 2 * *}")
     public void archiveColdPartitions() {
         if (!enabled) {
             return;
         }
         LocalDate target = LocalDate.now(clock).minusMonths(7).withDayOfMonth(1);
-        log.info("[audit-archive] trigger archive for {} (cron={})", target, cron);
-        // TODO: invoke Object Lock/Glacier script or Spring Batch job with partition key
+        log.info("[audit-archive] trigger archive for {} (cron={}, cmd={}, retry={})", target, cron, archiveCommand, retry);
+        if (!StringUtils.hasText(archiveCommand)) {
+            return; // noop if command not provided
+        }
+        // TODO: invoke external script with target and retry (e.g., ProcessBuilder + exit code handling + Slack alert)
     }
 }

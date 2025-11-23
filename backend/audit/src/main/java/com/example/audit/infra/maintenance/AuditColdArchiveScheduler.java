@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -54,5 +55,14 @@ public class AuditColdArchiveScheduler {
         log.info("[audit-archive] prepare move to COLD for partition month {} (hotWindow={}, command={})",
                 coldTarget, hotWindow, archiveCommand.isBlank() ? "(noop)" : archiveCommand);
         // TODO: archiveCommand 연동(프로세스 실행 또는 배치 런처) + 실패 시 알림/리트라이
+    }
+
+    /** 정책 변경 시 즉시 설정 반영을 위한 훅 (정책 이벤트가 출판될 경우) */
+    @EventListener(condition = "#event.code == 'security.policy'")
+    public void onPolicyChanged(Object event) {
+        if (!enabled) {
+            return;
+        }
+        log.info("[audit-archive] policy changed, next archive target will refresh on next cron");
     }
 }
