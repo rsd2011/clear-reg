@@ -43,7 +43,8 @@ class PolicyAdminPortAdapterBranchTest {
 
         PolicyAdminPortAdapter adapter = new PolicyAdminPortAdapter(service, auditPort);
         adapter.updateToggles(new PolicyUpdateRequest(null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null));
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, null));
 
         verify(auditPort).record(Mockito.any(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
