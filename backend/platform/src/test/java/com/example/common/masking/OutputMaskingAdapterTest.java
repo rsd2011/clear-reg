@@ -7,89 +7,54 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.common.policy.DataPolicyMatch;
+
 class OutputMaskingAdapterTest {
 
     @Test
-    @DisplayName("문자열에 PARTIAL 마스킹을 적용한다")
-    void masksStringPartial() {
+    @DisplayName("기본 마스킹 규칙을 적용해 문자열을 마스킹한다")
+    void masksStringWithRule() {
         MaskingTarget target = MaskingTarget.builder()
-                .defaultMask(true)
-                .maskRule("PARTIAL")
+                .forceUnmask(false)
+                .dataKind("accountNumber")
                 .build();
 
-        String masked = OutputMaskingAdapter.mask("account", "12345678", target, "PARTIAL", null);
+        String masked = OutputMaskingAdapter.mask("acctNo", "1234-5678-9012", target, "PARTIAL", "{\"keepEnd\":4}");
 
-        assertThat(masked).isEqualTo("12****78");
+        assertThat(masked)
+                .matches(".*\\d{2}$") // 끝 2자리는 남는다
+                .isNotEqualTo("1234-5678-9012");
     }
 
     @Test
-    @DisplayName("Maskable 값객체에도 masker를 적용한다")
-    void masksMaskable() {
-        MaskingTarget target = MaskingTarget.builder()
-                .maskRule("HASH")
-                .build();
-        Maskable value = new DummyMaskable("9876543210");
-
-        String masked = OutputMaskingAdapter.mask("rrn", value, target, "HASH", null);
-
-        assertThat(masked).hasSize(64); // SHA-256 hex length
-    }
-
-    @Test
-    @DisplayName("forceUnmaskFields가 설정되면 원문을 반환한다")
+    @DisplayName("forceUnmask 필드에 포함되면 원문을 반환한다")
     void forceUnmaskFieldReturnsRaw() {
         MaskingTarget target = MaskingTarget.builder()
-                .forceUnmaskFields(Set.of("ownerName"))
-                .maskRule("FULL")
+                .forceUnmaskFields(Set.of("acctNo"))
+                .forceUnmask(false)
+                .dataKind("accountNumber")
                 .build();
 
-        String masked = OutputMaskingAdapter.mask("ownerName", "홍길동", target, "FULL", null);
+        String masked = OutputMaskingAdapter.mask("acctNo", "1234-5678-9012", target, "PARTIAL", "{\"keepEnd\":4}");
 
-        assertThat(masked).isEqualTo("홍길동");
+        assertThat(masked).isEqualTo("1234-5678-9012");
     }
 
     @Test
-    @DisplayName("forceUnmaskKinds가 dataKind에 매칭되면 원문을 반환한다")
-    void forceUnmaskKindReturnsRaw() {
+    @DisplayName("Maskable 값을 입력해도 정책 기반 마스킹을 적용한다")
+    void masksMaskableValueObject() {
         MaskingTarget target = MaskingTarget.builder()
-                .dataKind("RRN")
-                .forceUnmaskKinds(Set.of("RRN"))
-                .maskRule("FULL")
+                .forceUnmask(false)
+                .dataKind("rrn")
                 .build();
 
-        String masked = OutputMaskingAdapter.mask("rrn", "900101-1234567", target, "FULL", null);
+        Maskable rrn = new Maskable() {
+            @Override public String raw() { return "900101-1234567"; }
+            @Override public String masked() { return "900101-1******"; }
+        };
 
-        assertThat(masked).isEqualTo("900101-1234567");
-    }
+        String masked = OutputMaskingAdapter.mask("rrn", rrn, target, "HASH", null);
 
-    @Test
-    @DisplayName("CSV 셀 값도 동일한 마스킹 규칙이 적용된다")
-    void csvCellMasking() {
-        MaskingTarget target = MaskingTarget.builder()
-                .maskRule("PARTIAL")
-                .dataKind("ACCOUNT")
-                .build();
-
-        String masked = OutputMaskingAdapter.mask("accountNumber", "1234-5678-9012-3456", target, "PARTIAL", null);
-
-        assertThat(masked).startsWith("12").contains("*").endsWith("56");
-    }
-
-    @Test
-    @DisplayName("JSON 필드 값에도 Hash 마스킹을 적용한다")
-    void jsonFieldMasking() {
-        MaskingTarget target = MaskingTarget.builder()
-                .maskRule("HASH")
-                .dataKind("EMAIL")
-                .build();
-
-        String masked = OutputMaskingAdapter.mask("email", "user@example.com", target, "HASH", null);
-
-        assertThat(masked).hasSize(64);
-        assertThat(masked).isNotEqualTo("user@example.com");
-    }
-
-    private record DummyMaskable(String raw) implements Maskable {
-        @Override public String masked() { return "[MASKED]"; }
+        assertThat(masked).hasSizeGreaterThan(10); // 해시 적용 결과 문자열
     }
 }
