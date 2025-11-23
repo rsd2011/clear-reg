@@ -17,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.audit.AuditPort;
 import com.example.dw.domain.DwIngestionOutbox;
 import com.example.dw.domain.DwIngestionOutboxRepository;
 
@@ -27,11 +28,13 @@ class DwIngestionOutboxServiceRetryTest {
 
     @Mock
     DwIngestionOutboxRepository repository;
+    @Mock
+    AuditPort auditPort;
 
     @Test
     @DisplayName("재시도 한계를 넘기지 않으면 PENDING으로 되돌린다")
     void scheduleRetryKeepsPendingWhenUnderLimit() {
-        DwIngestionOutboxService service = new DwIngestionOutboxService(repository, FIXED_CLOCK);
+        DwIngestionOutboxService service = new DwIngestionOutboxService(repository, FIXED_CLOCK, auditPort);
         UUID id = UUID.randomUUID();
         DwIngestionOutbox entry = DwIngestionOutbox.pending(DwIngestionJobType.FETCH_NEXT, FIXED_CLOCK);
         when(repository.findById(id)).thenReturn(Optional.of(entry));
@@ -45,7 +48,7 @@ class DwIngestionOutboxServiceRetryTest {
     @Test
     @DisplayName("재시도 한계를 초과하면 DeadLetter로 전환하며 오류 메시지를 보존한다")
     void scheduleRetryMovesToDeadLetterAtLimit() {
-        DwIngestionOutboxService service = new DwIngestionOutboxService(repository, FIXED_CLOCK);
+        DwIngestionOutboxService service = new DwIngestionOutboxService(repository, FIXED_CLOCK, auditPort);
         UUID id = UUID.randomUUID();
         DwIngestionOutbox entry = DwIngestionOutbox.pending(DwIngestionJobType.FETCH_NEXT, FIXED_CLOCK);
         entry.markRetry(FIXED_CLOCK, Duration.ZERO, "1");
