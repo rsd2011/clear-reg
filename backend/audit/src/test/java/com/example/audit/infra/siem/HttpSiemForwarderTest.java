@@ -32,11 +32,15 @@ class HttpSiemForwarderTest {
         props.setEnabled(true);
         props.setEndpoint("https://siem.example.com/audit");
         props.setApiKey("token");
+        props.setWhitelist(java.util.List.of("eventType", "actor.id"));
+        props.setHmacSecret("secret");
+        props.setRetry(2);
         HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
         RestTemplate restTemplate = Mockito.mock(RestTemplate.class);
         forwarder.setRestTemplate(restTemplate);
         var entityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
         Mockito.when(restTemplate.postForEntity(Mockito.anyString(), any(HttpEntity.class), eq(Void.class)))
+                .thenThrow(new RuntimeException("net"))
                 .thenReturn(ResponseEntity.ok().build());
 
         AuditEvent event = AuditEvent.builder()
@@ -50,9 +54,10 @@ class HttpSiemForwarderTest {
 
         forwarder.forward(event);
 
-        verify(restTemplate).postForEntity(Mockito.anyString(), entityCaptor.capture(), eq(Void.class));
+        verify(restTemplate, Mockito.times(2)).postForEntity(Mockito.anyString(), entityCaptor.capture(), eq(Void.class));
         HttpHeaders headers = entityCaptor.getValue().getHeaders();
         assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isEqualTo("Bearer token");
+        assertThat(headers.getFirst("X-SIEM-SIGNATURE")).isNotBlank();
     }
 
     @Test

@@ -326,11 +326,11 @@ audit:
   4) Writer: 각 필드/셀/텍스트에 `masker.apply(...)` 또는 `MaskingService.render(...)`
   5) 감사: `AuditEvent(DOWNLOAD_<FORMAT>)` 기록(파일명·행수·reason/legalBasis·rowScope/maskRule 포함)
 - 체크리스트
-  - [ ] 포맷별 Writer에 공통 헬퍼 삽입
-  - [ ] forceUnmask 역할·사유 검증
-  - [ ] 대량/스트리밍 성능 검증(SXSSF 등)
-  - [ ] 다운로드/내보내기 AuditEvent 기록
-  - [ ] e2e 스모크: 마스킹 적용 여부 확인(Playwright 등)
+- [ ] 포맷별 Writer에 공통 헬퍼 삽입
+- [ ] forceUnmask 역할·사유 검증
+- [ ] 대량/스트리밍 성능 검증(SXSSF 등)
+- [ ] 다운로드/내보내기 AuditEvent 기록
+- [ ] e2e 스모크: 마스킹 적용 여부 확인(Playwright 등)
   - **사용자 요청 기반 마스킹 정책**: 화면/사용자 입력으로 선택된 마스킹 해제·강도 설정도 문서 다운로드(Excel/PDF/Word/XML/CSV 등) 시 동일하게 적용. UI에서 선택된 정책값을 요청 컨텍스트에 태우고, Writer 단계에서 `MaskingTarget.forceUnmaskFields/kinds` 반영.
   - **모든 마스킹 정책 일관 적용**: 서비스/DTO 레이어에서 적용한 마스킹 규칙(민감필드, maskRule, maskParams)과 forceUnmask 여부를 문서 변환(모든 포맷)에도 동일하게 전달·적용해 서버/문서 출력 간 정책 불일치가 없도록 한다.
 

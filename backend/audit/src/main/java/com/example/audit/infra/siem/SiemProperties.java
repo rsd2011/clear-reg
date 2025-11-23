@@ -25,4 +25,19 @@ public class SiemProperties {
      * 연결/전송 타임아웃 ms.
      */
     private int timeoutMs = 3000;
+
+    /**
+     * HMAC 서명용 비밀(선택).
+     */
+    private String hmacSecret;
+
+    /**
+     * 전송 필드 화이트리스트(없으면 전체 전송).
+     */
+    private java.util.List<String> whitelist = java.util.List.of();
+
+    /**
+     * 실패 재시도 횟수.
+     */
+    private int retry = 1;
 }
