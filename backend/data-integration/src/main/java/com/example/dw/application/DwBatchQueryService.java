@@ -48,7 +48,7 @@ public class DwBatchQueryService {
 
         AuditEvent event = AuditEvent.builder()
                 .eventType("DW_BATCH")
-                .moduleName("dw-integration")
+                .moduleName("data-integration")
                 .action(action)
                 .actor(actor)
                 .subject(Subject.builder().type("DW_BATCH").key(subjectKey).build())

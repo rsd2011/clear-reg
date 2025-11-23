@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.audit.AuditPort;
 import com.example.dw.domain.HrEmployeeEntity;
 import com.example.dw.infrastructure.persistence.HrEmployeeRepository;
 
@@ -24,12 +25,14 @@ class DwEmployeeDirectoryServiceTest {
 
     @Mock
     private HrEmployeeRepository employeeRepository;
+    @Mock
+    private AuditPort auditPort;
 
     private DwEmployeeDirectoryService service;
 
     @BeforeEach
     void setUp() {
-        service = new DwEmployeeDirectoryService(employeeRepository);
+        service = new DwEmployeeDirectoryService(employeeRepository, auditPort);
     }
 
     @Test
