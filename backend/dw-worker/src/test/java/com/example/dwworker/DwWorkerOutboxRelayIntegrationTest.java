@@ -15,6 +15,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
+import com.example.audit.AuditPort;
 import com.example.batch.ingestion.DwIngestionService;
 import com.example.batch.ingestion.queue.DwIngestionOutboxRelay;
 import com.example.dw.application.job.DwIngestionJob;
@@ -42,6 +43,9 @@ class DwWorkerOutboxRelayIntegrationTest {
 
     @MockBean
     private DwIngestionService ingestionService;
+
+    @MockBean
+    private AuditPort auditPort;
 
     private final DwIngestionOutboxService outboxService;
     private final DwIngestionOutboxRelay relay;

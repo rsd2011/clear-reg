@@ -22,6 +22,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
+import com.example.audit.AuditPort;
 import com.example.batch.ingestion.DwIngestionService;
 import com.example.batch.ingestion.queue.DwIngestionOutboxRelay;
 import com.example.dw.application.job.DwIngestionJob;
@@ -54,6 +55,9 @@ class DwOutboxConcurrencyIntegrationTest {
 
     @MockBean
     private DwIngestionService ingestionService;
+
+    @MockBean
+    private AuditPort auditPort;
 
     @Autowired
     private DwIngestionOutboxService outboxService;

@@ -27,5 +27,6 @@ dependencies {
     testImplementation libs.junit.platform.launcher
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
+    testImplementation project(':backend:audit')
     testRuntimeOnly libs.h2.database
 }
