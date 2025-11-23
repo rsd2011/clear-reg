@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import com.example.audit.infra.persistence.AuditLogRepository;
+import com.example.audit.infra.persistence.AuditMonthlySummaryEntity;
+import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
 
 /**
  * 월간 접속/감사 로그 점검 리포트를 생성하기 위한 스켈레톤.
@@ -23,6 +25,7 @@ import com.example.audit.infra.persistence.AuditLogRepository;
 public class AuditMonthlyReportJob {
 
     private final AuditLogRepository repository;
+    private final AuditMonthlySummaryRepository summaryRepository;
     private final Clock clock;
 
     /**
@@ -38,5 +41,12 @@ public class AuditMonthlyReportJob {
 
         long count = repository.countByEventTimeBetween(from, to);
         log.info("Audit monthly report {} ~ {} count={}", start, end.minusDays(1), count);
+
+        String yearMonth = start.toString().substring(0, 7); // yyyy-MM
+        summaryRepository.save(AuditMonthlySummaryEntity.builder()
+                .yearMonth(yearMonth)
+                .totalCount(count)
+                .createdAt(Instant.now(clock))
+                .build());
     }
 }
