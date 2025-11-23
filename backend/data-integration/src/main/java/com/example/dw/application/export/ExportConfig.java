@@ -8,6 +8,6 @@ public class ExportConfig {
 
     @Bean
     public ExportFailureNotifier exportFailureNotifier() {
-        return ExportFailureNotifier.NOOP;
+        return new LoggingExportFailureNotifier();
     }
 }
