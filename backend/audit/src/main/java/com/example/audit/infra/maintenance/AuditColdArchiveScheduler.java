@@ -5,8 +5,12 @@ import java.time.LocalDate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.example.common.policy.AuditPartitionSettings;
+import com.example.common.policy.PolicySettingsProvider;
 
 /**
  * HOT→COLD 이동 및 Object Lock/Glacier 배치를 트리거하는 스켈레톤.
@@ -19,11 +23,20 @@ public class AuditColdArchiveScheduler {
 
     private final Clock clock;
     private final boolean enabled;
+    private final PolicySettingsProvider policySettingsProvider;
+    private final String archiveCommand;
+    private final int hotMonths;
 
     public AuditColdArchiveScheduler(Clock clock,
-                                     @org.springframework.beans.factory.annotation.Value("${audit.archive.enabled:false}") boolean enabled) {
+                                     PolicySettingsProvider policySettingsProvider,
+                                     @Value("${audit.archive.enabled:false}") boolean enabled,
+                                     @Value("${audit.archive.command:}") String archiveCommand,
+                                     @Value("${audit.partition.hot-months:6}") int hotMonths) {
         this.clock = clock;
+        this.policySettingsProvider = policySettingsProvider;
         this.enabled = enabled;
+        this.archiveCommand = archiveCommand;
+        this.hotMonths = hotMonths <= 0 ? 6 : hotMonths;
     }
 
     /**
@@ -35,8 +48,11 @@ public class AuditColdArchiveScheduler {
             return;
         }
         LocalDate today = LocalDate.now(clock);
-        LocalDate coldTarget = today.minusMonths(7).withDayOfMonth(1);
-        log.info("[audit-archive] prepare move to COLD for partition month {}", coldTarget);
-        // TODO: invoke actual archive job (Object Lock/Glacier) via command bus or batch launcher
+        AuditPartitionSettings ps = policySettingsProvider.partitionSettings();
+        int hotWindow = ps != null ? ps.hotMonths() : hotMonths;
+        LocalDate coldTarget = today.minusMonths(hotWindow + 1).withDayOfMonth(1);
+        log.info("[audit-archive] prepare move to COLD for partition month {} (hotWindow={}, command={})",
+                coldTarget, hotWindow, archiveCommand.isBlank() ? "(noop)" : archiveCommand);
+        // TODO: archiveCommand 연동(프로세스 실행 또는 배치 런처) + 실패 시 알림/리트라이
     }
 }

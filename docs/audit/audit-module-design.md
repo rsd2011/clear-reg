@@ -241,13 +241,13 @@ audit:
   - [x] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/2025-11-23-remove-dw-log-tables.sql` 추가 → 배포 전 백업 및 드라이런 계획 수립  
 
 ### 운영 설계 보강 (HOT/COLD + Object Lock)
-- [ ] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
+  - [ ] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
   - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
   - [ ] 모니터링: HOT IOPS, COLD 스토리지 비용, export 성공/실패 카운터, Object Lock 배치 지연 알림.
     - 절차: `pg_dump --table=audit_log_YYYY_MM` → `aws s3 cp ... --object-lock-mode COMPLIANCE --object-lock-retain-until-date +5y` → 확인 후 `DROP TABLE audit_log_YYYY_MM`.  
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.  
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
-    - `audit.partition.preload-months=2`, `audit.retention.hot-months=6`, `audit.retention.cold-months=60` 등의 프로퍼티를 `AuditPartitionScheduler`/`AuditLogRetentionJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
+    - `audit.partition.preload-months=2`, `audit.partition.tablespace.hot/cold`, `audit.partition.hot-months=6`, `audit.partition.cold-months=60`, `audit.archive.command=/path/to/hot-cold-archive-example.sh` 프로퍼티를 `AuditPartitionScheduler`/`AuditColdArchiveScheduler`/`AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
     - application.yml 예시  
       ```yaml
       audit:
