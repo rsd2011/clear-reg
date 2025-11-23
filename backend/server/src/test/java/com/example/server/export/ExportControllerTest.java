@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import com.example.common.masking.MaskingContextHolder;
 import com.example.common.masking.MaskingTarget;
 import com.example.dw.application.export.ExportCommand;
+import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.dw.application.export.ExportService;
 
 class ExportControllerTest {
@@ -35,7 +36,8 @@ class ExportControllerTest {
             Supplier<byte[]> supplier = invocation.getArgument(1);
             return supplier.get();
         });
-        ExportController controller = new ExportController(exportService);
+        ExportExecutionHelper helper = new ExportExecutionHelper(exportService, new com.fasterxml.jackson.databind.ObjectMapper());
+        ExportController controller = new ExportController(helper);
 
         MaskingContextHolder.set(MaskingTarget.builder()
                 .dataKind("accountNumber")

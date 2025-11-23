@@ -1,6 +1,7 @@
 package com.example.server.export;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
@@ -14,9 +15,8 @@ import lombok.RequiredArgsConstructor;
 
 import com.example.common.masking.MaskingContextHolder;
 import com.example.common.masking.MaskingTarget;
-import com.example.common.masking.OutputMaskingAdapter;
 import com.example.dw.application.export.ExportCommand;
-import com.example.dw.application.export.ExportService;
+import com.example.dw.application.export.ExportExecutionHelper;
 
 /**
  * 예시용 export 엔드포인트.
@@ -27,7 +27,7 @@ import com.example.dw.application.export.ExportService;
 @RequiredArgsConstructor
 public class ExportController {
 
-    private final ExportService exportService;
+    private final ExportExecutionHelper exportExecutionHelper;
 
     @GetMapping("/api/exports/sample")
     public ResponseEntity<byte[]> sampleCsv(@RequestParam("accountNumber") String accountNumber,
@@ -35,7 +35,6 @@ public class ExportController {
                                             @RequestParam(value = "reasonText", required = false) String reasonText,
                                             @RequestParam(value = "legalBasisCode", required = false) String legalBasisCode) {
         MaskingTarget target = MaskingContextHolder.get();
-        String masked = OutputMaskingAdapter.mask("accountNumber", accountNumber, target, "PARTIAL", "{\"keepEnd\":4}");
 
         ExportCommand command = new ExportCommand(
                 "csv",
@@ -47,8 +46,12 @@ public class ExportController {
                 legalBasisCode,
                 com.example.audit.AuditMode.ASYNC_FALLBACK);
 
-        byte[] body = exportService.export(command, () ->
-                ("accountNumber\n" + masked + "\n").getBytes(StandardCharsets.UTF_8));
+        byte[] body = exportExecutionHelper.exportCsv(
+                command,
+                List.of(Map.of("accountNumber", accountNumber)),
+                target,
+                "PARTIAL",
+                "{\"keepEnd\":4}");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sample.csv\"")
