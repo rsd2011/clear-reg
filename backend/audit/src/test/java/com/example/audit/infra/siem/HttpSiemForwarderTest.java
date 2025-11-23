@@ -80,4 +80,23 @@ class HttpSiemForwarderTest {
         HttpHeaders headers = entityCaptor.getValue().getHeaders();
         assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isNull();
     }
+
+    @Test
+    @DisplayName("RestTemplate이 주입되지 않은 경우 내부 생성 로직을 타고 예외를 삼킨다")
+    void createsTemplateWhenNull() {
+        SiemProperties props = new SiemProperties();
+        props.setEnabled(true);
+        props.setEndpoint("http://invalid.local");
+        HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
+
+        AuditEvent event = AuditEvent.builder()
+                .eventId(UUID.randomUUID())
+                .eventTime(Instant.now())
+                .eventType("TEST")
+                .action("FORWARD")
+                .build();
+
+        // 내부 RestTemplate가 연결 실패해도 catch되어 예외가 던져지지 않아야 한다
+        assertThatCode(() -> forwarder.forward(event)).doesNotThrowAnyException();
+    }
 }

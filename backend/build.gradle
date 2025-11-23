@@ -37,8 +37,8 @@ subprojects { subproject ->
         // 전역적으로 공통 적용할 exclude 집합 (report/verification 모두 동일하게 사용)
         def jacocoGlobalExcludes = (jacocoExclusions + [
                 '**/generated/**',
-                '**/infra/siem/**',
-                '**/infra/kafka/**'
+                '**/SiemProperties.*',
+                '**/AuditKafkaProperties.*'
         ]).unique()
 
         def mainSourceSet = subproject.extensions.getByType(JavaPluginExtension).sourceSets.named('main').get()
