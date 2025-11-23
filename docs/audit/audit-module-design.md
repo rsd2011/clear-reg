@@ -230,6 +230,10 @@ audit:
     - SQL 예시(PSQL): `ALTER TABLE audit_log ATTACH PARTITION audit_log_2025_05 FOR VALUES FROM ('2025-05-01') TO ('2025-06-01') TABLESPACE audit_hot;`  
     - 7개월 경과 시: `ALTER TABLE audit_log_2024_10 SET TABLESPACE audit_cold;` + `REINDEX TABLE audit_log_2024_10;` + `ALTER TABLE ... SET (toast.compress=zstd);`
   - [ ] S3 Object Lock(Compliance) 또는 Glacier 딥아카이브 전송 배치 스크립트 설계: 파티션 단위 export→Object Lock→DROP 순서 정의.  
+  - [ ] AuditPartitionScheduler 정책 연동·배치 통합  
+    - [ ] PolicyToggleSettings/Policy YAML/UI에 `auditPartitionEnabled`, `auditPartitionCron`, `auditPartitionPreloadMonths` 필드 추가  
+    - [ ] AuditPartitionScheduler를 배치 모듈로 이동, PolicySettings 기반 동적 cron/enable 반영(secure-by-default: off)  
+    - [ ] preloadMonths 만큼 월 파티션 루프 생성, cron과 enable을 정책/프로퍼티에서 조정 가능하도록 구현  
 
 ### 정리/마이그레이션
   - [x] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/2025-11-23-remove-dw-log-tables.sql` 추가 → 배포 전 백업 및 드라이런 계획 수립  
