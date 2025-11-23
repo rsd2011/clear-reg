@@ -15,6 +15,8 @@ import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
 import com.example.audit.Subject;
+import com.example.common.masking.MaskingTarget;
+import com.example.common.masking.SubjectType;
 
 /**
  * 간단한 요청 단위 감사 dual-write 파일럿 인터셉터.
@@ -69,8 +71,17 @@ public class RequestAuditInterceptor implements HandlerInterceptor {
                 .riskLevel(RiskLevel.LOW)
                 .build();
 
+        MaskingTarget maskingTarget = (MaskingTarget) request.getAttribute("AUDIT_MASKING_TARGET");
+        if (maskingTarget == null) {
+            maskingTarget = MaskingTarget.builder()
+                    .subjectType(SubjectType.EMPLOYEE)
+                    .dataKind("HTTP")
+                    .requesterRoles(ctx.permissionGroupCode() != null ? java.util.Set.of(ctx.permissionGroupCode()) : java.util.Set.of())
+                    .defaultMask(true)
+                    .build();
+        }
         try {
-            auditPort.record(event, AuditMode.ASYNC_FALLBACK);
+            auditPort.record(event, AuditMode.ASYNC_FALLBACK, maskingTarget);
         } catch (RuntimeException e) {
             log.warn("Audit dual-write skipped: {}", e.getMessage());
         }

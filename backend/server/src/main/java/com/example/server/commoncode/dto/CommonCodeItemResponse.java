@@ -3,6 +3,7 @@ package com.example.server.commoncode.dto;
 import com.example.server.commoncode.CommonCodeItem;
 import com.example.server.commoncode.model.CommonCodeKind;
 import com.example.server.commoncode.model.CommonCodeSource;
+import java.util.function.UnaryOperator;
 
 public record CommonCodeItemResponse(String codeValue,
                                      String codeName,
@@ -14,13 +15,18 @@ public record CommonCodeItemResponse(String codeValue,
                                      String metadataJson) {
 
     public static CommonCodeItemResponse from(CommonCodeItem item) {
-        return new CommonCodeItemResponse(item.codeValue(),
-                item.codeName(),
+        return from(item, UnaryOperator.identity());
+    }
+
+    public static CommonCodeItemResponse from(CommonCodeItem item, UnaryOperator<String> masker) {
+        UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
+        return new CommonCodeItemResponse(fn.apply(item.codeValue()),
+                fn.apply(item.codeName()),
                 item.displayOrder(),
                 item.codeKind(),
                 item.source(),
                 item.active(),
-                item.description(),
-                item.metadataJson());
+                fn.apply(item.description()),
+                fn.apply(item.metadataJson()));
     }
 }

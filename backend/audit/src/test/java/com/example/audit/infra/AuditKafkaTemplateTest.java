@@ -33,7 +33,7 @@ class AuditKafkaTemplateTest {
         KafkaTemplate<String, String> template = Mockito.mock(KafkaTemplate.class);
 
         ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        AuditRecordService service = new AuditRecordService(repository, resolver, mapper, template, "audit.events.v1", false, "", "default", new com.example.audit.infra.masking.MaskingProperties());
+        AuditRecordService service = new AuditRecordService(repository, resolver, mapper, template, "audit.events.v1", false, "", "default", new com.example.audit.infra.masking.MaskingProperties(), null);
 
         AuditEvent event = AuditEvent.builder()
                 .eventId(UUID.randomUUID())

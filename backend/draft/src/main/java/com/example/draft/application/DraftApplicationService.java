@@ -223,6 +223,11 @@ public class DraftApplicationService {
         if (rowScope == RowScope.CUSTOM) {
             throw new UnsupportedOperationException("CUSTOM RowScope는 별도 전략이 필요합니다.");
         }
+        // DataPolicyMatch가 있는 경우 정책 rowScope 우선 적용
+        var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
+        if (policyMatch != null && policyMatch.getRowScope() != null) {
+            rowScope = RowScope.valueOf(policyMatch.getRowScope());
+        }
         rowScope = normalizeRowScope(rowScope);
         Specification<Draft> specification = RowScopeSpecifications.<Draft>organizationScoped(
                 "organizationCode",
@@ -230,8 +235,18 @@ public class DraftApplicationService {
                 organizationCode,
                 scopedOrganizations
         ).and(filter(status, businessFeatureCode, createdBy, titleContains));
+        java.util.function.UnaryOperator<String> masker = buildMasker(policyMatch);
         return draftRepository.findAll(specification, pageable)
-                .map(DraftResponse::from);
+                .map(draft -> DraftResponse.from(draft, masker));
+    }
+
+    private java.util.function.UnaryOperator<String> buildMasker(com.example.common.policy.DataPolicyMatch match) {
+        if (match == null || match.getMaskRule() == null) {
+            return java.util.function.UnaryOperator.identity();
+        }
+        String rule = match.getMaskRule();
+        String params = match.getMaskParams();
+        return value -> com.example.common.masking.MaskRuleProcessor.apply(rule, value, params);
     }
 
     @Transactional(readOnly = true)
@@ -247,9 +262,10 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.DataPolicyContextHolder.get());
         return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId)
                 .stream()
-                .map(DraftHistoryResponse::from)
+                .map(h -> DraftHistoryResponse.from(h, masker))
                 .toList();
     }
 
@@ -258,9 +274,10 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.DataPolicyContextHolder.get());
         return draftReferenceRepository.findByDraftIdAndActiveTrue(draftId)
                 .stream()
-                .map(DraftReferenceResponse::from)
+                .map(ref -> DraftReferenceResponse.from(ref, masker))
                 .toList();
     }
 

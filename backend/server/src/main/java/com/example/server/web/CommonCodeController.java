@@ -32,7 +32,10 @@ public class CommonCodeController {
     public CommonCodeAggregateResponse getCodes(@PathVariable String codeType,
                                                 @RequestParam(defaultValue = "true") boolean includeSystem,
                                                 @RequestParam(defaultValue = "true") boolean includeDw) {
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return CommonCodeAggregateResponse.of(codeType,
-                commonCodeQueryService.aggregate(codeType, includeSystem, includeDw));
+                commonCodeQueryService.aggregate(codeType, includeSystem, includeDw),
+                masker);
     }
 }

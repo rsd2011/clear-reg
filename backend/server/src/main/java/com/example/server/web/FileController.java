@@ -79,9 +79,11 @@ public class FileController {
     @GetMapping
     @RequirePermission(feature = FeatureCode.FILE, action = ActionCode.READ)
     public java.util.List<FileMetadataResponse> listFiles() {
+        var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
+        java.util.function.UnaryOperator<String> masker = com.example.common.masking.MaskingFunctions.masker(policyMatch);
         return fileManagementPort.list()
                 .stream()
-                .map(FileMetadataResponse::fromDto)
+                .map(meta -> FileMetadataResponse.fromDto(meta, masker))
                 .toList();
     }
 
@@ -90,6 +92,8 @@ public class FileController {
     public ResponseEntity<Resource> download(@PathVariable UUID id,
                                              @RequestParam(value = "draftId", required = false) UUID draftId) {
         String actor = currentUsername();
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
         java.util.List<String> allowed = new java.util.ArrayList<>();
         allowed.add(actor);
         if (draftId != null) {
@@ -109,7 +113,8 @@ public class FileController {
             }
         }
         FileDownload download = fileManagementPort.download(id, actor, allowed);
-        String filename = URLEncoder.encode(download.metadata().originalName(), StandardCharsets.UTF_8);
+        String maskedName = masker.apply(download.metadata().originalName());
+        String filename = URLEncoder.encode(maskedName, StandardCharsets.UTF_8);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
                 .contentType(MediaType.parseMediaType(

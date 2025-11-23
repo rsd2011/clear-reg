@@ -2,6 +2,7 @@ package com.example.draft.application.response;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import java.util.function.UnaryOperator;
 
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.TemplateScope;
@@ -20,18 +21,39 @@ public record DraftFormTemplateResponse(
         OffsetDateTime updatedAt
 ) {
     public static DraftFormTemplateResponse from(DraftFormTemplate template) {
+        return from(template, UnaryOperator.identity());
+    }
+
+    public static DraftFormTemplateResponse from(DraftFormTemplate template, UnaryOperator<String> masker) {
+        UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
         return new DraftFormTemplateResponse(
                 template.getId(),
-                template.getTemplateCode(),
-                template.getName(),
+                fn.apply(template.getTemplateCode()),
+                fn.apply(template.getName()),
                 template.getBusinessType(),
                 template.getScope(),
                 template.getOrganizationCode(),
-                template.getSchemaJson(),
+                fn.apply(template.getSchemaJson()),
                 template.getVersion(),
                 template.isActive(),
                 template.getCreatedAt(),
                 template.getUpdatedAt()
         );
+    }
+
+    public static DraftFormTemplateResponse apply(DraftFormTemplateResponse response, UnaryOperator<String> masker) {
+        UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
+        return new DraftFormTemplateResponse(
+                response.id(),
+                fn.apply(response.templateCode()),
+                fn.apply(response.name()),
+                response.businessType(),
+                response.scope(),
+                response.organizationCode(),
+                fn.apply(response.schemaJson()),
+                response.version(),
+                response.active(),
+                response.createdAt(),
+                response.updatedAt());
     }
 }

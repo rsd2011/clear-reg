@@ -192,36 +192,68 @@ audit:
 - 운영: 월간 접속기록 리포트, 이상행위 룰(심야 대량 조회/DRM 해제 빈발) 알림, SIEM 전송.
 - 관측: audit write latency/error, Kafka lag, policy 캐시 hit/miss 메트릭 노출.
 
-## 12) TODO 체크리스트
+## 12) TODO 체크리스트 (우선순위 P1 > P2 > P3 > P4)
 ### 설계
-- [ ] `backend/audit` 모듈 구조 확정(core/infra/policy-client)
-- [ ] 공통 `AuditEvent`·`AuditPolicySnapshot`·`AuditMode` 스키마 문서화
-- [ ] Policy 스키마에 감사 토글·sensitive_api·retention·mask_profile 추가 정의
+- [x] `backend/audit` 모듈 구조 확정(core/infra/policy-client)
+- [x] 공통 `AuditEvent`·`AuditPolicySnapshot`·`AuditMode` 스키마 문서화
+- [x] Policy 스키마에 감사 토글·sensitive_api·retention·mask_profile 추가 정의
 
 ### 구현
-- [ ] AuditPort 구현(JPA 저장 + Kafka publisher), hash_chain 계산 포함
-- [ ] `@Audit` 어노테이션 + AOP/HandlerInterceptor 등록(server)
-- [ ] PolicyClient + Caffeine 캐시(secure-by-default) 구현
-- [ ] SENSITIVE_API reason/legalBasis 검증 필터(server)
-- [ ] DRM 이벤트 전용 서비스/DTO 추가
+- [x] AuditPort 구현(JPA 저장 + Kafka publisher 스켈레톤), hash_chain 계산 포함
+- [x] `@Audit` 대체용 필터/인터셉터 등록(server)
+- [x] PolicyClient + Caffeine 캐시(secure-by-default) 구현
+- [x] SENSITIVE_API reason/legalBasis 검증 필터(server)
+- [x] (P2) DRM 이벤트 전용 서비스/DTO 추가
 
 ### 마이그레이션
-- [ ] `auth` 로그인/비밀번호 변경 로그 → AuditPort dual-write 후 레거시 제거
-- [ ] `server` 컨트롤러 필터 로깅 → AOP 교체
-- [ ] `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거
-- [ ] `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
-- [ ] 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
+- [x] (P2) `auth` 로그인/비밀번호 변경/권한 감사 → AuditPort 전환(dual-write 레거시 제거)
+- [~] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거
+- [~] (P2) `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 조회는 AuditPort 연동 완료, 추가 대량 처리 전환 필요)**
+- [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
+- [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
 
 ### 테스트
-- [ ] Policy 미정의 시 기본 ON/사유 필수 동작 검증
-- [ ] Strict 모드 실패 시 트랜잭션 롤백 확인
-- [ ] Kafka DLQ/재처리 시나리오 검증
-- [ ] 마스킹/summary에 원문 포함 여부 점검
+- [x] Policy 미정의 시 기본 ON/사유 필수 동작 스모크(필터 + 문서/Playwright)
+- [x] Strict/forceUnmask → UnmaskAudit 적재 e2e 테스트
+- [ ] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널)
+- [~] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대
 
 ### 운영
-- [ ] 보존기간별 파티션/아카이브 배치 스케줄링
-- [ ] 월간 접속기록 점검 리포트 및 알림 대시보드 연동
-- [ ] 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록
-- [ ] SIEM/외부 보안시스템 연동 및 전송 암호화 확인
+- [ ] (P2) 보존기간별 파티션/아카이브 배치 스케줄링
+- [ ] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동
+- [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
+- [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인
+
+## 13) 멀티 포맷(Excel/PDF/XML/Word/CSV/JSON) 출력 마스킹 설계
+- 공통 원칙
+  - 컨트롤러/필터에서 `DataPolicyMaskingFilter` → `MaskingTarget/MaskingContextHolder` 설정, `maskRule/maskParams`는 `MaskingFunctions.masker(policyMatch)`로 `UnaryOperator<String>` 생성
+  - 출력 직전 단일 어댑터(OutputMaskingAdapter)에서 포맷 무관하게 마스킹 적용
+  - 승인 역할 + `forceUnmaskFields/forceUnmaskKinds` 조합으로 필드 단위 해제 허용(사유 필수)
+- 컴포넌트
+  - `OutputMaskingAdapter<T>`: 포맷별 Writer 앞단에서 값→mask→Writer
+  - 포맷별 훅: Excel(SXSSF) 셀 쓰기 전, CSV/JSON/XML 직렬화 시, PDF/Word 텍스트 삽입 전 `mask` 호출
+  - `MaskRuleProcessor`(NONE/PARTIAL/FULL/HASH/TOKENIZE) + `Maskable` 값객체(RRN/카드/계좌/이름/주소 등)는 `MaskingService.render`
+- 흐름
+  1) 필터: `DataPolicyMaskingFilter` → `MaskingTarget` ThreadLocal
+  2) 서비스: RowScope 적용 데이터 조회
+  3) 출력 서비스: `masker = MaskingFunctions.masker(policyMatch)` 준비
+  4) Writer: 각 필드/셀/텍스트에 `masker.apply(...)` 또는 `MaskingService.render(...)`
+  5) 감사: `AuditEvent(DOWNLOAD_<FORMAT>)` 기록(파일명·행수·reason/legalBasis·rowScope/maskRule 포함)
+- 체크리스트
+  - [ ] 포맷별 Writer에 공통 헬퍼 삽입
+  - [ ] forceUnmask 역할·사유 검증
+  - [ ] 대량/스트리밍 성능 검증(SXSSF 등)
+  - [ ] 다운로드/내보내기 AuditEvent 기록
+  - [ ] e2e 스모크: 마스킹 적용 여부 확인(Playwright 등)
+  - **사용자 요청 기반 마스킹 정책**: 화면/사용자 입력으로 선택된 마스킹 해제·강도 설정도 문서 다운로드(Excel/PDF/Word/XML/CSV 등) 시 동일하게 적용. UI에서 선택된 정책값을 요청 컨텍스트에 태우고, Writer 단계에서 `MaskingTarget.forceUnmaskFields/kinds` 반영.
+  - **모든 마스킹 정책 일관 적용**: 서비스/DTO 레이어에서 적용한 마스킹 규칙(민감필드, maskRule, maskParams)과 forceUnmask 여부를 문서 변환(모든 포맷)에도 동일하게 전달·적용해 서버/문서 출력 간 정책 불일치가 없도록 한다.
+
+### 운영 베스트 프랙티스 가이드 (감사 로그 조회 + 보존/파티션)
+- **조회 자체를 감사**: 모든 `audit_log` 조회 API/쿼리 결과에 대해 `AUDIT_ACCESS` 이벤트 발행 (actor, 검색조건, 결과 건수, 페이지 번호 포함), ASYNC_FALLBACK 로깅.
+- **최소 권한 원칙**: 전용 역할(AUDIT_VIEWER)만 조회 가능, 결과 다운로드/Export는 별도 권한 + 사유 필수.
+- **파티션 설계**: 월 단위 파티션(`audit_log_yyyy_mm`), 3/5년 보존 정책을 파티션 DROP/ARCHIVE 배치로 실행. 해시체인/WORM 보존본은 S3 Object Lock(Compliance mode) 또는 외부 WORM 스토리지에 병행 적재.
+- **캐시/인덱스**: 조회 키(event_time, actor_id, subject_type/key) 인덱스 유지. 장기 파티션은 HOT(최근 3~6개월) / COLD(이후) 테이블스페이스 분리.
+- **성능/비용**: COLD 파티션은 ZSTD 압축, auto-vacuum 튜닝. Export 시 필터링/마스킹된 데이터만 제공.
+- **운영 리포트**: 월간 접속기록 점검 작업을 스케줄링(배치)하고 결과를 알림/대시보드로 전송. 이상 패턴(심야 다건 조회 등) 룰을 Prometheus Alert 또는 SIEM 룰로 등록.
 
 **이 설계는 참고용이며, 실제 적용 전 반드시 최신 국내 법령과 감독당국·금융보안원 및 사내 컴플라이언스 규정을 통해 최종 검증해야 한다.**

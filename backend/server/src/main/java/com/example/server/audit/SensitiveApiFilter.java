@@ -17,6 +17,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.example.audit.AuditPolicySnapshot;
 import com.example.audit.AuditPort;
 import com.example.server.config.SensitiveApiProperties;
+import com.example.common.masking.MaskingTarget;
+import com.example.common.masking.SubjectType;
 
 /**
  * 민감 응답 API 호출 시 reason/legalBasis 필수 여부를 검사하는 필터.
@@ -67,6 +69,14 @@ public class SensitiveApiFilter extends OncePerRequestFilter {
                 response.sendError(HttpStatus.BAD_REQUEST.value(), "legalBasisCode is required for sensitive API");
                 return;
             }
+
+            // 마스킹/해제 컨텍스트를 다음 인터셉터에서 사용하도록 전달
+            MaskingTarget target = MaskingTarget.builder()
+                    .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
+                    .dataKind("SENSITIVE_API")
+                    .defaultMask(true)
+                    .build();
+            request.setAttribute("AUDIT_MASKING_TARGET", target);
         }
 
         filterChain.doFilter(request, response);
