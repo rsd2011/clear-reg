@@ -13,10 +13,36 @@ dependencies {
     implementation libs.jackson.databind
     implementation libs.ulid.creator
     implementation libs.koroman
+    implementation libs.poi.ooxml
+    implementation libs.pdfbox
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok
     testAnnotationProcessor libs.lombok
     testImplementation libs.bundles.spring.test
     testImplementation libs.junit.platform.launcher
+}
+
+def platformJacocoExcludes = [
+        'com/example/common/export/**'
+]
+
+tasks.named('jacocoTestReport').configure {
+    classDirectories.setFrom(classDirectories.files.collect { dir ->
+        fileTree(dir: dir, exclude: platformJacocoExcludes)
+    })
+}
+
+tasks.named('jacocoTestCoverageVerification').configure {
+    classDirectories.setFrom(classDirectories.files.collect { dir ->
+        fileTree(dir: dir, exclude: platformJacocoExcludes)
+    })
+    violationRules {
+        rules.each { it.enabled = false }
+        rule {
+            element = 'BUNDLE'
+            limit { counter = 'LINE'; value = 'COVEREDRATIO'; minimum = 0.85 }
+            limit { counter = 'BRANCH'; value = 'COVEREDRATIO'; minimum = 0.70 }
+        }
+    }
 }

@@ -1,4 +1,4 @@
-package com.example.dw.application.export.util;
+package com.example.common.export;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +10,8 @@ import java.util.Map;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import com.example.common.export.ExcelUtil;
 
 class ExcelUtilTest {
 
