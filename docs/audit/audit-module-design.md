@@ -231,9 +231,37 @@ audit:
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.  
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
     - `audit.partition.preload-months=2`, `audit.retention.hot-months=6`, `audit.retention.cold-months=60` 등의 프로퍼티를 `AuditPartitionScheduler`/`AuditLogRetentionJob`에 주입.  
+    - application.yml 예시  
+      ```yaml
+      audit:
+        partition:
+          preload-months: 2        # 미래 파티션 미리 생성
+          tablespace:
+            hot: audit_hot
+            cold: audit_cold
+        retention:
+          hot-months: 6            # HOT 보존
+          cold-months: 60          # COLD 보존
+        archive:
+          s3:
+            bucket: audit-archive
+            prefix: audit-log/
+            object-lock-years: 5
+          enabled: true
+      ```
   - [ ] 운영 점검: 파티션 생성/아카이브 실패 알림(Slack/Webhook) 및 리트라이 정책 정의.  
     - Retry: 최대 3회 지수백오프(5s→30s→2m), 알림에는 파티션명·에러코드 포함.  
     - 알림 채널: Slack Webhook 예) `audit.alert.webhook`, 장애 시 이메일 백업.
+    - 배치 스크립트 예시(개요)
+      ```bash
+      part=$1 # e.g. 2024_10
+      pg_dump "$PG_URL" --table="audit_log_${part}" -Fc -f "/tmp/audit_${part}.dump"
+      aws s3 cp "/tmp/audit_${part}.dump" "s3://$S3_BUCKET/$S3_PREFIX/audit_${part}.dump" \
+        --object-lock-mode COMPLIANCE \
+        --object-lock-retain-until-date "$(date -d '+5 years' -Ins)"
+      # checksum 확인 후 DROP
+      psql "$PG_URL" -c "DROP TABLE IF EXISTS audit_log_${part};"
+      ```
 - [~] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — `AuditMonthlyReportJob` 스켈레톤으로 월 1회 집계 로그 추가, 향후 기간별 count/리포트 export/SIEM 연계로 확장 (Grafana/Loki 혹은 SIEM 쿼리 템플릿 정의 예정)
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
