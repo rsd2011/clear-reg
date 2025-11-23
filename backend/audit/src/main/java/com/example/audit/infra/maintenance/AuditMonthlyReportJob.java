@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -40,7 +41,12 @@ public class AuditMonthlyReportJob {
         Instant to = end.atStartOfDay().toInstant(ZoneOffset.UTC);
 
         long count = repository.countByEventTimeBetween(from, to);
+        long failureCount = repository.countByEventTimeBetweenAndSuccess(from, to, false);
+        long unmaskCount = repository.countByEventTimeBetweenAndEventTypeIn(from, to, List.of("UNMASK"));
+        long drmDownloadCount = repository.countByEventTimeBetweenAndEventTypeIn(from, to, List.of("DRM_DOWNLOAD", "DRM_EXPORT", "DOWNLOAD"));
+
         log.info("Audit monthly report {} ~ {} count={}", start, end.minusDays(1), count);
+        log.info("Audit monthly metrics: failures={}, unmaskRequests={}, drm/download={}", failureCount, unmaskCount, drmDownloadCount);
 
         String yearMonth = start.toString().substring(0, 7); // yyyy-MM
         summaryRepository.save(AuditMonthlySummaryEntity.builder()

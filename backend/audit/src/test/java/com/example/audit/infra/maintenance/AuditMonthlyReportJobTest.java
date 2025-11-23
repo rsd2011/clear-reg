@@ -4,6 +4,7 @@ import static org.mockito.Mockito.verify;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
@@ -30,6 +31,8 @@ class AuditMonthlyReportJobTest {
         Instant from = LocalDate.of(2025, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
         Instant to = LocalDate.of(2025, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
         verify(repo).countByEventTimeBetween(from, to);
+        verify(repo).countByEventTimeBetweenAndSuccess(from, to, false);
+        verify(repo).countByEventTimeBetweenAndEventTypeIn(from, to, List.of("UNMASK"));
         verify(summaryRepo).save(Mockito.argThat(e ->
                 e.getYearMonth().equals("2025-01") &&
                         e.getTotalCount() == 0L));
