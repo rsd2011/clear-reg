@@ -232,7 +232,12 @@ audit:
   - [ ] S3 Object Lock(Compliance) 또는 Glacier 딥아카이브 전송 배치 스크립트 설계: 파티션 단위 export→Object Lock→DROP 순서 정의.  
 
 ### 정리/마이그레이션
-- [ ] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/`에 삭제/이관 스크립트 추가 → 배포 후 드라이런/백업 계획 수립  
+  - [x] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/2025-11-23-remove-dw-log-tables.sql` 추가 → 배포 전 백업 및 드라이런 계획 수립  
+
+### 운영 설계 보강 (HOT/COLD + Object Lock)
+- [ ] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
+- [ ] S3 Object Lock/Glacier 배치 설계: 파티션별 CSV/Parquet export → S3 Object Lock(Compliance, 5년) 업로드 → 삭제 로그 감사 → Glacier Deep Archive 이동(선택).  
+- [ ] 모니터링: HOT IOPS, COLD 스토리지 비용, export 성공/실패 카운터, Object Lock 배치 지연 알림.
     - 절차: `pg_dump --table=audit_log_YYYY_MM` → `aws s3 cp ... --object-lock-mode COMPLIANCE --object-lock-retain-until-date +5y` → 확인 후 `DROP TABLE audit_log_YYYY_MM`.  
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.  
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
