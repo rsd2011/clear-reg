@@ -23,6 +23,7 @@ dependencies {
     implementation libs.spring.boot.starter.actuator
     implementation libs.spring.boot.starter.web
     implementation libs.micrometer.tracing.bridge.otel
+    implementation libs.micrometer.registry.prometheus
     implementation libs.opentelemetry.exporter.otlp
     implementation libs.jackson.dataformat.yaml
 
@@ -32,8 +33,8 @@ dependencies {
     testImplementation libs.spring.batch.test
     testImplementation libs.junit.platform.launcher
     testImplementation libs.testcontainers.junit
-    testImplementation "org.testcontainers:postgresql:${libs.versions.testcontainers.get()}"
-    testImplementation "org.postgresql:postgresql:42.7.2"
+    testImplementation libs.testcontainers.postgresql
+    testImplementation libs.postgresql
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
 

@@ -247,7 +247,10 @@ audit:
     - HOT IOPS: pg_stat_io 기반 HOT TS read/write IOPS 95퍼센타일이 평시 대비 50%↑ 시 Slack 경고.
     - COLD 비용: 월별 table_size×단가 추정 비용 증가율>20% 시 경고.
     - Object Lock 지연: 업로드/검증/삭제 elapsed_ms가 `audit.archive.alert.delay-threshold-ms` 초과 시 경고, 3회 연속 시 PagerDuty 알림.
+    - 파티션 이동 실패: `ATTACH/DETACH/SET TABLESPACE` 실패 시 즉시 Slack/Webhook 알림(파티션명, 오류코드, 재시도횟수) + 지수백오프 3회 재시도.
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.
+    - 지표 수집/알림 파이프라인 제안: Prometheus exporter로 HOT/COLD IOPS·압축비·ObjectLock 지연(ms)·S3 PUT/Glacier 비용 메트릭 노출 → Alertmanager 룰 적용.
+    - Alertmanager 샘플 룰 추가: `docs/monitoring/audit-alerts.yml` (archive 실패/지연, HOT IOPS 스파이크, COLD 비용 상승, Object Lock 지연).
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
     - `audit.partition.preload-months=2`, `audit.partition.tablespace.hot/cold`, `audit.partition.hot-months=6`, `audit.partition.cold-months=60`, `audit.archive.command=/path/to/hot-cold-archive-example.sh`, `audit.archive.retry=3` 프로퍼티를 `AuditPartitionScheduler`/`AuditColdArchiveScheduler`/`AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
   - [ ] 정책 이벤트 연동: `PolicyChangedEvent(security.policy)` 발생 시 AuditPartitionScheduler/AuditColdArchiveScheduler가 즉시 새 설정을 반영하고, 다음 cron에서 HOT/COLD 생성·아카이브를 재계산하도록 EventListener 추가(e2e 검증 필요).  
@@ -291,6 +294,19 @@ audit:
   - [ ] e2e 스모크: H2/pg 테스트에서 지난달 샘플 데이터 삽입 후 배치 실행 → summary row 생성 검증.
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
+
+### SIEM/외부 연동 필드 매핑(초안)
+- 전송 방식: TLS + 서명(Optional) syslog/OTLP/JSON. 개인정보/신용정보 필드는 마스킹/토큰화 후 전송.
+- 필드 매핑 예시 (→ SIEM)
+  - event_time → @timestamp
+  - event_type/module/action → labels.event_type/module/action
+  - actor_id/actor_type/actor_role/actor_dept → subject.user.id/type/role/dept
+  - subject_type/subject_key → resource.type/id (마스킹된 키 사용)
+  - client_ip/user_agent/device_id/channel → source.ip/ua/device/channel
+  - reason_code/reason_text/legal_basis_code → audit.reason.code/text/legal_basis
+  - risk_level → labels.risk_level
+  - before_summary/after_summary → fields.before/after (민감값 마스킹)
+  - hash_chain → integrity.hash_chain
 
 ## 13) 멀티 포맷(Excel/PDF/XML/Word/CSV/JSON) 출력 마스킹 설계
 - 공통 원칙

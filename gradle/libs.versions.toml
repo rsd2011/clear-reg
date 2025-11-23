@@ -14,6 +14,7 @@ micrometer-tracing = "1.2.0"
 koroman = "java-v1.0.12"
 poi = "5.2.5"
 pdfbox = "3.0.1"
+postgresql = "42.7.2"
 
 [libraries]
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
@@ -50,6 +51,7 @@ jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", ver
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jackson" }
 spring-boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers", version.ref = "spring-boot" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 tika-core = { module = "org.apache.tika:tika-core", version.ref = "tika" }
 spring-batch-test = { module = "org.springframework.batch:spring-batch-test" }
 archunit-junit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "archunit" }
@@ -61,6 +63,7 @@ micrometer-tracing-bridge-otel = { module = "io.micrometer:micrometer-tracing-br
 koroman = { module = "com.github.gerosyab:koroman", version.ref = "koroman" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 
 [bundles]
 spring-boot-core = ["spring-boot-starter", "spring-boot-starter-validation"]
