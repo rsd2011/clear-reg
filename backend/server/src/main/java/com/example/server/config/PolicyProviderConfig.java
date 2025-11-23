@@ -54,6 +54,11 @@ public class PolicyProviderConfig {
                 properties.getAuditRiskLevel(),
                 properties.isAuditMaskingEnabled(),
                 properties.getAuditSensitiveEndpoints(),
-                properties.getAuditUnmaskRoles());
+                properties.getAuditUnmaskRoles(),
+                properties.isAuditPartitionEnabled(),
+                properties.getAuditPartitionCron(),
+                properties.getAuditPartitionPreloadMonths(),
+                properties.isAuditMonthlyReportEnabled(),
+                properties.getAuditMonthlyReportCron());
     }
 }
