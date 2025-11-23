@@ -8,7 +8,7 @@ dependencies {
     testImplementation platform(libs.spring.boot.bom)
 
     implementation project(':backend:dw-ingestion-core')
-    implementation project(':backend:dw-integration')
+    implementation project(':backend:data-integration')
     implementation project(':backend:file-core')
     implementation project(':backend:platform')
     implementation project(':backend:auth')

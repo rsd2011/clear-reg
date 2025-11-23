@@ -8,7 +8,7 @@ dependencies {
 
     api project(':backend:dw-gateway')
     implementation project(':backend:platform')
-    api project(':backend:dw-integration')
+    api project(':backend:data-integration')
     api project(':backend:file-core')
 
     implementation libs.spring.boot.starter.web

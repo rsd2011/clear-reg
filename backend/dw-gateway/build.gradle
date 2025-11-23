@@ -9,7 +9,7 @@ dependencies {
 
     implementation project(':backend:platform')
     implementation project(':backend:auth')
-    implementation project(':backend:dw-integration')
+    implementation project(':backend:data-integration')
     implementation project(':backend:file-core')
     implementation project(':backend:policy')
     implementation project(':backend:audit')
