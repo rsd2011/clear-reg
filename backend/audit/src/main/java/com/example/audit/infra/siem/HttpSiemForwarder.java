@@ -36,6 +36,11 @@ public class HttpSiemForwarder implements SiemForwarder {
         return restTemplate;
     }
 
+    // 테스트 주입용
+    void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
     @Override
     public void forward(AuditEvent event) {
         try {

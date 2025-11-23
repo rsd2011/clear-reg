@@ -28,7 +28,6 @@ testImplementation 'com.h2database:h2'
 }
 
 def auditJacocoExcludes = [
-        'com/example/audit/infra/kafka/**'
 ]
 
 tasks.named('jacocoTestReport').configure {
@@ -49,7 +48,7 @@ tasks.named('jacocoTestCoverageVerification').configure {
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                minimum = 0.65
+                minimum = 0.70
             }
         }
     }

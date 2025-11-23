@@ -191,6 +191,25 @@ class AuditRecordServiceTest {
         service.record(sampleEvent(), AuditMode.ASYNC_FALLBACK);
     }
 
+    @Test
+    void record_strictPublishFailureSendsDlq() {
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
+        KafkaTemplate<String, String> main = Mockito.mock(KafkaTemplate.class);
+        KafkaTemplate<String, String> dlq = Mockito.mock(KafkaTemplate.class);
+        Mockito.doThrow(new RuntimeException("send fail")).when(main).send(any(), any(), any());
+
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                main, "topic", "dlq", dlq,
+                false, "", "default", maskingProperties, maskingService, null);
+
+        AuditEvent event = sampleEvent();
+
+        assertThatThrownBy(() -> service.record(event, AuditMode.STRICT))
+                .isInstanceOf(IllegalStateException.class);
+        verify(dlq).send(Mockito.eq("dlq"), Mockito.eq(event.getEventId().toString()), any());
+    }
+
     private AuditEvent sampleEvent() {
         return AuditEvent.builder()
                 .eventType("LOGIN")
