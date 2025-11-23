@@ -1,7 +1,7 @@
 # 중앙 감사(Audit) 모듈 설계 초안
 
 ## 1) 요구사항·법적 전제 정리
-- 대상: Java 21 / Spring Boot 3.3.x 멀티모듈(backend/platform, auth, dw-integration, policy, server, batch-app).
+- 대상: Java 21 / Spring Boot 3.3.x 멀티모듈(backend/platform, auth, data-integration, policy, server, batch).
 - 규제 반영: 접속기록 기본 2년(고위험), 신용정보 처리 3년, 전자금융거래 5년을 정책 기본값으로 설정(정책으로 조정 가능).
 - 개인정보 최소수집·마스킹, 위·변조 방지(append-only/hash-chain), 월 1회 점검, 민감 응답 사유 필수.
 - 감사 실패 시 트랜잭션 영향은 정책 기반 선택(STRICT=롤백, ASYNC_FALLBACK=비동기 보류).
@@ -14,19 +14,19 @@
   - 동기: `AuditPort.record(event, mode)` 호출. mode=STRICT|ASYNC_FALLBACK.
   - 비동기: Kafka 토픽 `audit.events.v1` 발행 → audit 모듈 consumer 저장.
   - SDK/AOP: `@Audit(action=..., sensitive=true, reasonRequired=true)`로 컨트롤러/서비스 단 공통 처리.
-- 의존 방향: 상위 모듈(server, batch-app, auth, dw-integration)이 audit 포트를 의존, audit은 platform 공용 타입 최소 참조.
+- 의존 방향: 상위 모듈(server, batch, auth, data-integration)이 audit 포트를 의존, audit은 platform 공용 타입 최소 참조.
 
 ## 3) 기존 멀티모듈 분석 및 마이그레이션 전략
 - 예상 책임 위치
   - `auth`: 로그인/세션/비밀번호 변경 로그, RowScope 활용.
   - `server`: MVC 필터/인터셉터 기반 접속기록.
-  - `dw-integration`: 배치·대량 조회 로깅, HR 데이터 접근.
+  - `data-integration`: 배치·대량 조회 로깅, HR 데이터 접근.
   - `policy`: 권한·정책 변경 이력.
   - `platform`: 공통 보안 유틸(RowScope 등) → AuditContext에서 재사용.
 - 단계적 플랜
   1) `audit-core` 도입, 공통 `AuditEvent`/`AuditPolicySnapshot` 정의(레거시 로그 유지).
   2) Dual-write: 새 포트 호출 + 기존 로깅 병행, 정책 캐시 적용.
-  3) 모듈별 전환: auth → server → dw-integration → batch-app, 직접 DB insert 제거.
+  3) 모듈별 전환: auth → server → data-integration → batch, 직접 DB insert 제거.
   4) 레거시 로그 테이블/코드 제거, 문서 및 권한 정리.
 
 ## 4) 감사 이벤트 종류 및 공통 스키마 정의
@@ -208,7 +208,7 @@ audit:
 ### 마이그레이션
 - [x] (P2) `auth` 로그인/비밀번호 변경/권한 감사 → AuditPort 전환(dual-write 레거시 제거)
 - [x] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거 (`HttpAuditAspect`, 필터 기반 dual-write 제거)
-- [~] (P2) `dw-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, 나머지 대량 처리 경로 전환 남음)**
+- [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, 대량 export/파일 생성 경로 전환 남음)**
 - [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
 - [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
 

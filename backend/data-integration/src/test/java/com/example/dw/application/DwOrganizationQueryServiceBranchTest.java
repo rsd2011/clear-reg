@@ -14,6 +14,7 @@ import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import com.example.audit.AuditPort;
 import com.example.common.policy.DataPolicyContextHolder;
 import com.example.common.policy.DataPolicyMatch;
 import com.example.common.security.RowScope;
@@ -25,13 +26,14 @@ class DwOrganizationQueryServiceBranchTest {
     DwOrganizationTreeService tree = Mockito.mock(DwOrganizationTreeService.class);
     OrganizationRowScopeStrategy custom = Mockito.mock(OrganizationRowScopeStrategy.class);
     OrganizationReadModelPort readModel = Mockito.mock(OrganizationReadModelPort.class);
+    AuditPort auditPort = Mockito.mock(AuditPort.class);
 
     @Test
     @DisplayName("CUSTOM 스코프는 커스텀 전략으로 위임한다")
     void customScopeUsesStrategy() {
         PageRequest page = PageRequest.of(0, 10);
         when(custom.apply(page, "ORG1")).thenReturn(Page.empty(page));
-        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, readModel);
+        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, readModel, auditPort);
 
         Page<DwOrganizationNode> result = svc.getOrganizations(page, RowScope.CUSTOM, "ORG1");
         assertThat(result.getTotalElements()).isZero();
@@ -42,7 +44,7 @@ class DwOrganizationQueryServiceBranchTest {
     void policyOverridesRowScope() {
         DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ALL.name()).build());
         when(tree.snapshot()).thenReturn(DwOrganizationTreeService.OrganizationTreeSnapshot.fromNodes(List.of()));
-        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, null);
+        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, null, auditPort);
 
         Page<DwOrganizationNode> result = svc.getOrganizations(PageRequest.of(0, 5), RowScope.OWN, "ORG1");
         assertThat(result.getContent()).isEmpty();
@@ -52,7 +54,7 @@ class DwOrganizationQueryServiceBranchTest {
     @Test
     @DisplayName("organizationCode가 없고 ALL 이외의 스코프이면 예외를 던진다")
     void missingOrgCodeThrows() {
-        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, null);
+        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, null, auditPort);
         assertThatThrownBy(() -> svc.getOrganizations(PageRequest.of(0, 1), RowScope.ORG, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
@@ -63,7 +65,7 @@ class DwOrganizationQueryServiceBranchTest {
         when(readModel.isEnabled()).thenReturn(true);
         OrganizationTreeReadModel rm = new OrganizationTreeReadModel("id", OffsetDateTime.now(), List.of());
         when(readModel.load()).thenReturn(Optional.of(rm));
-        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, readModel);
+        DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, readModel, auditPort);
 
         Page<DwOrganizationNode> result = svc.getOrganizations(PageRequest.of(0, 1), RowScope.ALL, "ORG1");
         assertThat(result.getTotalElements()).isZero();

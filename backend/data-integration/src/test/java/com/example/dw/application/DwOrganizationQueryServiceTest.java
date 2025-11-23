@@ -22,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import com.example.audit.AuditPort;
 import com.example.common.security.RowScope;
 import com.example.dw.application.DwOrganizationTreeService.OrganizationTreeSnapshot;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
@@ -38,12 +39,14 @@ class DwOrganizationQueryServiceTest {
     private OrganizationRowScopeStrategy organizationRowScopeStrategy;
     @Mock
     private OrganizationReadModelPort organizationReadModelPort;
+    @Mock
+    private AuditPort auditPort;
 
     private DwOrganizationQueryService service;
 
     @BeforeEach
     void setUp() {
-        service = new DwOrganizationQueryService(treeService, organizationRowScopeStrategy, organizationReadModelPort);
+        service = new DwOrganizationQueryService(treeService, organizationRowScopeStrategy, organizationReadModelPort, auditPort);
     }
 
     @Test
@@ -178,7 +181,7 @@ class DwOrganizationQueryServiceTest {
     void usesSnapshotWhenReadModelPortIsNull() {
         PageRequest pageable = PageRequest.of(0, 5);
         DwOrganizationQueryService noReadModelService =
-                new DwOrganizationQueryService(treeService, organizationRowScopeStrategy, null);
+                new DwOrganizationQueryService(treeService, organizationRowScopeStrategy, null, auditPort);
         OrganizationTreeSnapshot snapshot = OrganizationTreeSnapshot.from(List.of(sample("ROOT", null)));
         given(treeService.snapshot()).willReturn(snapshot);
 
