@@ -12,4 +12,6 @@ public interface AuditLogRepository extends JpaRepository<AuditLogEntity, UUID> 
     Optional<AuditLogEntity> findTopByOrderByEventTimeDesc();
 
     long deleteByEventTimeBefore(Instant threshold);
+
+    long countByEventTimeBetween(Instant startInclusive, Instant endExclusive);
 }

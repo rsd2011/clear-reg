@@ -2,6 +2,8 @@ package com.example.audit.infra.maintenance;
 
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.Instant;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -31,7 +33,10 @@ public class AuditMonthlyReportJob {
         LocalDate now = LocalDate.now(clock);
         LocalDate start = now.minusMonths(1).withDayOfMonth(1);
         LocalDate end = now.withDayOfMonth(1);
-        long count = repository.count(); // TODO: 기간 필터 집계로 확장
+        Instant from = start.atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant to = end.atStartOfDay().toInstant(ZoneOffset.UTC);
+
+        long count = repository.countByEventTimeBetween(from, to);
         log.info("Audit monthly report {} ~ {} count={}", start, end.minusDays(1), count);
     }
 }

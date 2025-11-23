@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.Instant;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ class AuditMonthlyReportJobTest {
 
         job.report();
 
-        verify(repo).count();
+        Instant from = LocalDate.of(2025, 1, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant to = LocalDate.of(2025, 2, 1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        verify(repo).countByEventTimeBetween(from, to);
     }
 }
