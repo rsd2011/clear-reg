@@ -56,7 +56,9 @@ class PolicyAdminControllerTest {
     void givenPolicyWhenGetThenReturn() throws Exception {
         PolicyView view = new PolicyView(true, true, true, List.of("PASSWORD"),
                 10_485_760L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml");
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "yaml");
         given(policyAdminPort.currentPolicy()).willReturn(view);
 
         mockMvc.perform(get("/api/admin/policies"))
@@ -69,9 +71,11 @@ class PolicyAdminControllerTest {
     void givenUpdateWhenPutThenUpdate() throws Exception {
         PolicyView view = new PolicyView(false, true, true, List.of("SSO"),
                 10_485_760L, List.of("pdf"), true, 365,
-                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml");
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
+                false, "0 0 2 1 * *", 1, "", "", 6, 60,
+                true, "0 0 4 1 * *", "yaml");
         PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"), null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
         given(policyAdminPort.updateToggles(request)).willReturn(view);
 
         mockMvc.perform(put("/api/admin/policies/toggles")

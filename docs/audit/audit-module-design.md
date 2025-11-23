@@ -208,7 +208,7 @@ audit:
 ### 마이그레이션
 - [x] (P2) `auth` 로그인/비밀번호 변경/권한 감사 → AuditPort 전환(dual-write 레거시 제거)
 - [x] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거 (`HttpAuditAspect`, 필터 기반 dual-write 제거)
-  - [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, ExportAuditService/OutputMaskingAdapter를 활용한 멀티포맷 헬퍼·테스트 완료, 실제 대량 export 엔드포인트·잡에 연결만 남음)**  
+  - [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, ExportAuditService/OutputMaskingAdapter 멀티포맷 헬퍼·테스트 완료, 실제 대량 export 엔드포인트·잡 연결만 남음)**  
   - [x] data-integration 내 export 엔드포인트/잡에 `ExportService` 주입해 호출부 래핑 (server `ExportController` 샘플 엔드포인트 적용)  
   - [x] export 결과 직렬화 단계에서 `OutputMaskingAdapter` 적용(Excel/CSV/PDF/JSON 공통) → `ExportMaskingHelper`, `ExcelMaskingAdapter`, `PdfMaskingAdapter` + 멀티포맷 무누출 테스트 추가  
   - [x] ExportCommand에 reason/legalBasis 전달 · Audit 메타 기록 · API 파라미터 검증(사유/법적근거) 연결  
@@ -226,14 +226,16 @@ audit:
 
 ### 운영
 - [x] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 사전 생성 스케줄러(`AuditPartitionScheduler`) 구현 및 테스트 완료. **후속 세부 작업**  
-  - [ ] HOT/COLD 테이블스페이스 분리 전략 수립: 최근 6개월 HOT, 이후 COLD로 이동, 인덱스/압축(ZSTD) 정책 차등 적용.  
-    - SQL 예시(PSQL): `ALTER TABLE audit_log ATTACH PARTITION audit_log_2025_05 FOR VALUES FROM ('2025-05-01') TO ('2025-06-01') TABLESPACE audit_hot;`  
-    - 7개월 경과 시: `ALTER TABLE audit_log_2024_10 SET TABLESPACE audit_cold;` + `REINDEX TABLE audit_log_2024_10;` + `ALTER TABLE ... SET (toast.compress=zstd);`
-  - [ ] S3 Object Lock(Compliance) 또는 Glacier 딥아카이브 전송 배치 스크립트 설계: 파티션 단위 export→Object Lock→DROP 순서 정의.  
-  - [ ] AuditPartitionScheduler 정책 연동·배치 통합  
-    - [ ] PolicyToggleSettings/Policy YAML/UI에 `auditPartitionEnabled`, `auditPartitionCron`, `auditPartitionPreloadMonths` 필드 추가  
-    - [ ] AuditPartitionScheduler를 배치 모듈로 이동, PolicySettings 기반 동적 cron/enable 반영(secure-by-default: off)  
-    - [ ] preloadMonths 만큼 월 파티션 루프 생성, cron과 enable을 정책/프로퍼티에서 조정 가능하도록 구현  
+  - [~] HOT/COLD 테이블스페이스 분리 적용  
+    - 프로퍼티 추가 완료: `audit.partition.tablespace.hot`, `audit.partition.tablespace.cold`, `audit.partition.hot-months`, `audit.partition.cold-months` (기본 hot/cold 미지정 시 동일 TS).  
+    - SQL 예시: `ALTER TABLE audit_log ATTACH PARTITION audit_log_2025_05 FOR VALUES FROM ('2025-05-01') TO ('2025-06-01') TABLESPACE :hot;`  
+      7개월 경과 시 `ALTER TABLE audit_log_2024_10 SET TABLESPACE :cold; REINDEX TABLE audit_log_2024_10; ALTER TABLE ... SET (toast.compress='zstd'); VACUUM ANALYZE audit_log_2024_10;`  
+    - 운영 주기: HOT→COLD 이동 월 1회, 장기 파티션 VACUUM/REINDEX 주 1회.  
+  - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
+    - [ ] 배치 런처에서 스크립트 호출 파라미터화(`PG_URL`, `S3_BUCKET`, `S3_PREFIX`, `RETENTION_YEARS`, `MAX_RETRY`, `SLACK_WEBHOOK`) 및 실패 리트라이/알림 연동.  
+  - [~] AuditPartitionScheduler 정책 연동·배치 통합  
+    - [x] PolicyToggleSettings/Policy YAML에 `auditPartitionEnabled`, `auditPartitionCron`, `auditPartitionPreloadMonths`, `auditPartitionTablespaceHot/Cold`, `auditPartitionHotMonths/ColdMonths` 필드 저장 (UI 노출은 추후).  
+    - [ ] 정책 변경 이벤트 수신 시 스케줄러 Cron/enable/preloadMonths 동기화 e2e 검증  
 - [x] (P2) 월간 접속기록 점검 리포트 — `AuditMonthlyReportJob`을 정책 기반 동적 cron으로 전환 (`auditMonthlyReportEnabled`, `auditMonthlyReportCron`), 기본 cron=0 0 4 1 * *  
 
 ### 정리/마이그레이션
@@ -241,12 +243,12 @@ audit:
 
 ### 운영 설계 보강 (HOT/COLD + Object Lock)
 - [ ] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
-- [ ] S3 Object Lock/Glacier 배치 설계: 파티션별 CSV/Parquet export → S3 Object Lock(Compliance, 5년) 업로드 → 삭제 로그 감사 → Glacier Deep Archive 이동(선택).  
-- [ ] 모니터링: HOT IOPS, COLD 스토리지 비용, export 성공/실패 카운터, Object Lock 배치 지연 알림.
+  - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
+  - [ ] 모니터링: HOT IOPS, COLD 스토리지 비용, export 성공/실패 카운터, Object Lock 배치 지연 알림.
     - 절차: `pg_dump --table=audit_log_YYYY_MM` → `aws s3 cp ... --object-lock-mode COMPLIANCE --object-lock-retain-until-date +5y` → 확인 후 `DROP TABLE audit_log_YYYY_MM`.  
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.  
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
-    - `audit.partition.preload-months=2`, `audit.retention.hot-months=6`, `audit.retention.cold-months=60` 등의 프로퍼티를 `AuditPartitionScheduler`/`AuditLogRetentionJob`에 주입.  
+    - `audit.partition.preload-months=2`, `audit.retention.hot-months=6`, `audit.retention.cold-months=60` 등의 프로퍼티를 `AuditPartitionScheduler`/`AuditLogRetentionJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
     - application.yml 예시  
       ```yaml
       audit:

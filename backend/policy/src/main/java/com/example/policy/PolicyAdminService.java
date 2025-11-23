@@ -7,12 +7,15 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.common.policy.AuditPartitionSettings;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 import com.example.policy.dto.PolicyUpdateRequest;
 import com.example.policy.dto.PolicyView;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class PolicyAdminService {
@@ -85,8 +88,29 @@ public class PolicyAdminService {
 
     private PolicyState readState(String yaml) {
         try {
-            PolicyToggleSettings settings = yamlMapper.readValue(yaml, PolicyToggleSettings.class);
-            return PolicyState.from(settings);
+            JsonNode root = yamlMapper.readTree(yaml);
+            AuditPartitionSettings partition = null;
+            JsonNode partitionNode = root.get("auditPartition");
+            if (partitionNode != null) {
+                partition = yamlMapper.treeToValue(partitionNode, AuditPartitionSettings.class);
+            }
+            ObjectNode toggleNode = root.isObject() ? ((ObjectNode) root).deepCopy() : yamlMapper.createObjectNode();
+            toggleNode.remove("auditPartition");
+            toggleNode.remove("auditPartitionTablespaceHot");
+            toggleNode.remove("auditPartitionTablespaceCold");
+            toggleNode.remove("auditPartitionHotMonths");
+            toggleNode.remove("auditPartitionColdMonths");
+            PolicyToggleSettings settings = yamlMapper.treeToValue(toggleNode, PolicyToggleSettings.class);
+            if (partition == null && (root.has("auditPartitionTablespaceHot") || root.has("auditPartitionTablespaceCold")
+                    || root.has("auditPartitionHotMonths") || root.has("auditPartitionColdMonths"))) {
+                partition = new AuditPartitionSettings(settings.auditPartitionEnabled(), settings.auditPartitionCron(),
+                        settings.auditPartitionPreloadMonths(),
+                        root.path("auditPartitionTablespaceHot").asText(""),
+                        root.path("auditPartitionTablespaceCold").asText(""),
+                        root.path("auditPartitionHotMonths").asInt(6),
+                        root.path("auditPartitionColdMonths").asInt(60));
+            }
+            return PolicyState.from(settings, partition);
         } catch (JsonProcessingException exception) {
             throw new IllegalArgumentException("Invalid policy YAML", exception);
         }
@@ -94,7 +118,9 @@ public class PolicyAdminService {
 
     private String exportYaml(PolicyState state) {
         try {
-            return yamlMapper.writeValueAsString(state.toSettings());
+            ObjectNode root = yamlMapper.valueToTree(state.toSettings());
+            root.set("auditPartition", yamlMapper.valueToTree(state.toPartitionSettings()));
+            return yamlMapper.writeValueAsString(root);
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Unable to export policy YAML", exception);
         }
@@ -125,6 +151,10 @@ public class PolicyAdminService {
                 state.auditPartitionEnabled(),
                 state.auditPartitionCron(),
                 state.auditPartitionPreloadMonths(),
+                state.auditPartitionTablespaceHot(),
+                state.auditPartitionTablespaceCold(),
+                state.auditPartitionHotMonths(),
+                state.auditPartitionColdMonths(),
                 state.auditMonthlyReportEnabled(),
                 state.auditMonthlyReportCron(),
                 snapshot.yaml());
@@ -152,6 +182,10 @@ public class PolicyAdminService {
         private final boolean auditPartitionEnabled;
         private final String auditPartitionCron;
         private final int auditPartitionPreloadMonths;
+        private final String auditPartitionTablespaceHot;
+        private final String auditPartitionTablespaceCold;
+        private final int auditPartitionHotMonths;
+        private final int auditPartitionColdMonths;
         private final boolean auditMonthlyReportEnabled;
         private final String auditMonthlyReportCron;
 
@@ -175,6 +209,10 @@ public class PolicyAdminService {
                             boolean auditPartitionEnabled,
                             String auditPartitionCron,
                             int auditPartitionPreloadMonths,
+                            String auditPartitionTablespaceHot,
+                            String auditPartitionTablespaceCold,
+                            int auditPartitionHotMonths,
+                            int auditPartitionColdMonths,
                             boolean auditMonthlyReportEnabled,
                             String auditMonthlyReportCron) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
@@ -197,6 +235,10 @@ public class PolicyAdminService {
             this.auditPartitionEnabled = auditPartitionEnabled;
             this.auditPartitionCron = auditPartitionCron;
             this.auditPartitionPreloadMonths = auditPartitionPreloadMonths;
+            this.auditPartitionTablespaceHot = auditPartitionTablespaceHot == null ? "" : auditPartitionTablespaceHot;
+            this.auditPartitionTablespaceCold = auditPartitionTablespaceCold == null ? "" : auditPartitionTablespaceCold;
+            this.auditPartitionHotMonths = auditPartitionHotMonths <= 0 ? 6 : auditPartitionHotMonths;
+            this.auditPartitionColdMonths = auditPartitionColdMonths <= 0 ? 60 : auditPartitionColdMonths;
             this.auditMonthlyReportEnabled = auditMonthlyReportEnabled;
             this.auditMonthlyReportCron = auditMonthlyReportCron;
         }
@@ -222,6 +264,43 @@ public class PolicyAdminService {
                     settings.auditPartitionEnabled(),
                     settings.auditPartitionCron(),
                     settings.auditPartitionPreloadMonths(),
+                    "",
+                    "",
+                    6,
+                    60,
+                    settings.auditMonthlyReportEnabled(),
+                    settings.auditMonthlyReportCron());
+        }
+
+        public static PolicyState from(PolicyToggleSettings settings, AuditPartitionSettings partition) {
+            AuditPartitionSettings ps = partition == null
+                    ? new AuditPartitionSettings(settings.auditPartitionEnabled(), settings.auditPartitionCron(),
+                    settings.auditPartitionPreloadMonths(), "", "", 6, 60)
+                    : partition;
+            return new PolicyState(settings.passwordPolicyEnabled(),
+                    settings.passwordHistoryEnabled(),
+                    settings.accountLockEnabled(),
+                    settings.enabledLoginTypes(),
+                    settings.maxFileSizeBytes(),
+                    settings.allowedFileExtensions(),
+                    settings.strictMimeValidation(),
+                    settings.fileRetentionDays(),
+                    settings.auditEnabled(),
+                    settings.auditReasonRequired(),
+                    settings.auditSensitiveApiDefaultOn(),
+                    settings.auditRetentionDays(),
+                    settings.auditStrictMode(),
+                    settings.auditRiskLevel(),
+                    settings.auditMaskingEnabled(),
+                    settings.auditSensitiveEndpoints(),
+                    settings.auditUnmaskRoles(),
+                    ps.enabled(),
+                    ps.cron(),
+                    ps.preloadMonths(),
+                    ps.tablespaceHot(),
+                    ps.tablespaceCold(),
+                    ps.hotMonths(),
+                    ps.coldMonths(),
                     settings.auditMonthlyReportEnabled(),
                     settings.auditMonthlyReportCron());
         }
@@ -244,6 +323,11 @@ public class PolicyAdminService {
                     auditMaskingEnabled,
                     auditSensitiveEndpoints,
                     auditUnmaskRoles);
+        }
+
+        public AuditPartitionSettings toPartitionSettings() {
+            return new AuditPartitionSettings(auditPartitionEnabled, auditPartitionCron, auditPartitionPreloadMonths,
+                    auditPartitionTablespaceHot, auditPartitionTablespaceCold, auditPartitionHotMonths, auditPartitionColdMonths);
         }
 
         public PolicyState merge(PolicyUpdateRequest request) {
@@ -272,6 +356,10 @@ public class PolicyAdminService {
             boolean newAuditPartitionEnabled = request.auditPartitionEnabled() != null ? request.auditPartitionEnabled() : auditPartitionEnabled;
             String newAuditPartitionCron = request.auditPartitionCron() != null ? request.auditPartitionCron() : auditPartitionCron;
             int newAuditPartitionPreloadMonths = request.auditPartitionPreloadMonths() != null ? request.auditPartitionPreloadMonths() : auditPartitionPreloadMonths;
+            String newTablespaceHot = request.auditPartitionTablespaceHot() != null ? request.auditPartitionTablespaceHot() : auditPartitionTablespaceHot;
+            String newTablespaceCold = request.auditPartitionTablespaceCold() != null ? request.auditPartitionTablespaceCold() : auditPartitionTablespaceCold;
+            int newHotMonths = request.auditPartitionHotMonths() != null ? request.auditPartitionHotMonths() : auditPartitionHotMonths;
+            int newColdMonths = request.auditPartitionColdMonths() != null ? request.auditPartitionColdMonths() : auditPartitionColdMonths;
             boolean newAuditMonthlyReportEnabled = request.auditMonthlyReportEnabled() != null ? request.auditMonthlyReportEnabled() : auditMonthlyReportEnabled;
             String newAuditMonthlyReportCron = request.auditMonthlyReportCron() != null ? request.auditMonthlyReportCron() : auditMonthlyReportCron;
 
@@ -280,6 +368,7 @@ public class PolicyAdminService {
                     newAuditEnabled, newAuditReasonRequired, newAuditSensitiveApiDefaultOn,
                     Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel, newAuditMaskingEnabled, newAuditSensitiveEndpoints, newAuditUnmaskRoles,
                     newAuditPartitionEnabled, newAuditPartitionCron, Math.max(newAuditPartitionPreloadMonths, 0),
+                    newTablespaceHot, newTablespaceCold, Math.max(newHotMonths, 1), Math.max(newColdMonths, 1),
                     newAuditMonthlyReportEnabled, newAuditMonthlyReportCron);
         }
 
@@ -363,6 +452,22 @@ public class PolicyAdminService {
             return auditPartitionPreloadMonths;
         }
 
+        public String auditPartitionTablespaceHot() {
+            return auditPartitionTablespaceHot;
+        }
+
+        public String auditPartitionTablespaceCold() {
+            return auditPartitionTablespaceCold;
+        }
+
+        public int auditPartitionHotMonths() {
+            return auditPartitionHotMonths;
+        }
+
+        public int auditPartitionColdMonths() {
+            return auditPartitionColdMonths;
+        }
+
         public boolean auditMonthlyReportEnabled() {
             return auditMonthlyReportEnabled;
         }
@@ -383,6 +488,11 @@ public class PolicyAdminService {
         @Override
         public PolicyToggleSettings currentSettings() {
             return service.currentState().toSettings();
+        }
+
+        @Override
+        public AuditPartitionSettings partitionSettings() {
+            return service.currentState().toPartitionSettings();
         }
     }
 }
