@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
@@ -81,6 +82,14 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
         LocalDate coldTarget = LocalDate.now(clock).minusMonths(hotWindow + 1).withDayOfMonth(1);
         log.debug("[audit-partition] hotWindow={} coldWindow={} tablespaceHot={} tablespaceCold={} nextColdTarget={}",
                 hotWindow, coldWindow, tsHot, tsCold, coldTarget);
+    }
+
+    @EventListener
+    public void refreshOnPolicyChange(AuditPartitionPolicyChangedEvent event) {
+        if (AuditPartitionPolicyChangedEvent.AUDIT_POLICY_CODE.equals(event.code())) {
+            log.info("[audit-partition] policy changed, refreshing partition creation");
+            createNextPartitions();
+        }
     }
 
     void ensurePartition(LocalDate monthStart, String tsHot) {

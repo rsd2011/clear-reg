@@ -4,6 +4,9 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -35,6 +38,9 @@ public class AuditArchiveJob {
     @Value("${audit.archive.retry:3}")
     private int retry;
 
+    /** 테스트 용도 주입 가능한 커맨드 실행자 */
+    private CommandInvoker invoker = this::runCommand;
+
     @Scheduled(cron = "${audit.archive.cron:0 30 3 2 * *}")
     public void archiveColdPartitions() {
         if (!enabled) {
@@ -45,6 +51,38 @@ public class AuditArchiveJob {
         if (!StringUtils.hasText(archiveCommand)) {
             return; // noop if command not provided
         }
-        // TODO: invoke external script with target and retry (e.g., ProcessBuilder + exit code handling + Slack alert)
+        int attempts = Math.max(retry, 1);
+        AtomicReference<Integer> lastExit = new AtomicReference<>(0);
+        for (int i = 1; i <= attempts; i++) {
+            try {
+                int exit = invoker.run(archiveCommand, target.toString());
+                lastExit.set(exit);
+                if (exit == 0) {
+                    log.info("[audit-archive] archive command succeeded on attempt {}", i);
+                    return;
+                }
+                log.warn("[audit-archive] command exited {} on attempt {}/{}", exit, i, attempts);
+            } catch (Exception e) {
+                log.warn("[audit-archive] command failed on attempt {}/{}: {}", i, attempts, e.getMessage());
+            }
+        }
+        log.error("[audit-archive] archive command failed after {} attempts, lastExit={}", attempts, lastExit.get());
+    }
+
+    /** 테스트 용도 */
+    void setInvoker(CommandInvoker invoker) {
+        this.invoker = invoker;
+    }
+
+    private int runCommand(String command, String targetMonth) throws IOException, InterruptedException {
+        ProcessBuilder pb = new ProcessBuilder(command, targetMonth);
+        Process proc = pb.start();
+        int exit = proc.waitFor();
+        return exit;
+    }
+
+    @FunctionalInterface
+    interface CommandInvoker {
+        int run(String command, String targetMonth) throws Exception;
     }
 }

@@ -30,6 +30,9 @@ dependencies {
     testImplementation libs.bundles.spring.test
     testImplementation libs.spring.batch.test
     testImplementation libs.junit.platform.launcher
+    testImplementation libs.testcontainers.junit
+    testImplementation "org.testcontainers:postgresql:${libs.versions.testcontainers.get()}"
+    testImplementation "org.postgresql:postgresql:42.7.2"
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
 

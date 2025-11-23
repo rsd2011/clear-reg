@@ -58,11 +58,12 @@ public class AuditColdArchiveScheduler {
     }
 
     /** 정책 변경 시 즉시 설정 반영을 위한 훅 (정책 이벤트가 출판될 경우) */
-    @EventListener(condition = "#event.code == 'security.policy'")
+    @EventListener
     public void onPolicyChanged(Object event) {
         if (!enabled) {
             return;
         }
         log.info("[audit-archive] policy changed, next archive target will refresh on next cron");
+        scheduleArchive();
     }
 }
