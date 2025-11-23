@@ -82,6 +82,33 @@ class AuditRecordServiceTest {
     }
 
     @Test
+    void policyDisabled_skipsPersistAndPublish() {
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(false).build()));
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                kafkaTemplate, "audit.events.v1", "", kafkaTemplate,
+                false, "", "default", maskingProperties, maskingService);
+
+        service.record(sampleEvent(), AuditMode.ASYNC_FALLBACK);
+
+        Mockito.verifyNoInteractions(repository);
+        Mockito.verifyNoInteractions(kafkaTemplate);
+    }
+
+    @Test
+    void publishSkippedWhenKafkaTemplateNull() {
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                null, "audit.events.v1", "", null,
+                false, "", "default", maskingProperties, maskingService);
+
+        service.record(sampleEvent(), AuditMode.ASYNC_FALLBACK);
+
+        verify(repository).save(any());
+    }
+
+    @Test
     void sanitize_removesRawSensitivePatterns() {
         given(policyResolver.resolve(any(), any()))
                 .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).build()));

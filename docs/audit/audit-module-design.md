@@ -215,7 +215,7 @@ audit:
 ### 테스트
 - [x] Policy 미정의 시 기본 ON/사유 필수 동작 스모크(필터 + 문서/Playwright)
 - [x] Strict/forceUnmask → UnmaskAudit 적재 e2e 테스트
-- [~] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널) — 브로커 준비 시 env `AUDIT_KAFKA_BOOTSTRAP` 기반 스모크(AuditKafkaSmokeTest) 실행, DLQ/재처리는 브로커 마련 후 추가 예정
+- [~] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널) — 브로커 준비 시 env `AUDIT_KAFKA_BOOTSTRAP` 기반 스모크(AuditKafkaSmokeTest) 실행, DLQ 재처리 리스너(AuditDlqReprocessor) 추가 완료(프로퍼티로 토글), 재처리 알람/지표는 브로커 마련 후 확장
 - [~] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대 — 멀티포맷(OutputMaskingAdapter) 경로별 샘플 테스트 추가 예정 (Excel/CSV/PDF/JSON 각각 최소 1개 케이스)
 
 ### 운영
