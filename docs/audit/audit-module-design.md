@@ -210,19 +210,19 @@ audit:
 - [x] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거 (`HttpAuditAspect`, 필터 기반 dual-write 제거)
 - [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, 대량 export/파일 생성 경로 전환 남음)**
 - [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
-- [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트
+- [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트 — `dw_*_log` 레거시 테이블 삭제 계획 수립, 마이그레이션 스크립트 작성 필요
 
 ### 테스트
 - [x] Policy 미정의 시 기본 ON/사유 필수 동작 스모크(필터 + 문서/Playwright)
 - [x] Strict/forceUnmask → UnmaskAudit 적재 e2e 테스트
-- [ ] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널)
-- [~] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대
+- [ ] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널) — 카프카 미도입 환경에서는 스킵, 브로커 준비 시 embedded-Kafka 기반 스모크 추가
+- [~] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대 — 멀티포맷(OutputMaskingAdapter) 경로별 샘플 테스트 추가 예정 (Excel/CSV/PDF/JSON 각각 최소 1개 케이스)
 
 ### 운영
-- [ ] (P2) 보존기간별 파티션/아카이브 배치 스케줄링
-- [ ] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동
+- [ ] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 + HOT/COLD 분리, 만료시 S3 Object Lock/Glacier 이동 배치 설계
+- [ ] (P2) 월간 접속기록 점검 리포트 및 알림 대시보드 연동 — Grafana/Loki 또는 SIEM 쿼리 템플릿 정의 필요
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
-- [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인
+- [ ] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성 예정
 
 ## 13) 멀티 포맷(Excel/PDF/XML/Word/CSV/JSON) 출력 마스킹 설계
 - 공통 원칙
