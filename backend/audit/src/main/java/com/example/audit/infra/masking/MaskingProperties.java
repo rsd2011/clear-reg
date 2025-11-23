@@ -23,6 +23,8 @@ public class MaskingProperties {
         rules.add(new MaskingRule("\\d{15,}", "[REDACTED-DIGITS]")); // 장문 숫자
         rules.add(new MaskingRule("[가-힣]{1,10}(동|로|길)\\s?\\d+[가-힣0-9\\-]*", "[REDACTED-ADDR]")); // 주소
         rules.add(new MaskingRule("이름\\s*[가-힣]{2,4}", "이름 [REDACTED-NAME]")); // 이름
+        rules.add(new MaskingRule("\\b\\w+@\\w+\\.\\w+\\b", "[REDACTED-EMAIL]")); // 이메일
+        rules.add(new MaskingRule("\\d{3}-\\d{2}-\\d{4}", "[REDACTED-SSN]")); // 해외 SSN 패턴
     }
 
     public List<MaskingRule> getRules() {
