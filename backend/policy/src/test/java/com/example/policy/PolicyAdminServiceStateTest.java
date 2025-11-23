@@ -24,7 +24,8 @@ class PolicyAdminServiceStateTest {
                 List.of("OTP"), 20L, List.of("csv"), false, 15,
                 false, false, false, 90, false, "HIGH", false,
                 List.of("/secure"), List.of("POWER_USER"),
-                null, null, null);
+                null, null, null,
+                null, null);
 
         PolicyAdminService.PolicyState merged = state.merge(req);
         assertThat(merged.passwordPolicyEnabled()).isFalse();

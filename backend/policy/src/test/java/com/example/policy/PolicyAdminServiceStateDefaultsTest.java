@@ -22,7 +22,7 @@ class PolicyAdminServiceStateDefaultsTest {
         PolicyUpdateRequest req = new PolicyUpdateRequest(null, null, null,
                 null, -1L, null, null, -5,
                 null, null, null, -1, null, null, null, null, null,
-                null, null, null);
+                null, null, null, null, null);
 
         PolicyAdminService.PolicyState merged = state.merge(req);
         assertThat(merged.maxFileSizeBytes()).isEqualTo(5L);

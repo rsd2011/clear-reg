@@ -26,7 +26,9 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                                    List<String> auditUnmaskRoles,
                                    @JsonProperty(defaultValue = "false") boolean auditPartitionEnabled,
                                    @JsonProperty(defaultValue = "0 0 2 1 * *") String auditPartitionCron,
-                                   @JsonProperty(defaultValue = "1") int auditPartitionPreloadMonths) {
+                                   @JsonProperty(defaultValue = "1") int auditPartitionPreloadMonths,
+                                   @JsonProperty(defaultValue = "true") boolean auditMonthlyReportEnabled,
+                                   @JsonProperty(defaultValue = "0 0 4 1 * *") String auditMonthlyReportCron) {
 
     private static final long DEFAULT_MAX_FILE_SIZE = 20 * 1024 * 1024;
 
@@ -54,6 +56,9 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
         if (auditPartitionPreloadMonths < 0) {
             auditPartitionPreloadMonths = 0;
         }
+        if (auditMonthlyReportCron == null || auditMonthlyReportCron.isBlank()) {
+            auditMonthlyReportCron = "0 0 4 1 * *";
+        }
     }
 
     /** 기존 시그니처 호환을 위한 편의 생성자. */
@@ -68,7 +73,8 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
         this(passwordPolicyEnabled, passwordHistoryEnabled, accountLockEnabled, enabledLoginTypes, maxFileSizeBytes,
                 allowedFileExtensions, strictMimeValidation, fileRetentionDays,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
-                false, "0 0 2 1 * *", 1);
+                false, "0 0 2 1 * *", 1,
+                true, "0 0 4 1 * *");
     }
 
     /** 이전 시그니처(추가 파티션 필드 이전) 호환용 생성자. */
@@ -93,7 +99,8 @@ public record PolicyToggleSettings(boolean passwordPolicyEnabled,
                 allowedFileExtensions, strictMimeValidation, fileRetentionDays,
                 auditEnabled, auditReasonRequired, auditSensitiveApiDefaultOn, auditRetentionDays,
                 auditStrictMode, auditRiskLevel, auditMaskingEnabled, auditSensitiveEndpoints, auditUnmaskRoles,
-                false, "0 0 2 1 * *", 1);
+                false, "0 0 2 1 * *", 1,
+                true, "0 0 4 1 * *");
     }
 
     public List<String> auditUnmaskRoles() {

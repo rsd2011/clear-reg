@@ -22,5 +22,7 @@ public record PolicyView(boolean passwordPolicyEnabled,
                          boolean auditPartitionEnabled,
                          String auditPartitionCron,
                          int auditPartitionPreloadMonths,
+                         boolean auditMonthlyReportEnabled,
+                         String auditMonthlyReportCron,
                          String yaml) {
 }

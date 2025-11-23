@@ -125,6 +125,8 @@ public class PolicyAdminService {
                 state.auditPartitionEnabled(),
                 state.auditPartitionCron(),
                 state.auditPartitionPreloadMonths(),
+                state.auditMonthlyReportEnabled(),
+                state.auditMonthlyReportCron(),
                 snapshot.yaml());
     }
 
@@ -150,6 +152,8 @@ public class PolicyAdminService {
         private final boolean auditPartitionEnabled;
         private final String auditPartitionCron;
         private final int auditPartitionPreloadMonths;
+        private final boolean auditMonthlyReportEnabled;
+        private final String auditMonthlyReportCron;
 
         private PolicyState(boolean passwordPolicyEnabled,
                             boolean passwordHistoryEnabled,
@@ -170,7 +174,9 @@ public class PolicyAdminService {
                             List<String> auditUnmaskRoles,
                             boolean auditPartitionEnabled,
                             String auditPartitionCron,
-                            int auditPartitionPreloadMonths) {
+                            int auditPartitionPreloadMonths,
+                            boolean auditMonthlyReportEnabled,
+                            String auditMonthlyReportCron) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
             this.passwordHistoryEnabled = passwordHistoryEnabled;
             this.accountLockEnabled = accountLockEnabled;
@@ -191,6 +197,8 @@ public class PolicyAdminService {
             this.auditPartitionEnabled = auditPartitionEnabled;
             this.auditPartitionCron = auditPartitionCron;
             this.auditPartitionPreloadMonths = auditPartitionPreloadMonths;
+            this.auditMonthlyReportEnabled = auditMonthlyReportEnabled;
+            this.auditMonthlyReportCron = auditMonthlyReportCron;
         }
 
         public static PolicyState from(PolicyToggleSettings settings) {
@@ -213,7 +221,9 @@ public class PolicyAdminService {
                     settings.auditUnmaskRoles(),
                     settings.auditPartitionEnabled(),
                     settings.auditPartitionCron(),
-                    settings.auditPartitionPreloadMonths());
+                    settings.auditPartitionPreloadMonths(),
+                    settings.auditMonthlyReportEnabled(),
+                    settings.auditMonthlyReportCron());
         }
 
         public PolicyToggleSettings toSettings() {
@@ -262,12 +272,15 @@ public class PolicyAdminService {
             boolean newAuditPartitionEnabled = request.auditPartitionEnabled() != null ? request.auditPartitionEnabled() : auditPartitionEnabled;
             String newAuditPartitionCron = request.auditPartitionCron() != null ? request.auditPartitionCron() : auditPartitionCron;
             int newAuditPartitionPreloadMonths = request.auditPartitionPreloadMonths() != null ? request.auditPartitionPreloadMonths() : auditPartitionPreloadMonths;
+            boolean newAuditMonthlyReportEnabled = request.auditMonthlyReportEnabled() != null ? request.auditMonthlyReportEnabled() : auditMonthlyReportEnabled;
+            String newAuditMonthlyReportCron = request.auditMonthlyReportCron() != null ? request.auditMonthlyReportCron() : auditMonthlyReportCron;
 
             return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes,
                     newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0),
                     newAuditEnabled, newAuditReasonRequired, newAuditSensitiveApiDefaultOn,
                     Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel, newAuditMaskingEnabled, newAuditSensitiveEndpoints, newAuditUnmaskRoles,
-                    newAuditPartitionEnabled, newAuditPartitionCron, Math.max(newAuditPartitionPreloadMonths, 0));
+                    newAuditPartitionEnabled, newAuditPartitionCron, Math.max(newAuditPartitionPreloadMonths, 0),
+                    newAuditMonthlyReportEnabled, newAuditMonthlyReportCron);
         }
 
         public boolean passwordPolicyEnabled() {
@@ -348,6 +361,14 @@ public class PolicyAdminService {
 
         public int auditPartitionPreloadMonths() {
             return auditPartitionPreloadMonths;
+        }
+
+        public boolean auditMonthlyReportEnabled() {
+            return auditMonthlyReportEnabled;
+        }
+
+        public String auditMonthlyReportCron() {
+            return auditMonthlyReportCron;
         }
     }
 

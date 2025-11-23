@@ -6,7 +6,11 @@ import java.time.ZoneOffset;
 import java.time.Instant;
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.Trigger;
+import org.springframework.scheduling.TriggerContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -15,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.persistence.AuditMonthlySummaryEntity;
 import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
+import com.example.common.policy.PolicySettingsProvider;
+import com.example.common.policy.PolicyToggleSettings;
 
 /**
  * 월간 접속/감사 로그 점검 리포트를 생성하기 위한 스켈레톤.
@@ -23,17 +29,22 @@ import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class AuditMonthlyReportJob {
+@EnableScheduling
+public class AuditMonthlyReportJob implements org.springframework.scheduling.annotation.SchedulingConfigurer {
 
     private final AuditLogRepository repository;
     private final AuditMonthlySummaryRepository summaryRepository;
     private final Clock clock;
+    private final PolicySettingsProvider policySettingsProvider;
 
     /**
      * 매월 1일 04:00에 지난달 로그 건수 리포트.
      */
-    @Scheduled(cron = "0 0 4 1 * *")
     public void report() {
+        PolicyToggleSettings settings = policySettingsProvider.currentSettings();
+        if (!settings.auditMonthlyReportEnabled()) {
+            return;
+        }
         LocalDate now = LocalDate.now(clock);
         LocalDate start = now.minusMonths(1).withDayOfMonth(1);
         LocalDate end = now.withDayOfMonth(1);
@@ -54,5 +65,16 @@ public class AuditMonthlyReportJob {
                 .totalCount(count)
                 .createdAt(Instant.now(clock))
                 .build());
+    }
+
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+        taskRegistrar.addTriggerTask(this::report, new Trigger() {
+            @Override
+            public java.util.Date nextExecutionTime(TriggerContext triggerContext) {
+                String cron = policySettingsProvider.currentSettings().auditMonthlyReportCron();
+                return new CronTrigger(cron).nextExecutionTime(triggerContext);
+            }
+        });
     }
 }
