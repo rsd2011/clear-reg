@@ -42,6 +42,18 @@ public class AuditArchiveJob {
     @Value("${audit.archive.slack-webhook:}")
     private String slackWebhook;
 
+    @Value("${audit.archive.alert.enabled:true}")
+    private boolean alertEnabled;
+
+    @Value("${audit.archive.alert.mention:}")
+    private String alertMention;
+
+    @Value("${audit.archive.alert.channel:#audit-ops}")
+    private String alertChannel;
+
+    @Value("${audit.archive.alert.delay-threshold-ms:60000}")
+    private long delayThresholdMs;
+
     private RestTemplate restTemplate = new RestTemplate();
     /** 테스트 용도 주입 가능한 커맨드 실행자 */
     private CommandInvoker invoker = this::runCommand;
@@ -58,12 +70,14 @@ public class AuditArchiveJob {
         }
         int attempts = Math.max(retry, 1);
         AtomicReference<Integer> lastExit = new AtomicReference<>(0);
+        long start = System.currentTimeMillis();
         for (int i = 1; i <= attempts; i++) {
             try {
                 int exit = invoker.run(archiveCommand, target.toString());
                 lastExit.set(exit);
                 if (exit == 0) {
                     log.info("[audit-archive] archive command succeeded on attempt {}", i);
+                    maybeAlertDelay(target, start);
                     return;
                 }
                 log.warn("[audit-archive] command exited {} on attempt {}/{}", exit, i, attempts);
@@ -94,17 +108,43 @@ public class AuditArchiveJob {
     }
 
     private void notifyFailure(LocalDate target, int exitCode) {
-        if (!StringUtils.hasText(slackWebhook)) {
+        if (!alertEnabled || !StringUtils.hasText(slackWebhook)) {
             return;
         }
         try {
             String payload = """
-                    {"text":"[audit-archive] FAILED target=%s exitCode=%d (host=%s)"}
-                    """.formatted(target, exitCode, java.net.InetAddress.getLocalHost().getHostName());
-            restTemplate.postForEntity(slackWebhook, payload, String.class);
+                    {
+                      "text":"[audit-archive] :x: FAILED target=%s exitCode=%d (host=%s) %s",
+                      "channel":"%s"
+                    }
+                    """.formatted(target, exitCode, java.net.InetAddress.getLocalHost().getHostName(),
+                    mention(), alertChannel);
+            restTemplate.postForEntity(slackWebhook, payload.replaceAll("\\s+", " "), String.class);
         } catch (Exception e) {
             log.warn("[audit-archive] failed to send slack alert: {}", e.getMessage());
         }
+    }
+
+    private void maybeAlertDelay(LocalDate target, long startMs) {
+        long elapsed = System.currentTimeMillis() - startMs;
+        if (!alertEnabled || !StringUtils.hasText(slackWebhook)) return;
+        if (elapsed < delayThresholdMs) return;
+        try {
+            String payload = """
+                    {
+                      "text":"[audit-archive] :warning: SLOW archive target=%s elapsedMs=%d (host=%s) %s",
+                      "channel":"%s"
+                    }
+                    """.formatted(target, elapsed, java.net.InetAddress.getLocalHost().getHostName(),
+                    mention(), alertChannel);
+            restTemplate.postForEntity(slackWebhook, payload.replaceAll("\\s+", " "), String.class);
+        } catch (Exception e) {
+            log.warn("[audit-archive] failed to send slack delay alert: {}", e.getMessage());
+        }
+    }
+
+    private String mention() {
+        return StringUtils.hasText(alertMention) ? alertMention : "";
     }
 
     @FunctionalInterface

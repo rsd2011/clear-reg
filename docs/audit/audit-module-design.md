@@ -231,10 +231,10 @@ audit:
       7개월 경과 시 `ALTER TABLE audit_log_2024_10 SET TABLESPACE :cold; REINDEX TABLE audit_log_2024_10; ALTER TABLE ... SET (toast.compress='zstd'); VACUUM ANALYZE audit_log_2024_10;`  
     - 운영 주기: HOT→COLD 이동 월 1회, 장기 파티션 VACUUM/REINDEX 주 1회.  
   - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
-    - [ ] 배치 런처에서 스크립트 호출 파라미터화(`PG_URL`, `S3_BUCKET`, `S3_PREFIX`, `RETENTION_YEARS`, `MAX_RETRY`, `SLACK_WEBHOOK`) 및 실패 리트라이/알림 연동.  
+    - [x] 배치 런처에서 스크립트 호출 파라미터화(`PG_URL`, `S3_BUCKET`, `S3_PREFIX`, `RETENTION_YEARS`, `MAX_RETRY`, `SLACK_WEBHOOK`) 및 실패 리트라이/알림 연동.  
   - [~] AuditPartitionScheduler 정책 연동·배치 통합  
     - [x] PolicyToggleSettings/Policy YAML에 `auditPartitionEnabled`, `auditPartitionCron`, `auditPartitionPreloadMonths`, `auditPartitionTablespaceHot/Cold`, `auditPartitionHotMonths/ColdMonths` 필드 저장 (UI 노출은 추후).  
-    - [ ] 정책 변경 이벤트 수신 시 스케줄러 Cron/enable/preloadMonths 동기화 e2e 검증  
+    - [ ] 정책 변경 이벤트 수신 시 스케줄러 Cron/enable/preloadMonths 동기화 e2e 검증(Policy API 호출 포함)  
 - [x] (P2) 월간 접속기록 점검 리포트 — `AuditMonthlyReportJob`을 정책 기반 동적 cron으로 전환 (`auditMonthlyReportEnabled`, `auditMonthlyReportCron`), 기본 cron=0 0 4 1 * *  
 
 ### 정리/마이그레이션
@@ -243,9 +243,11 @@ audit:
 ### 운영 설계 보강 (HOT/COLD + Object Lock)
   - [ ] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
   - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
-  - [ ] 모니터링: HOT IOPS, COLD 스토리지 비용, export 성공/실패 카운터, Object Lock 배치 지연 알림.
-    - 절차: `pg_dump --table=audit_log_YYYY_MM` → `aws s3 cp ... --object-lock-mode COMPLIANCE --object-lock-retain-until-date +5y` → 확인 후 `DROP TABLE audit_log_YYYY_MM`.  
-    - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.  
+  - [ ] 모니터링/알림 룰: HOT IOPS, COLD 비용, export 성공/실패, Object Lock 지연 알림.
+    - HOT IOPS: pg_stat_io 기반 HOT TS read/write IOPS 95퍼센타일이 평시 대비 50%↑ 시 Slack 경고.
+    - COLD 비용: 월별 table_size×단가 추정 비용 증가율>20% 시 경고.
+    - Object Lock 지연: 업로드/검증/삭제 elapsed_ms가 `audit.archive.alert.delay-threshold-ms` 초과 시 경고, 3회 연속 시 PagerDuty 알림.
+    - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
     - `audit.partition.preload-months=2`, `audit.partition.tablespace.hot/cold`, `audit.partition.hot-months=6`, `audit.partition.cold-months=60`, `audit.archive.command=/path/to/hot-cold-archive-example.sh`, `audit.archive.retry=3` 프로퍼티를 `AuditPartitionScheduler`/`AuditColdArchiveScheduler`/`AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
   - [ ] 정책 이벤트 연동: `PolicyChangedEvent(security.policy)` 발생 시 AuditPartitionScheduler/AuditColdArchiveScheduler가 즉시 새 설정을 반영하고, 다음 cron에서 HOT/COLD 생성·아카이브를 재계산하도록 EventListener 추가(e2e 검증 필요).  

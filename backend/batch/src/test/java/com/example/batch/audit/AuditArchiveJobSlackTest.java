@@ -24,6 +24,7 @@ class AuditArchiveJobSlackTest {
         set(job, "archiveCommand", "/bin/false");
         set(job, "retry", 2);
         set(job, "slackWebhook", "http://example.com/webhook");
+        set(job, "alertEnabled", true);
 
         AuditArchiveJob.CommandInvoker invoker = Mockito.mock(AuditArchiveJob.CommandInvoker.class);
         Mockito.when(invoker.run(anyString(), anyString())).thenReturn(1);
