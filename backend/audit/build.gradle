@@ -28,6 +28,8 @@ testImplementation 'com.h2database:h2'
 }
 
 def auditJacocoExcludes = [
+        '**/infra/kafka/AuditKafkaProperties.*',
+        '**/infra/siem/**'
 ]
 
 tasks.named('jacocoTestReport').configure {
@@ -40,15 +42,20 @@ tasks.named('jacocoTestCoverageVerification').configure {
     classDirectories.setFrom(classDirectories.files.collect { dir ->
         fileTree(dir: dir, exclude: auditJacocoExcludes)
     })
-    // 모듈 내 DLQ 리스너 등 브랜치 수 증가로 임시 완화
     violationRules {
         rules.each { it.enabled = false }
         rule {
             element = 'BUNDLE'
+            includes = ['com.example.audit*', 'com.example.audit.infra*', 'com.example.audit.drm*']
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
             limit {
                 counter = 'BRANCH'
                 value = 'COVEREDRATIO'
-                minimum = 0.70
+                minimum = 0.75
             }
         }
     }
