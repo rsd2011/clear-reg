@@ -25,7 +25,15 @@ public final class OrganizationId extends AbstractIdentifier {
     }
 
     public String masked() {
-        return mask(raw);
+        if (raw.length() <= 3) {
+            return raw;
+        }
+        int visiblePrefix = Math.min(3, raw.length());
+        int visibleSuffix = Math.min(2, raw.length() - visiblePrefix);
+        String prefix = raw.substring(0, visiblePrefix);
+        String suffix = raw.substring(raw.length() - visibleSuffix);
+        String stars = "*".repeat(Math.max(0, raw.length() - visiblePrefix - visibleSuffix));
+        return prefix + stars + suffix;
     }
 
     @Override

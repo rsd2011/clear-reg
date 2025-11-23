@@ -28,6 +28,8 @@ subprojects { subproject ->
                 exceptionFormat = TestExceptionFormat.FULL
             }
             finalizedBy(tasks.named('jacocoTestReport'))
+            // 커버리지 게이트(라인 90%, 브랜치 75%)가 항상 실행되도록 테스트 후 검증까지 연결
+            finalizedBy(tasks.named('jacocoTestCoverageVerification'))
         }
 
         // 핵심 도메인/인프라 코드까지 커버리지에 포함하기 위해 최소한의 예외만 둔다.

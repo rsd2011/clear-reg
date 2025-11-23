@@ -110,7 +110,17 @@ class DraftTemplateAdminControllerExtraTest {
         AuthContext ctx = new AuthContext("user", "ORG", "PG", null, null, RowScope.ALL, null);
         AuthContextHolder.set(ctx);
 
-        ApprovalLineTemplateResponse response = mock(ApprovalLineTemplateResponse.class);
+        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(
+                UUID.randomUUID(),
+                "CODE",
+                "이름",
+                "BT",
+                com.example.draft.domain.TemplateScope.ORGANIZATION,
+                "ORG",
+                true,
+                OffsetDateTime.now(),
+                OffsetDateTime.now(),
+                List.of());
         when(service.listApprovalLineTemplates(eq("BT"), eq("ORG"), eq(false), eq(ctx), eq(true)))
                 .thenReturn(List.of(response));
 

@@ -1,95 +1,60 @@
 package com.example.policy.datapolicy;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
 import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.mockito.Mockito;
 
-@DataJpaTest
-@EntityScan(basePackageClasses = {OrgGroup.class, OrgGroupMember.class})
-@Import({OrgGroupPermissionResolver.class, OrgGroupPermissionResolverTest.TestConfig.class, OrgGroupPermissionResolverTest.TestApp.class})
+@DisplayName("OrgGroupPermissionResolver 기본/폴백 분기")
 class OrgGroupPermissionResolverTest {
 
-    @Autowired
-    OrgGroupRepository repository;
-
-    @Autowired
-    OrgGroupPermissionResolver resolver;
-
-    @TestConfiguration
-    @EnableJpaRepositories(basePackageClasses = OrgGroupRepository.class)
-    static class TestConfig {
-        @Bean
-        OrgGroupSettingsProperties orgGroupSettingsProperties() {
-            OrgGroupSettingsProperties props = new OrgGroupSettingsProperties();
-            props.setDefaultGroups(java.util.List.of("DEFAULT_GRP"));
-            return props;
-        }
-    }
-
-    @SpringBootApplication
-    static class TestApp {}
+    OrgGroupRepository repository = Mockito.mock(OrgGroupRepository.class);
+    OrgGroupSettingsProperties props = new OrgGroupSettingsProperties();
 
     @Test
-    @DisplayName("리더/멤버에 따라 다른 권한그룹을 반환한다")
-    void resolve() {
-        repository.save(OrgGroupMember.builder()
-                .groupCode("GRP_A")
-                .orgId("ORG1")
-                .leaderPermGroupCode("LEADER_ADMIN")
-                .memberPermGroupCode("MEMBER_READ")
-                .priority(50)
-                .build());
+    void resolvesLeaderAndMemberAndFallback() {
+        OrgGroupMember leaderMember = OrgGroupMember.builder().groupCode("G1").orgId("O1").leaderPermGroupCode("L1").memberPermGroupCode("M1").priority(1).build();
+        OrgGroupMember onlyMember = OrgGroupMember.builder().groupCode("G2").orgId("O2").memberPermGroupCode("M2").priority(2).build();
+        given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of(leaderMember, onlyMember));
 
-        Set<String> leader = resolver.resolvePermGroups(List.of("ORG1"), true);
-        Set<String> member = resolver.resolvePermGroups(List.of("ORG1"), false);
+        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+        Set<String> leader = resolver.resolvePermGroups(List.of("O1", "O2"), true);
+        Set<String> member = resolver.resolvePermGroups(List.of("O1", "O2"), false);
 
-        assertThat(leader).containsExactly("LEADER_ADMIN");
-        assertThat(member).containsExactly("MEMBER_READ");
+        assertThat(leader).containsExactly("L1");
+        assertThat(member).containsExactly("M1", "M2");
     }
 
     @Test
-    @DisplayName("우선순위가 낮은 값이 뒤에 온다")
-    void priorityOrdering() {
-        repository.save(OrgGroupMember.builder()
-                .groupCode("GRP_A")
-                .orgId("ORG1")
-                .memberPermGroupCode("LOW")
-                .priority(200)
-                .build());
-        repository.save(OrgGroupMember.builder()
-                .groupCode("GRP_B")
-                .orgId("ORG1")
-                .memberPermGroupCode("HIGH")
-                .priority(10)
-                .build());
-
-        Set<String> member = resolver.resolvePermGroups(List.of("ORG1"), false);
-        assertThat(member.stream().toList()).containsExactly("HIGH", "LOW");
+    void fallbackToDefaultGroupsWhenEmpty() {
+        given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
+        props.setDefaultGroups(List.of("DEF1", "DEF2"));
+        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+        Set<String> groups = resolver.resolvePermGroups(List.of("O1"), false);
+        assertThat(groups).containsExactly("DEF1", "DEF2");
     }
 
     @Test
-    @DisplayName("맵핑이 없으면 기본 그룹을 반환한다")
-    void defaultGroupWhenEmpty() {
-        Set<String> member = resolver.resolvePermGroups(List.of("UNKNOWN"), false);
-        assertThat(member).containsExactly("DEFAULT_GRP");
+    void fallbackToLowestPriorityGroup() {
+        given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
+        props.setDefaultGroups(List.of());
+        props.setFallbackToLowestPriorityGroup(true);
+        given(repository.findTopByOrderByPriorityDesc()).willReturn(OrgGroup.builder().code("LOW").priority(200).name("low").build());
+
+        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+        Set<String> groups = resolver.resolvePermGroups(List.of("O1"), false);
+        assertThat(groups).containsExactly("LOW");
     }
 
     @Test
-    @DisplayName("맵핑 없을 때 기본 그룹 혹은 최하위 priority 그룹으로 대체")
-    void defaultOrLowestPriority() {
-        Set<String> member = resolver.resolvePermGroups(List.of("ORG2"), false);
-        assertThat(member).containsExactly("DEFAULT_GRP");
+    void emptyOrgIdsReturnsEmpty() {
+        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+        assertThat(resolver.resolvePermGroups(List.of(), false)).isEmpty();
     }
 }

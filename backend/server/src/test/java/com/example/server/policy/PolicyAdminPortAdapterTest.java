@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.example.audit.AuditPort;
 import com.example.policy.PolicyAdminService;
 import com.example.policy.dto.PolicyUpdateRequest;
 import com.example.policy.dto.PolicyView;
@@ -19,7 +20,8 @@ import com.example.policy.dto.PolicyYamlRequest;
 class PolicyAdminPortAdapterTest {
 
     private final PolicyAdminService policyAdminService = Mockito.mock(PolicyAdminService.class);
-    private final PolicyAdminPortAdapter adapter = new PolicyAdminPortAdapter(policyAdminService);
+    private final AuditPort auditPort = Mockito.mock(AuditPort.class);
+    private final PolicyAdminPortAdapter adapter = new PolicyAdminPortAdapter(policyAdminService, auditPort);
 
     @Test
     @DisplayName("현재 정책 조회를 서비스에 위임한다")
@@ -40,6 +42,10 @@ class PolicyAdminPortAdapterTest {
     void updateTogglesDelegates() {
         PolicyUpdateRequest request = new PolicyUpdateRequest(false, null, null, List.of("SSO"),
                 null, null, null, null, null, null, null, null, null, null, null, null, null);
+        PolicyView current = new PolicyView(true, true, true, List.of("PASSWORD"),
+                1_048_576L, List.of("pdf"), true, 365,
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml-current");
+        given(policyAdminService.currentView()).willReturn(current);
         given(policyAdminService.updateView(request)).willReturn(new PolicyView(false, true, true,
                 List.of("SSO"), 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml"));
@@ -54,6 +60,10 @@ class PolicyAdminPortAdapterTest {
     @DisplayName("YAML 업데이트도 서비스에 위임한다")
     void updateFromYamlDelegates() {
         PolicyYamlRequest yamlRequest = new PolicyYamlRequest("policy: value");
+        PolicyView current = new PolicyView(true, true, true, List.of("PASSWORD"),
+                1_048_576L, List.of("pdf"), true, 365,
+                true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "yaml-current");
+        given(policyAdminService.currentView()).willReturn(current);
         PolicyView view = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), "policy: value");
