@@ -168,7 +168,7 @@ public class AuditAspect {
   - 정책 캐시: `com.example.audit.infra.policy.AuditPolicyResolver` (Caffeine, secure-by-default)
 - 정책 토글 스키마 확장: `PolicyToggleSettings`에 `auditEnabled/auditReasonRequired/auditSensitiveApiDefaultOn/auditRetentionDays/auditStrictMode/auditRiskLevel` 추가 (기본 ON, reasonRequired=true, retention 730일, STRICT).
 - server/auth 파일럿: `AuthService` 로그인·비밀번호 변경 성공 시 `AuditPort`에 ASYNC_FALLBACK 모드 dual-write.
-- server 전역 파일럿: `RequestAuditInterceptor`를 `/api/**` 경로에 등록해 HTTP 요청 메타를 dual-write.
+- server 전역 파일럿: **HandlerInterceptor 기반 레거시를 제거**하고 `HttpAuditAspect`로 컨트롤러 전역 HTTP 감사 처리(`/api/**`), `AuditPort`로 기록. 기존 필터(`SensitiveApiFilter`, `DataPolicyMaskingFilter`)는 AOP 전/후로 동작.
 - Kafka 토픽 기본값: `audit.kafka.topic=audit.events.v1` (필요 시 프로퍼티로 재정의).
 - JPA 테이블: `audit_log` 엔티티 스켈레톤 포함.
 

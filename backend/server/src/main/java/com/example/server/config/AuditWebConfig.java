@@ -5,20 +5,17 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.example.audit.AuditPort;
-import com.example.server.audit.RequestAuditInterceptor;
-import com.example.server.audit.SensitiveApiFilter;
-import com.example.server.audit.DataPolicyMaskingFilter;
-import com.example.server.config.SensitiveApiProperties;
 import com.example.audit.NoopAuditPort;
 import com.example.common.policy.DataPolicyProvider;
+import com.example.server.audit.DataPolicyMaskingFilter;
+import com.example.server.audit.SensitiveApiFilter;
+import com.example.server.config.SensitiveApiProperties;
 
 @Configuration
 @EnableConfigurationProperties(SensitiveApiProperties.class)
-public class AuditWebConfig implements WebMvcConfigurer {
+public class AuditWebConfig {
 
     private final ObjectProvider<AuditPort> auditPortProvider;
     private final SensitiveApiProperties sensitiveApiProperties;
@@ -30,12 +27,6 @@ public class AuditWebConfig implements WebMvcConfigurer {
         this.auditPortProvider = auditPortProvider;
         this.sensitiveApiProperties = sensitiveApiProperties;
         this.dataPolicyProvider = dataPolicyProvider;
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new RequestAuditInterceptor(auditPortProvider.getIfAvailable(NoopAuditPort::new)))
-                .addPathPatterns("/api/**");
     }
 
     @Bean
