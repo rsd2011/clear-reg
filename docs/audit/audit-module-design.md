@@ -208,9 +208,9 @@ audit:
 ### 마이그레이션
 - [x] (P2) `auth` 로그인/비밀번호 변경/권한 감사 → AuditPort 전환(dual-write 레거시 제거)
 - [x] (P2) `server` 컨트롤러 필터 로깅 → AOP/포트 전환 및 레거시 제거 (`HttpAuditAspect`, 필터 기반 dual-write 제거)
-- [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, 대량 export/파일 생성 경로는 ExportAuditService 헬퍼까지 추가 완료 → 다음 단계: 실제 export 서비스/컨트롤러 호출부에서 ExportAuditService 활용 + OutputMaskingAdapter 연결, 완료 시 이 항목을 [x]로 전환)**  
+  - [~] (P2) `data-integration` 배치/대량 조회 로깅 → AuditPort 사용, 직접 DB insert 제거 **(배치 목록/최신 + 조직/직원 조회 + outbox enqueue/claim/sent/retry/dead-letter AuditPort 전환 완료, ExportAuditService/OutputMaskingAdapter를 활용한 멀티포맷 헬퍼·테스트 완료, 실제 대량 export 엔드포인트·잡에 연결만 남음)**  
   - [x] data-integration 내 export 엔드포인트/잡에 `ExportService` 주입해 호출부 래핑 (server `ExportController` 샘플 엔드포인트 적용)  
-  - [x] export 결과 직렬화 단계에서 `OutputMaskingAdapter` 적용(Excel/CSV/PDF/JSON 공통) → `ExportMaskingHelper`, `ExcelMaskingAdapter`, `PdfMaskingAdapter` 추가  
+  - [x] export 결과 직렬화 단계에서 `OutputMaskingAdapter` 적용(Excel/CSV/PDF/JSON 공통) → `ExportMaskingHelper`, `ExcelMaskingAdapter`, `PdfMaskingAdapter` + 멀티포맷 무누출 테스트 추가  
   - [x] ExportCommand에 reason/legalBasis 전달 · Audit 메타 기록 · API 파라미터 검증(사유/법적근거) 연결  
   - [x] export 실패 경로에서도 AuditMode=STRICT/ASYNC_FALLBACK 정책에 맞게 결과 코드/에러를 기록하고 DLQ 재처리 여부 점검.  
     - ExportFailureEvent/Notifier 추가로 실패 메타(파일명/건수/결과코드) 기록 및 알림 훅 제공(현재 NOOP → 알림 시스템 연동 시 구현).  
@@ -230,6 +230,9 @@ audit:
     - SQL 예시(PSQL): `ALTER TABLE audit_log ATTACH PARTITION audit_log_2025_05 FOR VALUES FROM ('2025-05-01') TO ('2025-06-01') TABLESPACE audit_hot;`  
     - 7개월 경과 시: `ALTER TABLE audit_log_2024_10 SET TABLESPACE audit_cold;` + `REINDEX TABLE audit_log_2024_10;` + `ALTER TABLE ... SET (toast.compress=zstd);`
   - [ ] S3 Object Lock(Compliance) 또는 Glacier 딥아카이브 전송 배치 스크립트 설계: 파티션 단위 export→Object Lock→DROP 순서 정의.  
+
+### 정리/마이그레이션
+- [ ] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/`에 삭제/이관 스크립트 추가 → 배포 후 드라이런/백업 계획 수립  
     - 절차: `pg_dump --table=audit_log_YYYY_MM` → `aws s3 cp ... --object-lock-mode COMPLIANCE --object-lock-retain-until-date +5y` → 확인 후 `DROP TABLE audit_log_YYYY_MM`.  
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.  
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
