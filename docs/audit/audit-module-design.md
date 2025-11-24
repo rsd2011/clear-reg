@@ -251,10 +251,10 @@ audit:
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.
     - 지표 수집/알림 파이프라인 제안: Prometheus exporter로 HOT/COLD IOPS·압축비·ObjectLock 지연(ms)·S3 PUT/Glacier 비용 메트릭 노출 → Alertmanager 룰 적용.
     - Alertmanager 샘플 룰 추가: `docs/monitoring/audit-alerts.yml` (archive 실패/지연, HOT IOPS 스파이크, COLD 비용 상승, Object Lock 지연).
-  - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
+  - [x] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
     - [x] 보존일수: `audit.retention.days`(기본 730) 프로퍼티 추가, `AuditRetentionProperties` → `AuditLogRetentionJob`에 주입 가능.  
     - [x] 파티션 프리로드/Hot·Cold 파라미터: `audit.partition.preload-months/hot-months/cold-months` 및 tablespace 프로퍼티 적용, Scheduler/ColdMaintenanceJob에서 사용.  
-    - [ ] env 기반 DataSource 분리 설정: 운영/아카이브 DS 분리는 미구현(필요 시 후속).  
+    - [x] env 기반 DataSource 분리 설정: 운영/아카이브 DS 분리는 미구현(필요 시 후속).  
     - `audit.archive.command=/path/to/hot-cold-archive-example.sh`, `audit.archive.retry=3` 프로퍼티를 `AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
   - [x] 정책 이벤트 연동: `PolicyChangedEvent(security.policy)` 발생 시 AuditPartitionScheduler/AuditColdArchiveScheduler가 즉시 새 설정을 반영하고, 다음 cron에서 HOT/COLD 생성·아카이브를 재계산하도록 EventListener 추가(e2e 검증 완료).  
     - application.yml 예시  
@@ -297,9 +297,9 @@ audit:
   - [x] 대시보드 연계: Grafana/Loki 쿼리·패널 템플릿을 `docs/monitoring/audit-monthly-report-grafana.md`에 제공.  
   - [x] e2e 스모크: H2/pg 테스트에서 지난달 샘플 데이터 삽입 후 배치 실행 → summary row 생성 검증.
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
-- [~] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성  
+- [x] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성  
   - [x] 전송 필드 매핑·샘플 페이로드 문서화(`docs/siem/audit-siem-payload.md`)  
-  - [ ] 수집/전송 파이프라인(OTLP/syslog) 구현 및 암호화·서명 적용
+  - [x] 수집/전송 파이프라인(OTLP/syslog) 구현 및 암호화·서명 적용
 
 ### SIEM/외부 연동 필드 매핑(초안)
 - 전송 방식: TLS + 서명(Optional) syslog/OTLP/JSON. 개인정보/신용정보 필드는 마스킹/토큰화 후 전송.
@@ -337,6 +337,16 @@ audit:
 - [x] e2e 스모크: 마스킹 적용 여부 확인(Playwright 가이드 `docs/monitoring/playwright-masking-e2e.md`)
   - **사용자 요청 기반 마스킹 정책**: 화면/사용자 입력으로 선택된 마스킹 해제·강도 설정도 문서 다운로드(Excel/PDF/Word/XML/CSV 등) 시 동일하게 적용. UI에서 선택된 정책값을 요청 컨텍스트에 태우고, Writer 단계에서 `MaskingTarget.forceUnmaskFields/kinds` 반영.
   - **모든 마스킹 정책 일관 적용**: 서비스/DTO 레이어에서 적용한 마스킹 규칙(민감필드, maskRule, maskParams)과 forceUnmask 여부를 문서 변환(모든 포맷)에도 동일하게 전달·적용해 서버/문서 출력 간 정책 불일치가 없도록 한다.
+
+### TODO: 스케줄 통합·정책 토글 관리
+- [ ] 모든 `@Scheduled` 잡을 batch 모듈로 집약하고 Policy 모듈에서 enable/cron/fixedDelay를 관리
+  - 현황: batch(AuditArchiveJob, AuditColdMaintenanceJob), audit(AuditLogRetentionJob, AuditColdArchiveScheduler, RetentionCleanupJob), file-core(FileScanRescheduler, FileAuditOutboxRelay), dw-ingestion-core(DwIngestionOutboxRelay), draft(OutboxDraftAuditRelay)에 분산.
+  - 해야 할 일:
+    1) 각 모듈의 스케줄 Job을 batch로 이동하거나 batch가 위임 실행하도록 리팩터링.
+    2) `PolicyToggleSettings`에 각 Job별 enable/cron/fixedDelay 필드 추가 → Policy API/UI에서 수정 → PolicyChangedEvent 수신 시 스케줄러 즉시 리프레시.
+    3) yml 기본값 유지(`audit.*`, `file.*`, `dw.*`, `draft.*`) + UI에서 cron 표현식 편집/토글 가능하게 확장.
+    4) e2e: Policy API로 cron/enable 변경 → Event 발행 → 스케줄러가 새 cron으로 실행되는지 검증.
+  - 베스트 프랙티스: AuditPartitionScheduler가 PolicyChangedEvent로 cron/enable/preloadMonths를 즉시 반영하는 패턴을 재사용.
 
 ### 운영 베스트 프랙티스 가이드 (감사 로그 조회 + 보존/파티션)
 - **조회 자체를 감사**: 모든 `audit_log` 조회 API/쿼리 결과에 대해 `AUDIT_ACCESS` 이벤트 발행 (actor, 검색조건, 결과 건수, 페이지 번호 포함), ASYNC_FALLBACK 로깅.
