@@ -215,7 +215,7 @@ audit:
     - ExportFailureEvent/Notifier 추가로 실패 메타(파일명/건수/결과코드) 기록 및 알림 훅 제공(현재 NOOP → 알림 시스템 연동 시 구현).  
     - AuditEvent.resultCode에 예외 클래스명 저장, AuditMode 전달(STRICT/ASYNC_FALLBACK) 유지.  
 - [x] (P2) `policy` 변경 이력 → AuditEvent(policy-change)로 남기기
-- [ ] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트 — `dw_*_log` 레거시 테이블 삭제 계획 수립, 마이그레이션 스크립트 작성 필요
+- [x] (P3) 불필요한 기존 로그 테이블/코드 제거 및 문서 업데이트 — `docs/migrations/2025-11-23-remove-dw-log-tables.sql` 추가, 배포 시 백업 후 실행
 
 ### 테스트
 - [x] Policy 미정의 시 기본 ON/사유 필수 동작 스모크(필터 + 문서/Playwright)
