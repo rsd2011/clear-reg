@@ -253,7 +253,7 @@ audit:
     - Alertmanager 샘플 룰 추가: `docs/monitoring/audit-alerts.yml` (archive 실패/지연, HOT IOPS 스파이크, COLD 비용 상승, Object Lock 지연).
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
     - `audit.partition.preload-months=2`, `audit.partition.tablespace.hot/cold`, `audit.partition.hot-months=6`, `audit.partition.cold-months=60`, `audit.archive.command=/path/to/hot-cold-archive-example.sh`, `audit.archive.retry=3` 프로퍼티를 `AuditPartitionScheduler`/`AuditColdArchiveScheduler`/`AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
-  - [ ] 정책 이벤트 연동: `PolicyChangedEvent(security.policy)` 발생 시 AuditPartitionScheduler/AuditColdArchiveScheduler가 즉시 새 설정을 반영하고, 다음 cron에서 HOT/COLD 생성·아카이브를 재계산하도록 EventListener 추가(e2e 검증 필요).  
+  - [x] 정책 이벤트 연동: `PolicyChangedEvent(security.policy)` 발생 시 AuditPartitionScheduler/AuditColdArchiveScheduler가 즉시 새 설정을 반영하고, 다음 cron에서 HOT/COLD 생성·아카이브를 재계산하도록 EventListener 추가(e2e 검증 완료).  
     - application.yml 예시  
       ```yaml
       audit:
