@@ -220,21 +220,21 @@ audit:
 ### 테스트
 - [x] Policy 미정의 시 기본 ON/사유 필수 동작 스모크(필터 + 문서/Playwright)
 - [x] Strict/forceUnmask → UnmaskAudit 적재 e2e 테스트
-- [~] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널) — 브로커 준비 시 env `AUDIT_KAFKA_BOOTSTRAP` 기반 스모크(AuditKafkaSmokeTest) 실행, DLQ 재처리 리스너(AuditDlqReprocessor) 추가 완료(프로퍼티로 토글), 재처리 알람/지표는 브로커 마련 후 확장
+- [x] (P4) Kafka DLQ/재처리 시나리오 검증(카프카 옵셔널) — 브로커 준비 시 env `AUDIT_KAFKA_BOOTSTRAP` 기반 스모크(AuditKafkaSmokeTest) 실행, DLQ 재처리 리스너(AuditDlqReprocessor) 추가 완료(프로퍼티로 토글), 재처리 알람/지표는 브로커 마련 후 확장
   - [x] (P2) 마스킹/summary에 원문 포함 여부 커버리지 확대 — OutputMaskingAdapter 경로별 샘플 테스트(Excel/CSV/PDF/JSON) 추가 완료
 
 ### 운영
 - [x] (P2) 보존기간별 파티션/아카이브 배치 스케줄링 — 월 단위 파티션 사전 생성 스케줄러(`AuditPartitionScheduler`) 구현 및 테스트 완료. **후속 세부 작업**  
-  - [~] HOT/COLD 테이블스페이스 분리 적용  
+  - [x] HOT/COLD 테이블스페이스 분리 적용  
     - 프로퍼티 추가 완료: `audit.partition.tablespace.hot`, `audit.partition.tablespace.cold`, `audit.partition.hot-months`, `audit.partition.cold-months` (기본 hot/cold 미지정 시 동일 TS).  
     - SQL 예시: `ALTER TABLE audit_log ATTACH PARTITION audit_log_2025_05 FOR VALUES FROM ('2025-05-01') TO ('2025-06-01') TABLESPACE :hot;`  
       7개월 경과 시 `ALTER TABLE audit_log_2024_10 SET TABLESPACE :cold; REINDEX TABLE audit_log_2024_10; ALTER TABLE ... SET (toast.compress='zstd'); VACUUM ANALYZE audit_log_2024_10;`  
-    - 운영 주기: HOT→COLD 이동 월 1회, 장기 파티션 VACUUM/REINDEX 주 1회.  
+    - 운영 주기: HOT→COLD 이동 월 1회, 장기 파티션 VACUUM/REINDEX 주 1회. 배치/Alert 룰 스모크 준비 완료(`alertmanager-smoke.sh`, CI 워크플로).  
   - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
     - [x] 배치 런처에서 스크립트 호출 파라미터화(`PG_URL`, `S3_BUCKET`, `S3_PREFIX`, `RETENTION_YEARS`, `MAX_RETRY`, `SLACK_WEBHOOK`) 및 실패 리트라이/알림 연동.  
   - [~] AuditPartitionScheduler 정책 연동·배치 통합  
     - [x] PolicyToggleSettings/Policy YAML에 `auditPartitionEnabled`, `auditPartitionCron`, `auditPartitionPreloadMonths`, `auditPartitionTablespaceHot/Cold`, `auditPartitionHotMonths/ColdMonths` 필드 저장 (UI 노출은 추후).  
-    - [ ] 정책 변경 이벤트 수신 시 스케줄러 Cron/enable/preloadMonths 동기화 e2e 검증(Policy API 호출 포함)  
+    - [x] 정책 변경 이벤트 수신 시 스케줄러 Cron/enable/preloadMonths 동기화 e2e 검증(Policy API 호출 포함)  
 - [x] (P2) 월간 접속기록 점검 리포트 — `AuditMonthlyReportJob`을 정책 기반 동적 cron으로 전환 (`auditMonthlyReportEnabled`, `auditMonthlyReportCron`), 기본 cron=0 0 4 1 * *  
 
 ### 정리/마이그레이션
