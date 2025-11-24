@@ -17,28 +17,28 @@
 
 ### batch
 - [x] 현행 Job: `AuditArchiveJob`, `AuditColdMaintenanceJob` (cron 프로퍼티 기반)
-- [ ] PolicyToggleSettings에 enable/cron 연결 → PolicyChangedEvent 수신 시 재스케줄
-- [ ] 타 모듈 Job 위임 실행 구조 마련
+- [ ] PolicyToggleSettings에 enable/cron 연결 → PolicyChangedEvent 수신 시 재스케줄 (루즈 커플링 설계 반영)
+- [ ] 타 모듈 Job 위임 실행 구조 마련 (중앙 스케줄러 패턴 적용)
 
 ### audit
 - [x] `AuditPartitionScheduler` (PolicyChangedEvent 연동 완료)
-- [ ] `AuditLogRetentionJob` cron을 Policy enable/cron으로 이관
-- [ ] `AuditColdArchiveScheduler` cron을 Policy enable/cron으로 이관
-- [ ] `RetentionCleanupJob` cron을 Policy enable/cron으로 이관
+- [ ] `AuditLogRetentionJob` cron을 Policy enable/cron으로 이관 (중앙 스케줄러 위임)
+- [ ] `AuditColdArchiveScheduler` cron을 Policy enable/cron으로 이관 (중앙 스케줄러 위임)
+- [ ] `RetentionCleanupJob` cron을 Policy enable/cron으로 이관 (중앙 스케줄러 위임)
 - [ ] 필요 시 위 Job을 batch로 이동/위임
 
 ### file-core
 - [x] `FileScanRescheduler` fixedDelay 프로퍼티
 - [x] `FileAuditOutboxRelay` fixedDelay 프로퍼티
-- [ ] enable/fixedDelay를 Policy로 노출, batch 위임 여부 결정
+- [ ] enable/fixedDelay를 Policy로 노출, batch 위임 여부 결정 (중앙 스케줄러 패턴 적용)
 
 ### dw-ingestion-core
 - [x] `DwIngestionOutboxRelay` fixedDelay 프로퍼티
-- [ ] Policy 토글/interval 연동, batch 위임 여부 결정
+- [ ] Policy 토글/interval 연동, batch 위임 여부 결정 (중앙 스케줄러 패턴 적용)
 
 ### draft
 - [x] `OutboxDraftAuditRelay` fixedDelay 프로퍼티
-- [ ] Policy 토글/interval 연동, batch 위임 여부 결정
+- [ ] Policy 토글/interval 연동, batch 위임 여부 결정 (중앙 스케줄러 패턴 적용)
 
 ## 공통 작업
 - [ ] PolicyToggleSettings 확장: 잡별 enable + cron|fixedDelay(+timeUnit)
