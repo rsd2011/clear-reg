@@ -40,4 +40,23 @@ public class SiemProperties {
      * 실패 재시도 횟수.
      */
     private int retry = 1;
+
+    /**
+     * 모드: otlp | syslog
+     */
+    private String mode = "otlp";
+
+    /**
+     * mTLS용 keystore/truststore (선택).
+     */
+    private String keyStore;
+    private String keyStorePassword;
+    private String trustStore;
+    private String trustStorePassword;
+
+    /**
+     * syslog 전송용 호스트/포트 (mode=syslog).
+     */
+    private String syslogHost;
+    private int syslogPort = 6514; // TLS 기본 포트
 }
