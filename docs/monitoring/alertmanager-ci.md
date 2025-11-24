@@ -20,6 +20,11 @@
    ```
 5) Slack/PD 수신기까지 전달 확인(옵션): webhook mock 또는 blackhole receiver로 CI에서 수신 여부 점검.
 
+## GitHub Actions 예시
+- `.github/workflows/alertmanager-smoke.yml` 참조:  
+  - promtool 체크 → ConfigMap 패치 → Pushgateway 테스트 메트릭 주입 → Alertmanager API로 firing 확인.  
+  - 필요한 시크릿: `KUBE_CONFIG_DATA`, `PGW_URL`, `ALERTMANAGER_URL`.
+
 ## 주의
 - CI 클러스터 접근 권한 필요(kubeconfig/SA).
 - PGW_URL/Alertmanager endpoint는 환경변수로 주입.
