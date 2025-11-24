@@ -241,9 +241,9 @@ audit:
   - [x] (P3) 레거시 `dw_*_log` 테이블 정리: 사용 중지 경로 파악 → `docs/migrations/2025-11-23-remove-dw-log-tables.sql` 추가 → 배포 전 백업 및 드라이런 계획 수립  
 
 ### 운영 설계 보강 (HOT/COLD + Object Lock)
-  - [ ] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
+  - [x] HOT/COLD 분리 실행 플랜: 최근 6개월 파티션은 `audit_hot` 테이블스페이스 + ZSTD 압축 OFF, 이후 파티션은 `audit_cold` + ZSTD 압축 ON, 주 1회 VACUUM/REINDEX 스케줄.  
   - [x] S3 Object Lock/Glacier 배치 스크립트 예시 추가(`docs/audit/hot-cold-archive-example.sh`): 파티션별 dump → S3 Object Lock(5년) 업로드 → 체크섬 검증 후 DROP, Glacier 이동 옵션 포함.  
-  - [ ] 모니터링/알림 룰: HOT IOPS, COLD 비용, export 성공/실패, Object Lock 지연 알림.
+  - [x] 모니터링/알림 룰: HOT IOPS, COLD 비용, export 성공/실패, Object Lock 지연 알림.
     - HOT IOPS: pg_stat_io 기반 HOT TS read/write IOPS 95퍼센타일이 평시 대비 50%↑ 시 Slack 경고.
     - COLD 비용: 월별 table_size×단가 추정 비용 증가율>20% 시 경고.
     - Object Lock 지연: 업로드/검증/삭제 elapsed_ms가 `audit.archive.alert.delay-threshold-ms` 초과 시 경고, 3회 연속 시 PagerDuty 알림.
@@ -252,7 +252,10 @@ audit:
     - 지표 수집/알림 파이프라인 제안: Prometheus exporter로 HOT/COLD IOPS·압축비·ObjectLock 지연(ms)·S3 PUT/Glacier 비용 메트릭 노출 → Alertmanager 룰 적용.
     - Alertmanager 샘플 룰 추가: `docs/monitoring/audit-alerts.yml` (archive 실패/지연, HOT IOPS 스파이크, COLD 비용 상승, Object Lock 지연).
   - [ ] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
-    - `audit.partition.preload-months=2`, `audit.partition.tablespace.hot/cold`, `audit.partition.hot-months=6`, `audit.partition.cold-months=60`, `audit.archive.command=/path/to/hot-cold-archive-example.sh`, `audit.archive.retry=3` 프로퍼티를 `AuditPartitionScheduler`/`AuditColdArchiveScheduler`/`AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
+    - [x] 보존일수: `audit.retention.days`(기본 730) 프로퍼티 추가, `AuditRetentionProperties` → `AuditLogRetentionJob`에 주입 가능.  
+    - [x] 파티션 프리로드/Hot·Cold 파라미터: `audit.partition.preload-months/hot-months/cold-months` 및 tablespace 프로퍼티 적용, Scheduler/ColdMaintenanceJob에서 사용.  
+    - [ ] env 기반 DataSource 분리 설정: 운영/아카이브 DS 분리는 미구현(필요 시 후속).  
+    - `audit.archive.command=/path/to/hot-cold-archive-example.sh`, `audit.archive.retry=3` 프로퍼티를 `AuditArchiveJob`에 주입. (스크립트 샘플은 `docs/audit/hot-cold-archive-example.sh` 참고)  
   - [x] 정책 이벤트 연동: `PolicyChangedEvent(security.policy)` 발생 시 AuditPartitionScheduler/AuditColdArchiveScheduler가 즉시 새 설정을 반영하고, 다음 cron에서 HOT/COLD 생성·아카이브를 재계산하도록 EventListener 추가(e2e 검증 완료).  
     - application.yml 예시  
       ```yaml
@@ -272,7 +275,6 @@ audit:
             object-lock-years: 5
           enabled: true
       ```
-  - [ ] 운영 점검: 파티션 생성/아카이브 실패 알림(Slack/Webhook) 및 리트라이 정책 정의.  \n    - Alertmanager 룰 배포 스모크 스크립트(`docs/monitoring/alertmanager-smoke.sh`) 추가됨 — CI 파이프라인 연동 필요.\n    - Retry: 최대 3회 지수백오프(5s→30s→2m), 알림에는 파티션명·에러코드 포함.  \n    - 알림 채널: Slack Webhook 예) `audit.alert.webhook`, 장애 시 이메일 백업.
   - [x] 운영 점검: 파티션 생성/아카이브 실패 알림(Slack/Webhook) 및 리트라이 정책 정의.  
     - Alertmanager 룰 배포 스모크 스크립트(`docs/monitoring/alertmanager-smoke.sh`) 및 CI 워크플로 추가 — 시크릿 설정 후 즉시 실행 가능.  
     - Retry: 최대 3회 지수백오프(5s→30s→2m), 알림에는 파티션명·에러코드 포함.  
