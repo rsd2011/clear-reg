@@ -3,6 +3,8 @@ package com.example.audit.infra.siem;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.SSLContext;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,6 +37,16 @@ public class HttpSiemForwarder implements SiemForwarder {
             SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
             f.setConnectTimeout(props.getTimeoutMs());
             f.setReadTimeout(props.getTimeoutMs());
+            if (props.getKeyStore() != null && props.getTrustStore() != null) {
+                try {
+                    SSLContext ctx = SiemSslContextBuilder.build(props.getKeyStore(), props.getKeyStorePassword(),
+                            props.getTrustStore(), props.getTrustStorePassword());
+                    f.setHostnameVerifier((h, s) -> true);
+                    f.setSslSocketFactory(ctx.getSocketFactory());
+                } catch (Exception e) {
+                    log.warn("Failed to build SSL context for SIEM: {}", e.getMessage());
+                }
+            }
             restTemplate = new RestTemplate(f);
         }
         return restTemplate;
