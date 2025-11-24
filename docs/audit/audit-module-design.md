@@ -327,7 +327,7 @@ audit:
   5) 감사: `AuditEvent(DOWNLOAD_<FORMAT>)` 기록(파일명·행수·reason/legalBasis·rowScope/maskRule 포함)
 - 체크리스트
 - [x] 포맷별 Writer에 공통 헬퍼 삽입
-- [ ] forceUnmask 역할·사유 검증
+- [ ] forceUnmask 역할·사유 검증 (Playwright e2e 예정)
 - [x] 대량/스트리밍 성능 검증(SXSSF 등) — 50k CSV/JSON 스모크
 - [x] 다운로드/내보내기 AuditEvent 기록(ExportService.auditExport)
 - [ ] e2e 스모크: 마스킹 적용 여부 확인(Playwright 등)
