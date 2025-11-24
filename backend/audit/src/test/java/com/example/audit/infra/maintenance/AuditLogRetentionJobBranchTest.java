@@ -21,7 +21,8 @@ class AuditLogRetentionJobBranchTest {
         AuditLogRepository repo = org.mockito.Mockito.mock(AuditLogRepository.class);
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
         when(repo.deleteByEventTimeBefore(org.mockito.Mockito.any())).thenReturn(0L);
-        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock);
+        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock, () -> null,
+                new com.example.audit.config.AuditRetentionProperties(365));
         job.setRetentionDays(365);
         job.purgeExpired();
 
@@ -34,7 +35,8 @@ class AuditLogRetentionJobBranchTest {
         AuditLogRepository repo = org.mockito.Mockito.mock(AuditLogRepository.class);
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
         when(repo.deleteByEventTimeBefore(org.mockito.Mockito.any())).thenReturn(5L);
-        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock);
+        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock, () -> null,
+                new com.example.audit.config.AuditRetentionProperties(180));
         job.setRetentionDays(180);
         job.purgeExpired();
 

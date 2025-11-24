@@ -17,6 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.ObjectProvider;
+import com.example.common.policy.PolicySettingsProvider;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class FileAuditOutboxRelayTest {
@@ -38,7 +42,7 @@ class FileAuditOutboxRelayTest {
         when(jdbcTemplate.query(any(String.class), any(org.springframework.jdbc.core.RowMapper.class), any()))
                 .thenReturn(List.of(row));
 
-        FileAuditOutboxRelay relay = new FileAuditOutboxRelay(jdbcTemplate, publisher, 10);
+        FileAuditOutboxRelay relay = newRelay(10);
 
         relay.relay();
 
@@ -55,7 +59,7 @@ class FileAuditOutboxRelayTest {
                 .thenReturn(List.of(row));
         doThrow(new RuntimeException("fail")).when(publisher).publish(any(FileAuditEvent.class));
 
-        FileAuditOutboxRelay relay = new FileAuditOutboxRelay(jdbcTemplate, publisher, 10);
+        FileAuditOutboxRelay relay = newRelay(10);
 
         assertThatNoException().isThrownBy(relay::relay);
         verify(jdbcTemplate).update("update file_audit_outbox set status = 'FAILED', last_error = ? where id = ?", "fail", getRowId(row));
@@ -67,10 +71,31 @@ class FileAuditOutboxRelayTest {
         when(jdbcTemplate.query(any(String.class), any(org.springframework.jdbc.core.RowMapper.class), any()))
                 .thenThrow(new org.springframework.jdbc.BadSqlGrammarException("", "", new java.sql.SQLException("table missing")));
 
-        FileAuditOutboxRelay relay = new FileAuditOutboxRelay(jdbcTemplate, publisher, 1);
+        FileAuditOutboxRelay relay = newRelay(1);
 
         org.assertj.core.api.Assertions.assertThatThrownBy(relay::relay)
                 .isInstanceOf(org.springframework.jdbc.BadSqlGrammarException.class);
+    }
+
+    @Test
+    @DisplayName("trigger 디스크립터를 반환한다")
+    void triggerNotNull() {
+        FileAuditOutboxRelay relay = newRelay(5);
+        org.assertj.core.api.Assertions.assertThat(relay.trigger()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("정책 스케줄이 있으면 그것을 사용한다")
+    void triggerUsesPolicySchedule() {
+        ObjectProvider<PolicySettingsProvider> provider = mock(ObjectProvider.class);
+        PolicySettingsProvider policy = mock(PolicySettingsProvider.class);
+        when(provider.getIfAvailable()).thenReturn(policy);
+        when(policy.batchJobSchedule(com.example.common.schedule.BatchJobCode.FILE_AUDIT_OUTBOX_RELAY))
+                .thenReturn(new com.example.common.schedule.BatchJobSchedule(true, com.example.common.schedule.TriggerType.FIXED_DELAY, null, 2222, 0, null));
+
+        FileAuditOutboxRelay relay = new FileAuditOutboxRelay(jdbcTemplate, publisher, 1, 5_000, provider, false);
+
+        org.assertj.core.api.Assertions.assertThat(relay.trigger().toString()).contains("2222");
     }
 
     private Object newOutboxRow(FileAuditEvent event, String payload) throws Exception {
@@ -84,5 +109,11 @@ class FileAuditOutboxRelayTest {
         var method = row.getClass().getDeclaredMethod("id");
         method.setAccessible(true);
         return method.invoke(row);
+    }
+
+    private FileAuditOutboxRelay newRelay(int batchSize) {
+        ObjectProvider<PolicySettingsProvider> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(null);
+        return new FileAuditOutboxRelay(jdbcTemplate, publisher, batchSize, 5_000, provider, false);
     }
 }

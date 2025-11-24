@@ -20,7 +20,8 @@ class AuditLogRetentionJobTest {
     void purgeExpiredDeletesOld() {
         AuditLogRepository repo = Mockito.mock(AuditLogRepository.class);
         Clock clock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);
-        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock);
+        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock, () -> null,
+                new com.example.audit.config.AuditRetentionProperties(30));
         job.setRetentionDays(30);
 
         job.purgeExpired();

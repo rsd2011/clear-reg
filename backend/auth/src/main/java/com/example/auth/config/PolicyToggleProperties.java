@@ -33,6 +33,12 @@ public class PolicyToggleProperties {
     private int auditPartitionPreloadMonths = 1;
     private boolean auditMonthlyReportEnabled = true;
     private String auditMonthlyReportCron = "0 0 4 1 * *";
+    private boolean auditLogRetentionEnabled = true;
+    private String auditLogRetentionCron = "0 0 3 * * *";
+    private boolean auditColdArchiveEnabled = false;
+    private String auditColdArchiveCron = "0 30 2 2 * *";
+    private boolean auditRetentionCleanupEnabled = true;
+    private String auditRetentionCleanupCron = "0 30 3 * * *";
 
     public boolean isPasswordPolicyEnabled() {
         return passwordPolicyEnabled;
@@ -208,5 +214,53 @@ public class PolicyToggleProperties {
 
     public void setAuditMonthlyReportCron(String auditMonthlyReportCron) {
         this.auditMonthlyReportCron = auditMonthlyReportCron;
+    }
+
+    public boolean isAuditLogRetentionEnabled() {
+        return auditLogRetentionEnabled;
+    }
+
+    public void setAuditLogRetentionEnabled(boolean auditLogRetentionEnabled) {
+        this.auditLogRetentionEnabled = auditLogRetentionEnabled;
+    }
+
+    public String getAuditLogRetentionCron() {
+        return auditLogRetentionCron;
+    }
+
+    public void setAuditLogRetentionCron(String auditLogRetentionCron) {
+        this.auditLogRetentionCron = auditLogRetentionCron;
+    }
+
+    public boolean isAuditColdArchiveEnabled() {
+        return auditColdArchiveEnabled;
+    }
+
+    public void setAuditColdArchiveEnabled(boolean auditColdArchiveEnabled) {
+        this.auditColdArchiveEnabled = auditColdArchiveEnabled;
+    }
+
+    public String getAuditColdArchiveCron() {
+        return auditColdArchiveCron;
+    }
+
+    public void setAuditColdArchiveCron(String auditColdArchiveCron) {
+        this.auditColdArchiveCron = auditColdArchiveCron;
+    }
+
+    public boolean isAuditRetentionCleanupEnabled() {
+        return auditRetentionCleanupEnabled;
+    }
+
+    public void setAuditRetentionCleanupEnabled(boolean auditRetentionCleanupEnabled) {
+        this.auditRetentionCleanupEnabled = auditRetentionCleanupEnabled;
+    }
+
+    public String getAuditRetentionCleanupCron() {
+        return auditRetentionCleanupCron;
+    }
+
+    public void setAuditRetentionCleanupCron(String auditRetentionCleanupCron) {
+        this.auditRetentionCleanupCron = auditRetentionCleanupCron;
     }
 }

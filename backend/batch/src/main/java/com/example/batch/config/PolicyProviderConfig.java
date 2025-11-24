@@ -4,6 +4,8 @@ import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
 import com.example.auth.LoginType;
 import com.example.auth.config.PolicyToggleProperties;
@@ -17,8 +19,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 public class PolicyProviderConfig {
 
     @Bean
+    @ConditionalOnBean(PolicyAdminService.class)
     public PolicySettingsProvider policySettingsProvider(PolicyAdminService policyAdminService) {
         return new PolicyAdminService.DatabasePolicySettingsProvider(policyAdminService);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(PolicySettingsProvider.class)
+    public PolicySettingsProvider noopPolicySettingsProvider() {
+        return () -> null;
     }
 
     @Bean(name = "yamlObjectMapper")
@@ -52,6 +61,13 @@ public class PolicyProviderConfig {
                 properties.getAuditPartitionCron(),
                 properties.getAuditPartitionPreloadMonths(),
                 properties.isAuditMonthlyReportEnabled(),
-                properties.getAuditMonthlyReportCron());
+                properties.getAuditMonthlyReportCron(),
+                properties.isAuditLogRetentionEnabled(),
+                properties.getAuditLogRetentionCron(),
+                properties.isAuditColdArchiveEnabled(),
+                properties.getAuditColdArchiveCron(),
+                properties.isAuditRetentionCleanupEnabled(),
+                properties.getAuditRetentionCleanupCron(),
+                java.util.Map.of());
     }
 }

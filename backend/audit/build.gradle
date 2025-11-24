@@ -26,3 +26,15 @@ dependencies {
     testImplementation libs.spring.kafka.test
     testImplementation 'com.h2database:h2'
 }
+
+
+// 테스트 유틸(SelfSignedCertGenerator)이 JDK 내부 sun.security.* API를 사용하므로
+// JDK 21 모듈 엑스포트 플래그를 테스트 컴파일/실행에만 한정해 추가한다.
+tasks.withType(JavaCompile).matching { it.name.toLowerCase().contains('test') }.configureEach {
+    options.compilerArgs += ['--add-exports=java.base/sun.security.x509=ALL-UNNAMED',
+                             '--add-exports=java.base/sun.security.util=ALL-UNNAMED']
+}
+tasks.withType(Test).configureEach {
+    jvmArgs += ['--add-exports=java.base/sun.security.x509=ALL-UNNAMED',
+                '--add-exports=java.base/sun.security.util=ALL-UNNAMED']
+}

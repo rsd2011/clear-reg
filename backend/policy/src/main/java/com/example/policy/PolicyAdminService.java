@@ -1,6 +1,7 @@
 package com.example.policy;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -18,6 +19,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.example.common.schedule.BatchJobCode;
+import com.example.common.schedule.BatchJobSchedule;
+import com.example.common.schedule.TriggerType;
 
 @Service
 public class PolicyAdminService {
@@ -35,7 +39,7 @@ public class PolicyAdminService {
                               ApplicationEventPublisher eventPublisher) {
         this.repository = repository;
         this.yamlMapper = yamlMapper.copy();
-        PolicyState initial = PolicyState.from(defaults);
+        PolicyState initial = PolicyState.from(defaults, null, com.example.common.schedule.BatchJobDefaults.defaults());
         this.cache = new AtomicReference<>(initial);
         this.eventPublisher = eventPublisher;
         repository.findByCode(DOCUMENT_CODE)
@@ -107,12 +111,14 @@ public class PolicyAdminService {
             if (partitionNode != null) {
                 partition = yamlMapper.treeToValue(partitionNode, AuditPartitionSettings.class);
             }
+            Map<BatchJobCode, BatchJobSchedule> batchSchedules = parseBatchJobs(root);
             ObjectNode toggleNode = root.isObject() ? ((ObjectNode) root).deepCopy() : yamlMapper.createObjectNode();
             toggleNode.remove("auditPartition");
             toggleNode.remove("auditPartitionTablespaceHot");
             toggleNode.remove("auditPartitionTablespaceCold");
             toggleNode.remove("auditPartitionHotMonths");
             toggleNode.remove("auditPartitionColdMonths");
+            toggleNode.remove("batchJobs");
             PolicyToggleSettings settings = yamlMapper.treeToValue(toggleNode, PolicyToggleSettings.class);
             if (partition == null && (root.has("auditPartitionTablespaceHot") || root.has("auditPartitionTablespaceCold")
                     || root.has("auditPartitionHotMonths") || root.has("auditPartitionColdMonths"))) {
@@ -123,7 +129,7 @@ public class PolicyAdminService {
                         root.path("auditPartitionHotMonths").asInt(6),
                         root.path("auditPartitionColdMonths").asInt(60));
             }
-            return PolicyState.from(settings, partition);
+            return PolicyState.from(settings, partition, batchSchedules);
         } catch (JsonProcessingException exception) {
             throw new IllegalArgumentException("Invalid policy YAML", exception);
         }
@@ -133,6 +139,11 @@ public class PolicyAdminService {
         try {
             ObjectNode root = yamlMapper.valueToTree(state.toSettings());
             root.set("auditPartition", yamlMapper.valueToTree(state.toPartitionSettings()));
+            if (!state.batchJobs().isEmpty()) {
+                ObjectNode batchNode = yamlMapper.createObjectNode();
+                state.batchJobs().forEach((code, sched) -> batchNode.set(code.name(), yamlMapper.valueToTree(sched)));
+                root.set("batchJobs", batchNode);
+            }
             return yamlMapper.writeValueAsString(root);
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Unable to export policy YAML", exception);
@@ -170,7 +181,34 @@ public class PolicyAdminService {
                 state.auditPartitionColdMonths(),
                 state.auditMonthlyReportEnabled(),
                 state.auditMonthlyReportCron(),
+                state.auditLogRetentionEnabled(),
+                state.auditLogRetentionCron(),
+                state.auditColdArchiveEnabled(),
+                state.auditColdArchiveCron(),
+                state.auditRetentionCleanupEnabled(),
+                state.auditRetentionCleanupCron(),
+                state.batchJobs(),
                 snapshot.yaml());
+    }
+
+    private Map<BatchJobCode, BatchJobSchedule> parseBatchJobs(JsonNode root) throws JsonProcessingException {
+        JsonNode batchNode = root.get("batchJobs");
+        if (batchNode == null || !batchNode.isObject()) {
+            return Map.of();
+        }
+        Map<BatchJobCode, BatchJobSchedule> result = new java.util.HashMap<>();
+        var fields = batchNode.fields();
+        while (fields.hasNext()) {
+            var entry = fields.next();
+            try {
+                BatchJobCode code = BatchJobCode.valueOf(entry.getKey());
+                BatchJobSchedule schedule = yamlMapper.treeToValue(entry.getValue(), BatchJobSchedule.class);
+                result.put(code, schedule);
+            } catch (IllegalArgumentException ignore) {
+                // unknown code -> skip
+            }
+        }
+        return result;
     }
 
     public static final class PolicyState {
@@ -201,6 +239,13 @@ public class PolicyAdminService {
         private final int auditPartitionColdMonths;
         private final boolean auditMonthlyReportEnabled;
         private final String auditMonthlyReportCron;
+        private final boolean auditLogRetentionEnabled;
+        private final String auditLogRetentionCron;
+        private final boolean auditColdArchiveEnabled;
+        private final String auditColdArchiveCron;
+        private final boolean auditRetentionCleanupEnabled;
+        private final String auditRetentionCleanupCron;
+        private final Map<BatchJobCode, BatchJobSchedule> batchJobs;
 
         private PolicyState(boolean passwordPolicyEnabled,
                             boolean passwordHistoryEnabled,
@@ -227,7 +272,14 @@ public class PolicyAdminService {
                             int auditPartitionHotMonths,
                             int auditPartitionColdMonths,
                             boolean auditMonthlyReportEnabled,
-                            String auditMonthlyReportCron) {
+                            String auditMonthlyReportCron,
+                            boolean auditLogRetentionEnabled,
+                            String auditLogRetentionCron,
+                            boolean auditColdArchiveEnabled,
+                            String auditColdArchiveCron,
+                            boolean auditRetentionCleanupEnabled,
+                            String auditRetentionCleanupCron,
+                            Map<BatchJobCode, BatchJobSchedule> batchJobs) {
             this.passwordPolicyEnabled = passwordPolicyEnabled;
             this.passwordHistoryEnabled = passwordHistoryEnabled;
             this.accountLockEnabled = accountLockEnabled;
@@ -254,6 +306,13 @@ public class PolicyAdminService {
             this.auditPartitionColdMonths = auditPartitionColdMonths <= 0 ? 60 : auditPartitionColdMonths;
             this.auditMonthlyReportEnabled = auditMonthlyReportEnabled;
             this.auditMonthlyReportCron = auditMonthlyReportCron;
+            this.auditLogRetentionEnabled = auditLogRetentionEnabled;
+            this.auditLogRetentionCron = auditLogRetentionCron;
+            this.auditColdArchiveEnabled = auditColdArchiveEnabled;
+            this.auditColdArchiveCron = auditColdArchiveCron;
+            this.auditRetentionCleanupEnabled = auditRetentionCleanupEnabled;
+            this.auditRetentionCleanupCron = auditRetentionCleanupCron;
+            this.batchJobs = batchJobs == null ? Map.of() : Map.copyOf(batchJobs);
         }
 
         public static PolicyState from(PolicyToggleSettings settings) {
@@ -282,10 +341,17 @@ public class PolicyAdminService {
                     6,
                     60,
                     settings.auditMonthlyReportEnabled(),
-                    settings.auditMonthlyReportCron());
+                    settings.auditMonthlyReportCron(),
+                    settings.auditLogRetentionEnabled(),
+                    settings.auditLogRetentionCron(),
+                    settings.auditColdArchiveEnabled(),
+                    settings.auditColdArchiveCron(),
+                    settings.auditRetentionCleanupEnabled(),
+                    settings.auditRetentionCleanupCron(),
+                    settings.batchJobs());
         }
 
-        public static PolicyState from(PolicyToggleSettings settings, AuditPartitionSettings partition) {
+        public static PolicyState from(PolicyToggleSettings settings, AuditPartitionSettings partition, Map<BatchJobCode, BatchJobSchedule> batchJobs) {
             AuditPartitionSettings ps = partition == null
                     ? new AuditPartitionSettings(settings.auditPartitionEnabled(), settings.auditPartitionCron(),
                     settings.auditPartitionPreloadMonths(), "", "", 6, 60)
@@ -315,7 +381,14 @@ public class PolicyAdminService {
                     ps.hotMonths(),
                     ps.coldMonths(),
                     settings.auditMonthlyReportEnabled(),
-                    settings.auditMonthlyReportCron());
+                    settings.auditMonthlyReportCron(),
+                    settings.auditLogRetentionEnabled(),
+                    settings.auditLogRetentionCron(),
+                    settings.auditColdArchiveEnabled(),
+                    settings.auditColdArchiveCron(),
+                    settings.auditRetentionCleanupEnabled(),
+                    settings.auditRetentionCleanupCron(),
+                    batchJobs == null ? Map.of() : batchJobs);
         }
 
         public PolicyToggleSettings toSettings() {
@@ -335,7 +408,19 @@ public class PolicyAdminService {
                     auditRiskLevel,
                     auditMaskingEnabled,
                     auditSensitiveEndpoints,
-                    auditUnmaskRoles);
+                    auditUnmaskRoles,
+                    auditPartitionEnabled,
+                    auditPartitionCron,
+                    auditPartitionPreloadMonths,
+                    auditMonthlyReportEnabled,
+                    auditMonthlyReportCron,
+                    auditLogRetentionEnabled,
+                    auditLogRetentionCron,
+                    auditColdArchiveEnabled,
+                    auditColdArchiveCron,
+                    auditRetentionCleanupEnabled,
+                    auditRetentionCleanupCron,
+                    batchJobs);
         }
 
         public AuditPartitionSettings toPartitionSettings() {
@@ -375,6 +460,13 @@ public class PolicyAdminService {
             int newColdMonths = request.auditPartitionColdMonths() != null ? request.auditPartitionColdMonths() : auditPartitionColdMonths;
             boolean newAuditMonthlyReportEnabled = request.auditMonthlyReportEnabled() != null ? request.auditMonthlyReportEnabled() : auditMonthlyReportEnabled;
             String newAuditMonthlyReportCron = request.auditMonthlyReportCron() != null ? request.auditMonthlyReportCron() : auditMonthlyReportCron;
+            boolean newAuditLogRetentionEnabled = request.auditLogRetentionEnabled() != null ? request.auditLogRetentionEnabled() : auditLogRetentionEnabled;
+            String newAuditLogRetentionCron = request.auditLogRetentionCron() != null ? request.auditLogRetentionCron() : auditLogRetentionCron;
+            boolean newAuditColdArchiveEnabled = request.auditColdArchiveEnabled() != null ? request.auditColdArchiveEnabled() : auditColdArchiveEnabled;
+            String newAuditColdArchiveCron = request.auditColdArchiveCron() != null ? request.auditColdArchiveCron() : auditColdArchiveCron;
+            boolean newAuditRetentionCleanupEnabled = request.auditRetentionCleanupEnabled() != null ? request.auditRetentionCleanupEnabled() : auditRetentionCleanupEnabled;
+            String newAuditRetentionCleanupCron = request.auditRetentionCleanupCron() != null ? request.auditRetentionCleanupCron() : auditRetentionCleanupCron;
+            Map<BatchJobCode, BatchJobSchedule> newBatchJobs = request.batchJobs() != null ? request.batchJobs() : batchJobs;
 
             return new PolicyState(newPasswordPolicyEnabled, newPasswordHistoryEnabled, newAccountLockEnabled, newTypes,
                     newMaxFileSize, newExtensions, newStrictMime, Math.max(newRetention, 0),
@@ -382,7 +474,11 @@ public class PolicyAdminService {
                     Math.max(newAuditRetention, 0), newAuditStrictMode, newAuditRiskLevel, newAuditMaskingEnabled, newAuditSensitiveEndpoints, newAuditUnmaskRoles,
                     newAuditPartitionEnabled, newAuditPartitionCron, Math.max(newAuditPartitionPreloadMonths, 0),
                     newTablespaceHot, newTablespaceCold, Math.max(newHotMonths, 1), Math.max(newColdMonths, 1),
-                    newAuditMonthlyReportEnabled, newAuditMonthlyReportCron);
+                    newAuditMonthlyReportEnabled, newAuditMonthlyReportCron,
+                    newAuditLogRetentionEnabled, newAuditLogRetentionCron,
+                    newAuditColdArchiveEnabled, newAuditColdArchiveCron,
+                    newAuditRetentionCleanupEnabled, newAuditRetentionCleanupCron,
+                    newBatchJobs == null ? Map.of() : newBatchJobs);
         }
 
         public boolean passwordPolicyEnabled() {
@@ -488,6 +584,34 @@ public class PolicyAdminService {
         public String auditMonthlyReportCron() {
             return auditMonthlyReportCron;
         }
+
+        public boolean auditLogRetentionEnabled() {
+            return auditLogRetentionEnabled;
+        }
+
+        public String auditLogRetentionCron() {
+            return auditLogRetentionCron;
+        }
+
+        public boolean auditColdArchiveEnabled() {
+            return auditColdArchiveEnabled;
+        }
+
+        public String auditColdArchiveCron() {
+            return auditColdArchiveCron;
+        }
+
+        public boolean auditRetentionCleanupEnabled() {
+            return auditRetentionCleanupEnabled;
+        }
+
+        public String auditRetentionCleanupCron() {
+            return auditRetentionCleanupCron;
+        }
+
+        public Map<BatchJobCode, BatchJobSchedule> batchJobs() {
+            return batchJobs;
+        }
     }
 
     public static final class DatabasePolicySettingsProvider implements PolicySettingsProvider {
@@ -506,6 +630,11 @@ public class PolicyAdminService {
         @Override
         public AuditPartitionSettings partitionSettings() {
             return service.currentState().toPartitionSettings();
+        }
+
+        @Override
+        public BatchJobSchedule batchJobSchedule(BatchJobCode code) {
+            return service.currentState().batchJobs().get(code);
         }
     }
 }

@@ -7,17 +7,27 @@ import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestTemplate;
+
 import jakarta.annotation.PostConstruct;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
+
+import com.example.common.policy.PolicySettingsProvider;
+import com.example.common.policy.PolicyToggleSettings;
+import com.example.common.schedule.ScheduledJobPort;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.scheduling.support.CronTrigger;
+import com.example.common.schedule.TriggerDescriptor;
+import com.example.common.schedule.TriggerType;
 
 /**
  * HOT→COLD 이동 이후 Object Lock/Glacier 전송을 외부 스크립트/배치로 호출하기 위한 훅.
@@ -26,10 +36,11 @@ import org.springframework.web.client.RestTemplate;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class AuditArchiveJob {
+public class AuditArchiveJob implements ScheduledJobPort, SchedulingConfigurer {
 
     private final Clock clock;
     private final MeterRegistry meterRegistry;
+    private final PolicySettingsProvider policySettingsProvider;
 
     @Value("${audit.archive.enabled:false}")
     private boolean enabled;
@@ -58,6 +69,9 @@ public class AuditArchiveJob {
     @Value("${audit.archive.alert.delay-threshold-ms:60000}")
     private long delayThresholdMs;
 
+    @Value("${central.scheduler.enabled:false}")
+    private boolean centralSchedulerEnabled;
+
     private RestTemplate restTemplate = new RestTemplate();
     /** 테스트 용도 주입 가능한 커맨드 실행자 */
     private CommandInvoker invoker = this::runCommand;
@@ -74,9 +88,9 @@ public class AuditArchiveJob {
                 .register(meterRegistry);
     }
 
-    @Scheduled(cron = "${audit.archive.cron:0 30 3 2 * *}")
     public void archiveColdPartitions() {
-        if (!enabled) {
+        ensureMeters();
+        if (!isEnabled()) {
             return;
         }
         LocalDate target = LocalDate.now(clock).minusMonths(7).withDayOfMonth(1);
@@ -184,6 +198,63 @@ public class AuditArchiveJob {
                     return;
                 }
             }
+        }
+    }
+
+    private void ensureMeters() {
+        if (successCounter == null || failureCounter == null || latencyTimer == null) {
+            initMeters();
+        }
+    }
+
+    public boolean isEnabled() {
+        PolicyToggleSettings settings = policySettingsProvider.currentSettings();
+        return settings != null ? settings.auditColdArchiveEnabled() : enabled;
+    }
+
+    public String currentCron() {
+        PolicyToggleSettings settings = policySettingsProvider.currentSettings();
+        String policyCron = settings != null ? settings.auditColdArchiveCron() : null;
+        if (policyCron == null || policyCron.isBlank()) {
+            return cron;
+        }
+        return policyCron;
+    }
+
+    @Override
+    public String jobId() {
+        return "audit-archive";
+    }
+
+    @Override
+    public TriggerDescriptor trigger() {
+        var policy = policySettingsProvider.batchJobSchedule(com.example.common.schedule.BatchJobCode.AUDIT_ARCHIVE);
+        if (policy != null) {
+            return policy.toTriggerDescriptor();
+        }
+        return new TriggerDescriptor(isEnabled(), TriggerType.CRON, currentCron(), 0, 0, null);
+    }
+
+    @Override
+    public void runOnce(java.time.Instant now) {
+        archiveColdPartitions();
+    }
+
+    // 기존 스케줄링은 중앙 스케줄러 사용 시 비활성화
+    @Override
+    public void configureTasks(org.springframework.scheduling.config.ScheduledTaskRegistrar taskRegistrar) {
+        if (centralSchedulerEnabled) {
+            log.info("[audit-archive] central scheduler enabled, skipping local registration");
+            return;
+        }
+        taskRegistrar.addTriggerTask(this::archiveColdPartitions, triggerContext ->
+                new org.springframework.scheduling.support.CronTrigger(currentCron()).nextExecution(triggerContext));
+    }
+
+    @EventListener
+    public void onPolicyChanged(com.example.common.policy.PolicyChangedEvent event) {
+        if ("security.policy".equals(event.code())) {
+            log.info("[audit-archive] policy changed, will apply new cron/enable on next trigger");
         }
     }
 

@@ -16,6 +16,9 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.ObjectProvider;
+import com.example.common.policy.PolicySettingsProvider;
+import static org.mockito.Mockito.when;
 
 import com.example.draft.domain.DraftAction;
 
@@ -46,9 +49,15 @@ class AuditSupportTest {
         UUID id = UUID.randomUUID();
         given(jdbc.queryForList(any())).willReturn(List.of(Map.of("id", id, "payload", "{}")));
 
-        OutboxDraftAuditRelay relay = new OutboxDraftAuditRelay(jdbc);
+        OutboxDraftAuditRelay relay = new OutboxDraftAuditRelay(jdbc, 60_000, nullProvider(), false);
         relay.relay();
 
         verify(jdbc).update(any(), eq(id));
+    }
+
+    private ObjectProvider<PolicySettingsProvider> nullProvider() {
+        ObjectProvider<PolicySettingsProvider> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(null);
+        return provider;
     }
 }

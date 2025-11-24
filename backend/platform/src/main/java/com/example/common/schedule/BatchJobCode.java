@@ -1,0 +1,17 @@
+package com.example.common.schedule;
+
+/**
+ * 중앙 스케줄러에서 관리하는 잡 코드 정의.
+ */
+public enum BatchJobCode {
+    FILE_SECURITY_RESCAN,
+    FILE_AUDIT_OUTBOX_RELAY,
+    DW_INGESTION_OUTBOX_RELAY,
+    DRAFT_AUDIT_OUTBOX_RELAY,
+    AUDIT_PARTITION_PRECREATE,
+    AUDIT_COLD_MAINTENANCE,
+    AUDIT_ARCHIVE,
+    AUDIT_LOG_RETENTION,
+    AUDIT_MONTHLY_REPORT,
+    AUDIT_COLD_ARCHIVE_SCHEDULER
+}

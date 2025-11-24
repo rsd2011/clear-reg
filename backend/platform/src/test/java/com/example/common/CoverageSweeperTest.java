@@ -56,7 +56,11 @@ class CoverageSweeperTest {
                 true, 10, true, true, true, 365, true, "high",
                 true, List.of("/sensitive"), List.of("AUDITOR"),
                 true, "0 0 2 1 * *", 2,
-                true, "0 0 4 1 * *");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                com.example.common.schedule.BatchJobDefaults.defaults());
         assertThat(settings.auditMaskingEnabled()).isTrue();
         assertThat(settings.auditUnmaskRoles()).contains("AUDITOR");
     }
@@ -135,7 +139,11 @@ class CoverageSweeperTest {
         PolicyToggleSettings settings = new PolicyToggleSettings(
                 true, true, true, List.of(), 1024, List.of(), true, 1,
                 true, true, true, 10, true, "medium", true, List.of(), List.of(),
-                true, "0 0 2 1 * *", 1, true, "0 0 4 1 * *");
+                true, "0 0 2 1 * *", 1, true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                com.example.common.schedule.BatchJobDefaults.defaults());
 
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
@@ -163,6 +171,37 @@ class CoverageSweeperTest {
 
         String tokenized = MaskingFunctions.masker(DataPolicyMatch.builder().maskRule("TOKENIZE").build()).apply("abc");
         assertThat(tokenized).hasSizeGreaterThan(5);
+
+        // schedule/policy artifacts coverage
+        com.example.common.schedule.TriggerDescriptor cron = new com.example.common.schedule.TriggerDescriptor(true, com.example.common.schedule.TriggerType.CRON, "0 0 * * * *", 0, 0, null);
+        assertThat(cron.enabled()).isTrue();
+        com.example.common.schedule.BatchJobSchedule schedule = new com.example.common.schedule.BatchJobSchedule(true, com.example.common.schedule.TriggerType.FIXED_DELAY, null, 1000L, 0L, "UTC");
+        assertThat(schedule.toTriggerDescriptor().expression()).isNull();
+        com.example.common.policy.AuditPartitionSettings auditPartitionSettings = new com.example.common.policy.AuditPartitionSettings(true, "0 0 2 1 * *", 1, "hot", "cold", 6, 60);
+        assertThat(auditPartitionSettings.enabled()).isTrue();
+        com.example.common.policy.PolicyChangedEvent evt = new com.example.common.policy.PolicyChangedEvent("security.policy", "yaml-body");
+        assertThat(evt.code()).isEqualTo("security.policy");
+        com.example.common.policy.PolicySettingsProvider provider = new com.example.common.policy.PolicySettingsProvider() {
+            @Override
+            public com.example.common.policy.PolicyToggleSettings currentSettings() { return settings; }
+
+            @Override
+            public com.example.common.schedule.BatchJobSchedule batchJobSchedule(com.example.common.schedule.BatchJobCode code) {
+                return schedule;
+            }
+        };
+        assertThat(provider.batchJobSchedule(com.example.common.schedule.BatchJobCode.AUDIT_COLD_MAINTENANCE)).isEqualTo(schedule);
+        assertThat(provider.partitionSettings()).isNull();
+
+        var defaultsFromNulls = new com.example.common.policy.PolicyToggleSettings(true, true, true, null, -1, null, true, -1,
+                true, true, true, -1, true, null, true, null, null,
+                true, "", -1, true, "", true, "", false, "", true, "",
+                com.example.common.schedule.BatchJobDefaults.defaults());
+        assertThat(defaultsFromNulls.allowedFileExtensions()).isEmpty();
+        assertThat(defaultsFromNulls.batchJobs()).isNotEmpty();
+
+        var audit2 = new com.example.common.policy.AuditPartitionSettings(true, "0 0 2 1 * *", 1, "hot", "cold", 6, 60);
+        assertThat(audit2).isEqualTo(auditPartitionSettings);
     }
 
     @Test

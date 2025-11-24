@@ -6,11 +6,6 @@ import java.time.ZoneOffset;
 import java.time.Instant;
 import java.util.List;
 
-import org.springframework.scheduling.Trigger;
-import org.springframework.scheduling.TriggerContext;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -21,6 +16,10 @@ import com.example.audit.infra.persistence.AuditMonthlySummaryEntity;
 import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.common.schedule.BatchJobCode;
+import com.example.common.schedule.ScheduledJobPort;
+import com.example.common.schedule.TriggerDescriptor;
+import com.example.common.schedule.TriggerType;
 
 /**
  * 월간 접속/감사 로그 점검 리포트를 생성하기 위한 스켈레톤.
@@ -29,13 +28,14 @@ import com.example.common.policy.PolicyToggleSettings;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@EnableScheduling
-public class AuditMonthlyReportJob implements org.springframework.scheduling.annotation.SchedulingConfigurer {
+public class AuditMonthlyReportJob implements ScheduledJobPort, org.springframework.scheduling.annotation.SchedulingConfigurer {
 
     private final AuditLogRepository repository;
     private final AuditMonthlySummaryRepository summaryRepository;
     private final Clock clock;
     private final PolicySettingsProvider policySettingsProvider;
+    @org.springframework.beans.factory.annotation.Value("${central.scheduler.enabled:false}")
+    private boolean centralSchedulerEnabled;
 
     /**
      * 매월 1일 04:00에 지난달 로그 건수 리포트.
@@ -67,11 +67,23 @@ public class AuditMonthlyReportJob implements org.springframework.scheduling.ann
                 .build());
     }
 
+    // ScheduledJobPort
+    @Override public String jobId() { return "audit-monthly-report"; }
+    @Override public void runOnce(Instant now) { report(); }
+    @Override public TriggerDescriptor trigger() {
+        var policySchedule = policySettingsProvider.batchJobSchedule(BatchJobCode.AUDIT_MONTHLY_REPORT);
+        if (policySchedule != null) return policySchedule.toTriggerDescriptor();
+        PolicyToggleSettings settings = policySettingsProvider.currentSettings();
+        return new TriggerDescriptor(settings.auditMonthlyReportEnabled(), TriggerType.CRON, settings.auditMonthlyReportCron(), 0, 0, null);
+    }
+
     @Override
-    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
-        taskRegistrar.addTriggerTask(this::report, (TriggerContext triggerContext) -> {
-            String cron = policySettingsProvider.currentSettings().auditMonthlyReportCron();
-            return new CronTrigger(cron).nextExecution(triggerContext);
-        });
+    public void configureTasks(org.springframework.scheduling.config.ScheduledTaskRegistrar taskRegistrar) {
+        if (centralSchedulerEnabled) {
+            log.info("[audit-monthly-report] central scheduler enabled, skipping local registration");
+            return;
+        }
+        taskRegistrar.addTriggerTask(this::report, triggerContext ->
+                new org.springframework.scheduling.support.CronTrigger(trigger().expression()).nextExecution(triggerContext));
     }
 }

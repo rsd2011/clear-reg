@@ -57,14 +57,21 @@ class AuditPartitionSchedulerContainerTest {
     void createsPartitionInPostgresOnPolicyChange() throws Exception {
         PolicyToggleSettings disabled = new PolicyToggleSettings(true, true, true, null, 0L, null, true, 0,
                 false, false, false, 0, true, "MEDIUM", true, null, null,
-                false, "0 0 2 1 * *", 0, true, "0 0 4 1 * *");
+                false, "0 0 2 1 * *", 0, true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *");
         PolicySettingsProvider provider = () -> disabled;
         Clock clock = Clock.fixed(LocalDate.of(2025, 3, 10).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditPartitionScheduler scheduler = new AuditPartitionScheduler(dataSource, clock, provider);
+        AuditPartitionScheduler scheduler = new AuditPartitionScheduler(dataSource, clock, provider,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
 
         PolicyToggleSettings enabled = new PolicyToggleSettings(true, true, true, null, 0L, null, true, 0,
                 true, true, true, 0, true, "MEDIUM", true, null, null,
-                true, "0 0 2 1 * *", 1, true, "0 0 4 1 * *");
+                true, "0 0 2 1 * *", 1, true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *");
         PolicySettingsProvider providerEnabled = () -> enabled;
         // replace provider via reflection
         java.lang.reflect.Field f = AuditPartitionScheduler.class.getDeclaredField("policySettingsProvider");

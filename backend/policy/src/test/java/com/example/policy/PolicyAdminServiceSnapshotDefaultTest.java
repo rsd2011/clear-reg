@@ -24,7 +24,7 @@ class PolicyAdminServiceSnapshotDefaultTest {
     @DisplayName("기본 설정만 있을 때 snapshot은 empty YAML이 아닌 기본값 YAML을 반환한다")
     void snapshot_returnsYamlFromDefaults() {
         given(repository.findByCode("security.policy")).willReturn(Optional.empty());
-        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults);
+        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults, null);
 
         PolicyAdminService.PolicySnapshot snapshot = service.snapshot();
 

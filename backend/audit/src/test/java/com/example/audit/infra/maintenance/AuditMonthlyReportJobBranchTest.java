@@ -26,7 +26,10 @@ class AuditMonthlyReportJobBranchTest {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
         PolicyToggleSettings disabled = new PolicyToggleSettings(true, true, true, List.of(), 20971520L, List.of(), true,
                 365, true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(), false,
-                "0 0 2 1 * *", 1, false, "0 0 4 1 * *");
+                "0 0 2 1 * *", 1, false, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *");
         PolicySettingsProvider provider = () -> disabled;
 
         AuditMonthlyReportJob job = new AuditMonthlyReportJob(logRepo, repo, clock, provider);

@@ -30,7 +30,8 @@ class AuditArchiveJobSlackRetryTest {
                 .thenThrow(new RuntimeException("network"))
                 .thenReturn(ResponseEntity.ok("ok"));
 
-        AuditArchiveJob job = new AuditArchiveJob(Clock.fixed(Instant.parse("2025-01-02T00:00:00Z"), ZoneOffset.UTC));
+        AuditArchiveJob job = new AuditArchiveJob(Clock.fixed(Instant.parse("2025-01-02T00:00:00Z"), ZoneOffset.UTC),
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         job.setRestTemplate(rest);
         job.setInvoker((cmd, target) -> 1); // 실패 exit code
 

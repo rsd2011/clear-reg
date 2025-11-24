@@ -58,7 +58,12 @@ class PolicyAdminControllerTest {
                 10_485_760L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "yaml");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "yaml");
         given(policyAdminPort.currentPolicy()).willReturn(view);
 
         mockMvc.perform(get("/api/admin/policies"))
@@ -73,22 +78,22 @@ class PolicyAdminControllerTest {
                 10_485_760L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "yaml");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "yaml");
         PolicyUpdateRequest request = new PolicyUpdateRequest(
                 false, null, null, List.of("SSO"),
                 null, null, null, null,
                 null, null, null, null,
                 null, null, null, null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                java.util.Collections.<com.example.common.schedule.BatchJobCode, com.example.common.schedule.BatchJobSchedule>emptyMap());
         given(policyAdminPort.updateToggles(request)).willReturn(view);
 
         mockMvc.perform(put("/api/admin/policies/toggles")

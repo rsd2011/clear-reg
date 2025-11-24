@@ -34,7 +34,10 @@ class AuditColdArchiveSchedulerTest {
             public com.example.common.policy.PolicyToggleSettings currentSettings() {
                 return new com.example.common.policy.PolicyToggleSettings(true, true, true, java.util.List.of(), 20971520L, java.util.List.of(), true,
                         365, true, true, true, 730, true, "MEDIUM", true, java.util.List.of(), java.util.List.of(), false,
-                        "0 0 2 1 * *", 1, true, "0 0 4 1 * *");
+                        "0 0 2 1 * *", 1, true, "0 0 4 1 * *",
+                        true, "0 0 3 * * *",
+                        false, "0 30 2 2 * *",
+                        true, "0 30 3 * * *");
             }
 
             @Override

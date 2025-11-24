@@ -36,7 +36,7 @@ class DatabasePolicySettingsProviderTest {
                 java.util.List.of("PASSWORD"), 1_000_000L, java.util.List.of("pdf"), true, 10);
         var partition = new com.example.common.policy.AuditPartitionSettings(true, "0 5 1 1 * *", 2,
                 "ts_hot", "ts_cold", 12, 48);
-        PolicyState state = PolicyState.from(toggles, partition);
+        PolicyState state = PolicyState.from(toggles, partition, java.util.Map.of());
 
         PolicyAdminService service = mock(PolicyAdminService.class);
         given(service.currentState()).willReturn(state);

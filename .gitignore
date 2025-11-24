@@ -50,6 +50,7 @@ hs_err_pid*
 .metadata
 /bin
 /*/bin
+/*/*/bin
 /tmp
 /*/tmp
 *.tmp

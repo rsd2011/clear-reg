@@ -1,8 +1,11 @@
 package com.example.audit.infra.siem;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -34,22 +37,38 @@ public class HttpSiemForwarder implements SiemForwarder {
 
     private RestTemplate template() {
         if (restTemplate == null) {
-            SimpleClientHttpRequestFactory f = new SimpleClientHttpRequestFactory();
-            f.setConnectTimeout(props.getTimeoutMs());
-            f.setReadTimeout(props.getTimeoutMs());
-            if (props.getKeyStore() != null && props.getTrustStore() != null) {
-                try {
-                    SSLContext ctx = SiemSslContextBuilder.build(props.getKeyStore(), props.getKeyStorePassword(),
-                            props.getTrustStore(), props.getTrustStorePassword());
-                    f.setHostnameVerifier((h, s) -> true);
-                    f.setSslSocketFactory(ctx.getSocketFactory());
-                } catch (Exception e) {
-                    log.warn("Failed to build SSL context for SIEM: {}", e.getMessage());
-                }
-            }
-            restTemplate = new RestTemplate(f);
+            restTemplate = new RestTemplate(buildRequestFactory());
         }
         return restTemplate;
+    }
+
+    private SimpleClientHttpRequestFactory buildRequestFactory() {
+        int timeout = props.getTimeoutMs();
+        if (props.getKeyStore() != null && props.getTrustStore() != null) {
+            try {
+                SSLContext ctx = SiemSslContextBuilder.build(props.getKeyStore(), props.getKeyStorePassword(),
+                        props.getTrustStore(), props.getTrustStorePassword());
+                SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory() {
+                    @Override
+                    protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
+                        if (connection instanceof HttpsURLConnection https) {
+                            https.setHostnameVerifier((h, s) -> true);
+                            https.setSSLSocketFactory(ctx.getSocketFactory());
+                        }
+                        super.prepareConnection(connection, httpMethod);
+                    }
+                };
+                factory.setConnectTimeout(timeout);
+                factory.setReadTimeout(timeout);
+                return factory;
+            } catch (Exception e) {
+                log.warn("Failed to build SSL context for SIEM: {}", e.getMessage());
+            }
+        }
+        SimpleClientHttpRequestFactory fallback = new SimpleClientHttpRequestFactory();
+        fallback.setConnectTimeout(timeout);
+        fallback.setReadTimeout(timeout);
+        return fallback;
     }
 
     // 테스트 주입용

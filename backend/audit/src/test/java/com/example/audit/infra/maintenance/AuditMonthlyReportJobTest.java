@@ -59,6 +59,9 @@ class AuditMonthlyReportJobTest {
         return new com.example.common.policy.PolicyToggleSettings(true, true, true, List.of(), 0L, List.of(), true, 0,
                 true, true, true, 0, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1,
-                true, "0 0 4 1 * *");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *");
     }
 }

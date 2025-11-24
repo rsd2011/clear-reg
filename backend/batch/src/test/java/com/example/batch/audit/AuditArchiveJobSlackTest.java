@@ -19,7 +19,7 @@ class AuditArchiveJobSlackTest {
     @DisplayName("재시도 후 실패하면 Slack 웹훅으로 알림을 보낸다")
     void notifyFailureOnRetriesExhausted() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         set(job, "enabled", true);
         set(job, "archiveCommand", "/bin/false");
         set(job, "retry", 2);

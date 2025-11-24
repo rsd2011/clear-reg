@@ -104,4 +104,23 @@ class HttpSiemForwarderTest {
         // 내부 RestTemplate가 연결 실패해도 catch되어 예외가 던져지지 않아야 한다
         assertThatCode(() -> forwarder.forward(event)).doesNotThrowAnyException();
     }
+
+    @Test
+    @DisplayName("API 키와 HMAC이 설정되면 헤더에 반영되고 whitelist 필터가 적용된다")
+    void forwardAddsAuthAndHmac() {
+        SiemProperties props = new SiemProperties();
+        props.setEnabled(true);
+        props.setEndpoint("http://localhost/siem");
+        props.setApiKey("token");
+        props.setHmacSecret("secret");
+        props.setWhitelist(java.util.List.of("eventType"));
+
+        HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
+        RestTemplate rest = Mockito.mock(RestTemplate.class);
+        forwarder.setRestTemplate(rest);
+
+        forwarder.forward(AuditEvent.builder().eventType("AUTH").eventTime(Instant.now()).build());
+
+        Mockito.verify(rest).postForEntity(Mockito.eq(props.getEndpoint()), any(HttpEntity.class), eq(Void.class));
+    }
 }

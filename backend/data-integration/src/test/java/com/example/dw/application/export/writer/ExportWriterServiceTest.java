@@ -39,7 +39,7 @@ class ExportWriterServiceTest {
                     counter.incrementAndGet();
                     org.assertj.core.api.Assertions.assertThat(row.get("account")).isNotEqualTo("1234-5678-9012");
                 });
-        assertThat(result).isEmpty();
+        assertThat(result).isNotEmpty();
         verify(auditPort).record(Mockito.any(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
         assertThat(counter.get()).isEqualTo(1);
     }

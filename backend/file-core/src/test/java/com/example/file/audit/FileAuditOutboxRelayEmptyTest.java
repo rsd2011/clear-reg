@@ -14,6 +14,10 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.ObjectProvider;
+import com.example.common.policy.PolicySettingsProvider;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 class FileAuditOutboxRelayEmptyTest {
 
@@ -25,11 +29,17 @@ class FileAuditOutboxRelayEmptyTest {
         when(jdbcTemplate.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), anyInt()))
                 .thenReturn(List.of());
 
-        FileAuditOutboxRelay relay = new FileAuditOutboxRelay(jdbcTemplate, publisher, 10);
+        FileAuditOutboxRelay relay = new FileAuditOutboxRelay(jdbcTemplate, publisher, 10, 5_000, nullProvider(), false);
 
         relay.relay();
 
         verifyNoInteractions(publisher);
         verify(jdbcTemplate, never()).update(anyString(), any(Object[].class));
+    }
+
+    private ObjectProvider<PolicySettingsProvider> nullProvider() {
+        ObjectProvider<PolicySettingsProvider> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(null);
+        return provider;
     }
 }

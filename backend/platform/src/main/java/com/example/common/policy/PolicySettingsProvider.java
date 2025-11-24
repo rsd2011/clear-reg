@@ -19,4 +19,12 @@ public interface PolicySettingsProvider {
     default AuditPartitionSettings partitionSettings() {
         return null;
     }
+
+    /**
+     * Optional per-job schedule settings when 중앙 스케줄러를 사용할 때 참고.
+     * 기본 구현은 null 반환(미정의).
+     */
+    default com.example.common.schedule.BatchJobSchedule batchJobSchedule(com.example.common.schedule.BatchJobCode code) {
+        return null;
+    }
 }

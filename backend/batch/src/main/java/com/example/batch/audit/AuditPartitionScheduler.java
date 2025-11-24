@@ -11,9 +11,6 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.SchedulingConfigurer;
-import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import io.micrometer.core.instrument.Counter;
@@ -25,6 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 import com.example.common.policy.AuditPartitionSettings;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.common.schedule.ScheduledJobPort;
+import com.example.common.schedule.TriggerDescriptor;
+import com.example.common.schedule.TriggerType;
+import org.springframework.scheduling.annotation.SchedulingConfigurer;
+import org.springframework.scheduling.config.ScheduledTaskRegistrar;
+import org.springframework.scheduling.support.CronTrigger;
 
 /**
  * PostgreSQL 기준 월 단위 파티션을 사전 생성하는 배치 스케줄러.
@@ -32,7 +35,7 @@ import com.example.common.policy.PolicyToggleSettings;
  */
 @Component
 @Slf4j
-public class AuditPartitionScheduler implements SchedulingConfigurer {
+public class AuditPartitionScheduler implements ScheduledJobPort, SchedulingConfigurer {
 
     private final DataSource dataSource;
     private final Clock clock;
@@ -54,6 +57,9 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
     @Value("${audit.partition.cold-months:60}")
     private int coldMonths;
 
+    @Value("${central.scheduler.enabled:false}")
+    private boolean centralSchedulerEnabled;
+
     private final Counter partitionSuccess;
     private final Counter partitionFailure;
     private final Timer partitionLatency;
@@ -71,14 +77,6 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
         this.partitionLatency = Timer.builder("audit_partition_create_ms")
                 .publishPercentileHistogram()
                 .register(meterRegistry);
-    }
-
-    @Override
-    public void configureTasks(ScheduledTaskRegistrar registrar) {
-        registrar.addTriggerTask(this::createNextPartitions, triggerContext -> {
-            String cron = currentSettings().auditPartitionCron();
-            return new CronTrigger(cron).nextExecution(triggerContext);
-        });
     }
 
     void createNextPartitions() {
@@ -112,6 +110,39 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
         }
     }
 
+    @Override
+    public String jobId() {
+        return "audit-partition";
+    }
+
+    @Override
+    public TriggerDescriptor trigger() {
+        var policy = policySettingsProvider.batchJobSchedule(com.example.common.schedule.BatchJobCode.AUDIT_PARTITION_PRECREATE);
+        if (policy != null) {
+            return policy.toTriggerDescriptor();
+        }
+        String cron = currentSettings().auditPartitionCron();
+        boolean enabled = currentSettings().auditPartitionEnabled();
+        return new TriggerDescriptor(enabled, TriggerType.CRON, cron, 0, 0, null);
+    }
+
+    @Override
+    public void runOnce(java.time.Instant now) {
+        createNextPartitions();
+    }
+
+    @Override
+    public void configureTasks(org.springframework.scheduling.config.ScheduledTaskRegistrar registrar) {
+        if (centralSchedulerEnabled) {
+            log.info("[audit-partition] central scheduler enabled, skipping local registration");
+            return;
+        }
+        registrar.addTriggerTask(this::createNextPartitions, triggerContext -> {
+            String cron = currentSettings().auditPartitionCron();
+            return new org.springframework.scheduling.support.CronTrigger(cron).nextExecution(triggerContext);
+        });
+    }
+
     void ensurePartition(LocalDate monthStart, String tsHot) {
         String suffix = monthStart.format(DateTimeFormatter.ofPattern("yyyy_MM"));
         String partitionName = "audit_log_" + suffix;
@@ -140,7 +171,11 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
             return new PolicyToggleSettings(true, true, true, null, 0L, null, true, 0,
                     true, true, true, 0, true, "MEDIUM", true, null, null,
                     enabledFallback, cronFallback, preloadMonthsFallback,
-                    true, "0 0 4 1 * *");
+                    true, "0 0 4 1 * *",
+                    true, "0 0 3 * * *",
+                    false, "0 30 2 2 * *",
+                    true, "0 30 3 * * *",
+                    java.util.Map.of());
         }
         AuditPartitionSettings ps = policySettingsProvider.partitionSettings();
         boolean enabled = ps != null ? ps.enabled() : settings.auditPartitionEnabled();
@@ -154,6 +189,10 @@ public class AuditPartitionScheduler implements SchedulingConfigurer {
                 settings.fileRetentionDays(), settings.auditEnabled(), settings.auditReasonRequired(), settings.auditSensitiveApiDefaultOn(),
                 settings.auditRetentionDays(), settings.auditStrictMode(), settings.auditRiskLevel(), settings.auditMaskingEnabled(),
                 settings.auditSensitiveEndpoints(), settings.auditUnmaskRoles(),
-                enabled, cron, preload, settings.auditMonthlyReportEnabled(), settings.auditMonthlyReportCron());
+                enabled, cron, preload, settings.auditMonthlyReportEnabled(), settings.auditMonthlyReportCron(),
+                settings.auditLogRetentionEnabled(), settings.auditLogRetentionCron(),
+                settings.auditColdArchiveEnabled(), settings.auditColdArchiveCron(),
+                settings.auditRetentionCleanupEnabled(), settings.auditRetentionCleanupCron(),
+                settings.batchJobs());
     }
 }

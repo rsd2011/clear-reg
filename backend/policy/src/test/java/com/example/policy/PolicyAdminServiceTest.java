@@ -38,7 +38,7 @@ class PolicyAdminServiceTest {
                 10_485_760L, List.of("pdf"), true, 365);
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         given(repository.findByCode("security.policy")).willReturn(Optional.empty());
-        service = new PolicyAdminService(repository, mapper, defaults);
+        service = new PolicyAdminService(repository, mapper, defaults, null);
     }
 
     @Test
@@ -63,7 +63,13 @@ class PolicyAdminServiceTest {
                 null, // auditPartitionHotMonths
                 null, // auditPartitionColdMonths
                 null, // auditMonthlyReportEnabled
-                null  // auditMonthlyReportCron
+                null, // auditMonthlyReportCron
+                null, // auditLogRetentionEnabled
+                null, // auditLogRetentionCron
+                null, // auditColdArchiveEnabled
+                null, // auditColdArchiveCron
+                null, // auditRetentionCleanupEnabled
+                null  // auditRetentionCleanupCron
         );
 
         PolicyAdminService.PolicySnapshot snapshot = service.update(request);
@@ -84,6 +90,27 @@ class PolicyAdminServiceTest {
 
         assertThat(snapshot.state().enabledLoginTypes()).containsExactly("SSO");
         then(repository).should().save(any());
+    }
+
+    @Test
+    @DisplayName("신규 감사 스케줄 필드를 업데이트하면 상태에 반영된다")
+    void updatesNewAuditScheduleFields() {
+        PolicyUpdateRequest request = new PolicyUpdateRequest(
+                null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null,
+                true, "0 0 1 * * *",
+                true, "0 15 2 2 * *",
+                false, "0 0 5 * * *");
+
+        PolicyAdminService.PolicySnapshot snapshot = service.update(request);
+
+        assertThat(snapshot.state().auditLogRetentionEnabled()).isTrue();
+        assertThat(snapshot.state().auditLogRetentionCron()).isEqualTo("0 0 1 * * *");
+        assertThat(snapshot.state().auditColdArchiveEnabled()).isTrue();
+        assertThat(snapshot.state().auditColdArchiveCron()).isEqualTo("0 15 2 2 * *");
+        assertThat(snapshot.state().auditRetentionCleanupEnabled()).isFalse();
+        assertThat(snapshot.state().auditRetentionCleanupCron()).isEqualTo("0 0 5 * * *");
     }
 
     @Test
@@ -111,6 +138,12 @@ class PolicyAdminServiceTest {
                 true,
                 false,
                 List.of("AD"),
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
                 null,
                 null,
                 null,
@@ -247,7 +280,7 @@ class PolicyAdminServiceTest {
         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         PolicyToggleSettings defaults = new PolicyToggleSettings(true, true, true, List.of("PASSWORD"), 10_485_760L, List.of("pdf"), true, 365);
 
-        PolicyAdminService svc = new PolicyAdminService(repo, mapper, defaults);
+        PolicyAdminService svc = new PolicyAdminService(repo, mapper, defaults, null);
 
         var state = svc.currentState();
         assertThat(state.auditPartitionEnabled()).isTrue();

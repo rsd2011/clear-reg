@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import java.util.List;
 
@@ -15,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.file.config.FileSecurityProperties;
+import com.example.common.policy.PolicySettingsProvider;
+import org.springframework.beans.factory.ObjectProvider;
 import com.example.file.storage.FileStorageClient;
 import com.example.file.port.FileScanner;
 
@@ -45,7 +48,7 @@ class FileScanReschedulerTest {
         FileSecurityProperties properties = new FileSecurityProperties();
         properties.setRescanEnabled(false);
         FileScanRescheduler rescheduler = new FileScanRescheduler(
-                storedFileRepository, versionRepository, fileScanner, storageClient, properties);
+                storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), false);
 
         rescheduler.rescanPending();
 
@@ -59,7 +62,7 @@ class FileScanReschedulerTest {
         FileSecurityProperties properties = new FileSecurityProperties();
         properties.setRescanEnabled(true);
         FileScanRescheduler rescheduler = new FileScanRescheduler(
-                storedFileRepository, versionRepository, fileScanner, storageClient, properties);
+                storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), false);
 
         StoredFile file = new StoredFile();
         file.setOriginalName("doc.txt");
@@ -86,7 +89,7 @@ class FileScanReschedulerTest {
         FileSecurityProperties properties = new FileSecurityProperties();
         properties.setRescanEnabled(true);
         FileScanRescheduler rescheduler = new FileScanRescheduler(
-                storedFileRepository, versionRepository, fileScanner, storageClient, properties);
+                storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), false);
 
         StoredFile file = new StoredFile();
         file.setOriginalName("doc.txt");
@@ -104,5 +107,61 @@ class FileScanReschedulerTest {
 
         assertThat(file.getScanStatus()).isEqualTo(ScanStatus.BLOCKED);
         assertThat(file.getBlockedReason()).contains("Rescan result");
+    }
+
+    @Test
+    @DisplayName("central scheduler가 활성화되면 @Scheduled 메서드는 실행을 건너뛴다")
+    void skipWhenCentralSchedulerEnabled() {
+        FileSecurityProperties properties = new FileSecurityProperties();
+        properties.setRescanEnabled(true);
+        FileScanRescheduler rescheduler = new FileScanRescheduler(
+                storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), true);
+
+        rescheduler.rescanPending();
+
+        verify(storedFileRepository, never()).findTop20ByScanStatusInOrderByCreatedAtAsc(any());
+    }
+
+    @Test
+    @DisplayName("trigger 디스크립터를 생성한다")
+    void triggerNotNull() {
+        FileSecurityProperties properties = new FileSecurityProperties();
+        FileScanRescheduler rescheduler = new FileScanRescheduler(
+                storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), false);
+
+        assertThat(rescheduler.trigger()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("정책 스케줄이 있으면 그것을 사용한다")
+    void triggerUsesPolicySchedule() {
+        FileSecurityProperties properties = new FileSecurityProperties();
+        var policy = mock(PolicySettingsProvider.class);
+        var provider = new ObjectProvider<PolicySettingsProvider>() {
+            @Override public PolicySettingsProvider getObject(Object... args) { return policy; }
+            @Override public PolicySettingsProvider getIfAvailable() { return policy; }
+            @Override public PolicySettingsProvider getIfUnique() { return policy; }
+            @Override public PolicySettingsProvider getObject() { return policy; }
+            @Override public java.util.stream.Stream<PolicySettingsProvider> stream() { return java.util.stream.Stream.of(policy); }
+            @Override public java.util.stream.Stream<PolicySettingsProvider> orderedStream() { return java.util.stream.Stream.of(policy); }
+        };
+        when(policy.batchJobSchedule(com.example.common.schedule.BatchJobCode.FILE_SECURITY_RESCAN))
+                .thenReturn(new com.example.common.schedule.BatchJobSchedule(true, com.example.common.schedule.TriggerType.FIXED_DELAY, null, 1234, 0, null));
+
+        FileScanRescheduler rescheduler = new FileScanRescheduler(
+                storedFileRepository, versionRepository, fileScanner, storageClient, properties, provider, false);
+
+        assertThat(rescheduler.trigger().toString()).contains("1234");
+    }
+
+    private ObjectProvider<PolicySettingsProvider> nullProvider() {
+        return new ObjectProvider<>() {
+            @Override public PolicySettingsProvider getObject(Object... args) { return null; }
+            @Override public PolicySettingsProvider getIfAvailable() { return null; }
+            @Override public PolicySettingsProvider getIfUnique() { return null; }
+            @Override public PolicySettingsProvider getObject() { return null; }
+            @Override public java.util.stream.Stream<PolicySettingsProvider> stream() { return java.util.stream.Stream.empty(); }
+            @Override public java.util.stream.Stream<PolicySettingsProvider> orderedStream() { return java.util.stream.Stream.empty(); }
+        };
     }
 }

@@ -98,4 +98,95 @@ class SiemPropertiesTest {
         right.setApiKey("diff");
         assertThat(left).isNotEqualTo(right);
     }
+
+    @Test
+    @DisplayName("equals는 모든 필드 차이를 감지한다")
+    void equalsCoversAllFields() {
+        SiemProperties base = fullProps();
+
+        String[] endpoints = {"url2"};
+        // endpoint
+        SiemProperties diff = fullProps();
+        diff.setEndpoint("url2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // apiKey
+        diff = fullProps();
+        diff.setApiKey("k2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // timeout
+        diff = fullProps();
+        diff.setTimeoutMs(9999);
+        assertThat(base).isNotEqualTo(diff);
+
+        // hmacSecret
+        diff = fullProps();
+        diff.setHmacSecret("h2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // whitelist
+        diff = fullProps();
+        diff.setWhitelist(java.util.List.of("b"));
+        assertThat(base).isNotEqualTo(diff);
+
+        // retry
+        diff = fullProps();
+        diff.setRetry(3);
+        assertThat(base).isNotEqualTo(diff);
+
+        // mode
+        diff = fullProps();
+        diff.setMode("syslog");
+        assertThat(base).isNotEqualTo(diff);
+
+        // keyStore
+        diff = fullProps();
+        diff.setKeyStore("ks2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // keyStorePassword
+        diff = fullProps();
+        diff.setKeyStorePassword("p2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // trustStore
+        diff = fullProps();
+        diff.setTrustStore("ts2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // trustStorePassword
+        diff = fullProps();
+        diff.setTrustStorePassword("tp2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // syslogHost
+        diff = fullProps();
+        diff.setSyslogHost("host2");
+        assertThat(base).isNotEqualTo(diff);
+
+        // syslogPort
+        diff = fullProps();
+        diff.setSyslogPort(1514);
+        assertThat(base).isNotEqualTo(diff);
+    }
+
+    private SiemProperties fullProps() {
+        SiemProperties p = new SiemProperties();
+        p.setEnabled(true);
+        p.setEndpoint("url");
+        p.setApiKey("k");
+        p.setTimeoutMs(1000);
+        p.setHmacSecret("h");
+        p.setWhitelist(java.util.List.of("a"));
+        p.setRetry(2);
+        p.setMode("otlp");
+        p.setKeyStore("ks");
+        p.setKeyStorePassword("kp");
+        p.setTrustStore("ts");
+        p.setTrustStorePassword("tp");
+        p.setSyslogHost("host");
+        p.setSyslogPort(6514);
+        return p;
+    }
 }

@@ -36,6 +36,10 @@ class PolicyAdminPortAdapterBranchTest {
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
                 true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
                 "before");
         PolicyView after = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
@@ -43,14 +47,20 @@ class PolicyAdminPortAdapterBranchTest {
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
                 true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
                 "after");
         Mockito.when(service.currentView()).thenReturn(view);
         Mockito.when(service.updateView(Mockito.any())).thenReturn(after);
 
         PolicyAdminPortAdapter adapter = new PolicyAdminPortAdapter(service, auditPort);
-        adapter.updateToggles(new PolicyUpdateRequest(null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null));
+        adapter.updateToggles(new PolicyUpdateRequest(
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null,
+                java.util.Collections.<com.example.common.schedule.BatchJobCode, com.example.common.schedule.BatchJobSchedule>emptyMap()));
 
         verify(auditPort).record(Mockito.any(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
     }
@@ -66,6 +76,10 @@ class PolicyAdminPortAdapterBranchTest {
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
                 true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
                 "before");
         PolicyView after = new PolicyView(false, false, false,
                 java.util.List.of(), 0L, java.util.List.of(), false, 0,
@@ -73,6 +87,10 @@ class PolicyAdminPortAdapterBranchTest {
                 java.util.List.of("/api/**"), java.util.List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
                 true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
                 "after");
         Mockito.when(service.currentView()).thenReturn(view);
         Mockito.when(service.applyYamlView(Mockito.anyString())).thenReturn(after);

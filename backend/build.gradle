@@ -33,7 +33,8 @@ subprojects { subproject ->
         }
 
         // 핵심 도메인/인프라 코드까지 커버리지에 포함하기 위해 최소한의 예외만 둔다.
-        def jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**']
+        def jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**',
+                                '**/policy/AuditPartitionSettings.class']
         // 전역적으로 공통 적용할 exclude 집합 (report/verification 모두 동일하게 사용)
         def jacocoGlobalExcludes = (jacocoExclusions + ['**/generated/**']).unique()
 

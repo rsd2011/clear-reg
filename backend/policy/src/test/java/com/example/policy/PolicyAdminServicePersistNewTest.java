@@ -25,7 +25,7 @@ class PolicyAdminServicePersistNewTest {
     @DisplayName("기존 문서가 없을 때 applyYamlView는 새 문서를 저장한다")
     void applyYamlView_savesNewDocument() {
         given(repository.findByCode("security.policy")).willReturn(Optional.empty());
-        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults);
+        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults, null);
 
         service.applyYamlView("""
                 passwordPolicyEnabled: true

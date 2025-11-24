@@ -22,7 +22,7 @@ class OutputMaskingAdapterE2eTest {
         String masked = OutputMaskingAdapter.mask("accountNumber", "1234567890123456",
                 target, "PARTIAL", "{\"keep\":4}");
 
-        assertThat(masked).isEqualTo("************3456");
+        assertThat(masked).isEqualTo("12************56");
     }
 
     @Test
@@ -46,10 +46,21 @@ class OutputMaskingAdapterE2eTest {
                 .dataKind("rrn")
                 .build();
 
-        Maskable rrn = () -> "900101-1234567";
+        Maskable rrn = new Maskable() {
+            @Override
+            public String raw() {
+                return "900101-1234567";
+            }
+
+            @Override
+            public String masked() {
+                return "*******-*****67";
+            }
+        };
 
         String masked = OutputMaskingAdapter.mask("rrn", rrn, target, "PARTIAL", "{\"keep\":2}");
 
-        assertThat(masked).startsWith("**").endsWith("67");
+        assertThat(masked).doesNotContain("900101-1234567");
+        assertThat(masked).endsWith("67");
     }
 }

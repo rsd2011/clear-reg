@@ -19,7 +19,7 @@ class RetentionCleanupJobTest {
         AuditLogRepository repo = Mockito.mock(AuditLogRepository.class);
         when(repo.deleteByEventTimeBefore(any())).thenReturn(0L); // deleted == 0 브랜치
         AuditRetentionProperties props = new AuditRetentionProperties(30);
-        RetentionCleanupJob job = new RetentionCleanupJob(repo, props);
+        RetentionCleanupJob job = new RetentionCleanupJob(repo, props, () -> null);
         job.purgeExpired();
 
         when(repo.deleteByEventTimeBefore(any())).thenReturn(5L); // deleted > 0 브랜치

@@ -24,7 +24,7 @@ class PolicyAdminServiceApplyYamlViewInvalidTest {
     @DisplayName("applyYamlView가 잘못된 YAML을 받으면 IllegalArgumentException을 던진다")
     void applyYamlView_invalid_throws() {
         given(repository.findByCode("security.policy")).willReturn(Optional.empty());
-        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults);
+        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults, null);
 
         assertThatThrownBy(() -> service.applyYamlView("bad: [yaml"))
                 .isInstanceOf(IllegalArgumentException.class);

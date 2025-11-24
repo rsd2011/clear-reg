@@ -7,7 +7,7 @@ import lombok.Value;
  * 마스킹 여부 판단에 필요한 컨텍스트.
  */
 @Value
-@Builder
+@Builder(toBuilder = true)
 public class MaskingTarget {
     SubjectType subjectType; // CUSTOMER / EMPLOYEE / SYSTEM 등
     String dataKind;       // RRN, CARD, PAYMENT_REFERENCE 등 자유 텍스트

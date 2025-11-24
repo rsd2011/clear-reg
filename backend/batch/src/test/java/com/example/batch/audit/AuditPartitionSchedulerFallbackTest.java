@@ -32,7 +32,8 @@ class AuditPartitionSchedulerFallbackTest {
         PolicySettingsProvider provider = () -> null; // currentSettings null
 
         Clock clock = Clock.fixed(LocalDate.of(2025, 3, 5).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditPartitionScheduler scheduler = new AuditPartitionScheduler(ds, clock, provider);
+        AuditPartitionScheduler scheduler = new AuditPartitionScheduler(ds, clock, provider,
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
         setField(scheduler, "enabledFallback", true);
         setField(scheduler, "preloadMonthsFallback", 1);
         setField(scheduler, "hotTablespace", "audit_hot");

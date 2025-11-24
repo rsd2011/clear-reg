@@ -19,7 +19,7 @@ class AuditArchiveJobCommandTest {
     @DisplayName("archiveCommand가 설정되면 retry 횟수 내에서 실행을 시도한다")
     void invokesCommandWithRetry() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         setField(job, "enabled", true);
         setField(job, "archiveCommand", "/bin/echo");
         setField(job, "retry", 2);
@@ -40,7 +40,7 @@ class AuditArchiveJobCommandTest {
     @DisplayName("command가 비어 있으면 invoker를 호출하지 않는다")
     void noopWhenCommandEmpty() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         setField(job, "enabled", true);
         setField(job, "archiveCommand", "");
         AuditArchiveJob.CommandInvoker invoker = Mockito.mock(AuditArchiveJob.CommandInvoker.class);
@@ -55,7 +55,7 @@ class AuditArchiveJobCommandTest {
     @DisplayName("모든 재시도가 실패하면 retry 횟수만큼 시도한다")
     void retriesAllAttemptsOnFailure() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         setField(job, "enabled", true);
         setField(job, "archiveCommand", "/bin/false");
         setField(job, "retry", 3);
@@ -73,7 +73,7 @@ class AuditArchiveJobCommandTest {
     @DisplayName("실제 커맨드가 성공하면 runCommand 경로를 커버한다")
     void realCommandSuccess() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         setField(job, "enabled", true);
         setField(job, "archiveCommand", "/bin/echo");
         setField(job, "retry", 1);

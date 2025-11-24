@@ -59,6 +59,12 @@ public class PolicyProviderConfig {
                 properties.getAuditPartitionCron(),
                 properties.getAuditPartitionPreloadMonths(),
                 properties.isAuditMonthlyReportEnabled(),
-                properties.getAuditMonthlyReportCron());
+                properties.getAuditMonthlyReportCron(),
+                properties.isAuditLogRetentionEnabled(),
+                properties.getAuditLogRetentionCron(),
+                properties.isAuditColdArchiveEnabled(),
+                properties.getAuditColdArchiveCron(),
+                properties.isAuditRetentionCleanupEnabled(),
+                properties.getAuditRetentionCleanupCron());
     }
 }

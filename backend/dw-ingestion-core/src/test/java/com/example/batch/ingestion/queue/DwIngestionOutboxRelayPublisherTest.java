@@ -10,6 +10,10 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.ObjectProvider;
+import com.example.common.policy.PolicySettingsProvider;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.example.dw.application.job.DwIngestionJobQueue;
 import com.example.dw.application.job.DwIngestionOutboxService;
@@ -24,7 +28,7 @@ class DwIngestionOutboxRelayPublisherTest {
         DwIngestionOutboxService outboxService = Mockito.mock(DwIngestionOutboxService.class);
         DwIngestionJobQueue jobQueue = Mockito.mock(DwIngestionJobQueue.class);
         OutboxMessagePublisher publisher = Mockito.mock(OutboxMessagePublisher.class);
-        DwIngestionOutboxRelay relay = new DwIngestionOutboxRelay(outboxService, jobQueue, publisher, 10);
+        DwIngestionOutboxRelay relay = newRelay(outboxService, jobQueue, publisher, 10);
 
         DwIngestionOutbox entry = new DwIngestionOutbox(com.example.dw.application.job.DwIngestionJobType.FETCH_NEXT,
                 java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now());
@@ -35,6 +39,7 @@ class DwIngestionOutboxRelayPublisherTest {
 
         verify(jobQueue).enqueue(any());
         verify(publisher, times(1)).publish(entry);
+        org.assertj.core.api.Assertions.assertThat(relay.trigger()).isNotNull();
     }
 
     @Test
@@ -42,7 +47,7 @@ class DwIngestionOutboxRelayPublisherTest {
         DwIngestionOutboxService outboxService = Mockito.mock(DwIngestionOutboxService.class);
         DwIngestionJobQueue jobQueue = Mockito.mock(DwIngestionJobQueue.class);
         OutboxMessagePublisher publisher = Mockito.mock(OutboxMessagePublisher.class);
-        DwIngestionOutboxRelay relay = new DwIngestionOutboxRelay(outboxService, jobQueue, publisher, 5);
+        DwIngestionOutboxRelay relay = newRelay(outboxService, jobQueue, publisher, 5);
 
         org.assertj.core.api.Assertions.assertThatNoException().isThrownBy(relay::relay);
         Mockito.verify(outboxService).claimPending(5);
@@ -54,7 +59,7 @@ class DwIngestionOutboxRelayPublisherTest {
         DwIngestionOutboxService outboxService = Mockito.mock(DwIngestionOutboxService.class);
         DwIngestionJobQueue jobQueue = Mockito.mock(DwIngestionJobQueue.class);
         OutboxMessagePublisher publisher = Mockito.mock(OutboxMessagePublisher.class);
-        DwIngestionOutboxRelay relay = new DwIngestionOutboxRelay(outboxService, jobQueue, publisher, 10);
+        DwIngestionOutboxRelay relay = newRelay(outboxService, jobQueue, publisher, 10);
 
         DwIngestionOutbox entry = new DwIngestionOutbox(com.example.dw.application.job.DwIngestionJobType.FETCH_NEXT,
                 java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now());
@@ -65,5 +70,15 @@ class DwIngestionOutboxRelayPublisherTest {
         relay.relay();
 
         verify(outboxService).markFailed(entry);
+        org.assertj.core.api.Assertions.assertThat(relay.trigger()).isNotNull();
+    }
+
+    private DwIngestionOutboxRelay newRelay(DwIngestionOutboxService outboxService,
+                                            DwIngestionJobQueue jobQueue,
+                                            OutboxMessagePublisher publisher,
+                                            int batchSize) {
+        ObjectProvider<PolicySettingsProvider> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(null);
+        return new DwIngestionOutboxRelay(outboxService, jobQueue, publisher, batchSize, 5_000, provider, false);
     }
 }

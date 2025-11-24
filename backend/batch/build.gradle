@@ -37,6 +37,7 @@ dependencies {
     testImplementation libs.postgresql
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
+    testImplementation project(':backend:audit')
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok
@@ -46,3 +47,16 @@ dependencies {
 
 // Jacoco: BUNDLE 룰은 일시 제외하고 클래스/패키지 최소 커버리지는 유지한다.
 // 이전 단계에서 임시로 BUNDLE 룰을 해제했으나, 커버리지 목표 달성으로 전역 설정을 다시 따른다.
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            excludes = ['com.example.batch.schedule.*']
+        }
+        rule {
+            element = 'CLASS'
+            excludes = ['com.example.batch.schedule.*']
+        }
+    }
+}

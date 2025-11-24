@@ -27,7 +27,8 @@ class AuditArchiveJobDelayAlertTest {
                 .thenThrow(new RuntimeException("timeout"))
                 .thenReturn(ResponseEntity.ok("ok"));
 
-        AuditArchiveJob job = new AuditArchiveJob(Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC));
+        AuditArchiveJob job = new AuditArchiveJob(Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC),
+                new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         job.setRestTemplate(rest);
         // invoker는 성공하지만 느린 케이스로 가정
         job.setInvoker((cmd, target) -> {

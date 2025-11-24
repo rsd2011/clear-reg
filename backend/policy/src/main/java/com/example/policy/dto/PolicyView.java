@@ -1,6 +1,10 @@
 package com.example.policy.dto;
 
 import java.util.List;
+import java.util.Map;
+
+import com.example.common.schedule.BatchJobCode;
+import com.example.common.schedule.BatchJobSchedule;
 
 public record PolicyView(boolean passwordPolicyEnabled,
                          boolean passwordHistoryEnabled,
@@ -28,5 +32,12 @@ public record PolicyView(boolean passwordPolicyEnabled,
                          int auditPartitionColdMonths,
                          boolean auditMonthlyReportEnabled,
                          String auditMonthlyReportCron,
+                         boolean auditLogRetentionEnabled,
+                         String auditLogRetentionCron,
+                         boolean auditColdArchiveEnabled,
+                         String auditColdArchiveCron,
+                         boolean auditRetentionCleanupEnabled,
+                         String auditRetentionCleanupCron,
+                         Map<BatchJobCode, BatchJobSchedule> batchJobs,
                          String yaml) {
 }

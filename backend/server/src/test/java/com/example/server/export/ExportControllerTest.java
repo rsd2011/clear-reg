@@ -44,7 +44,7 @@ class ExportControllerTest {
                 .forceUnmask(false)
                 .build());
 
-        var response = controller.sampleCsv("1234-5678-9012", "RSN_SAMPLE", "샘플 다운로드", "PIPA");
+        var response = controller.sampleCsv("1234-5678-9012", "RSN_SAMPLE", "샘플 다운로드", "PIPA", false);
 
         String body = new String(response.getBody(), StandardCharsets.UTF_8);
         assertThat(body).contains("accountNumber");

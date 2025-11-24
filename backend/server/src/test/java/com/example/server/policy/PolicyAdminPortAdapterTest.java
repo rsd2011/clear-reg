@@ -30,7 +30,12 @@ class PolicyAdminPortAdapterTest {
                 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "yaml");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "yaml");
         given(policyAdminService.currentView()).willReturn(view);
 
         PolicyView result = adapter.currentPolicy();
@@ -47,27 +52,32 @@ class PolicyAdminPortAdapterTest {
                 null, null, null, null,
                 null, null, null, null,
                 null, null, null, null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                null, null, null, null,
+                java.util.Collections.<com.example.common.schedule.BatchJobCode, com.example.common.schedule.BatchJobSchedule>emptyMap());
         PolicyView current = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "yaml-current");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "yaml-current");
         given(policyAdminService.currentView()).willReturn(current);
         given(policyAdminService.updateView(request)).willReturn(new PolicyView(false, true, true,
                 List.of("SSO"), 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "yaml"));
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "yaml"));
 
         PolicyView updated = adapter.updateToggles(request);
 
@@ -83,13 +93,23 @@ class PolicyAdminPortAdapterTest {
                 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "yaml-current");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "yaml-current");
         given(policyAdminService.currentView()).willReturn(current);
         PolicyView view = new PolicyView(true, true, true, List.of("PASSWORD"),
                 1_048_576L, List.of("pdf"), true, 365,
                 true, true, true, 730, true, "MEDIUM", true, List.of(), List.of(),
                 false, "0 0 2 1 * *", 1, "", "", 6, 60,
-                true, "0 0 4 1 * *", "policy: value");
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *",
+                java.util.Map.of(),
+                "policy: value");
         given(policyAdminService.applyYamlView(yamlRequest.yaml())).willReturn(view);
 
         PolicyView result = adapter.updateFromYaml(yamlRequest);

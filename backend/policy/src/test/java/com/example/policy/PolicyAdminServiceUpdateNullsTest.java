@@ -35,10 +35,11 @@ class PolicyAdminServiceUpdateNullsTest {
                 fileRetentionDays: 90
                 """);
         given(repository.findByCode("security.policy")).willReturn(Optional.of(doc));
-        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults);
+        PolicyAdminService service = new PolicyAdminService(repository, yamlMapper, defaults, null);
 
         PolicyUpdateRequest req = new PolicyUpdateRequest(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null);
         service.update(req);
 
         verify(repository).save(Mockito.argThat(saved ->

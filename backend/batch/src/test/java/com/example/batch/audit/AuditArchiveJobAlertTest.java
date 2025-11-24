@@ -20,7 +20,7 @@ class AuditArchiveJobAlertTest {
     @DisplayName("delayThreshold 초과 시 슬랙 경고를 보낸다")
     void sendsDelayAlert() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         set(job, "enabled", true);
         set(job, "archiveCommand", "/bin/echo");
         set(job, "retry", 1);
@@ -43,7 +43,7 @@ class AuditArchiveJobAlertTest {
     @DisplayName("alertEnabled=false면 알림을 보내지 않는다")
     void noAlertWhenDisabled() throws Exception {
         Clock clock = Clock.fixed(LocalDate.of(2025, 11, 23).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        AuditArchiveJob job = new AuditArchiveJob(clock);
+        AuditArchiveJob job = new AuditArchiveJob(clock, new io.micrometer.core.instrument.simple.SimpleMeterRegistry(), () -> null);
         set(job, "enabled", true);
         set(job, "archiveCommand", "/bin/false");
         set(job, "retry", 1);
