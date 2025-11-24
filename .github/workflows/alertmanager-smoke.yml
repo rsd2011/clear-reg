@@ -1,0 +1,51 @@
+name: Alertmanager Rule Smoke
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "docs/monitoring/audit-alerts.yml"
+      - ".github/workflows/alertmanager-smoke.yml"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_DATA }}
+      PGW_URL: ${{ secrets.PGW_URL }}
+      ALERTMANAGER_URL: ${{ secrets.ALERTMANAGER_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install promtool
+        run: |
+          PROM_VERSION=2.54.1
+          curl -sL https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz \
+            | tar zx --strip-components=1 prometheus-${PROM_VERSION}.linux-amd64/promtool
+          sudo mv promtool /usr/local/bin/
+
+      - name: promtool check rules
+        run: promtool check rules docs/monitoring/audit-alerts.yml
+
+      - name: Setup kubeconfig
+        if: env.KUBE_CONFIG_DATA != ''
+        run: |
+          echo "$KUBE_CONFIG_DATA" | base64 -d > $HOME/.kube/config
+
+      - name: Apply ConfigMap to Alertmanager
+        if: env.KUBE_CONFIG_DATA != ''
+        run: |
+          kubectl -n monitoring create configmap audit-alerts --from-file=docs/monitoring/audit-alerts.yml --dry-run=client -o yaml | kubectl apply -f -
+          kubectl -n monitoring patch alertmanager main --type merge -p '{"spec":{"configMap":"audit-alerts"}}'
+
+      - name: Push test metric to Pushgateway
+        if: env.PGW_URL != ''
+        run: |
+          echo 'audit_archive_failure_total 1' | curl -s -XPOST ${PGW_URL}/metrics/job/audit_smoke --data-binary @-
+
+      - name: Check Alertmanager firing
+        if: env.ALERTMANAGER_URL != ''
+        run: |
+          sleep 10
+          curl -s ${ALERTMANAGER_URL}/api/v2/alerts | jq '.[] | select(.labels.alertname=="AuditArchiveFailure")' | tee /tmp/alerts.json
+          test -s /tmp/alerts.json

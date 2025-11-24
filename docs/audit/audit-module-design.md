@@ -275,7 +275,7 @@ audit:
   - [ ] 운영 점검: 파티션 생성/아카이브 실패 알림(Slack/Webhook) 및 리트라이 정책 정의.  \n    - Alertmanager 룰 배포 스모크 스크립트(`docs/monitoring/alertmanager-smoke.sh`) 추가됨 — CI 파이프라인 연동 필요.\n    - Retry: 최대 3회 지수백오프(5s→30s→2m), 알림에는 파티션명·에러코드 포함.  \n    - 알림 채널: Slack Webhook 예) `audit.alert.webhook`, 장애 시 이메일 백업.
     - Retry: 최대 3회 지수백오프(5s→30s→2m), 알림에는 파티션명·에러코드 포함.  
     - 알림 채널: Slack Webhook 예) `audit.alert.webhook`, 장애 시 이메일 백업.
-    - 배치 스크립트 예시(개요)
+    - 배치 스크립트 예시(개요)0
       ```bash
       part=$1 # e.g. 2024_10
       pg_dump "$PG_URL" --table="audit_log_${part}" -Fc -f "/tmp/audit_${part}.dump"
