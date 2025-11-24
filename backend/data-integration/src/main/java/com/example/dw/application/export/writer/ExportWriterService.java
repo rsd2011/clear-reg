@@ -29,12 +29,15 @@ public class ExportWriterService {
                               String maskRule,
                               String maskParams,
                               BiConsumer<Integer, Map<String, Object>> writer) {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         return exportService.export(command, () -> {
             for (int i = 0; i < rows.size(); i++) {
                 Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(i), target, maskRule, maskParams);
                 writer.accept(i, masked);
+                baos.writeBytes(masked.values().stream().map(Object::toString).reduce((a, b) -> a + "," + b).orElse("").getBytes());
+                baos.writeBytes(System.lineSeparator().getBytes());
             }
-            return new byte[0]; // 실제 Excel 파일은 writer가 처리한다고 가정
+            return baos.toByteArray(); // 실제 Excel 파일은 writer가 처리하거나 이 바이트로 대체
         });
     }
 
@@ -44,11 +47,15 @@ public class ExportWriterService {
                             String maskRule,
                             String maskParams,
                             java.util.function.Consumer<String> writer) {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         return exportService.export(command, () -> {
             for (Map<String, Object> row : rows) {
-                PdfMaskingAdapter.writeMaskedParagraph(row, target, maskRule, maskParams, writer);
+                PdfMaskingAdapter.writeMaskedParagraph(row, target, maskRule, maskParams, text -> {
+                    writer.accept(text);
+                    baos.writeBytes((text + System.lineSeparator()).getBytes());
+                });
             }
-            return new byte[0]; // 실제 PDF writer가 처리한다고 가정
+            return baos.toByteArray(); // 실제 PDF writer가 처리한다고 가정
         });
     }
 

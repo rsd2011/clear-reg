@@ -33,8 +33,15 @@ public class ExportController {
     public ResponseEntity<byte[]> sampleCsv(@RequestParam("accountNumber") String accountNumber,
                                             @RequestParam("reasonCode") String reasonCode,
                                             @RequestParam(value = "reasonText", required = false) String reasonText,
-                                            @RequestParam(value = "legalBasisCode", required = false) String legalBasisCode) {
+                                            @RequestParam(value = "legalBasisCode", required = false) String legalBasisCode,
+                                            @RequestParam(value = "forceUnmask", required = false, defaultValue = "false") boolean forceUnmask) {
         MaskingTarget target = MaskingContextHolder.get();
+        if (target == null) {
+            target = MaskingTarget.builder().defaultMask(true).build();
+        }
+        if (forceUnmask) {
+            target = target.toBuilder().forceUnmask(true).build();
+        }
 
         ExportCommand command = new ExportCommand(
                 "csv",
@@ -56,6 +63,41 @@ public class ExportController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sample.csv\"")
                 .contentType(MediaType.TEXT_PLAIN)
+                .body(body);
+    }
+
+    @GetMapping(value = "/api/exports/sample.json", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<byte[]> sampleJson(@RequestParam("accountNumber") String accountNumber,
+                                             @RequestParam("reasonCode") String reasonCode,
+                                             @RequestParam(value = "forceUnmask", required = false, defaultValue = "false") boolean forceUnmask) {
+        MaskingTarget target = MaskingContextHolder.get();
+        if (target == null) {
+            target = MaskingTarget.builder().defaultMask(true).build();
+        }
+        if (forceUnmask) {
+            target = target.toBuilder().forceUnmask(true).build();
+        }
+
+        ExportCommand command = new ExportCommand(
+                "json",
+                "sample.json",
+                1,
+                Map.of("source", "sample-api"),
+                reasonCode,
+                null,
+                null,
+                com.example.audit.AuditMode.ASYNC_FALLBACK);
+
+        byte[] body = exportExecutionHelper.exportJson(
+                command,
+                List.of(Map.of("accountNumber", accountNumber)),
+                target,
+                "PARTIAL",
+                "{\"keepEnd\":4}");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sample.json\"")
+                .contentType(MediaType.APPLICATION_JSON)
                 .body(body);
     }
 }

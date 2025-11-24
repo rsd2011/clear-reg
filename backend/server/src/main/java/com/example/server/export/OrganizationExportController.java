@@ -34,8 +34,9 @@ public class OrganizationExportController {
     public ResponseEntity<byte[]> exportOrgsExcel(@RequestParam(name = "limit", defaultValue = "100") int limit,
                                                   @RequestParam String reasonCode,
                                                   @RequestParam(required = false) String reasonText,
-                                                  @RequestParam(required = false) String legalBasisCode) {
-        MaskingTarget target = defaultTarget();
+                                                  @RequestParam(required = false) String legalBasisCode,
+                                                  @RequestParam(defaultValue = "false") boolean forceUnmask) {
+        MaskingTarget target = defaultTarget(forceUnmask);
 
         var rows = organizationRepository.findAll().stream()
                 .limit(Math.max(limit, 0))
@@ -50,7 +51,7 @@ public class OrganizationExportController {
                 com.example.audit.AuditMode.ASYNC_FALLBACK);
 
         byte[] body = exportWriterService.exportExcel(cmd, (List<Map<String, Object>>) (List<?>) rows, target, "PARTIAL", "{}", (idx, row) -> {
-            // 실제 Excel 작성기는 외부 제공 예정. 여기서는 Audit/마스킹 경로만 통과.
+            // ByteArrayOutputStream은 ExportWriterService 쪽에서 보관하며 row를 줄 단위로 쌓는다.
         });
 
         return ResponseEntity.ok()
@@ -63,8 +64,9 @@ public class OrganizationExportController {
     public ResponseEntity<byte[]> exportOrgsPdf(@RequestParam(name = "limit", defaultValue = "100") int limit,
                                                 @RequestParam String reasonCode,
                                                 @RequestParam(required = false) String reasonText,
-                                                @RequestParam(required = false) String legalBasisCode) {
-        MaskingTarget target = defaultTarget();
+                                                @RequestParam(required = false) String legalBasisCode,
+                                                @RequestParam(defaultValue = "false") boolean forceUnmask) {
+        MaskingTarget target = defaultTarget(forceUnmask);
 
         var rows = organizationRepository.findAll().stream()
                 .limit(Math.max(limit, 0))
@@ -79,7 +81,7 @@ public class OrganizationExportController {
                 com.example.audit.AuditMode.ASYNC_FALLBACK);
 
         byte[] body = exportWriterService.exportPdf(cmd, (List<Map<String, Object>>) (List<?>) rows, target, "PARTIAL", "{}", paragraph -> {
-            // 실제 PDF 작성기는 외부 제공 예정. Audit/마스킹 경로만 통과.
+            // ExportWriterService에서 ByteArrayOutputStream에 누적된 텍스트를 반환한다.
         });
 
         return ResponseEntity.ok()
@@ -88,10 +90,13 @@ public class OrganizationExportController {
                 .body(body);
     }
 
-    private MaskingTarget defaultTarget() {
+    private MaskingTarget defaultTarget(boolean forceUnmask) {
         MaskingTarget target = MaskingContextHolder.get();
         if (target == null) {
             target = MaskingTarget.builder().defaultMask(true).build();
+        }
+        if (forceUnmask) {
+            target = target.toBuilder().forceUnmask(true).build();
         }
         return target;
     }

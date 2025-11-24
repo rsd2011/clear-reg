@@ -34,10 +34,14 @@ public class HrEmployeeExportController {
     public ResponseEntity<byte[]> exportHrEmployees(@RequestParam(name = "limit", defaultValue = "100") int limit,
                                                     @RequestParam(name = "reasonCode") String reasonCode,
                                                     @RequestParam(name = "reasonText", required = false) String reasonText,
-                                                    @RequestParam(name = "legalBasisCode", required = false) String legalBasisCode) {
+                                                    @RequestParam(name = "legalBasisCode", required = false) String legalBasisCode,
+                                                    @RequestParam(name = "forceUnmask", required = false, defaultValue = "false") boolean forceUnmask) {
         MaskingTarget target = MaskingContextHolder.get();
         if (target == null) {
             target = MaskingTarget.builder().defaultMask(true).build();
+        }
+        if (forceUnmask) {
+            target = target.toBuilder().forceUnmask(true).build();
         }
 
         var employees = hrEmployeeRepository.findAll().stream()
