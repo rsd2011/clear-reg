@@ -330,7 +330,7 @@ audit:
 - [ ] forceUnmask 역할·사유 검증 (Playwright e2e 예정)
 - [x] 대량/스트리밍 성능 검증(SXSSF 등) — 50k CSV/JSON 스모크
 - [x] 다운로드/내보내기 AuditEvent 기록(ExportService.auditExport)
-- [ ] e2e 스모크: 마스킹 적용 여부 확인(Playwright 등)
+- [~] e2e 스모크: 마스킹 적용 여부 확인(Playwright 등) — 스켈레톤 가이드 `docs/monitoring/playwright-masking-e2e.md` 추가, 실제 Nuxt UI 연동은 미구현
   - **사용자 요청 기반 마스킹 정책**: 화면/사용자 입력으로 선택된 마스킹 해제·강도 설정도 문서 다운로드(Excel/PDF/Word/XML/CSV 등) 시 동일하게 적용. UI에서 선택된 정책값을 요청 컨텍스트에 태우고, Writer 단계에서 `MaskingTarget.forceUnmaskFields/kinds` 반영.
   - **모든 마스킹 정책 일관 적용**: 서비스/DTO 레이어에서 적용한 마스킹 규칙(민감필드, maskRule, maskParams)과 forceUnmask 여부를 문서 변환(모든 포맷)에도 동일하게 전달·적용해 서버/문서 출력 간 정책 불일치가 없도록 한다.
 
