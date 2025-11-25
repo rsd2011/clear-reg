@@ -14,6 +14,7 @@ import com.example.audit.config.AuditRetentionProperties;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * 보존기간이 지난 감사 로그를 주기적으로 정리하는 잡.
@@ -30,6 +31,7 @@ public class RetentionCleanupJob implements SchedulingConfigurer {
     private final AuditRetentionProperties properties;
     private final PolicySettingsProvider policySettingsProvider;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring DI로 주입되는 빈 참조")
     public RetentionCleanupJob(AuditLogRepository repository, AuditRetentionProperties properties, PolicySettingsProvider policySettingsProvider) {
         this.repository = repository;
         this.properties = properties;

@@ -24,11 +24,13 @@ import lombok.extern.slf4j.Slf4j;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "audit.siem", name = "enabled", havingValue = "true")
 @Slf4j
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring DI 주입 빈 참조")
 public class HttpSiemForwarder implements SiemForwarder {
 
     private final SiemProperties props;

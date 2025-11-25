@@ -17,6 +17,7 @@ import com.example.common.schedule.BatchJobCode;
 import com.example.common.schedule.ScheduledJobPort;
 import com.example.common.schedule.TriggerDescriptor;
 import com.example.common.schedule.TriggerType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * 보존 기간을 초과한 감사 로그를 주기적으로 정리하는 잡.
@@ -25,6 +26,7 @@ import com.example.common.schedule.TriggerType;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring DI 주입 빈 참조")
 public class AuditLogRetentionJob implements ScheduledJobPort, org.springframework.scheduling.annotation.SchedulingConfigurer {
 
     private static final String DEFAULT_CRON = "0 0 3 * * *";

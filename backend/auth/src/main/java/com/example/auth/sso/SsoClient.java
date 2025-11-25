@@ -2,5 +2,5 @@ package com.example.auth.sso;
 
 public interface SsoClient {
 
-    String resolveUsername(String token);
+  String resolveUsername(String token);
 }

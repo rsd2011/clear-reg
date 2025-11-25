@@ -18,6 +18,7 @@ dependencies {
     implementation libs.jjwt.api
     runtimeOnly libs.jjwt.impl
     runtimeOnly libs.jjwt.jackson
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok

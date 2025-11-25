@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * DLQ(audit.events.dlq)로 떨어진 감사 이벤트를 주 토픽으로 재전송한다.
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(prefix = "audit.kafka.dlq", name = "enabled", havingValue = "true")
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring KafkaTemplate DI 주입")
 public class AuditDlqReprocessor {
 
     private final KafkaTemplate<String, String> kafkaTemplate;

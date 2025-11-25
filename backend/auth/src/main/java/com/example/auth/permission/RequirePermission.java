@@ -11,9 +11,9 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface RequirePermission {
 
-    FeatureCode feature();
+  FeatureCode feature();
 
-    ActionCode action();
+  ActionCode action();
 
-    boolean audit() default true;
+  boolean audit() default true;
 }

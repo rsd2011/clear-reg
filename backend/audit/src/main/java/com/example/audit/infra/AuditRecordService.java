@@ -24,6 +24,7 @@ import com.example.common.masking.Maskable;
 import com.example.common.masking.MaskingService;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -47,6 +48,7 @@ public class AuditRecordService implements AuditPort {
     private final MaskingProperties maskingProperties;
     private final MaskingService maskingService;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring DI로 주입되는 빈 참조는 불변으로 취급")
     public AuditRecordService(AuditLogRepository repository,
                               AuditPolicyResolver policyResolver,
                               ObjectMapper objectMapper,

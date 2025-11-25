@@ -6,7 +6,6 @@ import static org.mockito.BDDMockito.given;
 
 import java.util.List;
 import java.util.Set;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -14,47 +13,123 @@ import org.mockito.Mockito;
 @DisplayName("OrgGroupPermissionResolver 기본/폴백 분기")
 class OrgGroupPermissionResolverTest {
 
-    OrgGroupRepository repository = Mockito.mock(OrgGroupRepository.class);
-    OrgGroupSettingsProperties props = new OrgGroupSettingsProperties();
+  OrgGroupRepository repository = Mockito.mock(OrgGroupRepository.class);
+  OrgGroupSettingsProperties props = new OrgGroupSettingsProperties();
 
-    @Test
-    void resolvesLeaderAndMemberAndFallback() {
-        OrgGroupMember leaderMember = OrgGroupMember.builder().groupCode("G1").orgId("O1").leaderPermGroupCode("L1").memberPermGroupCode("M1").priority(1).build();
-        OrgGroupMember onlyMember = OrgGroupMember.builder().groupCode("G2").orgId("O2").memberPermGroupCode("M2").priority(2).build();
-        given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of(leaderMember, onlyMember));
+  @Test
+  void resolvesLeaderAndMemberAndFallback() {
+    OrgGroupMember leaderMember =
+        OrgGroupMember.builder()
+            .groupCode("G1")
+            .orgId("O1")
+            .leaderPermGroupCode("L1")
+            .memberPermGroupCode("M1")
+            .priority(1)
+            .build();
+    OrgGroupMember onlyMember =
+        OrgGroupMember.builder()
+            .groupCode("G2")
+            .orgId("O2")
+            .memberPermGroupCode("M2")
+            .priority(2)
+            .build();
+    given(repository.findByOrgIdInOrderByPriorityAsc(any()))
+        .willReturn(List.of(leaderMember, onlyMember));
 
-        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
-        Set<String> leader = resolver.resolvePermGroups(List.of("O1", "O2"), true);
-        Set<String> member = resolver.resolvePermGroups(List.of("O1", "O2"), false);
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    Set<String> leader = resolver.resolvePermGroups(List.of("O1", "O2"), true);
+    Set<String> member = resolver.resolvePermGroups(List.of("O1", "O2"), false);
 
-        assertThat(leader).containsExactly("L1");
-        assertThat(member).containsExactly("M1", "M2");
-    }
+    assertThat(leader).containsExactly("L1");
+    assertThat(member).containsExactly("M1", "M2");
+  }
 
-    @Test
-    void fallbackToDefaultGroupsWhenEmpty() {
-        given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
-        props.setDefaultGroups(List.of("DEF1", "DEF2"));
-        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
-        Set<String> groups = resolver.resolvePermGroups(List.of("O1"), false);
-        assertThat(groups).containsExactly("DEF1", "DEF2");
-    }
+  @Test
+  void fallbackToDefaultGroupsWhenEmpty() {
+    given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
+    props.setDefaultGroups(List.of("DEF1", "DEF2"));
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    Set<String> groups = resolver.resolvePermGroups(List.of("O1"), false);
+    assertThat(groups).containsExactly("DEF1", "DEF2");
+  }
 
-    @Test
-    void fallbackToLowestPriorityGroup() {
-        given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
-        props.setDefaultGroups(List.of());
-        props.setFallbackToLowestPriorityGroup(true);
-        given(repository.findTopByOrderByPriorityDesc()).willReturn(OrgGroup.builder().code("LOW").priority(200).name("low").build());
+  @Test
+  void managerUsesMemberSpecificCode() {
+    OrgGroupMember member =
+        OrgGroupMember.builder()
+            .groupCode("G1")
+            .orgId("O1")
+            .managerPermGroupCode("RESP-MANAGER")
+            .priority(1)
+            .build();
+    given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of(member));
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    assertThat(resolver.resolveManagerPermGroups(List.of("O1"))).containsExactly("RESP-MANAGER");
+  }
 
-        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
-        Set<String> groups = resolver.resolvePermGroups(List.of("O1"), false);
-        assertThat(groups).containsExactly("LOW");
-    }
+  @Test
+  void managerUsesConfiguredDefaults() {
+    props.setDefaultManagerGroups(List.of("RESP1", "RESP2"));
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    Set<String> groups = resolver.resolveManagerPermGroups(List.of("O1"));
+    assertThat(groups).containsExactly("RESP1", "RESP2");
+  }
 
-    @Test
-    void emptyOrgIdsReturnsEmpty() {
-        OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
-        assertThat(resolver.resolvePermGroups(List.of(), false)).isEmpty();
-    }
+  @Test
+  void managerFallsBackToDefaultGroupsWhenConfigured() {
+    props.setDefaultManagerGroups(List.of());
+    props.setDefaultGroups(List.of("DEF-R1"));
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    assertThat(resolver.resolveManagerPermGroups(List.of("O1"))).containsExactly("DEF-R1");
+  }
+
+  @Test
+  void managerFallsBackToLowestPriorityGroup() {
+    props.setDefaultManagerGroups(List.of());
+    props.setDefaultGroups(List.of());
+    props.setFallbackToLowestPriorityGroup(true);
+    given(repository.findTopByOrderByPriorityDesc())
+        .willReturn(OrgGroup.builder().code("LOW").priority(500).name("low").build());
+
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    assertThat(resolver.resolveManagerPermGroups(List.of("O1"))).containsExactly("LOW");
+  }
+
+  @Test
+  void noFallbackWhenDisabled() {
+    props.setDefaultGroups(List.of());
+    props.setFallbackToLowestPriorityGroup(false);
+    given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    assertThat(resolver.resolvePermGroups(List.of("O1"), false)).isEmpty();
+  }
+
+  @Test
+  void ignoresEmptyCodesFromMembers() {
+    OrgGroupMember blank = OrgGroupMember.builder().groupCode("G").orgId("O1").priority(1).build();
+    given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of(blank));
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    assertThat(resolver.resolvePermGroups(List.of("O1"), true)).isEmpty();
+  }
+
+  @Test
+  void fallbackToLowestPriorityGroup() {
+    given(repository.findByOrgIdInOrderByPriorityAsc(any())).willReturn(List.of());
+    props.setDefaultGroups(List.of());
+    props.setFallbackToLowestPriorityGroup(true);
+    given(repository.findTopByOrderByPriorityDesc())
+        .willReturn(OrgGroup.builder().code("LOW").priority(200).name("low").build());
+
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    Set<String> groups = resolver.resolvePermGroups(List.of("O1"), false);
+    assertThat(groups).containsExactly("LOW");
+  }
+
+  @Test
+  void emptyOrgIdsReturnsEmpty() {
+    OrgGroupPermissionResolver resolver = new OrgGroupPermissionResolver(repository, props);
+    assertThat(resolver.resolvePermGroups(List.of(), false)).isEmpty();
+    assertThat(resolver.resolveManagerPermGroups(List.of())).isEmpty();
+    assertThat(resolver.resolveManagerPermGroups(null)).isEmpty();
+  }
 }

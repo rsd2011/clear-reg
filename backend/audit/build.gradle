@@ -16,6 +16,9 @@ dependencies {
     implementation libs.jackson.datatype.jsr310
     implementation libs.spring.boot.starter.web
 
+    // SpotBugs @SuppressFBWarnings
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
+
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok

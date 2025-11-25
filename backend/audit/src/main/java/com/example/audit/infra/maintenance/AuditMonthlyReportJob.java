@@ -20,6 +20,7 @@ import com.example.common.schedule.BatchJobCode;
 import com.example.common.schedule.ScheduledJobPort;
 import com.example.common.schedule.TriggerDescriptor;
 import com.example.common.schedule.TriggerType;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * 월간 접속/감사 로그 점검 리포트를 생성하기 위한 스켈레톤.
@@ -28,6 +29,7 @@ import com.example.common.schedule.TriggerType;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring DI 주입 빈 참조")
 public class AuditMonthlyReportJob implements ScheduledJobPort, org.springframework.scheduling.annotation.SchedulingConfigurer {
 
     private final AuditLogRepository repository;

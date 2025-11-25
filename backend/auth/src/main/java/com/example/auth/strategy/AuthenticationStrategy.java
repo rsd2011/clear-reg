@@ -6,7 +6,7 @@ import com.example.auth.dto.LoginRequest;
 
 public interface AuthenticationStrategy {
 
-    LoginType supportedType();
+  LoginType supportedType();
 
-    UserAccount authenticate(LoginRequest request);
+  UserAccount authenticate(LoginRequest request);
 }

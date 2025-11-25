@@ -1,266 +1,272 @@
 package com.example.auth.config;
 
+import com.example.auth.LoginType;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.example.auth.LoginType;
 
 @ConfigurationProperties(prefix = "security.policy")
 public class PolicyToggleProperties {
 
-    private boolean passwordPolicyEnabled = true;
-    private boolean passwordHistoryEnabled = true;
-    private boolean accountLockEnabled = true;
-    private List<LoginType> enabledLoginTypes = new ArrayList<>(EnumSet.allOf(LoginType.class));
-    private long maxFileSizeBytes = 20 * 1024 * 1024; // 20MB
-    private List<String> allowedFileExtensions = new ArrayList<>(List.of("pdf", "png", "jpg", "jpeg", "txt"));
-    private boolean strictMimeValidation = true;
-    private int fileRetentionDays = 365;
-    private boolean auditEnabled = true;
-    private boolean auditReasonRequired = true;
-    private boolean auditSensitiveApiDefaultOn = true;
-    private int auditRetentionDays = 730;
-    private boolean auditStrictMode = true;
-    private String auditRiskLevel = "MEDIUM";
-    private List<String> auditSensitiveEndpoints = new ArrayList<>();
-    private boolean auditMaskingEnabled = true;
-    private java.util.List<String> auditUnmaskRoles = new java.util.ArrayList<>();
-    private boolean auditPartitionEnabled = false;
-    private String auditPartitionCron = "0 0 2 1 * *";
-    private int auditPartitionPreloadMonths = 1;
-    private boolean auditMonthlyReportEnabled = true;
-    private String auditMonthlyReportCron = "0 0 4 1 * *";
-    private boolean auditLogRetentionEnabled = true;
-    private String auditLogRetentionCron = "0 0 3 * * *";
-    private boolean auditColdArchiveEnabled = false;
-    private String auditColdArchiveCron = "0 30 2 2 * *";
-    private boolean auditRetentionCleanupEnabled = true;
-    private String auditRetentionCleanupCron = "0 30 3 * * *";
+  private boolean passwordPolicyEnabled = true;
+  private boolean passwordHistoryEnabled = true;
+  private boolean accountLockEnabled = true;
+  private List<LoginType> enabledLoginTypes = new ArrayList<>(EnumSet.allOf(LoginType.class));
+  private long maxFileSizeBytes = 20 * 1024 * 1024; // 20MB
+  private List<String> allowedFileExtensions =
+      new ArrayList<>(List.of("pdf", "png", "jpg", "jpeg", "txt"));
+  private boolean strictMimeValidation = true;
+  private int fileRetentionDays = 365;
+  private boolean auditEnabled = true;
+  private boolean auditReasonRequired = true;
+  private boolean auditSensitiveApiDefaultOn = true;
+  private int auditRetentionDays = 730;
+  private boolean auditStrictMode = true;
+  private String auditRiskLevel = "MEDIUM";
+  private List<String> auditSensitiveEndpoints = new ArrayList<>();
+  private boolean auditMaskingEnabled = true;
+  private java.util.List<String> auditUnmaskRoles = new java.util.ArrayList<>();
+  private boolean auditPartitionEnabled = false;
+  private String auditPartitionCron = "0 0 2 1 * *";
+  private int auditPartitionPreloadMonths = 1;
+  private boolean auditMonthlyReportEnabled = true;
+  private String auditMonthlyReportCron = "0 0 4 1 * *";
+  private boolean auditLogRetentionEnabled = true;
+  private String auditLogRetentionCron = "0 0 3 * * *";
+  private boolean auditColdArchiveEnabled = false;
+  private String auditColdArchiveCron = "0 30 2 2 * *";
+  private boolean auditRetentionCleanupEnabled = true;
+  private String auditRetentionCleanupCron = "0 30 3 * * *";
 
-    public boolean isPasswordPolicyEnabled() {
-        return passwordPolicyEnabled;
-    }
+  public boolean isPasswordPolicyEnabled() {
+    return passwordPolicyEnabled;
+  }
 
-    public void setPasswordPolicyEnabled(boolean passwordPolicyEnabled) {
-        this.passwordPolicyEnabled = passwordPolicyEnabled;
-    }
+  public void setPasswordPolicyEnabled(boolean passwordPolicyEnabled) {
+    this.passwordPolicyEnabled = passwordPolicyEnabled;
+  }
 
-    public boolean isPasswordHistoryEnabled() {
-        return passwordHistoryEnabled;
-    }
+  public boolean isPasswordHistoryEnabled() {
+    return passwordHistoryEnabled;
+  }
 
-    public void setPasswordHistoryEnabled(boolean passwordHistoryEnabled) {
-        this.passwordHistoryEnabled = passwordHistoryEnabled;
-    }
+  public void setPasswordHistoryEnabled(boolean passwordHistoryEnabled) {
+    this.passwordHistoryEnabled = passwordHistoryEnabled;
+  }
 
-    public boolean isAccountLockEnabled() {
-        return accountLockEnabled;
-    }
+  public boolean isAccountLockEnabled() {
+    return accountLockEnabled;
+  }
 
-    public void setAccountLockEnabled(boolean accountLockEnabled) {
-        this.accountLockEnabled = accountLockEnabled;
-    }
+  public void setAccountLockEnabled(boolean accountLockEnabled) {
+    this.accountLockEnabled = accountLockEnabled;
+  }
 
-    public List<LoginType> getEnabledLoginTypes() {
-        return enabledLoginTypes;
-    }
+  public List<LoginType> getEnabledLoginTypes() {
+    return Collections.unmodifiableList(enabledLoginTypes);
+  }
 
-    public void setEnabledLoginTypes(List<LoginType> enabledLoginTypes) {
-        this.enabledLoginTypes = enabledLoginTypes;
-    }
+  public void setEnabledLoginTypes(List<LoginType> enabledLoginTypes) {
+    this.enabledLoginTypes =
+        enabledLoginTypes == null ? new ArrayList<>() : new ArrayList<>(enabledLoginTypes);
+  }
 
-    public long getMaxFileSizeBytes() {
-        return maxFileSizeBytes;
-    }
+  public long getMaxFileSizeBytes() {
+    return maxFileSizeBytes;
+  }
 
-    public void setMaxFileSizeBytes(long maxFileSizeBytes) {
-        this.maxFileSizeBytes = maxFileSizeBytes;
-    }
+  public void setMaxFileSizeBytes(long maxFileSizeBytes) {
+    this.maxFileSizeBytes = maxFileSizeBytes;
+  }
 
-    public List<String> getAllowedFileExtensions() {
-        return allowedFileExtensions;
-    }
+  public List<String> getAllowedFileExtensions() {
+    return Collections.unmodifiableList(allowedFileExtensions);
+  }
 
-    public void setAllowedFileExtensions(List<String> allowedFileExtensions) {
-        this.allowedFileExtensions = allowedFileExtensions;
-    }
+  public void setAllowedFileExtensions(List<String> allowedFileExtensions) {
+    this.allowedFileExtensions =
+        allowedFileExtensions == null ? new ArrayList<>() : new ArrayList<>(allowedFileExtensions);
+  }
 
-    public boolean isStrictMimeValidation() {
-        return strictMimeValidation;
-    }
+  public boolean isStrictMimeValidation() {
+    return strictMimeValidation;
+  }
 
-    public void setStrictMimeValidation(boolean strictMimeValidation) {
-        this.strictMimeValidation = strictMimeValidation;
-    }
+  public void setStrictMimeValidation(boolean strictMimeValidation) {
+    this.strictMimeValidation = strictMimeValidation;
+  }
 
-    public int getFileRetentionDays() {
-        return fileRetentionDays;
-    }
+  public int getFileRetentionDays() {
+    return fileRetentionDays;
+  }
 
-    public void setFileRetentionDays(int fileRetentionDays) {
-        this.fileRetentionDays = fileRetentionDays;
-    }
+  public void setFileRetentionDays(int fileRetentionDays) {
+    this.fileRetentionDays = fileRetentionDays;
+  }
 
-    public boolean isAuditEnabled() {
-        return auditEnabled;
-    }
+  public boolean isAuditEnabled() {
+    return auditEnabled;
+  }
 
-    public void setAuditEnabled(boolean auditEnabled) {
-        this.auditEnabled = auditEnabled;
-    }
+  public void setAuditEnabled(boolean auditEnabled) {
+    this.auditEnabled = auditEnabled;
+  }
 
-    public boolean isAuditReasonRequired() {
-        return auditReasonRequired;
-    }
+  public boolean isAuditReasonRequired() {
+    return auditReasonRequired;
+  }
 
-    public void setAuditReasonRequired(boolean auditReasonRequired) {
-        this.auditReasonRequired = auditReasonRequired;
-    }
+  public void setAuditReasonRequired(boolean auditReasonRequired) {
+    this.auditReasonRequired = auditReasonRequired;
+  }
 
-    public boolean isAuditSensitiveApiDefaultOn() {
-        return auditSensitiveApiDefaultOn;
-    }
+  public boolean isAuditSensitiveApiDefaultOn() {
+    return auditSensitiveApiDefaultOn;
+  }
 
-    public void setAuditSensitiveApiDefaultOn(boolean auditSensitiveApiDefaultOn) {
-        this.auditSensitiveApiDefaultOn = auditSensitiveApiDefaultOn;
-    }
+  public void setAuditSensitiveApiDefaultOn(boolean auditSensitiveApiDefaultOn) {
+    this.auditSensitiveApiDefaultOn = auditSensitiveApiDefaultOn;
+  }
 
-    public int getAuditRetentionDays() {
-        return auditRetentionDays;
-    }
+  public int getAuditRetentionDays() {
+    return auditRetentionDays;
+  }
 
-    public void setAuditRetentionDays(int auditRetentionDays) {
-        this.auditRetentionDays = auditRetentionDays;
-    }
+  public void setAuditRetentionDays(int auditRetentionDays) {
+    this.auditRetentionDays = auditRetentionDays;
+  }
 
-    public boolean isAuditStrictMode() {
-        return auditStrictMode;
-    }
+  public boolean isAuditStrictMode() {
+    return auditStrictMode;
+  }
 
-    public void setAuditStrictMode(boolean auditStrictMode) {
-        this.auditStrictMode = auditStrictMode;
-    }
+  public void setAuditStrictMode(boolean auditStrictMode) {
+    this.auditStrictMode = auditStrictMode;
+  }
 
-    public String getAuditRiskLevel() {
-        return auditRiskLevel;
-    }
+  public String getAuditRiskLevel() {
+    return auditRiskLevel;
+  }
 
-    public void setAuditRiskLevel(String auditRiskLevel) {
-        this.auditRiskLevel = auditRiskLevel;
-    }
+  public void setAuditRiskLevel(String auditRiskLevel) {
+    this.auditRiskLevel = auditRiskLevel;
+  }
 
-    public List<String> getAuditSensitiveEndpoints() {
-        return auditSensitiveEndpoints;
-    }
+  public List<String> getAuditSensitiveEndpoints() {
+    return Collections.unmodifiableList(auditSensitiveEndpoints);
+  }
 
-    public void setAuditSensitiveEndpoints(List<String> auditSensitiveEndpoints) {
-        this.auditSensitiveEndpoints = auditSensitiveEndpoints;
-    }
+  public void setAuditSensitiveEndpoints(List<String> auditSensitiveEndpoints) {
+    this.auditSensitiveEndpoints =
+        auditSensitiveEndpoints == null
+            ? new ArrayList<>()
+            : new ArrayList<>(auditSensitiveEndpoints);
+  }
 
-    public boolean isAuditMaskingEnabled() {
-        return auditMaskingEnabled;
-    }
+  public boolean isAuditMaskingEnabled() {
+    return auditMaskingEnabled;
+  }
 
-    public void setAuditMaskingEnabled(boolean auditMaskingEnabled) {
-        this.auditMaskingEnabled = auditMaskingEnabled;
-    }
+  public void setAuditMaskingEnabled(boolean auditMaskingEnabled) {
+    this.auditMaskingEnabled = auditMaskingEnabled;
+  }
 
-    public java.util.List<String> getAuditUnmaskRoles() {
-        return auditUnmaskRoles;
-    }
+  public java.util.List<String> getAuditUnmaskRoles() {
+    return Collections.unmodifiableList(auditUnmaskRoles);
+  }
 
-    public void setAuditUnmaskRoles(java.util.List<String> auditUnmaskRoles) {
-        this.auditUnmaskRoles = auditUnmaskRoles;
-    }
+  public void setAuditUnmaskRoles(java.util.List<String> auditUnmaskRoles) {
+    this.auditUnmaskRoles =
+        auditUnmaskRoles == null ? new ArrayList<>() : new ArrayList<>(auditUnmaskRoles);
+  }
 
-    public boolean isAuditPartitionEnabled() {
-        return auditPartitionEnabled;
-    }
+  public boolean isAuditPartitionEnabled() {
+    return auditPartitionEnabled;
+  }
 
-    public void setAuditPartitionEnabled(boolean auditPartitionEnabled) {
-        this.auditPartitionEnabled = auditPartitionEnabled;
-    }
+  public void setAuditPartitionEnabled(boolean auditPartitionEnabled) {
+    this.auditPartitionEnabled = auditPartitionEnabled;
+  }
 
-    public String getAuditPartitionCron() {
-        return auditPartitionCron;
-    }
+  public String getAuditPartitionCron() {
+    return auditPartitionCron;
+  }
 
-    public void setAuditPartitionCron(String auditPartitionCron) {
-        this.auditPartitionCron = auditPartitionCron;
-    }
+  public void setAuditPartitionCron(String auditPartitionCron) {
+    this.auditPartitionCron = auditPartitionCron;
+  }
 
-    public int getAuditPartitionPreloadMonths() {
-        return auditPartitionPreloadMonths;
-    }
+  public int getAuditPartitionPreloadMonths() {
+    return auditPartitionPreloadMonths;
+  }
 
-    public void setAuditPartitionPreloadMonths(int auditPartitionPreloadMonths) {
-        this.auditPartitionPreloadMonths = auditPartitionPreloadMonths;
-    }
+  public void setAuditPartitionPreloadMonths(int auditPartitionPreloadMonths) {
+    this.auditPartitionPreloadMonths = auditPartitionPreloadMonths;
+  }
 
-    public boolean isAuditMonthlyReportEnabled() {
-        return auditMonthlyReportEnabled;
-    }
+  public boolean isAuditMonthlyReportEnabled() {
+    return auditMonthlyReportEnabled;
+  }
 
-    public void setAuditMonthlyReportEnabled(boolean auditMonthlyReportEnabled) {
-        this.auditMonthlyReportEnabled = auditMonthlyReportEnabled;
-    }
+  public void setAuditMonthlyReportEnabled(boolean auditMonthlyReportEnabled) {
+    this.auditMonthlyReportEnabled = auditMonthlyReportEnabled;
+  }
 
-    public String getAuditMonthlyReportCron() {
-        return auditMonthlyReportCron;
-    }
+  public String getAuditMonthlyReportCron() {
+    return auditMonthlyReportCron;
+  }
 
-    public void setAuditMonthlyReportCron(String auditMonthlyReportCron) {
-        this.auditMonthlyReportCron = auditMonthlyReportCron;
-    }
+  public void setAuditMonthlyReportCron(String auditMonthlyReportCron) {
+    this.auditMonthlyReportCron = auditMonthlyReportCron;
+  }
 
-    public boolean isAuditLogRetentionEnabled() {
-        return auditLogRetentionEnabled;
-    }
+  public boolean isAuditLogRetentionEnabled() {
+    return auditLogRetentionEnabled;
+  }
 
-    public void setAuditLogRetentionEnabled(boolean auditLogRetentionEnabled) {
-        this.auditLogRetentionEnabled = auditLogRetentionEnabled;
-    }
+  public void setAuditLogRetentionEnabled(boolean auditLogRetentionEnabled) {
+    this.auditLogRetentionEnabled = auditLogRetentionEnabled;
+  }
 
-    public String getAuditLogRetentionCron() {
-        return auditLogRetentionCron;
-    }
+  public String getAuditLogRetentionCron() {
+    return auditLogRetentionCron;
+  }
 
-    public void setAuditLogRetentionCron(String auditLogRetentionCron) {
-        this.auditLogRetentionCron = auditLogRetentionCron;
-    }
+  public void setAuditLogRetentionCron(String auditLogRetentionCron) {
+    this.auditLogRetentionCron = auditLogRetentionCron;
+  }
 
-    public boolean isAuditColdArchiveEnabled() {
-        return auditColdArchiveEnabled;
-    }
+  public boolean isAuditColdArchiveEnabled() {
+    return auditColdArchiveEnabled;
+  }
 
-    public void setAuditColdArchiveEnabled(boolean auditColdArchiveEnabled) {
-        this.auditColdArchiveEnabled = auditColdArchiveEnabled;
-    }
+  public void setAuditColdArchiveEnabled(boolean auditColdArchiveEnabled) {
+    this.auditColdArchiveEnabled = auditColdArchiveEnabled;
+  }
 
-    public String getAuditColdArchiveCron() {
-        return auditColdArchiveCron;
-    }
+  public String getAuditColdArchiveCron() {
+    return auditColdArchiveCron;
+  }
 
-    public void setAuditColdArchiveCron(String auditColdArchiveCron) {
-        this.auditColdArchiveCron = auditColdArchiveCron;
-    }
+  public void setAuditColdArchiveCron(String auditColdArchiveCron) {
+    this.auditColdArchiveCron = auditColdArchiveCron;
+  }
 
-    public boolean isAuditRetentionCleanupEnabled() {
-        return auditRetentionCleanupEnabled;
-    }
+  public boolean isAuditRetentionCleanupEnabled() {
+    return auditRetentionCleanupEnabled;
+  }
 
-    public void setAuditRetentionCleanupEnabled(boolean auditRetentionCleanupEnabled) {
-        this.auditRetentionCleanupEnabled = auditRetentionCleanupEnabled;
-    }
+  public void setAuditRetentionCleanupEnabled(boolean auditRetentionCleanupEnabled) {
+    this.auditRetentionCleanupEnabled = auditRetentionCleanupEnabled;
+  }
 
-    public String getAuditRetentionCleanupCron() {
-        return auditRetentionCleanupCron;
-    }
+  public String getAuditRetentionCleanupCron() {
+    return auditRetentionCleanupCron;
+  }
 
-    public void setAuditRetentionCleanupCron(String auditRetentionCleanupCron) {
-        this.auditRetentionCleanupCron = auditRetentionCleanupCron;
-    }
+  public void setAuditRetentionCleanupCron(String auditRetentionCleanupCron) {
+    this.auditRetentionCleanupCron = auditRetentionCleanupCron;
+  }
 }

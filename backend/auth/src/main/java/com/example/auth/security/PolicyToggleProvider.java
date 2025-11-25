@@ -1,16 +1,15 @@
 package com.example.auth.security;
 
-import java.util.List;
-
 import com.example.auth.LoginType;
+import java.util.List;
 
 public interface PolicyToggleProvider {
 
-    boolean isPasswordPolicyEnabled();
+  boolean isPasswordPolicyEnabled();
 
-    boolean isPasswordHistoryEnabled();
+  boolean isPasswordHistoryEnabled();
 
-    boolean isAccountLockEnabled();
+  boolean isAccountLockEnabled();
 
-    List<LoginType> enabledLoginTypes();
+  List<LoginType> enabledLoginTypes();
 }

@@ -2,10 +2,9 @@ package com.example.auth.organization;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OrganizationPolicyRepository extends JpaRepository<OrganizationPolicy, UUID> {
 
-    Optional<OrganizationPolicy> findByOrganizationCode(String organizationCode);
+  Optional<OrganizationPolicy> findByOrganizationCode(String organizationCode);
 }

@@ -1,6 +1,7 @@
 package com.example.audit.infra.masking;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -28,12 +29,12 @@ public class MaskingProperties {
     }
 
     public List<MaskingRule> getRules() {
-        return rules;
+        return Collections.unmodifiableList(rules);
     }
 
     public void setRules(List<MaskingRule> rules) {
         if (rules != null && !rules.isEmpty()) {
-            this.rules = rules;
+            this.rules = new ArrayList<>(rules);
         }
     }
 

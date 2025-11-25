@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Test;
 
 class AuthContextPropagatorCallableTest {
 
-    @Test
-    @DisplayName("wrapCurrentContext(Callable)는 현재 컨텍스트가 없어도 정상 실행한다")
-    void wrapCurrentContextCallableRuns() throws Exception {
-        var callable = AuthContextPropagator.wrapCurrentContext(() -> "ok");
+  @Test
+  @DisplayName("wrapCurrentContext(Callable)는 현재 컨텍스트가 없어도 정상 실행한다")
+  void wrapCurrentContextCallableRuns() throws Exception {
+    var callable = AuthContextPropagator.wrapCurrentContext(() -> "ok");
 
-        assertThat(callable.call()).isEqualTo("ok");
-    }
+    assertThat(callable.call()).isEqualTo("ok");
+  }
 }

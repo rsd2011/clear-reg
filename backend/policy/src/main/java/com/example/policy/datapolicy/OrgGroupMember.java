@@ -30,7 +30,7 @@ public class OrgGroupMember extends PrimaryKeyEntity {
   private String leaderPermGroupCode;
 
   @Column(length = 100)
-  private String responsiblePermGroupCode;
+  private String managerPermGroupCode;
 
   @Column(length = 100)
   private String memberPermGroupCode;

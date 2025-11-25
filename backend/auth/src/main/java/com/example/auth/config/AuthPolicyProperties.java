@@ -5,85 +5,85 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "security.auth")
 public class AuthPolicyProperties {
 
-    private int passwordMinLength = 12;
-    private boolean requireUppercase = true;
-    private boolean requireLowercase = true;
-    private boolean requireDigit = true;
-    private boolean requireSpecial = true;
-    private int maxFailedAttempts = 5;
-    private long lockoutSeconds = 900;
-    private int passwordHistorySize = 5;
-    private long passwordExpiryDays = 90;
+  private int passwordMinLength = 12;
+  private boolean requireUppercase = true;
+  private boolean requireLowercase = true;
+  private boolean requireDigit = true;
+  private boolean requireSpecial = true;
+  private int maxFailedAttempts = 5;
+  private long lockoutSeconds = 900;
+  private int passwordHistorySize = 5;
+  private long passwordExpiryDays = 90;
 
-    public int getPasswordMinLength() {
-        return passwordMinLength;
-    }
+  public int getPasswordMinLength() {
+    return passwordMinLength;
+  }
 
-    public void setPasswordMinLength(int passwordMinLength) {
-        this.passwordMinLength = passwordMinLength;
-    }
+  public void setPasswordMinLength(int passwordMinLength) {
+    this.passwordMinLength = passwordMinLength;
+  }
 
-    public boolean isRequireUppercase() {
-        return requireUppercase;
-    }
+  public boolean isRequireUppercase() {
+    return requireUppercase;
+  }
 
-    public void setRequireUppercase(boolean requireUppercase) {
-        this.requireUppercase = requireUppercase;
-    }
+  public void setRequireUppercase(boolean requireUppercase) {
+    this.requireUppercase = requireUppercase;
+  }
 
-    public boolean isRequireLowercase() {
-        return requireLowercase;
-    }
+  public boolean isRequireLowercase() {
+    return requireLowercase;
+  }
 
-    public void setRequireLowercase(boolean requireLowercase) {
-        this.requireLowercase = requireLowercase;
-    }
+  public void setRequireLowercase(boolean requireLowercase) {
+    this.requireLowercase = requireLowercase;
+  }
 
-    public boolean isRequireDigit() {
-        return requireDigit;
-    }
+  public boolean isRequireDigit() {
+    return requireDigit;
+  }
 
-    public void setRequireDigit(boolean requireDigit) {
-        this.requireDigit = requireDigit;
-    }
+  public void setRequireDigit(boolean requireDigit) {
+    this.requireDigit = requireDigit;
+  }
 
-    public boolean isRequireSpecial() {
-        return requireSpecial;
-    }
+  public boolean isRequireSpecial() {
+    return requireSpecial;
+  }
 
-    public void setRequireSpecial(boolean requireSpecial) {
-        this.requireSpecial = requireSpecial;
-    }
+  public void setRequireSpecial(boolean requireSpecial) {
+    this.requireSpecial = requireSpecial;
+  }
 
-    public int getMaxFailedAttempts() {
-        return maxFailedAttempts;
-    }
+  public int getMaxFailedAttempts() {
+    return maxFailedAttempts;
+  }
 
-    public void setMaxFailedAttempts(int maxFailedAttempts) {
-        this.maxFailedAttempts = maxFailedAttempts;
-    }
+  public void setMaxFailedAttempts(int maxFailedAttempts) {
+    this.maxFailedAttempts = maxFailedAttempts;
+  }
 
-    public long getLockoutSeconds() {
-        return lockoutSeconds;
-    }
+  public long getLockoutSeconds() {
+    return lockoutSeconds;
+  }
 
-    public void setLockoutSeconds(long lockoutSeconds) {
-        this.lockoutSeconds = lockoutSeconds;
-    }
+  public void setLockoutSeconds(long lockoutSeconds) {
+    this.lockoutSeconds = lockoutSeconds;
+  }
 
-    public int getPasswordHistorySize() {
-        return passwordHistorySize;
-    }
+  public int getPasswordHistorySize() {
+    return passwordHistorySize;
+  }
 
-    public void setPasswordHistorySize(int passwordHistorySize) {
-        this.passwordHistorySize = passwordHistorySize;
-    }
+  public void setPasswordHistorySize(int passwordHistorySize) {
+    this.passwordHistorySize = passwordHistorySize;
+  }
 
-    public long getPasswordExpiryDays() {
-        return passwordExpiryDays;
-    }
+  public long getPasswordExpiryDays() {
+    return passwordExpiryDays;
+  }
 
-    public void setPasswordExpiryDays(long passwordExpiryDays) {
-        this.passwordExpiryDays = passwordExpiryDays;
-    }
+  public void setPasswordExpiryDays(long passwordExpiryDays) {
+    this.passwordExpiryDays = passwordExpiryDays;
+  }
 }

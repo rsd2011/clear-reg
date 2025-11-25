@@ -1,7 +1,9 @@
 package com.example.audit;
 
+import java.util.Collections;
 import java.util.Map;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.Singular;
 import lombok.Value;
 
@@ -29,10 +31,16 @@ public class AuditPolicySnapshot {
     @Builder.Default
     RiskLevel riskLevel = RiskLevel.MEDIUM;
 
+    @Getter(lombok.AccessLevel.NONE)
     @Singular
     Map<String, Object> attributes;
 
     public static AuditPolicySnapshot secureDefault() {
         return AuditPolicySnapshot.builder().build();
+    }
+
+    /** attributes 방어적 복사 */
+    public Map<String, Object> getAttributes() {
+        return attributes == null ? Collections.emptyMap() : Collections.unmodifiableMap(attributes);
     }
 }

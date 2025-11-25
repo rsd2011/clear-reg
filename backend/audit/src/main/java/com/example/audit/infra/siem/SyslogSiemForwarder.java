@@ -10,11 +10,15 @@ import org.springframework.stereotype.Component;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @Component
 @RequiredArgsConstructor
 @ConditionalOnProperty(prefix = "audit.siem", name = "mode", havingValue = "syslog")
 @Slf4j
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring DI 주입 빈 참조")
 public class SyslogSiemForwarder implements SiemForwarder {
 
     private final SiemProperties props;
@@ -29,7 +33,7 @@ public class SyslogSiemForwarder implements SiemForwarder {
                  OutputStream out = socket.getOutputStream()) {
                 String body = mapper.writeValueAsString(event);
                 String line = "<134>1 " + java.time.Instant.now() + " audit " + " - - - " + body + "\n";
-                out.write(line.getBytes());
+                out.write(line.getBytes(StandardCharsets.UTF_8));
                 out.flush();
             }
         } catch (Exception e) {
