@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -20,6 +21,7 @@ import com.example.server.policy.PolicyDebugResponse;
 @RestController
 @Validated
 @RequestMapping("/api/admin/policies")
+@Tag(name = "Policy Debug", description = "정책 매칭/토글 조회 디버그 API")
 public class PolicyDebugController {
 
     private final PolicySettingsProvider policySettingsProvider;

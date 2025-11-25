@@ -9,6 +9,7 @@ import java.util.UUID;
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftWorkflowException;
+import com.example.approval.api.ApprovalStatus;
 import com.example.draft.domain.DraftFormTemplate;
 
 import jakarta.persistence.CascadeType;
@@ -48,6 +49,9 @@ public class Draft extends PrimaryKeyEntity {
 
     @Column(name = "template_code", nullable = false, length = 100)
     private String templateCode;
+
+    @Column(name = "template_preset_id")
+    private UUID templatePresetId;
 
     @Column(name = "form_template_code", length = 100)
     private String formTemplateCode;
@@ -89,6 +93,9 @@ public class Draft extends PrimaryKeyEntity {
     @Column(name = "withdrawn_at")
     private OffsetDateTime withdrawnAt;
 
+    @Column(name = "approval_request_id")
+    private UUID approvalRequestId;
+
     @OneToMany(mappedBy = "draft", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepOrder ASC")
     private final List<DraftApprovalStep> approvalSteps = new ArrayList<>();
@@ -119,6 +126,24 @@ public class Draft extends PrimaryKeyEntity {
         this.updatedAt = now;
     }
 
+    public void linkApprovalRequest(UUID approvalRequestId) {
+        if (this.approvalRequestId != null) {
+            return;
+        }
+        this.approvalRequestId = approvalRequestId;
+    }
+
+    public void applyApprovalResult(ApprovalStatus status, String actor, String comment, OffsetDateTime now) {
+        if (status == ApprovalStatus.APPROVED) {
+            this.status = DraftStatus.APPROVED;
+            this.completedAt = now;
+        } else if (status == ApprovalStatus.REJECTED) {
+            this.status = DraftStatus.REJECTED;
+        }
+        this.updatedBy = actor;
+        this.updatedAt = now;
+    }
+
     public static Draft create(String title,
                                String content,
                                String businessFeatureCode,
@@ -127,6 +152,10 @@ public class Draft extends PrimaryKeyEntity {
                                String actor,
                                OffsetDateTime now) {
         return new Draft(title, content, businessFeatureCode, organizationCode, templateCode, actor, now);
+    }
+
+    public void useTemplatePreset(UUID templatePresetId) {
+        this.templatePresetId = templatePresetId;
     }
 
     public void attachFormTemplate(DraftFormTemplate template, String payload) {

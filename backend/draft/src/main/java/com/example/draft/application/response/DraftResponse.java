@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
+import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftStatus;
 
@@ -15,6 +16,7 @@ public record DraftResponse(UUID id,
                             String organizationCode,
                             String createdBy,
                             DraftStatus status,
+                            UUID templatePresetId,
                             String templateCode,
                             String formTemplateCode,
                             Integer formTemplateVersion,
@@ -27,13 +29,19 @@ public record DraftResponse(UUID id,
                             OffsetDateTime cancelledAt,
                             OffsetDateTime withdrawnAt,
                             List<DraftApprovalStepResponse> approvalSteps,
-                             List<DraftAttachmentResponse> attachments) {
+                            List<DraftAttachmentResponse> attachments,
+                            UUID approvalRequestId,
+                            ApprovalStatusSnapshot approvalStatus) {
 
     public static DraftResponse from(Draft draft) {
-        return from(draft, UnaryOperator.identity());
+        return from(draft, null, UnaryOperator.identity());
     }
 
-    public static DraftResponse from(Draft draft, UnaryOperator<String> masker) {
+    public static DraftResponse from(Draft draft, ApprovalStatusSnapshot approvalStatus) {
+        return from(draft, approvalStatus, UnaryOperator.identity());
+    }
+
+    public static DraftResponse from(Draft draft, ApprovalStatusSnapshot approvalStatus, UnaryOperator<String> masker) {
         List<DraftApprovalStepResponse> steps = draft.getApprovalSteps().stream()
                 .map(DraftApprovalStepResponse::from)
                 .toList();
@@ -49,6 +57,7 @@ public record DraftResponse(UUID id,
                 draft.getOrganizationCode(),
                 draft.getCreatedBy(),
                 draft.getStatus(),
+                draft.getTemplatePresetId(),
                 draft.getTemplateCode(),
                 draft.getFormTemplateCode(),
                 draft.getFormTemplateVersion(),
@@ -61,6 +70,8 @@ public record DraftResponse(UUID id,
                 draft.getCancelledAt(),
                 draft.getWithdrawnAt(),
                 steps,
-                files);
+                files,
+                draft.getApprovalRequestId(),
+                approvalStatus);
     }
 }

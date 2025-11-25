@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.draft.domain.ApprovalLineTemplate;
-import com.example.draft.domain.TemplateScope;
+import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.approval.domain.TemplateScope;
 
 public record ApprovalLineTemplateResponse(
         UUID id,

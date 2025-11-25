@@ -92,10 +92,10 @@ subprojects { subproject ->
             )
 
             verification.violationRules {
-                // 전역 BUNDLE 기준
+                // 전역 BUNDLE 기준 (프로젝트 가이드: 라인 80%)
                 rule {
                     element = 'BUNDLE'
-                    limit { counter = 'LINE';   value = 'COVEREDRATIO'; minimum = 0.90 }
+                    limit { counter = 'LINE';   value = 'COVEREDRATIO'; minimum = 0.80 }
                     limit { counter = 'BRANCH'; value = 'COVEREDRATIO'; minimum = 0.75 }
                 }
                 // CLASS 기준 (DTO 등 최소 예외는 classDirectories에서 이미 제외)

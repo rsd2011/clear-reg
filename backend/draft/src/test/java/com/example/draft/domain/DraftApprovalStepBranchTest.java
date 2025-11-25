@@ -15,7 +15,7 @@ class DraftApprovalStepBranchTest {
     @DisplayName("완료된 단계는 delegateTo 호출 시 예외를 던진다")
     void delegateToAfterCompletedThrows() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());
@@ -29,7 +29,7 @@ class DraftApprovalStepBranchTest {
     @DisplayName("대기 상태가 아니면 start는 상태를 변경하지 않는다")
     void startNoOpWhenNotWaiting() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());
@@ -43,7 +43,7 @@ class DraftApprovalStepBranchTest {
     @DisplayName("완료된 단계에서 skip은 아무 동작도 하지 않는다")
     void skipNoOpWhenCompleted() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());

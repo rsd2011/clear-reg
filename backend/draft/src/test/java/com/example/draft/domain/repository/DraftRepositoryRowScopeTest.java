@@ -82,8 +82,8 @@ class DraftRepositoryRowScopeTest {
 
     @SpringBootConfiguration
     @EnableAutoConfiguration
-    @EntityScan("com.example.draft")
-    @EnableJpaRepositories("com.example.draft.domain.repository")
+    @EntityScan({"com.example.draft", "com.example.approval"})
+    @EnableJpaRepositories({"com.example.draft.domain.repository", "com.example.approval.domain.repository"})
     public static class TestConfig {
     }
 }

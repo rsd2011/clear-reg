@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.response.ApprovalLineTemplateResponse;
-import com.example.draft.domain.ApprovalLineTemplate;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceListLineTemplateAuditNullTest {
@@ -27,7 +27,7 @@ class TemplateAdminServiceListLineTemplateAuditNullTest {
         TemplateAdminService service = new TemplateAdminService(
                 mock(ApprovalGroupRepository.class),
                 lineRepo,
-                mock(DraftFormTemplateRepository.class));
+                mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();
         ApprovalLineTemplate t1 = ApprovalLineTemplate.create("a", "HR", "ORG1", now);

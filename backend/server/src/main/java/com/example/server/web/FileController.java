@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -40,6 +41,7 @@ import jakarta.validation.Valid;
 @RestController
 @Validated
 @RequestMapping("/api/files")
+@Tag(name = "File", description = "파일 업로드/다운로드/삭제 API")
 public class FileController {
 
     private final FileManagementPort fileManagementPort;

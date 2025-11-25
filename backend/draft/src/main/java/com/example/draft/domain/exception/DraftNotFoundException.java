@@ -1,8 +1,11 @@
 package com.example.draft.domain.exception;
 
-public class DraftNotFoundException extends RuntimeException {
+import com.example.common.error.BusinessException;
+import com.example.common.error.CommonErrorCode;
+
+public class DraftNotFoundException extends BusinessException {
 
     public DraftNotFoundException(String message) {
-        super(message);
+        super(CommonErrorCode.NOT_FOUND, message);
     }
 }

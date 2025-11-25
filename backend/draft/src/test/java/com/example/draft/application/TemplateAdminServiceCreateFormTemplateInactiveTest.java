@@ -13,8 +13,8 @@ import com.example.common.security.RowScope;
 import com.example.draft.application.request.DraftFormTemplateRequest;
 import com.example.draft.application.response.DraftFormTemplateResponse;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceCreateFormTemplateInactiveTest {
@@ -26,7 +26,7 @@ class TemplateAdminServiceCreateFormTemplateInactiveTest {
         TemplateAdminService service = new TemplateAdminService(
                 mock(ApprovalGroupRepository.class),
                 mock(ApprovalLineTemplateRepository.class),
-                formRepo);
+                formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         given(formRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 

@@ -95,7 +95,7 @@ class DraftControllerTest {
         mockMvc.perform(post("/api/drafts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftCreateRequest(
-                                "제목", "본문", "NOTICE", UUID.randomUUID(), UUID.randomUUID(), "{}", java.util.List.of()))))
+                                "제목", "본문", "NOTICE", UUID.randomUUID(), UUID.randomUUID(), "{}", java.util.List.of(), null, java.util.Map.of()))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("제목"));
 
@@ -221,9 +221,9 @@ class DraftControllerTest {
         DraftApprovalStepResponse delegatedStep = new DraftApprovalStepResponse(UUID.randomUUID(), 1, "GROUP-A",
                 "1차", DraftApprovalState.IN_PROGRESS, null, OffsetDateTime.now(ZoneOffset.UTC), "위임", "delegatee", OffsetDateTime.now(ZoneOffset.UTC));
         DraftResponse delegated = new DraftResponse(snapshot.id(), "제목", "본문", "NOTICE", "ORG-001", "writer",
-                DraftStatus.IN_REVIEW, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
+                DraftStatus.IN_REVIEW, null, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
                 OffsetDateTime.now(ZoneOffset.UTC), OffsetDateTime.now(ZoneOffset.UTC),
-                null, null, null, null, List.of(delegatedStep), snapshot.attachments());
+                null, null, null, null, List.of(delegatedStep), snapshot.attachments(), null, null);
         given(draftApplicationService.delegate(any(), any(), eq("delegatee"), eq("writer"), eq("ORG-001"), eq(false)))
                 .willReturn(delegated);
         denyAuditAccess();
@@ -296,9 +296,9 @@ class DraftControllerTest {
                 new DraftAttachmentResponse(UUID.randomUUID(), "evidence.pdf", "application/pdf", 1024L,
                         now, "writer"));
         return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", "ORG-001", "writer",
-                status, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
+                status, null, "TEMPLATE", "FORM", 1, "{}", "{\"field\":\"value\"}",
                 now, now,
-                null, null, null, null, List.of(step), attachments);
+                null, null, null, null, List.of(step), attachments, null, null);
     }
 
     private DraftResponse sampleResponseWithOrg(String org, DraftStatus status) {
@@ -309,9 +309,9 @@ class DraftControllerTest {
                 new DraftAttachmentResponse(UUID.randomUUID(), "plan.xlsx", "application/vnd.ms-excel", 2048L,
                         now, "writer"));
         return new DraftResponse(UUID.randomUUID(), "제목", "본문", "NOTICE", org, "writer",
-                status, "TEMPLATE", "FORM", 2, "{\"schema\":true}", "{\"value\":true}",
+                status, null, "TEMPLATE", "FORM", 2, "{\"schema\":true}", "{\"value\":true}",
                 now, now,
-                null, null, null, null, List.of(step), attachments);
+                null, null, null, null, List.of(step), attachments, null, null);
     }
 
     private DwOrganizationNode sampleOrgNode(String code) {

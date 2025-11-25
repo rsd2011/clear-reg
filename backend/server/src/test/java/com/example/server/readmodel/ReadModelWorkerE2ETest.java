@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import com.example.dw.application.readmodel.MenuItem;
 import com.example.dw.application.readmodel.MenuReadModel;
@@ -32,6 +33,7 @@ import com.example.dw.application.readmodel.PermissionMenuItem;
 import com.example.dw.application.readmodel.PermissionMenuReadModel;
 import com.example.dw.application.readmodel.PermissionMenuReadModelPort;
 import com.example.dw.application.readmodel.PermissionMenuReadModelSource;
+import com.example.approval.api.ApprovalFacade;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
@@ -60,6 +62,9 @@ class ReadModelWorkerE2ETest {
     private PermissionMenuReadModelPort permissionMenuPort;
     @org.springframework.beans.factory.annotation.Autowired
     private LettuceConnectionFactory connectionFactory;
+
+    @MockBean
+    private ApprovalFacade approvalFacade;
 
     @BeforeAll
     static void startRedis() {

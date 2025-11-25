@@ -10,6 +10,10 @@ import com.example.auth.InvalidCredentialsException;
 import com.example.file.FilePolicyViolationException;
 import com.example.file.FileStorageException;
 import com.example.file.StoredFileNotFoundException;
+import com.example.common.api.ErrorResponse;
+import com.example.common.error.BusinessException;
+import com.example.common.error.CommonErrorCode;
+import com.example.common.error.ErrorCode;
 import com.example.server.notice.NoticeNotFoundException;
 import com.example.server.notice.NoticeStateException;
 import com.example.server.notification.UserNotificationNotFoundException;
@@ -66,6 +70,25 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + " " + error.getDefaultMessage())
                 .orElse("Invalid request");
         return ResponseEntity.badRequest().body(new ProblemResponse(message));
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ErrorResponse> handleBusiness(BusinessException exception) {
+        ErrorCode code = exception.errorCode();
+        HttpStatus status = toStatus(code);
+        return ResponseEntity.status(status)
+                .body(new ErrorResponse(code.code(), exception.getMessage()));
+    }
+
+    private HttpStatus toStatus(ErrorCode code) {
+        if (code == null) {
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        if (code == CommonErrorCode.PERMISSION_DENIED) return HttpStatus.FORBIDDEN;
+        if (code == CommonErrorCode.NOT_FOUND) return HttpStatus.NOT_FOUND;
+        if (code == CommonErrorCode.CONFLICT) return HttpStatus.CONFLICT;
+        if (code == CommonErrorCode.INVALID_REQUEST) return HttpStatus.BAD_REQUEST;
+        return HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
     public record ProblemResponse(String message) {

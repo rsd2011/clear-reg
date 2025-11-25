@@ -8,6 +8,7 @@ import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
+import com.example.approval.domain.ApprovalLineTemplate;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 
 class DraftDomainTest {
@@ -57,7 +58,9 @@ class DraftDomainTest {
         template.addStep(2, "GROUP-B", "두 번째");
         Draft draft = Draft.create("제목", "내용", "NOTICE", "ORG-001",
                 template.getTemplateCode(), "writer", NOW);
-        template.instantiateSteps().forEach(draft::addApprovalStep);
+        template.getSteps().stream()
+                .map(DraftApprovalStep::fromTemplate)
+                .forEach(draft::addApprovalStep);
         draft.initializeWorkflow(NOW);
         return draft;
     }

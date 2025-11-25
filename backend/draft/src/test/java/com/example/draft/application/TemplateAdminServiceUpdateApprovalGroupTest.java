@@ -16,9 +16,9 @@ import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.request.ApprovalGroupRequest;
 import com.example.draft.application.response.ApprovalGroupResponse;
-import com.example.draft.domain.ApprovalGroup;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.ApprovalGroup;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceUpdateApprovalGroupTest {
@@ -30,7 +30,7 @@ class TemplateAdminServiceUpdateApprovalGroupTest {
         TemplateAdminService service = new TemplateAdminService(
                 groupRepo,
                 mock(ApprovalLineTemplateRepository.class),
-                mock(DraftFormTemplateRepository.class));
+                mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         ApprovalGroup group = ApprovalGroup.create("G1", "old", "desc", "ORG1", null, OffsetDateTime.now());
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000021");

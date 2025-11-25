@@ -250,7 +250,7 @@ audit:
     - 파티션 이동 실패: `ATTACH/DETACH/SET TABLESPACE` 실패 시 즉시 Slack/Webhook 알림(파티션명, 오류코드, 재시도횟수) + 지수백오프 3회 재시도.
     - 실패 시 rollback: drop 전에 checksum 검증(md5/sha256) 및 S3 ObjectLock 헤더 확인.
     - 지표 수집/알림 파이프라인 제안: Prometheus exporter로 HOT/COLD IOPS·압축비·ObjectLock 지연(ms)·S3 PUT/Glacier 비용 메트릭 노출 → Alertmanager 룰 적용.
-    - Alertmanager 샘플 룰 추가: `docs/monitoring/audit-alerts.yml` (archive 실패/지연, HOT IOPS 스파이크, COLD 비용 상승, Object Lock 지연).
+    - Alertmanager 샘플 룰 추가: `docs/monitoring-artifacts/audit-alerts.yml` (archive 실패/지연, HOT IOPS 스파이크, COLD 비용 상승, Object Lock 지연).
   - [x] 운영 파라미터화: 보존일수/파티션 프리로드 개월수/env 기반 DataSource 분리 설정 추가.  
     - [x] 보존일수: `audit.retention.days`(기본 730) 프로퍼티 추가, `AuditRetentionProperties` → `AuditLogRetentionJob`에 주입 가능.  
     - [x] 파티션 프리로드/Hot·Cold 파라미터: `audit.partition.preload-months/hot-months/cold-months` 및 tablespace 프로퍼티 적용, Scheduler/ColdMaintenanceJob에서 사용.  
@@ -276,7 +276,7 @@ audit:
           enabled: true
       ```
   - [x] 운영 점검: 파티션 생성/아카이브 실패 알림(Slack/Webhook) 및 리트라이 정책 정의.  
-    - Alertmanager 룰 배포 스모크 스크립트(`docs/monitoring/alertmanager-smoke.sh`) 및 CI 워크플로 추가 — 시크릿 설정 후 즉시 실행 가능.  
+    - Alertmanager 룰 배포 스모크 스크립트(`docs/monitoring-artifacts/alertmanager-smoke.sh`) 및 CI 워크플로 추가 — 시크릿 설정 후 즉시 실행 가능.  
     - Retry: 최대 3회 지수백오프(5s→30s→2m), 알림에는 파티션명·에러코드 포함.  
     - 알림 채널: Slack Webhook 예) `audit.alert.webhook`, 장애 시 이메일 백업.  
     - 배치 스크립트 예시(개요)
@@ -294,7 +294,7 @@ audit:
   - [x] 집계 지표 정의: 총 접속 수, 실패 비율, 심야(00-06시) 조회 건수, DRM/다운로드 시도, unmask 요청 건수.  
   - [x] 결과 저장 스키마: `audit_monthly_summary` (year_month PK, total_count, created_at) — 엔티티/리포지토리/배치 저장 구현 완료.  
   - [x] 알림 훅: Slack/Webhook 또는 이메일로 top-3 이상 징후 전송(채널·템플릿 설계 완료, Alertmanager CI 스모크 포함).  
-  - [x] 대시보드 연계: Grafana/Loki 쿼리·패널 템플릿을 `docs/monitoring/audit-monthly-report-grafana.md`에 제공.  
+  - [x] 대시보드 연계: Grafana/Loki 쿼리·패널 템플릿을 `docs/operations/observability/overview.md`에 제공.  
   - [x] e2e 스모크: H2/pg 테스트에서 지난달 샘플 데이터 삽입 후 배치 실행 → summary row 생성 검증.
 - [x] (P2) 감사 로그 조회 권한 최소화, 조회 행위 자체 감사 기록 자동화 (AuditLogAccessAspect, allowed-roles)
 - [x] (P3) SIEM/외부 보안시스템 연동 및 전송 암호화 확인 — TLS/서명 채널, 전송 필드 마스킹 매핑 표 작성  
@@ -334,7 +334,7 @@ audit:
 - [x] forceUnmask 역할·사유 검증 (Playwright 가이드 작성, UI 연동은 후속)
 - [x] 대량/스트리밍 성능 검증(SXSSF 등) — 50k CSV/JSON 스모크
 - [x] 다운로드/내보내기 AuditEvent 기록(ExportService.auditExport)
-- [x] e2e 스모크: 마스킹 적용 여부 확인(Playwright 가이드 `docs/monitoring/playwright-masking-e2e.md`)
+- [x] e2e 스모크: 마스킹 적용 여부 확인(Playwright 가이드 `docs/operations/observability/playwright-masking-e2e.md`)
   - **사용자 요청 기반 마스킹 정책**: 화면/사용자 입력으로 선택된 마스킹 해제·강도 설정도 문서 다운로드(Excel/PDF/Word/XML/CSV 등) 시 동일하게 적용. UI에서 선택된 정책값을 요청 컨텍스트에 태우고, Writer 단계에서 `MaskingTarget.forceUnmaskFields/kinds` 반영.
   - **모든 마스킹 정책 일관 적용**: 서비스/DTO 레이어에서 적용한 마스킹 규칙(민감필드, maskRule, maskParams)과 forceUnmask 여부를 문서 변환(모든 포맷)에도 동일하게 전달·적용해 서버/문서 출력 간 정책 불일치가 없도록 한다.
 

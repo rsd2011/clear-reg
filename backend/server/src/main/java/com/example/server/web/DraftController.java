@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -31,6 +32,7 @@ import com.example.draft.application.response.DraftResponse;
 import com.example.draft.application.response.DraftTemplateSuggestionResponse;
 import com.example.draft.application.response.DraftHistoryResponse;
 import com.example.draft.application.response.DraftReferenceResponse;
+import com.example.draft.application.response.DraftTemplatePresetResponse;
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationQueryService;
 
@@ -39,6 +41,7 @@ import jakarta.validation.Valid;
 @RestController
 @Validated
 @RequestMapping("/api/drafts")
+@Tag(name = "Draft", description = "기안 생성/조회/결재 API")
 public class DraftController {
 
     private final DraftApplicationService draftApplicationService;
@@ -153,6 +156,31 @@ public class DraftController {
         AuthContext context = currentContext();
         ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
         return draftApplicationService.suggestTemplate(businessFeature, context.organizationCode());
+    }
+
+    @GetMapping("/templates")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CREATE)
+    public List<DraftTemplatePresetResponse> listTemplates(@RequestParam("businessFeature") String businessFeature) {
+        AuthContext context = currentContext();
+        ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        boolean audit = hasAuditPermission();
+        return draftApplicationService.listTemplatePresets(businessFeature, context.organizationCode(), audit).stream()
+                .map(t -> DraftTemplatePresetResponse.apply(t, masker))
+                .toList();
+    }
+
+    @GetMapping("/templates/recommend")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CREATE)
+    public List<DraftTemplatePresetResponse> recommendTemplates(@RequestParam("businessFeature") String businessFeature) {
+        AuthContext context = currentContext();
+        ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return draftApplicationService.recommendTemplatePresets(businessFeature, context.organizationCode(), context.username()).stream()
+                .map(t -> DraftTemplatePresetResponse.apply(t, masker))
+                .toList();
     }
 
     @GetMapping("/{id}/history")

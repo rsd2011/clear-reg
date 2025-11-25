@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalState;
-import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 @Service
@@ -79,7 +79,7 @@ public class DraftNotificationService {
                 .map(step -> approvalGroupRepository.findByGroupCode(step.getApprovalGroupCode())
                         .map(group -> approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId())
                                 .stream()
-                                .map(com.example.draft.domain.ApprovalGroupMember::getMemberUserId)
+                                .map(com.example.approval.domain.ApprovalGroupMember::getMemberUserId)
                                 .toList())
                         .orElse(List.of()))
                 .orElse(List.of());

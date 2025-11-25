@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -18,6 +19,7 @@ import com.example.server.notice.NoticeService;
 @RestController
 @Validated
 @RequestMapping("/api/notices")
+@Tag(name = "Notice", description = "공지 조회 API")
 public class NoticeController {
 
     private final NoticeService noticeService;

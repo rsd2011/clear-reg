@@ -19,7 +19,10 @@ public enum ActionCode {
   DRAFT_AUDIT,
   DRAFT_WITHDRAW,
   DRAFT_RESUBMIT,
-  DRAFT_DELEGATE;
+  DRAFT_DELEGATE,
+
+  APPROVAL_ADMIN,
+  APPROVAL_REVIEW;
 
   public boolean satisfies(ActionCode required) {
     if (required == null) {

@@ -13,18 +13,24 @@ import com.example.draft.application.request.ApprovalGroupRequest;
 import com.example.draft.application.request.ApprovalLineTemplateRequest;
 import com.example.draft.application.request.ApprovalTemplateStepRequest;
 import com.example.draft.application.request.DraftFormTemplateRequest;
+import com.example.draft.application.request.DraftTemplatePresetRequest;
 import com.example.draft.application.response.ApprovalGroupResponse;
 import com.example.draft.application.response.ApprovalLineTemplateResponse;
 import com.example.draft.application.response.DraftFormTemplateResponse;
-import com.example.draft.domain.ApprovalGroup;
-import com.example.draft.domain.ApprovalLineTemplate;
-import com.example.draft.domain.ApprovalTemplateStep;
+import com.example.draft.application.response.DraftTemplatePresetResponse;
+import com.example.approval.domain.ApprovalGroup;
+import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.approval.domain.ApprovalTemplateStep;
 import com.example.draft.domain.DraftFormTemplate;
+import com.example.draft.domain.DraftTemplatePreset;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftTemplatePresetRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @Transactional
@@ -33,13 +39,19 @@ public class TemplateAdminService {
     private final ApprovalGroupRepository approvalGroupRepository;
     private final ApprovalLineTemplateRepository approvalLineTemplateRepository;
     private final DraftFormTemplateRepository draftFormTemplateRepository;
+    private final DraftTemplatePresetRepository presetRepository;
+    private final ObjectMapper objectMapper;
 
     public TemplateAdminService(ApprovalGroupRepository approvalGroupRepository,
                                 ApprovalLineTemplateRepository approvalLineTemplateRepository,
-                                DraftFormTemplateRepository draftFormTemplateRepository) {
+                                DraftFormTemplateRepository draftFormTemplateRepository,
+                                DraftTemplatePresetRepository presetRepository,
+                                ObjectMapper objectMapper) {
         this.approvalGroupRepository = approvalGroupRepository;
         this.approvalLineTemplateRepository = approvalLineTemplateRepository;
         this.draftFormTemplateRepository = draftFormTemplateRepository;
+        this.presetRepository = presetRepository;
+        this.objectMapper = objectMapper;
     }
 
     public ApprovalGroupResponse createApprovalGroup(ApprovalGroupRequest request, AuthContext context, boolean audit) {
@@ -169,10 +181,137 @@ public class TemplateAdminService {
                 .toList();
     }
 
+    public DraftTemplatePresetResponse createDraftTemplatePreset(DraftTemplatePresetRequest request,
+                                                                  AuthContext context,
+                                                                  boolean audit) {
+        String org = ensureOrganizationNullable(request.organizationCode(), context, audit);
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplate formTemplate = draftFormTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
+        formTemplate.assertOrganization(org == null ? context.organizationCode() : org);
+        ensureBusinessMatches(formTemplate, request.businessFeatureCode());
+        ApprovalLineTemplate approvalTemplate = null;
+        if (request.defaultApprovalTemplateId() != null) {
+            approvalTemplate = approvalLineTemplateRepository.findByIdAndActiveTrue(request.defaultApprovalTemplateId())
+                    .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
+            if (approvalTemplate.getOrganizationCode() != null) {
+                ensureOrganizationAccess(approvalTemplate.getOrganizationCode(), context, audit);
+            }
+            ensureApprovalBusiness(approvalTemplate, request.businessFeatureCode());
+        }
+        DraftTemplatePreset preset = DraftTemplatePreset.create(
+                request.name(),
+                request.businessFeatureCode(),
+                org,
+                request.titleTemplate(),
+                request.contentTemplate(),
+                formTemplate,
+                approvalTemplate,
+                request.defaultFormPayload(),
+                serializeVariables(request.variables()),
+                request.active(),
+                now);
+        return DraftTemplatePresetResponse.from(presetRepository.save(preset), request.variables(), java.util.function.UnaryOperator.identity());
+    }
+
+    public DraftTemplatePresetResponse updateDraftTemplatePreset(UUID id,
+                                                                  DraftTemplatePresetRequest request,
+                                                                  AuthContext context,
+                                                                  boolean audit) {
+        DraftTemplatePreset preset = presetRepository.findById(id)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("템플릿 프리셋을 찾을 수 없습니다."));
+        if (preset.getOrganizationCode() != null) {
+            ensureOrganizationAccess(preset.getOrganizationCode(), context, audit);
+        }
+        if (!preset.getBusinessFeatureCode().equalsIgnoreCase(request.businessFeatureCode())) {
+            throw new IllegalArgumentException("businessFeatureCode는 변경할 수 없습니다.");
+        }
+        DraftFormTemplate formTemplate = draftFormTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
+        formTemplate.assertOrganization(preset.getOrganizationCode() == null ? context.organizationCode() : preset.getOrganizationCode());
+        ensureBusinessMatches(formTemplate, preset.getBusinessFeatureCode());
+        ApprovalLineTemplate approvalTemplate = null;
+        if (request.defaultApprovalTemplateId() != null) {
+            approvalTemplate = approvalLineTemplateRepository.findByIdAndActiveTrue(request.defaultApprovalTemplateId())
+                    .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
+            if (approvalTemplate.getOrganizationCode() != null) {
+                ensureOrganizationAccess(approvalTemplate.getOrganizationCode(), context, audit);
+            }
+            ensureApprovalBusiness(approvalTemplate, preset.getBusinessFeatureCode());
+        }
+        preset.update(request.name(),
+                request.titleTemplate(),
+                request.contentTemplate(),
+                formTemplate,
+                approvalTemplate,
+                request.defaultFormPayload(),
+                serializeVariables(request.variables()),
+                request.active(),
+                OffsetDateTime.now());
+        return DraftTemplatePresetResponse.from(preset, request.variables(), java.util.function.UnaryOperator.identity());
+    }
+
+    @Transactional(readOnly = true)
+    public List<DraftTemplatePresetResponse> listDraftTemplatePresets(String businessType,
+                                                                      String organizationCode,
+                                                                      boolean activeOnly,
+                                                                      AuthContext context,
+                                                                      boolean audit) {
+        if (!audit) {
+            organizationCode = context.organizationCode();
+        }
+        String orgFilter = organizationCode;
+        return presetRepository.findAll().stream()
+                .filter(p -> businessType == null || businessType.equalsIgnoreCase(p.getBusinessFeatureCode()))
+                .filter(p -> orgFilter == null || p.isGlobal() || orgFilter.equals(p.getOrganizationCode()))
+                .filter(p -> !activeOnly || p.isActive())
+                .map(this::toResponse)
+                .toList();
+    }
+
     private List<ApprovalTemplateStep> toEntities(ApprovalLineTemplate template, List<ApprovalTemplateStepRequest> steps) {
         return steps.stream()
                 .map(req -> new ApprovalTemplateStep(template, req.stepOrder(), req.approvalGroupCode(), req.description()))
                 .toList();
+    }
+
+    private DraftTemplatePresetResponse toResponse(DraftTemplatePreset preset) {
+        return DraftTemplatePresetResponse.from(preset, deserializeVariables(preset.getVariablesJson()), java.util.function.UnaryOperator.identity());
+    }
+
+    private List<String> deserializeVariables(String variablesJson) {
+        if (variablesJson == null || variablesJson.isBlank()) {
+            return List.of();
+        }
+        try {
+            return objectMapper.readValue(variablesJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+            });
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private String serializeVariables(List<String> variables) {
+        if (variables == null || variables.isEmpty()) {
+            return "[]";
+        }
+        try {
+            return objectMapper.writeValueAsString(variables);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("variables 직렬화에 실패했습니다.", e);
+        }
+    }
+
+    private void ensureBusinessMatches(DraftFormTemplate formTemplate, String businessFeatureCode) {
+        if (!formTemplate.matchesBusiness(businessFeatureCode)) {
+            throw new IllegalArgumentException("비즈니스 유형에 맞지 않는 양식 템플릿입니다.");
+        }
+    }
+
+    private void ensureApprovalBusiness(ApprovalLineTemplate template, String businessFeatureCode) {
+        if (!template.getBusinessType().equalsIgnoreCase(businessFeatureCode)) {
+            throw new IllegalArgumentException("비즈니스 유형에 맞지 않는 결재선 템플릿입니다.");
+        }
     }
 
     private String ensureOrganization(String organizationCode, AuthContext context, boolean audit) {

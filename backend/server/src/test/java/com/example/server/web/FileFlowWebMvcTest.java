@@ -52,6 +52,8 @@ import com.example.file.storage.FileStorageClient;
 import com.example.file.audit.FileAuditOutboxRelay;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.response.DraftResponse;
+import com.example.draft.application.response.DraftApprovalStepResponse;
+import com.example.draft.application.response.DraftAttachmentResponse;
 import com.example.draft.domain.DraftStatus;
 import com.example.file.FilePolicyViolationException;
 import com.example.file.api.FileUploadRequest;
@@ -180,8 +182,8 @@ class FileFlowWebMvcTest {
         given(draftApplicationService.getDraft(draftId, "ORG", "tester", false))
                 .willReturn(new DraftResponse(draftId, "t", "c", "BF", "ORG", "creator",
                         DraftStatus.DRAFT, null, null, null, null, null,
-                        null, null, null, null, null, null,
-                        List.of(), List.of()));
+                        null, null, null, null, null, null, null,
+                        List.<DraftApprovalStepResponse>of(), List.<DraftAttachmentResponse>of(), null, null));
         // 첨부되지 않으면 controller에서 download 호출 전에 정책 위반을 던지므로 download는 호출되지 않아도 됨
         given(fileManagementPort.download(eq(fileId), any(), anyList()))
                 .willThrow(new FilePolicyViolationException("해당 기안에 첨부되지 않은 파일입니다."));

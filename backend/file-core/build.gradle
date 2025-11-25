@@ -8,11 +8,28 @@ dependencies {
 
     implementation project(':backend:platform')
 
-    implementation libs.spring.boot.starter.data.jpa
+    // 부트 스타터 제거: 코어 + 오토컨피규어
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+
+    // 스프링 코어/데이터
     implementation libs.spring.context
+    implementation libs.spring.data.commons
+    implementation 'org.springframework.data:spring-data-jpa'
+    implementation 'org.springframework:spring-orm'
+    implementation 'org.springframework:spring-tx'
+    implementation libs.jakarta.persistence
+    implementation 'org.hibernate.orm:hibernate-core'
+
+    // 검증 (엔티티/DTO)
+    implementation 'org.hibernate.validator:hibernate-validator'
+    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
+
     implementation libs.spring.kafka
     implementation libs.jackson.databind
     implementation libs.tika.core
+
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok
@@ -21,16 +38,4 @@ dependencies {
 
     testImplementation libs.bundles.spring.test
     testImplementation libs.h2.database
-}
-
-def excludedClasses = [
-        'com/example/file/FileCoreAutoConfiguration.class',
-        'com/example/file/port/*',
-        '**/AuditJsonSerializer.*'
-]
-
-jacocoTestReport {
-    classDirectories.setFrom(files(classDirectories.files.collect {
-        fileTree(dir: it, exclude: excludedClasses)
-    }))
 }

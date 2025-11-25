@@ -70,10 +70,11 @@ class FileControllerAuthGuardTest {
         UUID draftId = UUID.randomUUID();
         DraftResponse draft = new DraftResponse(draftId, "t", "c", "BF", "ORG", "creator",
                 DraftStatus.DRAFT, null, null, null, null, null,
-                null, null, null, null, null, null,
+                null, null, null, null, null, null, null,
                 List.of(new DraftApprovalStepResponse(null, 1, "AG1", null,
                         com.example.draft.domain.DraftApprovalState.WAITING, null, null, null, null, null)),
-                List.of(new com.example.draft.application.response.DraftAttachmentResponse(fileId, "a.txt", "creator", 1L, null, null)));
+                List.of(new com.example.draft.application.response.DraftAttachmentResponse(fileId, "a.txt", "creator", 1L, null, null)),
+                null, null);
         when(draftApplicationService.getDraft(draftId, "ORG", "user", false)).thenReturn(draft);
         when(draftApplicationService.listReferences(draftId, "ORG", "user", false))
                 .thenReturn(List.of(new DraftReferenceResponse(UUID.randomUUID(), "ref-user", "ORG", "adder", null)));

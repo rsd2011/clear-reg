@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
 import com.example.auth.permission.FieldMaskRule;
+import com.example.auth.permission.context.AuthCurrentUserProvider;
 import com.example.auth.permission.context.AuthContext;
 import com.example.auth.permission.context.AuthContextHolder;
+import com.example.common.annotation.Sensitive;
 import com.example.common.security.RowScope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
@@ -17,7 +19,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("SensitiveSerialization 테스트")
 class SensitiveSerializationTest {
 
-  private final DataPolicyEvaluator evaluator = new DataPolicyEvaluator();
+  private final DataPolicyEvaluator evaluator = new DataPolicyEvaluator(new AuthCurrentUserProvider());
 
   @AfterEach
   void cleanup() {
@@ -95,7 +97,7 @@ class SensitiveSerializationTest {
   void givenConfiguration_whenCreatingModule_thenReusable() {
     DataPolicyConfiguration configuration = new DataPolicyConfiguration();
     SensitiveDataMaskingModule module =
-        configuration.sensitiveDataMaskingModule(new DataPolicyEvaluator());
+        configuration.sensitiveDataMaskingModule(new DataPolicyEvaluator(new AuthCurrentUserProvider()));
     assertThat(module).isNotNull();
   }
 }

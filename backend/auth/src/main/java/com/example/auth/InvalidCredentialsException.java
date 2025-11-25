@@ -1,8 +1,11 @@
 package com.example.auth;
 
-public class InvalidCredentialsException extends RuntimeException {
+import com.example.common.error.BusinessException;
+import com.example.common.error.CommonErrorCode;
+
+public class InvalidCredentialsException extends BusinessException {
 
   public InvalidCredentialsException() {
-    super("Invalid username or password");
+    super(CommonErrorCode.PERMISSION_DENIED, "Invalid username or password");
   }
 }

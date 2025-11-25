@@ -159,9 +159,10 @@ class FileControllerTest {
         setAuth(ActionCode.DOWNLOAD);
         UUID fileId = sampleMetadata().id();
         DraftResponse draft = new DraftResponse(UUID.randomUUID(), "t", "c", "BF", "ORG",
-                "creator", com.example.draft.domain.DraftStatus.IN_REVIEW, "tmpl", "form", 1,
+                "creator", com.example.draft.domain.DraftStatus.IN_REVIEW, null, "tmpl", "form", 1,
                 "{}", "{}", java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(), null, null, null, null,
-                List.<DraftApprovalStepResponse>of(), List.of(new DraftAttachmentResponse(UUID.randomUUID(), "other", "name", 1L, java.time.OffsetDateTime.now(), "creator")));
+                List.<DraftApprovalStepResponse>of(), List.of(new DraftAttachmentResponse(UUID.randomUUID(), "other", "name", 1L, java.time.OffsetDateTime.now(), "creator")),
+                null, null);
         given(draftApplicationService.getDraft(any(), any(), any(), org.mockito.ArgumentMatchers.eq(false))).willReturn(draft);
         given(draftApplicationService.listReferences(any(), any(), any(), org.mockito.ArgumentMatchers.eq(false))).willReturn(List.of());
 
@@ -189,9 +190,10 @@ class FileControllerTest {
         FileMetadataDto metadata = sampleMetadata();
         UUID draftId = UUID.randomUUID();
         DraftResponse draft = new DraftResponse(draftId, "t", "c", "BF", "ORG",
-                "tester", com.example.draft.domain.DraftStatus.IN_REVIEW, "tmpl", "form", 1,
+                "tester", com.example.draft.domain.DraftStatus.IN_REVIEW, null, "tmpl", "form", 1,
                 "{}", "{}", java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(), null, null, null, null,
-                List.<DraftApprovalStepResponse>of(), List.of(new DraftAttachmentResponse(metadata.id(), "name", "name", 1L, java.time.OffsetDateTime.now(), "tester")));
+                List.<DraftApprovalStepResponse>of(), List.of(new DraftAttachmentResponse(metadata.id(), "name", "name", 1L, java.time.OffsetDateTime.now(), "tester")),
+                null, null);
         given(draftApplicationService.getDraft(eq(draftId), any(), any(), eq(false))).willReturn(draft);
         given(draftApplicationService.listReferences(eq(draftId), any(), any(), eq(false))).willReturn(List.of());
         given(fileManagementPort.download(eq(metadata.id()), any(), any()))

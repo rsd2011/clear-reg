@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.response.ApprovalGroupResponse;
-import com.example.draft.domain.ApprovalGroup;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.ApprovalGroup;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceListTest {
@@ -26,7 +26,7 @@ class TemplateAdminServiceListTest {
         ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-        TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo);
+        TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         ApprovalGroup org1 = ApprovalGroup.create("G1", "name", null, "ORG1", null, OffsetDateTime.now());
         ApprovalGroup org2 = ApprovalGroup.create("G2", "name", null, "ORG2", null, OffsetDateTime.now());

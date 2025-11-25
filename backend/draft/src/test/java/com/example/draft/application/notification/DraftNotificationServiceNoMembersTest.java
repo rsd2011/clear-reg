@@ -13,11 +13,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.draft.domain.ApprovalGroup;
+import com.example.approval.domain.ApprovalGroup;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
-import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 class DraftNotificationServiceNoMembersTest {
@@ -33,7 +33,7 @@ class DraftNotificationServiceNoMembersTest {
         DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, groupRepo, memberRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.draft.domain.ApprovalTemplateStep(
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(
                 null,
                 1,
                 "GRP",

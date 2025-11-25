@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,7 @@ import com.example.dw.infrastructure.persistence.HrOrganizationRepository;
  * ExportCommand + ExportWriterService 경로로 Audit/마스킹을 일관 적용한다.
  */
 @RestController
+@Tag(name = "Organization Export", description = "조직 Export API")
 @RequiredArgsConstructor
 public class OrganizationExportController {
 

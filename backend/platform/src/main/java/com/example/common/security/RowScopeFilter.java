@@ -16,17 +16,12 @@ public record RowScopeFilter(RowScope rowScope,
     }
 
     public static <T> RowScopeFilter from(DataPolicyMatch match, RowScopeContext ctx, Specification<T> custom) {
-        RowScope row = parse(match.getRowScope());
+        RowScope row = RowScope.of(match.getRowScope());
         Specification<T> spec = RowScopeSpecifications.organizationScoped("organizationCode",
                 row,
                 ctx != null ? ctx.organizationCode() : null,
                 ctx != null ? ctx.organizationHierarchy() : null,
                 custom);
         return new RowScopeFilter(row, spec);
-    }
-
-    private static RowScope parse(String value) {
-        if (value == null) return RowScope.ALL;
-        return RowScope.valueOf(value.toUpperCase());
     }
 }

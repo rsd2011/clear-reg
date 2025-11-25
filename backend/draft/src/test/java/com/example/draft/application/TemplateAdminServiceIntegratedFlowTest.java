@@ -17,9 +17,9 @@ import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.request.ApprovalGroupRequest;
 import com.example.draft.application.response.ApprovalGroupResponse;
-import com.example.draft.domain.ApprovalGroup;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.ApprovalGroup;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceIntegratedFlowTest {
@@ -31,7 +31,7 @@ class TemplateAdminServiceIntegratedFlowTest {
         TemplateAdminService service = new TemplateAdminService(
                 groupRepo,
                 mock(ApprovalLineTemplateRepository.class),
-                mock(DraftFormTemplateRepository.class));
+                mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         // create
         ApprovalGroupRequest createReq = new ApprovalGroupRequest("G1", "name", "desc", "ORG1", null);

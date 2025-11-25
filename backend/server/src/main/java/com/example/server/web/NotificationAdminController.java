@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -19,6 +20,7 @@ import jakarta.validation.Valid;
 @RestController
 @RequestMapping("/api/admin/notifications")
 @Validated
+@Tag(name = "Notification Admin", description = "관리자 알림 발송 API")
 public class NotificationAdminController {
 
     private final NotificationService notificationService;

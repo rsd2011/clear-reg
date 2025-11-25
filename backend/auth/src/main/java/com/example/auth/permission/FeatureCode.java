@@ -13,5 +13,6 @@ public enum FeatureCode {
   FILE,
   ALERT,
   COMMON_CODE,
-  DRAFT;
+  DRAFT,
+  APPROVAL;
 }

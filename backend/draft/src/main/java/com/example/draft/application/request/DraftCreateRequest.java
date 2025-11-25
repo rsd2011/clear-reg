@@ -1,6 +1,7 @@
 package com.example.draft.application.request;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import jakarta.validation.Valid;
@@ -14,9 +15,12 @@ public record DraftCreateRequest(
         UUID templateId,
         UUID formTemplateId,
         @NotBlank String formPayload,
-        @Size(max = 10) List<@Valid DraftAttachmentRequest> attachments) {
+        @Size(max = 10) List<@Valid DraftAttachmentRequest> attachments,
+        UUID templatePresetId,
+        Map<String, String> templateVariables) {
 
     public DraftCreateRequest {
         attachments = attachments == null ? List.of() : List.copyOf(attachments);
+        templateVariables = templateVariables == null ? Map.of() : Map.copyOf(templateVariables);
     }
 }

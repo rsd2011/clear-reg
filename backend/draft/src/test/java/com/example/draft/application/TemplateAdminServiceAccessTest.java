@@ -16,10 +16,10 @@ import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import static org.mockito.Mockito.when;
 import com.example.draft.application.request.ApprovalGroupRequest;
-import com.example.draft.domain.ApprovalGroup;
+import com.example.approval.domain.ApprovalGroup;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceAccessTest {
@@ -30,7 +30,7 @@ class TemplateAdminServiceAccessTest {
         ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-        TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo);
+        TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         ApprovalGroup group = ApprovalGroup.create("GC", "name", "desc", "ORG-1", null, OffsetDateTime.now());
         given(groupRepo.findById(any())).willReturn(Optional.of(group));

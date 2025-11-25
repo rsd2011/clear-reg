@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,7 @@ import com.example.dw.application.export.ExportExecutionHelper;
  * 감사 로깅 및 정책 기반 마스킹을 일관되게 적용하는 패턴을 보여준다.
  */
 @RestController
+@Tag(name = "Export", description = "데이터 Export 샘플 API")
 @RequiredArgsConstructor
 public class ExportController {
 

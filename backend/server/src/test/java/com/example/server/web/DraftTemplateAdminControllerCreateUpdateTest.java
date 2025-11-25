@@ -51,7 +51,7 @@ class DraftTemplateAdminControllerCreateUpdateTest {
         AuthContextHolder.set(context);
         ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "ROLE", "COND");
         ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("이름", "BT", "ORG", true, java.util.List.of(step));
-        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", "BT", TemplateScope.ORGANIZATION, "ORG", true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
+        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", "BT", com.example.approval.domain.TemplateScope.ORGANIZATION, "ORG", true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
         UUID id = UUID.randomUUID();
         given(service.updateApprovalLineTemplate(eq(id), eq(request), eq(context), eq(true))).willReturn(response);
 

@@ -2,7 +2,7 @@ package com.example.draft.application.response;
 
 import java.util.UUID;
 
-import com.example.draft.domain.ApprovalTemplateStep;
+import com.example.approval.domain.ApprovalTemplateStep;
 
 public record ApprovalTemplateStepResponse(
         UUID id,

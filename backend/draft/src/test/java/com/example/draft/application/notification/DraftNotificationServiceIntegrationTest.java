@@ -13,13 +13,13 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.draft.domain.ApprovalGroup;
-import com.example.draft.domain.ApprovalGroupMember;
-import com.example.draft.domain.ApprovalTemplateStep;
+import com.example.approval.domain.ApprovalGroup;
+import com.example.approval.domain.ApprovalGroupMember;
+import com.example.approval.domain.ApprovalTemplateStep;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
-import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 class DraftNotificationServiceIntegrationTest {

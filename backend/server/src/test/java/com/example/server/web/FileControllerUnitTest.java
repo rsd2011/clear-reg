@@ -66,8 +66,8 @@ class FileControllerUnitTest {
         AuthContextHolder.set(new AuthContext("user", "ORG", "PG", FeatureCode.FILE, ActionCode.READ, null, null));
         DraftResponse draft = new DraftResponse(draftId, "t", "c", "BF", "ORG", "creator",
                 DraftStatus.DRAFT, null, null, null, null, null,
-                null, null, null, null, null, null,
-                List.of(), List.of());
+                null, null, null, null, null, null, null,
+                List.<DraftApprovalStepResponse>of(), List.<DraftAttachmentResponse>of(), null, null);
         when(draftApplicationService.getDraft(draftId, "ORG", "user", false)).thenReturn(draft);
         when(draftApplicationService.listReferences(draftId, "ORG", "user", false)).thenReturn(List.of());
 

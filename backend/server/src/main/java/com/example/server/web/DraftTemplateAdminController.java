@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -23,15 +24,18 @@ import com.example.draft.application.TemplateAdminService;
 import com.example.draft.application.request.ApprovalGroupRequest;
 import com.example.draft.application.request.ApprovalLineTemplateRequest;
 import com.example.draft.application.request.DraftFormTemplateRequest;
+import com.example.draft.application.request.DraftTemplatePresetRequest;
 import com.example.draft.application.response.ApprovalGroupResponse;
 import com.example.draft.application.response.ApprovalLineTemplateResponse;
 import com.example.draft.application.response.DraftFormTemplateResponse;
+import com.example.draft.application.response.DraftTemplatePresetResponse;
 
 import jakarta.validation.Valid;
 
 @RestController
 @Validated
 @RequestMapping("/api/draft-admin")
+@Tag(name = "Draft Template Admin", description = "기안 폼/승인선/프리셋 관리 API")
 public class DraftTemplateAdminController {
 
     private final TemplateAdminService templateAdminService;
@@ -134,6 +138,43 @@ public class DraftTemplateAdminController {
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return templateAdminService.listDraftFormTemplates(businessType, organizationCode, activeOnly, context, true).stream()
                 .map(t -> DraftFormTemplateResponse.apply(t, masker))
+                .toList();
+    }
+
+    // Draft Template Presets
+    @PostMapping("/template-presets")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    public DraftTemplatePresetResponse createDraftTemplatePreset(@Valid @RequestBody DraftTemplatePresetRequest request) {
+        AuthContext context = currentContext();
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return DraftTemplatePresetResponse.apply(
+                templateAdminService.createDraftTemplatePreset(request, context, true),
+                masker);
+    }
+
+    @PutMapping("/template-presets/{id}")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    public DraftTemplatePresetResponse updateDraftTemplatePreset(@PathVariable UUID id,
+                                                                  @Valid @RequestBody DraftTemplatePresetRequest request) {
+        AuthContext context = currentContext();
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return DraftTemplatePresetResponse.apply(
+                templateAdminService.updateDraftTemplatePreset(id, request, context, true),
+                masker);
+    }
+
+    @GetMapping("/template-presets")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    public List<DraftTemplatePresetResponse> listDraftTemplatePresets(@RequestParam(required = false) String businessType,
+                                                                      @RequestParam(required = false) String organizationCode,
+                                                                      @RequestParam(defaultValue = "true") boolean activeOnly) {
+        AuthContext context = currentContext();
+        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var masker = com.example.common.masking.MaskingFunctions.masker(match);
+        return templateAdminService.listDraftTemplatePresets(businessType, organizationCode, activeOnly, context, true).stream()
+                .map(r -> DraftTemplatePresetResponse.apply(r, masker))
                 .toList();
     }
 

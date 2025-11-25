@@ -5,7 +5,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.auth.policy.Sensitive;
+import com.example.common.annotation.Sensitive;
 import com.example.dwgateway.dw.DwOrganizationPort;
 
 public record DwOrganizationResponse(UUID id,

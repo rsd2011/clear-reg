@@ -6,7 +6,7 @@ dependencies {
     implementation platform(libs.spring.boot.bom)
     testImplementation platform(libs.spring.boot.bom)
 
-    api project(':backend:dw-gateway')
+    api project(':backend:dw-gateway-api')
     implementation project(':backend:platform')
     api project(':backend:data-integration')
     api project(':backend:file-core')
@@ -20,6 +20,7 @@ dependencies {
     testCompileOnly libs.lombok
     testAnnotationProcessor libs.lombok
 
+    testImplementation platform(libs.spring.boot.bom)
     testImplementation libs.bundles.spring.test
     testImplementation libs.junit.platform.launcher
 }

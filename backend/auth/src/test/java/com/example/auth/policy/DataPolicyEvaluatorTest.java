@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
 import com.example.auth.permission.FieldMaskRule;
+import com.example.auth.permission.context.AuthCurrentUserProvider;
 import com.example.auth.permission.context.AuthContext;
 import com.example.auth.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
@@ -17,7 +18,7 @@ import org.junit.jupiter.api.Test;
 @DisplayName("DataPolicyEvaluator 테스트")
 class DataPolicyEvaluatorTest {
 
-  private final DataPolicyEvaluator evaluator = new DataPolicyEvaluator();
+  private final DataPolicyEvaluator evaluator = new DataPolicyEvaluator(new AuthCurrentUserProvider());
 
   @AfterEach
   void tearDown() {

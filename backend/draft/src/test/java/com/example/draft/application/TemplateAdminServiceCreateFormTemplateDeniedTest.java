@@ -10,8 +10,8 @@ import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.request.DraftFormTemplateRequest;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceCreateFormTemplateDeniedTest {
@@ -22,7 +22,7 @@ class TemplateAdminServiceCreateFormTemplateDeniedTest {
         TemplateAdminService service = new TemplateAdminService(
                 mock(ApprovalGroupRepository.class),
                 mock(ApprovalLineTemplateRepository.class),
-                mock(DraftFormTemplateRepository.class));
+                mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", "HR", "ORG2", "{}", true);
         AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);

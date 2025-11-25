@@ -1,7 +1,5 @@
 package com.example.common.security;
 
-import java.util.Locale;
-
 import org.springframework.data.jpa.domain.Specification;
 
 import com.example.common.policy.DataPolicyMatch;
@@ -14,16 +12,11 @@ public final class RowScopeEvaluator {
                                                        RowScopeContext ctx,
                                                        Specification<T> customSpec) {
         RowScopeContext effective = ctx != null ? ctx : RowScopeContextHolder.get();
-        RowScope rowScope = parse(match.getRowScope());
+        RowScope rowScope = RowScope.of(match.getRowScope());
         return RowScopeSpecifications.organizationScoped("organizationCode",
                 rowScope,
                 effective != null ? effective.organizationCode() : null,
                 effective != null ? effective.organizationHierarchy() : null,
                 customSpec);
-    }
-
-    private static RowScope parse(String value) {
-        if (value == null) return RowScope.ALL;
-        return RowScope.valueOf(value.toUpperCase(Locale.ROOT));
     }
 }

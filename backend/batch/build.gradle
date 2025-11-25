@@ -4,8 +4,6 @@ plugins {
 }
 
 dependencies {
-    implementation platform(libs.spring.boot.bom)
-    testImplementation platform(libs.spring.boot.bom)
 
     implementation project(':backend:data-integration')
     implementation project(':backend:platform')
@@ -29,12 +27,14 @@ dependencies {
 
     runtimeOnly libs.h2.database
 
+    testImplementation platform(libs.spring.boot.bom)
     testImplementation libs.bundles.spring.test
     testImplementation libs.spring.batch.test
     testImplementation libs.junit.platform.launcher
     testImplementation libs.testcontainers.junit
     testImplementation libs.testcontainers.postgresql
     testImplementation libs.postgresql
+    testImplementation project(':backend:dw-gateway')
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
     testImplementation project(':backend:audit')
@@ -43,20 +43,4 @@ dependencies {
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok
     testAnnotationProcessor libs.lombok
-}
-
-// Jacoco: BUNDLE 룰은 일시 제외하고 클래스/패키지 최소 커버리지는 유지한다.
-// 이전 단계에서 임시로 BUNDLE 룰을 해제했으나, 커버리지 목표 달성으로 전역 설정을 다시 따른다.
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            element = 'BUNDLE'
-            excludes = ['com.example.batch.schedule.*']
-        }
-        rule {
-            element = 'CLASS'
-            excludes = ['com.example.batch.schedule.*']
-        }
-    }
 }

@@ -4,7 +4,7 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import com.example.common.jpa.PrimaryKeyEntity;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,10 +21,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuditMonthlySummaryEntity {
+public class AuditMonthlySummaryEntity extends PrimaryKeyEntity {
 
-    @Id
-    @Column(name = "year_month", length = 7, nullable = false)
+    @Column(name = "year_month", length = 7, nullable = false, unique = true)
     private String yearMonth; // e.g. 2025-01
 
     @Column(name = "total_count", nullable = false)

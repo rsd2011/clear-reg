@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +25,7 @@ import com.example.dw.infrastructure.persistence.HrEmployeeRepository;
  * 실운영 시 페이징/필터/대량 스트리밍으로 확장 가능.
  */
 @RestController
+@Tag(name = "HR Export", description = "HR 직원 데이터 Export API")
 @RequiredArgsConstructor
 public class HrEmployeeExportController {
 

@@ -1,12 +1,15 @@
 package com.example.dwgateway.client;
 
-public class DwGatewayClientException extends RuntimeException {
+import com.example.common.error.BusinessException;
+import com.example.common.error.CommonErrorCode;
+
+public class DwGatewayClientException extends BusinessException {
 
     public DwGatewayClientException(String message) {
-        super(message);
+        super(CommonErrorCode.INTERNAL_ERROR, message);
     }
 
     public DwGatewayClientException(String message, Throwable cause) {
-        super(message, cause);
+        super(CommonErrorCode.INTERNAL_ERROR, message, cause);
     }
 }

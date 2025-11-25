@@ -1,0 +1,10 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    implementation platform(libs.spring.boot.bom)
+    implementation project(':backend:platform')
+    api project(':backend:data-integration')
+    implementation libs.spring.data.commons
+}

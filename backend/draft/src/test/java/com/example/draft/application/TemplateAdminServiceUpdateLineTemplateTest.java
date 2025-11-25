@@ -18,10 +18,10 @@ import com.example.common.security.RowScope;
 import com.example.draft.application.request.ApprovalLineTemplateRequest;
 import com.example.draft.application.request.ApprovalTemplateStepRequest;
 import com.example.draft.application.response.ApprovalLineTemplateResponse;
-import com.example.draft.domain.ApprovalLineTemplate;
-import com.example.draft.domain.ApprovalTemplateStep;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.approval.domain.ApprovalTemplateStep;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceUpdateLineTemplateTest {
@@ -33,7 +33,7 @@ class TemplateAdminServiceUpdateLineTemplateTest {
         TemplateAdminService service = new TemplateAdminService(
                 mock(ApprovalGroupRepository.class),
                 lineRepo,
-                mock(DraftFormTemplateRepository.class));
+                mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();
         ApprovalLineTemplate template = ApprovalLineTemplate.create("old", "HR", "ORG1", now);

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.auth.permission.ActionCode;
 import com.example.auth.permission.FeatureCode;
@@ -20,6 +21,7 @@ import com.example.server.notification.dto.NotificationResponse;
 @RestController
 @RequestMapping("/api/notifications")
 @Validated
+@Tag(name = "Notification", description = "사용자 알림 조회/읽음 처리 API")
 public class NotificationController {
 
     private final NotificationService notificationService;

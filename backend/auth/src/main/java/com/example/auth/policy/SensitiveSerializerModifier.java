@@ -1,5 +1,6 @@
 package com.example.auth.policy;
 
+import com.example.common.annotation.Sensitive;
 import com.fasterxml.jackson.databind.BeanDescription;
 import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;

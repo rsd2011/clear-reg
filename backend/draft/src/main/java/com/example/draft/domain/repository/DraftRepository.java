@@ -10,4 +10,6 @@ import com.example.common.security.RequiresRowScope;
 
 @RequiresRowScope
 public interface DraftRepository extends JpaRepository<Draft, UUID>, JpaSpecificationExecutor<Draft> {
+
+    java.util.List<Draft> findTop5ByCreatedByAndBusinessFeatureCodeOrderByCreatedAtDesc(String createdBy, String businessFeatureCode);
 }

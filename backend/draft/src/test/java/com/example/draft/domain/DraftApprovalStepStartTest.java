@@ -13,7 +13,7 @@ class DraftApprovalStepStartTest {
     @DisplayName("WAITING 상태에서 start 호출 시 IN_PROGRESS로 전환된다")
     void startChangesStateToInProgress() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());

@@ -66,9 +66,9 @@ class FileControllerWebMvcTest {
         UUID fileId = UUID.randomUUID();
         com.example.draft.application.response.DraftResponse draft = new com.example.draft.application.response.DraftResponse(
                 UUID.randomUUID(), "t", "c", "BF", "ORG", "creator",
-                com.example.draft.domain.DraftStatus.IN_REVIEW, "tmpl", "form", 1, "{}", "{}",
+                com.example.draft.domain.DraftStatus.IN_REVIEW, null, "tmpl", "form", 1, "{}", "{}",
                 java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(), null, null, null, null,
-                java.util.List.of(), java.util.List.of());
+                java.util.List.of(), java.util.List.of(), null, null);
         when(draftApplicationService.getDraft(any(), any(), any(), org.mockito.ArgumentMatchers.eq(false))).thenReturn(draft);
         when(draftApplicationService.listReferences(any(), any(), any(), org.mockito.ArgumentMatchers.eq(false))).thenReturn(java.util.List.of());
 

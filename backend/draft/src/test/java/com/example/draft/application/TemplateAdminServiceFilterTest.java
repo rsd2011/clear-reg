@@ -14,10 +14,10 @@ import com.example.auth.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.response.ApprovalLineTemplateResponse;
 import com.example.draft.application.response.DraftFormTemplateResponse;
-import com.example.draft.domain.ApprovalLineTemplate;
+import com.example.approval.domain.ApprovalLineTemplate;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceFilterTest {
@@ -25,7 +25,7 @@ class TemplateAdminServiceFilterTest {
     ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
     ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-    TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo);
+    TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
     AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
 
     @Test

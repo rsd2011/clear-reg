@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.lenient;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -31,25 +32,33 @@ import com.example.draft.application.request.DraftAttachmentRequest;
 import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
-import com.example.draft.domain.ApprovalGroup;
-import com.example.draft.domain.ApprovalGroupMember;
-import com.example.draft.domain.ApprovalLineTemplate;
+import com.example.approval.domain.ApprovalAccessDeniedException;
+import com.example.approval.domain.ApprovalGroup;
+import com.example.approval.domain.ApprovalGroupMember;
+import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.DraftStatus;
+import com.example.draft.domain.DraftTemplatePreset;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
-import com.example.draft.domain.repository.ApprovalLineTemplateRepository;
-import com.example.draft.domain.repository.ApprovalGroupMemberRepository;
-import com.example.draft.domain.repository.ApprovalGroupRepository;
+import com.example.approval.api.ApprovalFacade;
+import com.example.approval.api.ApprovalStatus;
+import com.example.approval.api.ApprovalStatusSnapshot;
+import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
+import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
+import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 import com.example.draft.domain.repository.DraftRepository;
+import com.example.draft.domain.repository.DraftTemplatePresetRepository;
 import com.example.draft.application.notification.DraftNotificationService;
 import com.example.common.security.RowScope;
 import com.example.draft.application.business.DraftBusinessPolicy;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
 class DraftApplicationServiceTest {
@@ -86,11 +95,21 @@ class DraftApplicationServiceTest {
     private DraftReferenceRepository draftReferenceRepository;
 
     @Mock
+    private DraftTemplatePresetRepository presetRepository;
+
+    @Mock
     private com.example.draft.application.audit.DraftAuditPublisher auditPublisher;
 
     @Mock
     private DraftBusinessPolicy businessPolicy;
 
+    @Mock
+    private ApprovalFacade approvalFacade;
+
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    private ObjectMapper objectMapper;
     private Clock clock;
 
     @InjectMocks
@@ -99,9 +118,15 @@ class DraftApplicationServiceTest {
     @BeforeEach
     void setUp() {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
+        objectMapper = new ObjectMapper();
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
                 approvalGroupRepository, approvalGroupMemberRepository, mappingRepository,
-                draftHistoryRepository, draftReferenceRepository, notificationService, auditPublisher, businessPolicy, clock);
+                draftHistoryRepository, draftReferenceRepository, presetRepository, notificationService, auditPublisher, businessPolicy,
+                approvalFacade, eventPublisher, objectMapper, clock);
+        lenient().when(approvalFacade.requestApproval(any())).thenAnswer(invocation -> {
+            var cmd = invocation.getArgument(0, com.example.approval.api.ApprovalRequestCommand.class);
+            return new ApprovalStatusSnapshot(UUID.randomUUID(), cmd.draftId(), ApprovalStatus.REQUESTED, List.of());
+        });
     }
 
     @Test
@@ -113,7 +138,7 @@ class DraftApplicationServiceTest {
         given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), formTemplate.getId(), "{}", List.of());
+                template.getId(), formTemplate.getId(), "{}", List.of(), null, java.util.Map.of());
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.title()).isEqualTo("제목");
@@ -131,7 +156,7 @@ class DraftApplicationServiceTest {
         DraftAttachmentRequest attachment = new DraftAttachmentRequest(UUID.randomUUID(), "evidence.pdf", "application/pdf", 1234L);
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), formTemplate.getId(), "{}", List.of(attachment));
+                template.getId(), formTemplate.getId(), "{}", List.of(attachment), null, java.util.Map.of());
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.attachments()).hasSize(1);
@@ -147,7 +172,7 @@ class DraftApplicationServiceTest {
         given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), formTemplate.getId(), "{}", List.of());
+                template.getId(), formTemplate.getId(), "{}", List.of(), null, java.util.Map.of());
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
@@ -165,12 +190,81 @@ class DraftApplicationServiceTest {
         given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                null, null, "{}", List.of());
+                null, null, "{}", List.of(), null, java.util.Map.of());
 
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
         assertThat(response.formTemplateCode()).isEqualTo(formTemplate.getTemplateCode());
+    }
+
+    @Test
+    void givenTemplatePreset_whenCreate_thenUsesPresetDefaultsAndVariables() {
+        ApprovalLineTemplate template = sampleTemplate(ORG);
+        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
+        String defaultPayload = objectMapper.createObjectNode()
+                .put("base", true)
+                .put("field", "default")
+                .toString();
+        DraftTemplatePreset preset = DraftTemplatePreset.create(
+                "사전 기안",
+                "NOTICE",
+                ORG,
+                "{작성자}의 휴가",
+                "본문 {custom}",
+                formTemplate,
+                template,
+                defaultPayload,
+                "[\"custom\",\"작성자\"]",
+                true,
+                NOW);
+        given(presetRepository.findByIdAndActiveTrue(preset.getId())).willReturn(Optional.of(preset));
+        given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        DraftCreateRequest request = new DraftCreateRequest("ignored", "ignored", "NOTICE",
+                null, null, "{\"field\":\"user\"}", List.of(), preset.getId(), java.util.Map.of("custom", "급히"));
+
+        DraftResponse response = service.createDraft(request, "writer", ORG);
+
+        assertThat(response.templatePresetId()).isEqualTo(preset.getId());
+        assertThat(response.title()).contains("writer");
+        assertThat(response.content()).contains("급히");
+        assertThat(response.formPayload()).contains("base").contains("user");
+    }
+
+    @Test
+    void givenPresetWithAllowedVariables_whenCreate_thenDisallowsUnknownVariableAndMergesPayload() {
+        ApprovalLineTemplate approvalTemplate = sampleTemplate(ORG);
+        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
+        DraftTemplatePreset preset = DraftTemplatePreset.create(
+                "프리셋",
+                "NOTICE",
+                ORG,
+                "{custom} {작성자}",
+                "내용 {custom} {other}",
+                formTemplate,
+                null,
+                "{\"nested\":{\"x\":1}}",
+                "[\"custom\"]",
+                true,
+                NOW);
+        com.example.draft.domain.BusinessTemplateMapping mapping = com.example.draft.domain.BusinessTemplateMapping.create(
+                "NOTICE", ORG, approvalTemplate, formTemplate, NOW);
+
+        given(presetRepository.findByIdAndActiveTrue(preset.getId())).willReturn(Optional.of(preset));
+        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
+                .willReturn(Optional.of(mapping));
+        given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
+
+        DraftCreateRequest request = new DraftCreateRequest("원제목", "원본문", "NOTICE",
+                null, null, "{\"nested\":{\"y\":2},\"b\":3}", List.of(), preset.getId(),
+                java.util.Map.of("custom", "C", "other", "IGNORED"));
+
+        DraftResponse response = service.createDraft(request, "actor", ORG);
+
+        assertThat(response.title()).contains("C").contains("actor");
+        assertThat(response.content()).contains("C").doesNotContain("IGNORED");
+        assertThat(response.formPayload()).contains("\"x\":1").contains("\"y\":2").contains("\"b\":3");
     }
 
     @Test
@@ -207,10 +301,10 @@ class DraftApplicationServiceTest {
         given(templateRepository.findByIdAndActiveTrue(template.getId())).willReturn(Optional.of(template));
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), UUID.randomUUID(), "{}", List.of());
+                template.getId(), UUID.randomUUID(), "{}", List.of(), null, java.util.Map.of());
 
         assertThatThrownBy(() -> service.createDraft(request, "writer", ORG))
-                .isInstanceOf(DraftAccessDeniedException.class);
+                .isInstanceOfAny(DraftAccessDeniedException.class, ApprovalAccessDeniedException.class);
     }
 
     @Test
@@ -223,6 +317,8 @@ class DraftApplicationServiceTest {
         assertThat(response.status()).isEqualTo(DraftStatus.IN_REVIEW);
         verify(notificationService).notify(eq("SUBMITTED"), any(Draft.class), eq("writer"),
                 isNull(), isNull(), isNull(), any());
+        verify(approvalFacade).requestApproval(any());
+        assertThat(draft.getApprovalRequestId()).isNotNull();
     }
 
     @Test
@@ -367,7 +463,9 @@ class DraftApplicationServiceTest {
         ApprovalLineTemplate template = sampleTemplate(organizationCode);
         Draft draft = Draft.create("제목", "내용", "NOTICE", organizationCode,
                 template.getTemplateCode(), "writer", NOW);
-        template.instantiateSteps().forEach(draft::addApprovalStep);
+        template.getSteps().stream()
+                .map(DraftApprovalStep::fromTemplate)
+                .forEach(draft::addApprovalStep);
         draft.initializeWorkflow(NOW);
         return draft;
     }
