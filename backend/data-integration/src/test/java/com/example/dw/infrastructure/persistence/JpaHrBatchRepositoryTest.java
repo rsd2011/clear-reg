@@ -30,11 +30,11 @@ class JpaHrBatchRepositoryTest {
     @DisplayName("최신 배치를 조회하고 페이지 정렬로 반환한다")
     void findLatestAndPaged() {
         HrImportBatchEntity first = buildBatch("file1.csv", 1);
-        first.setStatus(HrBatchStatus.RECEIVED);
         delegate.save(first);
 
         HrImportBatchEntity second = buildBatch("file2.csv", 2);
-        second.setStatus(HrBatchStatus.COMPLETED);
+        second.markValidated(10, 0);
+        second.markCompleted(6, 4, 0);
         delegate.save(second);
 
         assertThat(repository.findLatest()).isPresent()
@@ -46,17 +46,17 @@ class JpaHrBatchRepositoryTest {
     }
 
     private HrImportBatchEntity buildBatch(String fileName, int seq) {
-        HrImportBatchEntity entity = new HrImportBatchEntity();
-        entity.setFileName(fileName);
-        entity.setFeedType(DataFeedType.EMPLOYEE);
-        entity.setSourceName("SRC");
-        entity.setBusinessDate(LocalDate.parse("2024-02-01"));
-        entity.setSequenceNumber(seq);
-        entity.setChecksum(UUID.randomUUID().toString());
-        entity.setSourcePath("/tmp/" + fileName);
-        entity.setTotalRecords(10);
-        entity.setInsertedRecords(5);
-        entity.setUpdatedRecords(5);
+        HrImportBatchEntity entity = HrImportBatchEntity.receive(
+                fileName,
+                DataFeedType.EMPLOYEE,
+                "SRC",
+                LocalDate.parse("2024-02-01"),
+                seq,
+                UUID.randomUUID().toString(),
+                "/tmp/" + fileName
+        );
+        entity.markValidated(10, 0);
+        entity.markCompleted(5, 5, 0);
         return entity;
     }
 }

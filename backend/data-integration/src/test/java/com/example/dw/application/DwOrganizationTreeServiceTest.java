@@ -77,16 +77,16 @@ class DwOrganizationTreeServiceTest {
     }
 
     private HrOrganizationEntity organization(String code, String parentCode) {
-        HrOrganizationEntity entity = new HrOrganizationEntity();
-        entity.setOrganizationCode(code);
-        entity.setVersion(1);
-        entity.setName("Org-" + code);
-        entity.setParentOrganizationCode(parentCode);
-        entity.setStatus("ACTIVE");
-        entity.setEffectiveStart(LocalDate.of(2020, 1, 1));
-        entity.setEffectiveEnd(null);
-        entity.setSourceBatchId(UUID.randomUUID());
-        entity.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        return entity;
+        return HrOrganizationEntity.snapshot(
+                code,
+                1,
+                "Org-" + code,
+                parentCode,
+                "ACTIVE",
+                LocalDate.of(2020, 1, 1),
+                null,
+                UUID.randomUUID(),
+                OffsetDateTime.now(ZoneOffset.UTC)
+        );
     }
 }

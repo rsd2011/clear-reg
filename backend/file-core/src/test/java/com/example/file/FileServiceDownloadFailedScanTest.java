@@ -48,12 +48,8 @@ class FileServiceDownloadFailedScanTest {
     @DisplayName("스캔 결과 FAILED인 파일은 다운로드 시 정책 위반 예외를 던진다")
     void download_failedScan_throws() {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setOriginalName("bad.txt");
-        file.setOwnerUsername("owner");
-        file.setStatus(FileStatus.ACTIVE);
-        file.setScanStatus(ScanStatus.FAILED);
-        file.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile file = StoredFile.create("bad.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        file.markScanResult(ScanStatus.FAILED, OffsetDateTime.now(clock), "failed");
         given(storedFileRepository.findById(id)).willReturn(Optional.of(file));
 
         assertThatThrownBy(() -> service.download(id, "owner", java.util.List.of("owner")))

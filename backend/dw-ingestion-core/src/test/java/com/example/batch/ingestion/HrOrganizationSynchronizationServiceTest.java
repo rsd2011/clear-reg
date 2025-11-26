@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.domain.HrImportBatchEntity;
 import com.example.dw.domain.HrOrganizationEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.HrOrganizationRecord;
 import com.example.dw.dto.HrSyncResult;
 import com.example.dw.infrastructure.persistence.HrOrganizationRepository;
@@ -41,7 +42,10 @@ class HrOrganizationSynchronizationServiceTest {
         given(repository.findFirstByOrganizationCodeAndEffectiveEndIsNullOrderByVersionDesc("ORG"))
                 .willReturn(Optional.empty());
 
-        HrSyncResult result = service.synchronize(new HrImportBatchEntity(), List.of(record));
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "org.csv", DataFeedType.ORGANIZATION, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
+        HrSyncResult result = service.synchronize(batch, List.of(record));
 
         assertThat(result.insertedRecords()).isEqualTo(1);
         verify(repository).save(any(HrOrganizationEntity.class));
@@ -49,10 +53,17 @@ class HrOrganizationSynchronizationServiceTest {
 
     @Test
     void givenActiveRecord_whenStateDiffers_thenUpdateAndInsert() {
-        HrOrganizationEntity active = new HrOrganizationEntity();
-        active.setOrganizationCode("ORG");
-        active.setVersion(1);
-        active.setEffectiveStart(LocalDate.now().minusDays(5));
+        HrOrganizationEntity active = HrOrganizationEntity.snapshot(
+                "ORG",
+                1,
+                "Org",
+                null,
+                "ACTIVE",
+                LocalDate.now().minusDays(5),
+                null,
+                java.util.UUID.randomUUID(),
+                java.time.OffsetDateTime.now()
+        );
         HrOrganizationRecord record = new HrOrganizationRecord("ORG", "Org", null, "INACTIVE",
                 LocalDate.now(), null, "payload", 2);
         given(repository.findFirstByOrganizationCodeAndEffectiveEndIsNullOrderByVersionDesc("ORG"))

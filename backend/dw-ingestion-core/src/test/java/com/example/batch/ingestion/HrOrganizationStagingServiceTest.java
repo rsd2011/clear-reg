@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.HrOrganizationRecord;
 import com.example.dw.dto.HrOrganizationValidationError;
 import com.example.dw.infrastructure.persistence.HrImportErrorRepository;
@@ -37,14 +38,20 @@ class HrOrganizationStagingServiceTest {
     void givenRecords_whenPersistRecords_thenSaveStagingEntities() {
         HrOrganizationRecord record = new HrOrganizationRecord("ORG", "Org", null, "ACTIVE",
                 LocalDate.now(), null, "payload", 2);
-        service.persistRecords(new HrImportBatchEntity(), List.of(record));
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "org.csv", DataFeedType.ORGANIZATION, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
+        service.persistRecords(batch, List.of(record));
         verify(stagingRepository).save(any());
     }
 
     @Test
     void givenErrors_whenPersistErrors_thenSaveImportErrors() {
         HrOrganizationValidationError error = new HrOrganizationValidationError(1, "ORG", "ERR", "message", "raw");
-        service.persistErrors(new HrImportBatchEntity(), List.of(error));
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "org.csv", DataFeedType.ORGANIZATION, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
+        service.persistErrors(batch, List.of(error));
         verify(errorRepository).save(any());
     }
 }

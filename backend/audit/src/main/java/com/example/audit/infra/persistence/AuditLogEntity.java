@@ -116,7 +116,6 @@ public class AuditLogEntity extends PrimaryKeyEntity {
                           String afterSummary,
                           String extraJson,
                           String hashChain) {
-        this.eventId = java.util.UUID.randomUUID();
         this.eventId = eventId == null ? java.util.UUID.randomUUID() : eventId;
         this.eventTime = eventTime;
         this.eventType = eventType;
@@ -142,5 +141,10 @@ public class AuditLogEntity extends PrimaryKeyEntity {
         this.afterSummary = afterSummary;
         this.extraJson = extraJson;
         this.hashChain = hashChain;
+    }
+
+    public AuditLogEntity withHashChain(String hashChain) {
+        this.hashChain = hashChain;
+        return this;
     }
 }

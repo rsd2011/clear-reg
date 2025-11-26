@@ -15,6 +15,8 @@ import jakarta.persistence.Version;
 @Table(name = "notices")
 public class Notice extends PrimaryKeyEntity {
 
+    protected Notice() {}
+
     @Column(name = "display_number", nullable = false, unique = true, length = 20)
     private String displayNumber;
 
@@ -60,113 +62,20 @@ public class Notice extends PrimaryKeyEntity {
     @Version
     private long version;
 
-    public String getDisplayNumber() {
-        return displayNumber;
-    }
-
-    public void setDisplayNumber(String displayNumber) {
-        this.displayNumber = displayNumber;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
-    }
-
-    public NoticeSeverity getSeverity() {
-        return severity;
-    }
-
-    public void setSeverity(NoticeSeverity severity) {
-        this.severity = severity == null ? NoticeSeverity.INFO : severity;
-    }
-
-    public NoticeAudience getAudience() {
-        return audience;
-    }
-
-    public void setAudience(NoticeAudience audience) {
-        this.audience = audience == null ? NoticeAudience.GLOBAL : audience;
-    }
-
-    public NoticeStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(NoticeStatus status) {
-        this.status = status == null ? NoticeStatus.DRAFT : status;
-    }
-
-    public boolean isPinned() {
-        return pinned;
-    }
-
-    public void setPinned(boolean pinned) {
-        this.pinned = pinned;
-    }
-
-    public OffsetDateTime getPublishAt() {
-        return publishAt;
-    }
-
-    public void setPublishAt(OffsetDateTime publishAt) {
-        this.publishAt = publishAt;
-    }
-
-    public OffsetDateTime getExpireAt() {
-        return expireAt;
-    }
-
-    public void setExpireAt(OffsetDateTime expireAt) {
-        this.expireAt = expireAt;
-    }
-
-    public OffsetDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public OffsetDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(OffsetDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public String getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public long getVersion() {
-        return version;
-    }
+    public String getDisplayNumber() { return displayNumber; }
+    public String getTitle() { return title; }
+    public String getContent() { return content; }
+    public NoticeSeverity getSeverity() { return severity; }
+    public NoticeAudience getAudience() { return audience; }
+    public NoticeStatus getStatus() { return status; }
+    public boolean isPinned() { return pinned; }
+    public OffsetDateTime getPublishAt() { return publishAt; }
+    public OffsetDateTime getExpireAt() { return expireAt; }
+    public OffsetDateTime getCreatedAt() { return createdAt; }
+    public OffsetDateTime getUpdatedAt() { return updatedAt; }
+    public String getCreatedBy() { return createdBy; }
+    public String getUpdatedBy() { return updatedBy; }
+    public long getVersion() { return version; }
 
     public boolean isArchived() {
         return status == NoticeStatus.ARCHIVED;
@@ -174,6 +83,76 @@ public class Notice extends PrimaryKeyEntity {
 
     public boolean isPublished() {
         return status == NoticeStatus.PUBLISHED;
+    }
+
+    public static Notice createDraft(String displayNumber,
+                                     String title,
+                                     String content,
+                                     NoticeSeverity severity,
+                                     NoticeAudience audience,
+                                     OffsetDateTime publishAt,
+                                     OffsetDateTime expireAt,
+                                     boolean pinned,
+                                     String actor,
+                                     OffsetDateTime now) {
+        Notice n = new Notice();
+        n.displayNumber = displayNumber;
+        n.title = title;
+        n.content = content;
+        n.severity = severity == null ? NoticeSeverity.INFO : severity;
+        n.audience = audience == null ? NoticeAudience.GLOBAL : audience;
+        n.publishAt = publishAt;
+        n.expireAt = expireAt;
+        n.pinned = pinned;
+        n.status = NoticeStatus.DRAFT;
+        n.markCreated(actor, now);
+        return n;
+    }
+
+    public void publish(OffsetDateTime publishAt, OffsetDateTime expireAt, boolean pinned, String actor, OffsetDateTime now) {
+        if (isArchived()) throw new NoticeStateException("보관된 공지사항은 게시할 수 없습니다.");
+        this.publishAt = publishAt != null ? publishAt : now;
+        this.expireAt = expireAt;
+        this.pinned = pinned;
+        this.status = NoticeStatus.PUBLISHED;
+        markUpdated(actor, now);
+    }
+
+    public void archive(OffsetDateTime expireAt, String actor, OffsetDateTime now) {
+        this.status = NoticeStatus.ARCHIVED;
+        this.pinned = false;
+        this.expireAt = expireAt != null ? expireAt : now;
+        markUpdated(actor, now);
+    }
+
+    public void updateContent(String title,
+                              String content,
+                              NoticeSeverity severity,
+                              NoticeAudience audience,
+                              OffsetDateTime publishAt,
+                              OffsetDateTime expireAt,
+                              boolean pinned,
+                              String actor,
+                              OffsetDateTime now) {
+        if (isArchived()) throw new NoticeStateException("이미 보관된 공지사항은 수정할 수 없습니다.");
+        this.title = title;
+        this.content = content;
+        this.severity = severity == null ? NoticeSeverity.INFO : severity;
+        this.audience = audience == null ? NoticeAudience.GLOBAL : audience;
+        this.publishAt = publishAt;
+        this.expireAt = expireAt;
+        this.pinned = pinned;
+        markUpdated(actor, now);
+    }
+
+    public void pin(String actor, OffsetDateTime now) {
+        this.pinned = true;
+        markUpdated(actor, now);
+    }
+
+    public void unpin(String actor, OffsetDateTime now) {
+        this.pinned = false;
+        markUpdated(actor, now);
     }
 
     public void markCreated(String actor, OffsetDateTime now) {

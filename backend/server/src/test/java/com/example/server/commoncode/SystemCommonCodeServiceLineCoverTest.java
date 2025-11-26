@@ -29,10 +29,9 @@ class SystemCommonCodeServiceLineCoverTest {
     @Test
     @DisplayName("create: 중복 코드가 있으면 IllegalArgumentException을 던진다")
     void createThrowsOnDuplicate() {
-        SystemCommonCode req = new SystemCommonCode();
-        req.setCodeValue("VAL");
-        req.setCodeName("NAME");
-        given(repository.findByCodeTypeAndCodeValue("TYPE", "VAL")).willReturn(Optional.of(new SystemCommonCode()));
+        SystemCommonCode req = SystemCommonCode.create("TYPE", "VAL", "NAME", 0,
+                null, true, null, null, null, null);
+        given(repository.findByCodeTypeAndCodeValue("TYPE", "VAL")).willReturn(Optional.of(req.copy()));
 
         assertThatThrownBy(() -> service.create("TYPE", req))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -41,9 +40,8 @@ class SystemCommonCodeServiceLineCoverTest {
     @Test
     @DisplayName("normalizeType: codeType이 null이면 IllegalArgumentException")
     void normalizeTypeNull() {
-        SystemCommonCode req = new SystemCommonCode();
-        req.setCodeValue("VAL");
-        req.setCodeName("NAME");
+        SystemCommonCode req = SystemCommonCode.create(null, "VAL", "NAME", 0,
+                null, true, null, null, null, null);
 
         assertThatThrownBy(() -> service.findActive(null))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -52,10 +50,8 @@ class SystemCommonCodeServiceLineCoverTest {
     @Test
     @DisplayName("create: STATIC 기본 타입에서 DYNAMIC을 요청하면 예외를 던진다")
     void enforceKindWhenStaticType() {
-        SystemCommonCode req = new SystemCommonCode();
-        req.setCodeValue("001");
-        req.setCodeName("파일 분류");
-        req.setCodeKind(com.example.server.commoncode.model.CommonCodeKind.DYNAMIC);
+        SystemCommonCode req = SystemCommonCode.create("FILE_CLASSIFICATION", "001", "파일 분류", 0,
+                com.example.server.commoncode.model.CommonCodeKind.DYNAMIC, true, null, null, null, null);
 
         assertThatThrownBy(() -> service.create("FILE_CLASSIFICATION", req))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -64,10 +60,8 @@ class SystemCommonCodeServiceLineCoverTest {
     @Test
     @DisplayName("create: codeKind와 updatedBy가 null이면 기본값으로 채워 저장한다")
     void createFillsDefaultKindAndUpdatedBy() {
-        SystemCommonCode req = new SystemCommonCode();
-        req.setCodeValue("CAT");
-        req.setCodeName("카테고리");
-        // codeKind, updatedBy intentionally null
+        SystemCommonCode req = SystemCommonCode.create("NOTICE_CATEGORY", "CAT", "카테고리", 0,
+                null, true, null, null, null, null);
 
         given(repository.findByCodeTypeAndCodeValue("NOTICE_CATEGORY", "CAT")).willReturn(Optional.empty());
 
@@ -90,8 +84,8 @@ class SystemCommonCodeServiceLineCoverTest {
     void updateThrowsWhenMissing() {
         given(repository.findByCodeTypeAndCodeValue("NOTICE_CATEGORY", "MISSING")).willReturn(Optional.empty());
 
-        SystemCommonCode req = new SystemCommonCode();
-        req.setCodeValue("MISSING");
+        SystemCommonCode req = SystemCommonCode.create("NOTICE_CATEGORY", "MISSING", "name", 0,
+                null, true, null, null, null, null);
 
         assertThatThrownBy(() -> service.update("NOTICE_CATEGORY", "MISSING", req))
                 .isInstanceOf(IllegalArgumentException.class);

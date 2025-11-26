@@ -1,8 +1,12 @@
 package com.example.file.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Getter;
+import lombok.Setter;
 
 @ConfigurationProperties(prefix = "file.security")
+@Getter
+@Setter
 public class FileSecurityProperties {
 
     /**
@@ -35,51 +39,4 @@ public class FileSecurityProperties {
     */
     private long rescanIntervalMs = 60_000;
 
-    public boolean isScanEnabled() {
-        return scanEnabled;
-    }
-
-    public void setScanEnabled(boolean scanEnabled) {
-        this.scanEnabled = scanEnabled;
-    }
-
-    public long getMaxSizeBytes() {
-        return maxSizeBytes;
-    }
-
-    public void setMaxSizeBytes(long maxSizeBytes) {
-        this.maxSizeBytes = maxSizeBytes;
-    }
-
-    public long getScanTimeoutMs() {
-        return scanTimeoutMs;
-    }
-
-    public void setScanTimeoutMs(long scanTimeoutMs) {
-        this.scanTimeoutMs = scanTimeoutMs;
-    }
-
-    public long getSignedUrlTtlSeconds() {
-        return signedUrlTtlSeconds;
-    }
-
-    public void setSignedUrlTtlSeconds(long signedUrlTtlSeconds) {
-        this.signedUrlTtlSeconds = signedUrlTtlSeconds;
-    }
-
-    public boolean isRescanEnabled() {
-        return rescanEnabled;
-    }
-
-    public void setRescanEnabled(boolean rescanEnabled) {
-        this.rescanEnabled = rescanEnabled;
-    }
-
-    public long getRescanIntervalMs() {
-        return rescanIntervalMs;
-    }
-
-    public void setRescanIntervalMs(long rescanIntervalMs) {
-        this.rescanIntervalMs = rescanIntervalMs;
-    }
 }

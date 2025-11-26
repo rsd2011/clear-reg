@@ -45,25 +45,26 @@ public class HrEmployeeSynchronizationService {
                 if (closingDate.isBefore(active.getEffectiveStart())) {
                     closingDate = active.getEffectiveStart();
                 }
-                active.setEffectiveEnd(closingDate);
+                active.closeAt(closingDate);
                 employeeRepository.save(active);
                 updated++;
             } else {
                 inserted++;
             }
 
-            HrEmployeeEntity snapshot = new HrEmployeeEntity();
-            snapshot.setEmployeeId(record.employeeId());
-            snapshot.setVersion(nextVersion);
-            snapshot.setFullName(record.fullName());
-            snapshot.setEmail(record.email());
-            snapshot.setOrganizationCode(record.organizationCode());
-            snapshot.setEmploymentType(record.employmentType());
-            snapshot.setEmploymentStatus(record.employmentStatus());
-            snapshot.setEffectiveStart(newStart);
-            snapshot.setEffectiveEnd(newEnd);
-            snapshot.setSourceBatchId(batch.getId());
-            snapshot.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
+            HrEmployeeEntity snapshot = HrEmployeeEntity.snapshot(
+                    record.employeeId(),
+                    nextVersion,
+                    record.fullName(),
+                    record.email(),
+                    record.organizationCode(),
+                    record.employmentType(),
+                    record.employmentStatus(),
+                    newStart,
+                    newEnd,
+                    batch.getId(),
+                    OffsetDateTime.now(ZoneOffset.UTC)
+            );
             employeeRepository.save(snapshot);
             employeeDirectoryService.evict(record.employeeId());
         }

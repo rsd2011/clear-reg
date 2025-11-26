@@ -2,9 +2,13 @@ package com.example.file.storage;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import lombok.Getter;
+import lombok.Setter;
 
 @Component
 @ConfigurationProperties(prefix = "file.storage")
+@Getter
+@Setter
 public class FileStorageProperties {
 
     /**
@@ -12,11 +16,4 @@ public class FileStorageProperties {
      */
     private String rootPath = "build/storage/files";
 
-    public String getRootPath() {
-        return rootPath;
-    }
-
-    public void setRootPath(String rootPath) {
-        this.rootPath = rootPath;
-    }
 }

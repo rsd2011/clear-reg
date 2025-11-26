@@ -32,19 +32,22 @@ public class DwHolidaySynchronizationService {
             if (existing != null && existing.sameBusinessState(record.localName(), record.englishName(), record.workingDay())) {
                 continue;
             }
+            OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
             if (existing == null) {
                 inserted++;
-                existing = new DwHolidayEntity();
-                existing.setHolidayDate(record.date());
-                existing.setCountryCode(record.countryCode());
+                existing = DwHolidayEntity.create(
+                        record.date(),
+                        record.countryCode(),
+                        record.localName(),
+                        record.englishName(),
+                        record.workingDay(),
+                        batch.getId(),
+                        now
+                );
             } else {
                 updated++;
+                existing.updateFromRecord(record.localName(), record.englishName(), record.workingDay(), batch.getId(), now);
             }
-            existing.setLocalName(record.localName());
-            existing.setEnglishName(record.englishName());
-            existing.setWorkingDay(record.workingDay());
-            existing.setSourceBatchId(batch.getId());
-            existing.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
             holidayRepository.save(existing);
         }
         return new HrSyncResult(inserted, updated);

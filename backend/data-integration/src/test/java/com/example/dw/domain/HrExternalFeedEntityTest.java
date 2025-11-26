@@ -16,11 +16,13 @@ class HrExternalFeedEntityTest {
     @Test
     @DisplayName("외부 피드 엔티티는 상태 전이에 따라 status와 updatedAt을 갱신한다")
     void stateTransitionsUpdateStatusAndTimestamp() {
-        HrExternalFeedEntity entity = new HrExternalFeedEntity();
-        entity.setFeedType(DataFeedType.EMPLOYEE);
-        entity.setPayload("payload");
-        entity.setBusinessDate(LocalDate.parse("2024-02-01"));
-        entity.setSequenceNumber(1);
+        HrExternalFeedEntity entity = HrExternalFeedEntity.receive(
+                DataFeedType.EMPLOYEE,
+                "payload",
+                LocalDate.parse("2024-02-01"),
+                1,
+                "external-db"
+        );
 
         OffsetDateTime before = entity.getUpdatedAt();
         entity.markProcessing();
@@ -40,11 +42,13 @@ class HrExternalFeedEntityTest {
     @Test
     @DisplayName("markFailed는 오류 메시지를 보존하고 markCompleted는 이를 초기화한다")
     void markFailedLeavesErrorUntilCompleted() {
-        HrExternalFeedEntity entity = new HrExternalFeedEntity();
-        entity.setFeedType(DataFeedType.EMPLOYEE);
-        entity.setPayload("payload");
-        entity.setBusinessDate(LocalDate.parse("2024-02-02"));
-        entity.setSequenceNumber(2);
+        HrExternalFeedEntity entity = HrExternalFeedEntity.receive(
+                DataFeedType.EMPLOYEE,
+                "payload",
+                LocalDate.parse("2024-02-02"),
+                2,
+                "external-db"
+        );
 
         entity.markFailed("temporary");
         assertThat(entity.getStatus()).isEqualTo(HrExternalFeedStatus.FAILED);
@@ -53,5 +57,24 @@ class HrExternalFeedEntityTest {
         entity.markCompleted();
         assertThat(entity.getStatus()).isEqualTo(HrExternalFeedStatus.COMPLETED);
         assertThat(entity.getErrorMessage()).isNull();
+    }
+
+    @Test
+    @DisplayName("receive는 필수 필드를 세팅하고 기본 sourceSystem을 유지한다")
+    void receiveSetsFields() {
+        HrExternalFeedEntity entity = HrExternalFeedEntity.receive(
+                DataFeedType.COMMON_CODE,
+                "data",
+                LocalDate.parse("2024-03-01"),
+                3,
+                "custom-src"
+        );
+
+        assertThat(entity.getFeedType()).isEqualTo(DataFeedType.COMMON_CODE);
+        assertThat(entity.getPayload()).isEqualTo("data");
+        assertThat(entity.getBusinessDate()).isEqualTo(LocalDate.parse("2024-03-01"));
+        assertThat(entity.getSequenceNumber()).isEqualTo(3);
+        assertThat(entity.getSourceSystem()).isEqualTo("custom-src");
+        assertThat(entity.getStatus()).isEqualTo(HrExternalFeedStatus.PENDING);
     }
 }

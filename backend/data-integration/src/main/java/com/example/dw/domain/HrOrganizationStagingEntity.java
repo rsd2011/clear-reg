@@ -19,6 +19,48 @@ import jakarta.persistence.Table;
         })
 public class HrOrganizationStagingEntity extends PrimaryKeyEntity {
 
+    protected HrOrganizationStagingEntity() {
+    }
+
+    private HrOrganizationStagingEntity(HrImportBatchEntity batch,
+                                        String organizationCode,
+                                        String name,
+                                        String parentOrganizationCode,
+                                        String status,
+                                        LocalDate startDate,
+                                        LocalDate endDate,
+                                        String payloadHash,
+                                        String rawPayload) {
+        this.batch = batch;
+        this.organizationCode = organizationCode;
+        this.name = name;
+        this.parentOrganizationCode = parentOrganizationCode;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.payloadHash = payloadHash;
+        this.rawPayload = rawPayload;
+    }
+
+    public static HrOrganizationStagingEntity fromRecord(HrImportBatchEntity batch,
+                                                         com.example.dw.dto.HrOrganizationRecord record,
+                                                         String payloadHash) {
+        if (batch == null || record == null) {
+            throw new IllegalArgumentException("batch and record are required");
+        }
+        return new HrOrganizationStagingEntity(
+                batch,
+                record.organizationCode(),
+                record.name(),
+                record.parentOrganizationCode(),
+                record.status(),
+                record.startDate(),
+                record.endDate(),
+                payloadHash,
+                record.rawPayload()
+        );
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "batch_id", nullable = false)
     private HrImportBatchEntity batch;
@@ -51,71 +93,35 @@ public class HrOrganizationStagingEntity extends PrimaryKeyEntity {
         return batch;
     }
 
-    public void setBatch(HrImportBatchEntity batch) {
-        this.batch = batch;
-    }
-
     public String getOrganizationCode() {
         return organizationCode;
-    }
-
-    public void setOrganizationCode(String organizationCode) {
-        this.organizationCode = organizationCode;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getParentOrganizationCode() {
         return parentOrganizationCode;
-    }
-
-    public void setParentOrganizationCode(String parentOrganizationCode) {
-        this.parentOrganizationCode = parentOrganizationCode;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public LocalDate getStartDate() {
         return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
     }
 
     public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
     public String getPayloadHash() {
         return payloadHash;
     }
 
-    public void setPayloadHash(String payloadHash) {
-        this.payloadHash = payloadHash;
-    }
-
     public String getRawPayload() {
         return rawPayload;
-    }
-
-    public void setRawPayload(String rawPayload) {
-        this.rawPayload = rawPayload;
     }
 }

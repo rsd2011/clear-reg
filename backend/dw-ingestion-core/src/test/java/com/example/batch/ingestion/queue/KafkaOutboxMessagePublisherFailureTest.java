@@ -22,7 +22,7 @@ class KafkaOutboxMessagePublisherFailureTest {
     void sendFailure_propagates() {
         KafkaOutboxMessagePublisher publisher = new KafkaOutboxMessagePublisher(kafkaTemplate, objectMapper, "topic");
         DwIngestionOutbox outbox = DwIngestionOutbox.pending(DwIngestionJobType.FETCH_NEXT, java.time.Clock.systemUTC());
-        outbox.setPayload("{\"payload\":\"value\"}");
+        outbox.withPayload("{\"payload\":\"value\"}");
         given(kafkaTemplate.send(Mockito.anyString(), Mockito.anyString(), Mockito.anyString()))
                 .willThrow(new RuntimeException("send fail"));
 

@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.beans.factory.ObjectProvider;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.schedule.BatchJobCode;
 import com.example.common.schedule.BatchJobDefaults;
@@ -84,17 +83,12 @@ public class FileScanRescheduler implements ScheduledJobPort {
                     var resource = storageClient.load(version.getStoragePath());
                     try (InputStream is = resource.getInputStream()) {
                         ScanStatus status = fileScanner.scan(file.getOriginalName(), is);
-                        file.setScanStatus(status);
-                        file.setScannedAt(nowTs);
-                        if (status == ScanStatus.BLOCKED || status == ScanStatus.FAILED) {
-                            file.setBlockedReason("Rescan result: " + status);
-                        } else {
-                            file.setBlockedReason(null);
-                        }
+                        String reason = (status == ScanStatus.BLOCKED || status == ScanStatus.FAILED)
+                                ? "Rescan result: " + status : null;
+                        file.markScanResult(status, nowTs, reason);
                     }
                 } catch (IOException e) {
-                    file.setScanStatus(ScanStatus.FAILED);
-                    file.setBlockedReason("Rescan IO error: " + e.getMessage());
+                    file.markScanResult(ScanStatus.FAILED, nowTs, "Rescan IO error: " + e.getMessage());
                 }
             });
         }

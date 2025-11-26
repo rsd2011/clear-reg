@@ -70,15 +70,15 @@ public class DwIngestionService {
     }
 
     private HrImportBatchEntity createBatch(DataFeed feed) {
-        HrImportBatchEntity batch = new HrImportBatchEntity();
-        batch.setFileName(feed.id());
-        batch.setFeedType(feed.feedType());
-        batch.setSourceName(feed.source());
-        batch.setBusinessDate(feed.businessDate());
-        batch.setSequenceNumber(feed.sequenceNumber());
-        batch.setChecksum(hash(feed.payload()));
-        batch.setSourcePath(feed.source());
-        batch.setReceivedAt(OffsetDateTime.now(ZoneOffset.UTC));
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                feed.id(),
+                feed.feedType(),
+                feed.source(),
+                feed.businessDate(),
+                feed.sequenceNumber(),
+                hash(feed.payload()),
+                feed.source()
+        );
         return batchRepository.save(batch);
     }
 

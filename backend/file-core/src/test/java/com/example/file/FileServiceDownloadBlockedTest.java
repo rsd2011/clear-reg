@@ -48,12 +48,8 @@ class FileServiceDownloadBlockedTest {
     @DisplayName("BLOCKED 상태 파일 다운로드 시 정책 위반 예외가 발생한다")
     void download_blockedFile_throws() {
         UUID id = UUID.randomUUID();
-        StoredFile blocked = new StoredFile();
-        blocked.setOriginalName("blocked.txt");
-        blocked.setOwnerUsername("owner");
-        blocked.setStatus(FileStatus.ACTIVE);
-        blocked.setScanStatus(ScanStatus.BLOCKED);
-        blocked.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile blocked = StoredFile.create("blocked.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        blocked.markScanResult(ScanStatus.BLOCKED, OffsetDateTime.now(clock), "blocked");
         given(storedFileRepository.findById(id)).willReturn(Optional.of(blocked));
 
         assertThatThrownBy(() -> service.download(id, "other", java.util.List.of()))
@@ -64,12 +60,8 @@ class FileServiceDownloadBlockedTest {
     @DisplayName("PENDING 상태 파일은 다운로드 시 정책 위반 예외가 발생한다")
     void download_pending_scan_throws() {
         UUID id = UUID.randomUUID();
-        StoredFile pending = new StoredFile();
-        pending.setOriginalName("pending.txt");
-        pending.setOwnerUsername("owner");
-        pending.setStatus(com.example.common.file.FileStatus.ACTIVE);
-        pending.setScanStatus(ScanStatus.PENDING);
-        pending.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile pending = StoredFile.create("pending.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        pending.markScanResult(ScanStatus.PENDING, OffsetDateTime.now(clock), null);
         given(storedFileRepository.findById(id)).willReturn(Optional.of(pending));
 
         assertThatThrownBy(() -> service.download(id, "owner", java.util.List.of()))

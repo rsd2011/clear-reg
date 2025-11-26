@@ -56,7 +56,7 @@ public class AuthDataInitializer implements CommandLineRunner {
             .organizationCode("ROOT")
             .permissionGroupCode("DEFAULT")
             .build();
-    adUser.setActiveDirectoryDomain("corp.example.com");
+    adUser.assignActiveDirectoryDomain("corp.example.com");
 
     UserAccount ssoUser =
         UserAccount.builder()
@@ -67,7 +67,7 @@ public class AuthDataInitializer implements CommandLineRunner {
             .organizationCode("ROOT")
             .permissionGroupCode("DEFAULT")
             .build();
-    ssoUser.setSsoId("sso-sso-user");
+    ssoUser.linkSsoId("sso-sso-user");
 
     passwordUser = userAccountService.save(passwordUser);
     passwordHistoryService.record(passwordUser, passwordUser.getPassword());

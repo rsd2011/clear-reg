@@ -17,6 +17,32 @@ import jakarta.persistence.Table;
 @Table(name = "dw_source_feeds")
 public class HrExternalFeedEntity extends PrimaryKeyEntity {
 
+    protected HrExternalFeedEntity() {
+    }
+
+    private HrExternalFeedEntity(DataFeedType feedType,
+                                 String payload,
+                                 LocalDate businessDate,
+                                 int sequenceNumber,
+                                 String sourceSystem) {
+        if (feedType == null || payload == null || businessDate == null || sourceSystem == null) {
+            throw new IllegalArgumentException("feedType, payload, businessDate, sourceSystem는 필수입니다.");
+        }
+        this.feedType = feedType;
+        this.payload = payload;
+        this.businessDate = businessDate;
+        this.sequenceNumber = sequenceNumber;
+        this.sourceSystem = sourceSystem;
+    }
+
+    public static HrExternalFeedEntity receive(DataFeedType feedType,
+                                               String payload,
+                                               LocalDate businessDate,
+                                               int sequenceNumber,
+                                               String sourceSystem) {
+        return new HrExternalFeedEntity(feedType, payload, businessDate, sequenceNumber, sourceSystem);
+    }
+
     @Enumerated(EnumType.STRING)
     @Column(name = "feed_type", nullable = false, length = 32)
     private DataFeedType feedType;
@@ -50,32 +76,16 @@ public class HrExternalFeedEntity extends PrimaryKeyEntity {
         return feedType;
     }
 
-    public void setFeedType(DataFeedType feedType) {
-        this.feedType = feedType;
-    }
-
     public String getPayload() {
         return payload;
-    }
-
-    public void setPayload(String payload) {
-        this.payload = payload;
     }
 
     public LocalDate getBusinessDate() {
         return businessDate;
     }
 
-    public void setBusinessDate(LocalDate businessDate) {
-        this.businessDate = businessDate;
-    }
-
     public int getSequenceNumber() {
         return sequenceNumber;
-    }
-
-    public void setSequenceNumber(int sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
     }
 
     public HrExternalFeedStatus getStatus() {
@@ -84,10 +94,6 @@ public class HrExternalFeedEntity extends PrimaryKeyEntity {
 
     public String getSourceSystem() {
         return sourceSystem;
-    }
-
-    public void setSourceSystem(String sourceSystem) {
-        this.sourceSystem = sourceSystem;
     }
 
     public String getErrorMessage() {

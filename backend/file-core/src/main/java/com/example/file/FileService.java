@@ -85,22 +85,25 @@ public class FileService {
         enforcePolicy(command, settings);
         ensureNoDuplicateActiveFile(command.originalName());
         OffsetDateTime now = now();
-        StoredFile file = new StoredFile();
-        file.setOriginalName(command.originalName());
-        file.setContentType(command.contentType());
-        file.setOwnerUsername(command.ownerUsername());
-        file.setRetentionUntil(resolveRetention(command.retentionUntil(), settings, now));
-        file.markCreated(command.ownerUsername(), now);
+        StoredFile file = StoredFile.create(
+                command.originalName(),
+                command.contentType(),
+                command.ownerUsername(),
+                resolveRetention(command.retentionUntil(), settings, now),
+                command.ownerUsername(),
+                now
+        );
 
-        StoredFileVersion version = createVersion(file, command, command.ownerUsername(), now);
+        java.util.concurrent.atomic.AtomicLong storedSize = new java.util.concurrent.atomic.AtomicLong(command.size());
+        StoredFileVersion version = createVersion(file, command, command.ownerUsername(), now, storedSize);
         file.addVersion(version);
-        file.setChecksum(version.getChecksum());
+        file.updateHashes(storedSize.get(), version.getChecksum(), version.getChecksum());
         ScanStatus scanStatus = runScan(command.originalName(), command.inputStreamSupplier());
-        file.setSha256(version.getChecksum());
-        file.setScanStatus(scanStatus);
-        file.setScannedAt(now);
+        String blockedReason = (scanStatus == ScanStatus.BLOCKED || scanStatus == ScanStatus.FAILED)
+                ? "Scan result: " + scanStatus
+                : null;
+        file.markScanResult(scanStatus, now, blockedReason);
         if (scanStatus == ScanStatus.BLOCKED || scanStatus == ScanStatus.FAILED) {
-            file.setBlockedReason("Scan result: " + scanStatus);
             throw new FilePolicyViolationException("업로드가 차단되었습니다. 상태: " + scanStatus);
         }
         StoredFile persisted = storedFileRepository.save(file);
@@ -176,8 +179,7 @@ public class FileService {
         if (file.isDeleted()) {
             return file;
         }
-        file.setStatus(FileStatus.DELETED);
-        file.markUpdated(actor, now());
+        file.markDeleted(actor, now());
         file.getVersions().forEach(version -> {
             try {
                 storageClient.delete(version.getStoragePath());
@@ -194,7 +196,8 @@ public class FileService {
     private StoredFileVersion createVersion(StoredFile file,
                                             FileUploadCommand command,
                                             String actor,
-                                            OffsetDateTime now) {
+                                            OffsetDateTime now,
+                                            java.util.concurrent.atomic.AtomicLong storedSizeHolder) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             try (InputStream inputStream = command.inputStreamSupplier().get();
@@ -202,14 +205,15 @@ public class FileService {
                 FileStorageClient.StoredObject storedObject = storageClient.store(digestStream,
                         command.size(),
                         command.originalName());
+                storedSizeHolder.set(storedObject.size());
                 String checksum = HexFormat.of().formatHex(digest.digest());
-                StoredFileVersion version = new StoredFileVersion();
-                version.setVersionNumber(1);
-                version.setStoragePath(storedObject.storagePath());
-                version.setChecksum(checksum);
-                version.setCreatedAt(now);
-                version.setCreatedBy(actor);
-                file.setSize(storedObject.size());
+                StoredFileVersion version = StoredFileVersion.createVersion(
+                        1,
+                        storedObject.storagePath(),
+                        checksum,
+                        actor,
+                        now
+                );
                 return version;
             }
         }
@@ -219,12 +223,7 @@ public class FileService {
     }
 
     private void logAccess(StoredFile file, String action, String actor, String detail, OffsetDateTime now) {
-        FileAccessLog log = new FileAccessLog();
-        log.setFile(file);
-        log.setAction(action);
-        log.setActor(actor);
-        log.setDetail(detail);
-        log.setCreatedAt(now);
+        FileAccessLog log = FileAccessLog.recordAccess(file, action, actor, detail, now);
         accessLogRepository.save(log);
     }
 

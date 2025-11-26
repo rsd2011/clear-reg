@@ -30,12 +30,18 @@ class DwCommonCodeDirectoryServiceTest {
 
     @Test
     void givenCodeType_whenFindActive_thenReturnOrderedSnapshots() {
-        DwCommonCodeEntity entity = new DwCommonCodeEntity();
-        entity.setCodeType("CATEGORY");
-        entity.setCodeValue("A");
-        entity.setCodeName("Alpha");
-        entity.setDisplayOrder(10);
-        entity.setActive(true);
+        DwCommonCodeEntity entity = DwCommonCodeEntity.create(
+                "CATEGORY",
+                "A",
+                "Alpha",
+                10,
+                true,
+                null,
+                null,
+                null,
+                java.util.UUID.randomUUID(),
+                java.time.OffsetDateTime.now()
+        );
         given(repository.findByCodeTypeAndActiveTrueOrderByDisplayOrderAscCodeValueAsc("CATEGORY"))
                 .willReturn(List.of(entity));
 

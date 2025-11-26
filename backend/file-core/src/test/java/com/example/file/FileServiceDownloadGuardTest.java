@@ -48,10 +48,9 @@ class FileServiceDownloadGuardTest {
     }
 
     private StoredFile baseFile() {
-        StoredFile file = new StoredFile();
-        file.setStatus(FileStatus.ACTIVE);
-        file.setOwnerUsername("owner");
-        file.setScanStatus(ScanStatus.CLEAN);
+        OffsetDateTime now = OffsetDateTime.now(clock);
+        StoredFile file = StoredFile.create("file.txt", null, "owner", null, "owner", now);
+        file.markScanResult(ScanStatus.CLEAN, now, null);
         return file;
     }
 
@@ -59,7 +58,7 @@ class FileServiceDownloadGuardTest {
     @DisplayName("삭제된 파일이면 404를 던진다")
     void deletedFileThrowsNotFound() {
         StoredFile file = baseFile();
-        file.setStatus(FileStatus.DELETED);
+        file.markDeleted("actor", OffsetDateTime.now(clock));
         UUID id = file.getId();
         when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
 
@@ -82,7 +81,7 @@ class FileServiceDownloadGuardTest {
     @DisplayName("스캔이 BLOCKED면 다운로드를 차단한다")
     void blockedFileThrowsPolicyViolation() {
         StoredFile file = baseFile();
-        file.setScanStatus(ScanStatus.BLOCKED);
+        file.markScanResult(ScanStatus.BLOCKED, OffsetDateTime.now(clock), "blocked");
         UUID id = file.getId();
         when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
 
@@ -95,10 +94,14 @@ class FileServiceDownloadGuardTest {
     void delegatedUserCanDownload() throws Exception {
         StoredFile file = baseFile();
         UUID id = UUID.randomUUID();
-        StoredFileVersion version = new StoredFileVersion();
-        version.setStoragePath("path");
-        version.setVersionNumber(1);
-        version.setCreatedAt(OffsetDateTime.now(clock));
+        StoredFileVersion version = StoredFileVersion.createVersion(
+                1,
+                "path",
+                "chk",
+                "owner",
+                OffsetDateTime.now(clock)
+        );
+        file.addVersion(version);
         when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
         when(versionRepository.findFirstByFileIdOrderByVersionNumberDesc(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(java.util.Optional.of(version));
@@ -113,7 +116,7 @@ class FileServiceDownloadGuardTest {
     @DisplayName("스캔이 완료되지 않았으면 다운로드를 차단한다")
     void pendingScanBlocksDownload() {
         StoredFile file = baseFile();
-        file.setScanStatus(ScanStatus.PENDING);
+        file.markScanResult(ScanStatus.PENDING, OffsetDateTime.now(clock), null);
         UUID id = UUID.randomUUID();
         when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
 

@@ -36,13 +36,8 @@ class CommonCodeQueryServiceTest {
     @Test
     @DisplayName("Given 시스템/ DW 코드 When aggregate 호출 Then 병합 후 중복을 제거한다")
     void givenSystemAndDwCodes_whenAggregate_thenMergeAndDeduplicate() {
-        SystemCommonCode systemCode = new SystemCommonCode();
-        systemCode.setCodeType("CATEGORY");
-        systemCode.setCodeValue("A");
-        systemCode.setCodeName("System Alpha");
-        systemCode.setDisplayOrder(1);
-        systemCode.setCodeKind(CommonCodeKind.DYNAMIC);
-        systemCode.setActive(true);
+        SystemCommonCode systemCode = SystemCommonCode.create("CATEGORY", "A", "System Alpha", 1,
+                CommonCodeKind.DYNAMIC, true, null, null, "tester", null);
         given(systemCommonCodeService.findActive("CATEGORY")).willReturn(List.of(systemCode));
 
         DwCommonCodeSnapshot dwCode = new DwCommonCodeSnapshot("CATEGORY", "A", "DW Alpha", 2,

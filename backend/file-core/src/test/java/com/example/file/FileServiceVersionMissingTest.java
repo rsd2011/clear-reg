@@ -46,11 +46,8 @@ class FileServiceVersionMissingTest {
     @DisplayName("버전 정보를 찾지 못하면 StoredFileNotFoundException을 던진다")
     void download_throws_whenVersionMissing() {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setOwnerUsername("owner");
-        file.setStatus(FileStatus.ACTIVE);
-        file.setScanStatus(ScanStatus.CLEAN);
-        file.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile file = StoredFile.create("file.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        file.markScanResult(ScanStatus.CLEAN, OffsetDateTime.now(clock), null);
 
         given(storedFileRepository.findById(id)).willReturn(Optional.of(file));
         given(versionRepository.findFirstByFileIdOrderByVersionNumberDesc(file.getId()))

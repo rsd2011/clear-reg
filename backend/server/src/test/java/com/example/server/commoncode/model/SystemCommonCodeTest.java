@@ -13,28 +13,22 @@ class SystemCommonCodeTest {
     @Test
     @DisplayName("codeType이 null이면 null로 유지하고, 값이 있으면 대문자로 저장한다")
     void setCodeType_handlesNullAndUppercase() {
-        SystemCommonCode code = new SystemCommonCode();
-        code.setCodeType(null);
+        SystemCommonCode code = SystemCommonCode.create(null, "V", "Name", 0,
+                null, true, null, null, "actor", null);
         assertThat(code.getCodeType()).isNull();
 
-        code.setCodeType("hr");
-        assertThat(code.getCodeType()).isEqualTo("HR");
+        SystemCommonCode upper = SystemCommonCode.create("hr", "V", "Name", 0,
+                null, true, null, null, "actor", null);
+        assertThat(upper.getCodeType()).isEqualTo("HR");
     }
 
     @Test
     @DisplayName("codeKind가 null이면 DYNAMIC으로 기본 설정한다")
     void of_defaultsCodeKindWhenNull() {
-        SystemCommonCode draft = new SystemCommonCode();
-        draft.setCodeValue("V");
-        draft.setCodeName("Name");
-        draft.setDisplayOrder(1);
-        draft.setCodeKind(null);
-        draft.setActive(true);
-        draft.setDescription("desc");
-        draft.setMetadataJson("{}");
-        draft.setUpdatedBy("actor");
+        SystemCommonCode draft = SystemCommonCode.create("TYPE", "V", "Name", 1,
+                null, true, "desc", "{}", "actor", null);
 
-        SystemCommonCode copied = SystemCommonCode.of("TYPE", draft);
+        SystemCommonCode copied = draft.copy();
 
         assertThat(copied.getCodeType()).isEqualTo("TYPE");
         assertThat(copied.getCodeKind()).isEqualTo(CommonCodeKind.DYNAMIC);
@@ -43,17 +37,8 @@ class SystemCommonCodeTest {
     @Test
     @DisplayName("copy는 모든 필드를 그대로 복사한다")
     void copyCopiesFields() {
-        SystemCommonCode original = new SystemCommonCode();
-        original.setCodeType("TYPE");
-        original.setCodeValue("V");
-        original.setCodeName("Name");
-        original.setDisplayOrder(2);
-        original.setCodeKind(CommonCodeKind.STATIC);
-        original.setActive(false);
-        original.setDescription("desc");
-        original.setMetadataJson("{\"a\":1}");
-        original.setUpdatedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        original.setUpdatedBy("actor");
+        SystemCommonCode original = SystemCommonCode.create("TYPE", "V", "Name", 2,
+                CommonCodeKind.STATIC, false, "desc", "{\"a\":1}", "actor", OffsetDateTime.now(ZoneOffset.UTC));
 
         SystemCommonCode copy = original.copy();
 

@@ -68,13 +68,8 @@ class CommonCodeAdminControllerTest {
     @Test
     @DisplayName("Given 공통 코드 When 조회하면 Then 전체 목록을 반환한다")
     void givenCodes_whenListing_thenReturnAll() throws Exception {
-        SystemCommonCode code = new SystemCommonCode();
-        code.setCodeType("CATEGORY");
-        code.setCodeValue("A");
-        code.setCodeName("Alpha");
-        code.setCodeKind(CommonCodeKind.DYNAMIC);
-        code.setDisplayOrder(1);
-        code.setActive(true);
+        SystemCommonCode code = SystemCommonCode.create("CATEGORY", "A", "Alpha", 1,
+                CommonCodeKind.DYNAMIC, true, null, null, "tester", null);
         given(systemCommonCodeService.findAll("CATEGORY")).willReturn(List.of(code));
 
         mockMvc.perform(get("/api/admin/common-codes/CATEGORY"))
@@ -85,13 +80,8 @@ class CommonCodeAdminControllerTest {
     @Test
     @DisplayName("Given 생성 요청 When POST 호출 Then 서비스에 위임해 신규 코드를 반환한다")
     void givenRequest_whenCreate_thenDelegateService() throws Exception {
-        SystemCommonCode code = new SystemCommonCode();
-        code.setCodeType("CATEGORY");
-        code.setCodeValue("B");
-        code.setCodeName("Bravo");
-        code.setCodeKind(CommonCodeKind.DYNAMIC);
-        code.setDisplayOrder(2);
-        code.setActive(true);
+        SystemCommonCode code = SystemCommonCode.create("CATEGORY", "B", "Bravo", 2,
+                CommonCodeKind.DYNAMIC, true, null, null, "tester", null);
         given(systemCommonCodeService.create(eq("CATEGORY"), any(SystemCommonCode.class))).willReturn(code);
 
         mockMvc.perform(post("/api/admin/common-codes/CATEGORY")
@@ -112,13 +102,8 @@ class CommonCodeAdminControllerTest {
     @Test
     @DisplayName("Given 수정 요청 When PUT 호출 Then 서비스에 위임해 코드 정보를 갱신한다")
     void givenRequest_whenUpdate_thenDelegateService() throws Exception {
-        SystemCommonCode code = new SystemCommonCode();
-        code.setCodeType("CATEGORY");
-        code.setCodeValue("B");
-        code.setCodeName("Updated");
-        code.setCodeKind(CommonCodeKind.DYNAMIC);
-        code.setDisplayOrder(3);
-        code.setActive(false);
+        SystemCommonCode code = SystemCommonCode.create("CATEGORY", "B", "Updated", 3,
+                CommonCodeKind.DYNAMIC, false, null, null, "tester", null);
         given(systemCommonCodeService.update(eq("CATEGORY"), eq("B"), any(SystemCommonCode.class)))
                 .willReturn(code);
 

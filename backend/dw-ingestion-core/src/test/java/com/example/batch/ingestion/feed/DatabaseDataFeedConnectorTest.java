@@ -43,12 +43,9 @@ class DatabaseDataFeedConnectorTest {
 
     @Test
     void givenEnabledDatabase_whenFetching_thenReturnFeedAndMarkProcessing() {
-        HrExternalFeedEntity entity = new HrExternalFeedEntity();
-        entity.setFeedType(DataFeedType.EMPLOYEE);
-        entity.setPayload("payload");
-        entity.setBusinessDate(LocalDate.now());
-        entity.setSequenceNumber(4);
-        entity.setSourceSystem("db");
+        HrExternalFeedEntity entity = HrExternalFeedEntity.receive(
+                DataFeedType.EMPLOYEE, "payload", LocalDate.now(), 4, "db"
+        );
         given(repository.findFirstByStatusOrderByCreatedAtAsc(HrExternalFeedStatus.PENDING))
                 .willReturn(Optional.of(entity));
 
@@ -69,7 +66,9 @@ class DatabaseDataFeedConnectorTest {
 
     @Test
     void givenFeedSuccess_whenOnSuccess_thenMarkCompleted() {
-        HrExternalFeedEntity entity = new HrExternalFeedEntity();
+        HrExternalFeedEntity entity = HrExternalFeedEntity.receive(
+                DataFeedType.EMPLOYEE, "payload", LocalDate.now(), 1, "db"
+        );
         UUID id = entity.getId();
         DataFeed feed = new DataFeed(id.toString(), DataFeedType.EMPLOYEE, LocalDate.now(), 1, "payload", "db", java.util.Map.of());
         given(repository.findById(id)).willReturn(Optional.of(entity));
@@ -82,7 +81,9 @@ class DatabaseDataFeedConnectorTest {
 
     @Test
     void givenFeedFailure_whenOnFailure_thenMarkFailed() {
-        HrExternalFeedEntity entity = new HrExternalFeedEntity();
+        HrExternalFeedEntity entity = HrExternalFeedEntity.receive(
+                DataFeedType.EMPLOYEE, "payload", LocalDate.now(), 1, "db"
+        );
         UUID id = entity.getId();
         DataFeed feed = new DataFeed(id.toString(), DataFeedType.EMPLOYEE, LocalDate.now(), 1, "payload", "db", java.util.Map.of());
         given(repository.findById(id)).willReturn(Optional.of(entity));

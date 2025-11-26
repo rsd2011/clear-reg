@@ -48,11 +48,8 @@ class FileServiceDeletedDownloadTest {
     @DisplayName("삭제된 파일은 다운로드 시 NotFound 예외를 던진다")
     void download_deleted_throws() {
         UUID id = UUID.randomUUID();
-        StoredFile deleted = new StoredFile();
-        deleted.setOriginalName("del.txt");
-        deleted.setOwnerUsername("owner");
-        deleted.setStatus(FileStatus.DELETED);
-        deleted.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile deleted = StoredFile.create("del.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        deleted.markDeleted("owner", OffsetDateTime.now(clock));
         given(storedFileRepository.findById(id)).willReturn(Optional.of(deleted));
 
         assertThatThrownBy(() -> service.download(id, "actor", java.util.List.of()))

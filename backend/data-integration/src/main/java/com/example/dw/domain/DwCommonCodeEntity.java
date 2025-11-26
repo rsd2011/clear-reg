@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import com.example.common.jpa.PrimaryKeyEntity;
 import lombok.Getter;
-import lombok.Setter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,8 +17,64 @@ import jakarta.persistence.Table;
                 @Index(name = "idx_dw_common_code_type_order", columnList = "code_type, display_order, code_value")
         })
 @Getter
-@Setter
 public class DwCommonCodeEntity extends PrimaryKeyEntity {
+
+    protected DwCommonCodeEntity() {
+    }
+
+    private DwCommonCodeEntity(String codeType,
+                               String codeValue,
+                               String codeName,
+                               int displayOrder,
+                               boolean active,
+                               String category,
+                               String description,
+                               String metadataJson,
+                               UUID sourceBatchId,
+                               OffsetDateTime syncedAt) {
+        this.codeType = codeType;
+        this.codeValue = codeValue;
+        this.codeName = codeName;
+        this.displayOrder = displayOrder;
+        this.active = active;
+        this.category = category;
+        this.description = description;
+        this.metadataJson = metadataJson;
+        this.sourceBatchId = sourceBatchId;
+        this.syncedAt = syncedAt;
+    }
+
+    public static DwCommonCodeEntity create(String codeType,
+                                            String codeValue,
+                                            String codeName,
+                                            Integer displayOrder,
+                                            boolean active,
+                                            String category,
+                                            String description,
+                                            String metadataJson,
+                                            UUID sourceBatchId,
+                                            OffsetDateTime syncedAt) {
+        return new DwCommonCodeEntity(normalize(codeType), codeValue, codeName,
+                displayOrder == null ? 0 : displayOrder, active, category, description, metadataJson, sourceBatchId, syncedAt);
+    }
+
+    public void updateFromRecord(String codeName,
+                                 Integer displayOrder,
+                                 boolean active,
+                                 String category,
+                                 String description,
+                                 String metadataJson,
+                                 UUID sourceBatchId,
+                                 OffsetDateTime syncedAt) {
+        this.codeName = codeName;
+        this.displayOrder = displayOrder == null ? 0 : displayOrder;
+        this.active = active;
+        this.category = category;
+        this.description = description;
+        this.metadataJson = metadataJson;
+        this.sourceBatchId = sourceBatchId;
+        this.syncedAt = syncedAt;
+    }
 
     @Column(name = "code_type", nullable = false, length = 64)
     private String codeType;
@@ -51,10 +106,6 @@ public class DwCommonCodeEntity extends PrimaryKeyEntity {
     @Column(name = "source_batch_id", columnDefinition = "uuid", nullable = false)
     private UUID sourceBatchId;
 
-    public void setCodeType(String codeType) {
-        this.codeType = codeType == null ? null : codeType.toUpperCase(java.util.Locale.ROOT);
-    }
-
     public boolean sameBusinessState(String codeName,
                                      int displayOrder,
                                      boolean active,
@@ -71,5 +122,9 @@ public class DwCommonCodeEntity extends PrimaryKeyEntity {
 
     private static boolean safeEquals(Object left, Object right) {
         return left == null ? right == null : left.equals(right);
+    }
+
+    private static String normalize(String codeType) {
+        return codeType == null ? null : codeType.toUpperCase(java.util.Locale.ROOT);
     }
 }

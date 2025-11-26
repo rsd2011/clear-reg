@@ -9,7 +9,6 @@ import com.example.common.file.FileStatus;
 import com.example.common.jpa.PrimaryKeyEntity;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
 import org.hibernate.annotations.BatchSize;
 
@@ -26,7 +25,6 @@ import jakarta.persistence.Version;
 @Entity
 @Table(name = "stored_files")
 @Getter
-@Setter
 public class StoredFile extends PrimaryKeyEntity {
 
     @Column(name = "original_name", nullable = false, length = 255)
@@ -80,17 +78,35 @@ public class StoredFile extends PrimaryKeyEntity {
     private String updatedBy;
 
     @Version
-    @Setter(AccessLevel.NONE)
     private long version;
 
     @OneToMany(mappedBy = "file", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
     @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
     private List<StoredFileVersion> versions = new ArrayList<>();
 
     public List<StoredFileVersion> getVersions() {
         return Collections.unmodifiableList(versions);
+    }
+
+    public static StoredFile create(String originalName,
+                                    String contentType,
+                                    String ownerUsername,
+                                    OffsetDateTime retentionUntil,
+                                    String actor,
+                                    OffsetDateTime now) {
+        if (originalName == null || ownerUsername == null || actor == null || now == null) {
+            throw new IllegalArgumentException("originalName, ownerUsername, actor, now 는 필수입니다");
+        }
+        StoredFile file = new StoredFile();
+        file.originalName = originalName;
+        file.contentType = contentType;
+        file.ownerUsername = ownerUsername;
+        file.retentionUntil = retentionUntil;
+        file.status = FileStatus.ACTIVE;
+        file.scanStatus = ScanStatus.PENDING;
+        file.markCreated(actor, now);
+        return file;
     }
 
     void addVersion(StoredFileVersion version) {
@@ -104,6 +120,27 @@ public class StoredFile extends PrimaryKeyEntity {
 
     public void markAccessed(OffsetDateTime now) {
         this.lastAccessedAt = now;
+    }
+
+    public void updateHashes(long size, String checksum, String sha256) {
+        this.size = size;
+        this.checksum = checksum;
+        this.sha256 = sha256;
+    }
+
+    public void markScanResult(ScanStatus scanStatus, OffsetDateTime scannedAt, String blockedReason) {
+        this.scanStatus = scanStatus;
+        this.scannedAt = scannedAt;
+        this.blockedReason = blockedReason;
+    }
+
+    public void changeRetentionUntil(OffsetDateTime retentionUntil) {
+        this.retentionUntil = retentionUntil;
+    }
+
+    public void markDeleted(String actor, OffsetDateTime now) {
+        this.status = FileStatus.DELETED;
+        markUpdated(actor, now);
     }
 
     public void markCreated(String actor, OffsetDateTime now) {

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.domain.DwCommonCodeEntity;
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.DwCommonCodeRecord;
 import com.example.dw.dto.HrSyncResult;
 import com.example.dw.infrastructure.persistence.DwCommonCodeRepository;
@@ -39,7 +41,9 @@ class DwCommonCodeSynchronizationServiceTest {
 
     @Test
     void givenNewRecord_whenSynchronize_thenInsert() {
-        HrImportBatchEntity batch = new HrImportBatchEntity();
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "common.csv", DataFeedType.COMMON_CODE, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
         DwCommonCodeRecord record = new DwCommonCodeRecord("CATEGORY", "A", "Alpha", 1, true, null, null, null, 2);
         given(repository.findFirstByCodeTypeAndCodeValue("CATEGORY", "A")).willReturn(Optional.empty());
 
@@ -54,14 +58,9 @@ class DwCommonCodeSynchronizationServiceTest {
     @Test
     void givenExistingButDifferentRecord_whenSynchronize_thenUpdate() {
         HrImportBatchEntity batch = new HrImportBatchEntity();
-        DwCommonCodeEntity existing = new DwCommonCodeEntity();
-        existing.setCodeType("CATEGORY");
-        existing.setCodeValue("A");
-        existing.setCodeName("Alpha");
-        existing.setDisplayOrder(1);
-        existing.setActive(true);
-        existing.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        existing.setSourceBatchId(UUID.randomUUID());
+        DwCommonCodeEntity existing = DwCommonCodeEntity.create(
+                "CATEGORY", "A", "Alpha", 1, true, null, null, null, UUID.randomUUID(), OffsetDateTime.now(ZoneOffset.UTC)
+        );
         DwCommonCodeRecord record = new DwCommonCodeRecord("CATEGORY", "A", "Alpha+", 1, true, null, null, null, 2);
         given(repository.findFirstByCodeTypeAndCodeValue("CATEGORY", "A")).willReturn(Optional.of(existing));
 
@@ -74,12 +73,9 @@ class DwCommonCodeSynchronizationServiceTest {
     @Test
     void givenSameState_whenSynchronize_thenSkip() {
         HrImportBatchEntity batch = new HrImportBatchEntity();
-        DwCommonCodeEntity existing = new DwCommonCodeEntity();
-        existing.setCodeType("CATEGORY");
-        existing.setCodeValue("A");
-        existing.setCodeName("Alpha");
-        existing.setDisplayOrder(1);
-        existing.setActive(true);
+        DwCommonCodeEntity existing = DwCommonCodeEntity.create(
+                "CATEGORY", "A", "Alpha", 1, true, null, null, null, UUID.randomUUID(), OffsetDateTime.now(ZoneOffset.UTC)
+        );
         DwCommonCodeRecord record = new DwCommonCodeRecord("CATEGORY", "A", "Alpha", 1, true, null, null, null, 2);
         given(repository.findFirstByCodeTypeAndCodeValue("CATEGORY", "A")).willReturn(Optional.of(existing));
 

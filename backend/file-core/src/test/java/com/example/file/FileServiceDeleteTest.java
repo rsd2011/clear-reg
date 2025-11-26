@@ -58,8 +58,8 @@ class FileServiceDeleteTest {
     @DisplayName("이미 삭제된 파일은 저장소 삭제를 시도하지 않고 그대로 반환한다")
     void deleteSkipsWhenAlreadyDeleted() throws Exception {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setStatus(FileStatus.DELETED);
+        StoredFile file = StoredFile.create("del.txt", null, "owner", null, "owner", OffsetDateTime.now(fixedClock));
+        file.markDeleted("owner", OffsetDateTime.now(fixedClock));
         org.mockito.Mockito.when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
 
         StoredFile result = service().delete(id, "user");
@@ -72,11 +72,14 @@ class FileServiceDeleteTest {
     @DisplayName("스토리지 삭제 중 IOException이 발생해도 파일 상태를 DELETED로 저장한다")
     void deleteIgnoresStorageDeleteFailures() throws Exception {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        StoredFileVersion version = new StoredFileVersion();
-        version.setStoragePath("path-1");
-        version.setVersionNumber(1);
-        version.setCreatedAt(OffsetDateTime.now(fixedClock));
+        StoredFile file = StoredFile.create("file.txt", null, "user", null, "user", OffsetDateTime.now(fixedClock));
+        StoredFileVersion version = StoredFileVersion.createVersion(
+                1,
+                "path-1",
+                "chk",
+                "user",
+                OffsetDateTime.now(fixedClock)
+        );
         file.addVersion(version);
         org.mockito.Mockito.when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
         org.mockito.Mockito.when(storedFileRepository.save(org.mockito.ArgumentMatchers.any())).thenReturn(file);

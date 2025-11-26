@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.domain.DwHolidayEntity;
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.DwHolidayRecord;
 import com.example.dw.dto.HrSyncResult;
 import com.example.dw.infrastructure.persistence.DwHolidayRepository;
@@ -35,7 +36,10 @@ class DwHolidaySynchronizationServiceTest {
         DwHolidayRecord record = new DwHolidayRecord(LocalDate.of(2024, 5, 5), "KR", "Children's Day", "Children's Day", false);
         when(repository.findFirstByHolidayDateAndCountryCode(record.date(), record.countryCode())).thenReturn(Optional.empty());
 
-        HrSyncResult result = service.synchronize(new HrImportBatchEntity(), List.of(record));
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "file.csv", DataFeedType.EMPLOYEE, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
+        HrSyncResult result = service.synchronize(batch, List.of(record));
 
         assertThat(result.insertedRecords()).isEqualTo(1);
         verify(repository).save(any(DwHolidayEntity.class));
@@ -43,12 +47,15 @@ class DwHolidaySynchronizationServiceTest {
 
     @Test
     void givenExistingHoliday_whenChanged_thenUpdate() {
-        DwHolidayEntity entity = new DwHolidayEntity();
-        entity.setHolidayDate(LocalDate.of(2024, 5, 5));
-        entity.setCountryCode("KR");
-        entity.setLocalName("Children's Day");
-        entity.setEnglishName("Children's Day");
-        entity.setWorkingDay(false);
+        DwHolidayEntity entity = DwHolidayEntity.create(
+                LocalDate.of(2024, 5, 5),
+                "KR",
+                "Children's Day",
+                "Children's Day",
+                false,
+                java.util.UUID.randomUUID(),
+                java.time.OffsetDateTime.now()
+        );
         when(repository.findFirstByHolidayDateAndCountryCode(entity.getHolidayDate(), entity.getCountryCode()))
                 .thenReturn(Optional.of(entity));
 

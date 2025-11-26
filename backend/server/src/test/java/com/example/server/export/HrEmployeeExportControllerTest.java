@@ -47,14 +47,8 @@ class HrEmployeeExportControllerTest {
     @Test
     @DisplayName("HR 직원 CSV export 엔드포인트는 200을 반환한다")
     void exportHrEmployeesReturnsOk() throws Exception {
-        HrEmployeeEntity emp = new HrEmployeeEntity();
-        emp.setEmployeeId("E001");
-        emp.setFullName("Alice");
-        emp.setOrganizationCode("ORG1");
-        emp.setEmploymentType("FULL");
-        emp.setEmploymentStatus("ACTIVE");
-        emp.setEmail("alice@example.com");
-        emp.setSourceBatchId(UUID.randomUUID());
+        HrEmployeeEntity emp = HrEmployeeEntity.snapshot("E001", 1, "Alice", "alice@example.com",
+                "ORG1", "FULL", "ACTIVE", java.time.LocalDate.now(), null, UUID.randomUUID(), java.time.OffsetDateTime.now());
 
         given(repository.findAll()).willReturn(List.of(emp));
         given(helper.exportCsv(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyList(),

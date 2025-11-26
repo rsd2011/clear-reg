@@ -20,6 +20,48 @@ import jakarta.persistence.Table;
         })
 public class HrEmployeeEntity extends PrimaryKeyEntity {
 
+    protected HrEmployeeEntity() {
+    }
+
+    private HrEmployeeEntity(String employeeId,
+                             int version,
+                             String fullName,
+                             String email,
+                             String organizationCode,
+                             String employmentType,
+                             String employmentStatus,
+                             LocalDate effectiveStart,
+                             LocalDate effectiveEnd,
+                             UUID sourceBatchId,
+                             OffsetDateTime syncedAt) {
+        this.employeeId = employeeId;
+        this.version = version;
+        this.fullName = fullName;
+        this.email = email;
+        this.organizationCode = organizationCode;
+        this.employmentType = employmentType;
+        this.employmentStatus = employmentStatus;
+        this.effectiveStart = effectiveStart;
+        this.effectiveEnd = effectiveEnd;
+        this.sourceBatchId = sourceBatchId;
+        this.syncedAt = syncedAt == null ? OffsetDateTime.now(ZoneOffset.UTC) : syncedAt;
+    }
+
+    public static HrEmployeeEntity snapshot(String employeeId,
+                                            int version,
+                                            String fullName,
+                                            String email,
+                                            String organizationCode,
+                                            String employmentType,
+                                            String employmentStatus,
+                                            LocalDate effectiveStart,
+                                            LocalDate effectiveEnd,
+                                            UUID sourceBatchId,
+                                            OffsetDateTime syncedAt) {
+        return new HrEmployeeEntity(employeeId, version, fullName, email, organizationCode,
+                employmentType, employmentStatus, effectiveStart, effectiveEnd, sourceBatchId, syncedAt);
+    }
+
     @Column(name = "employee_id", nullable = false, length = 64)
     private String employeeId;
 
@@ -57,88 +99,44 @@ public class HrEmployeeEntity extends PrimaryKeyEntity {
         return employeeId;
     }
 
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
-    }
-
     public int getVersion() {
         return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 
     public String getFullName() {
         return fullName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getOrganizationCode() {
         return organizationCode;
     }
 
-    public void setOrganizationCode(String organizationCode) {
-        this.organizationCode = organizationCode;
-    }
-
     public String getEmploymentType() {
         return employmentType;
-    }
-
-    public void setEmploymentType(String employmentType) {
-        this.employmentType = employmentType;
     }
 
     public String getEmploymentStatus() {
         return employmentStatus;
     }
 
-    public void setEmploymentStatus(String employmentStatus) {
-        this.employmentStatus = employmentStatus;
-    }
-
     public LocalDate getEffectiveStart() {
         return effectiveStart;
-    }
-
-    public void setEffectiveStart(LocalDate effectiveStart) {
-        this.effectiveStart = effectiveStart;
     }
 
     public LocalDate getEffectiveEnd() {
         return effectiveEnd;
     }
 
-    public void setEffectiveEnd(LocalDate effectiveEnd) {
-        this.effectiveEnd = effectiveEnd;
-    }
-
     public UUID getSourceBatchId() {
         return sourceBatchId;
     }
 
-    public void setSourceBatchId(UUID sourceBatchId) {
-        this.sourceBatchId = sourceBatchId;
-    }
-
     public OffsetDateTime getSyncedAt() {
         return syncedAt;
-    }
-
-    public void setSyncedAt(OffsetDateTime syncedAt) {
-        this.syncedAt = syncedAt;
     }
 
     public boolean sameBusinessState(String fullName,
@@ -159,5 +157,13 @@ public class HrEmployeeEntity extends PrimaryKeyEntity {
 
     private static boolean safeEquals(Object left, Object right) {
         return left == null ? right == null : left.equals(right);
+    }
+
+    public void closeAt(LocalDate endDate) {
+        if (endDate != null && effectiveStart != null && endDate.isBefore(effectiveStart)) {
+            this.effectiveEnd = effectiveStart;
+        } else {
+            this.effectiveEnd = endDate;
+        }
     }
 }

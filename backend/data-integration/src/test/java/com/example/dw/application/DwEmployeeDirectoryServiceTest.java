@@ -63,18 +63,18 @@ class DwEmployeeDirectoryServiceTest {
     }
 
     private HrEmployeeEntity employee(String id) {
-        HrEmployeeEntity entity = new HrEmployeeEntity();
-        entity.setEmployeeId(id);
-        entity.setVersion(3);
-        entity.setFullName("Employee-" + id);
-        entity.setEmail(id.toLowerCase() + "@corp.dev");
-        entity.setOrganizationCode("ROOT");
-        entity.setEmploymentType("FULL_TIME");
-        entity.setEmploymentStatus("ACTIVE");
-        entity.setEffectiveStart(LocalDate.of(2020, 1, 1));
-        entity.setEffectiveEnd(null);
-        entity.setSourceBatchId(UUID.randomUUID());
-        entity.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        return entity;
+        return HrEmployeeEntity.snapshot(
+                id,
+                3,
+                "Employee-" + id,
+                id.toLowerCase() + "@corp.dev",
+                "ROOT",
+                "FULL_TIME",
+                "ACTIVE",
+                LocalDate.of(2020, 1, 1),
+                null,
+                UUID.randomUUID(),
+                OffsetDateTime.now(ZoneOffset.UTC)
+        );
     }
 }

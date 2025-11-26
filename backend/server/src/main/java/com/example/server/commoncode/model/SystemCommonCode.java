@@ -19,8 +19,46 @@ import jakarta.persistence.Table;
 @Table(name = "system_common_codes",
         indexes = @Index(name = "idx_system_common_code_type_order", columnList = "code_type, display_order, code_value"))
 @Getter
-@Setter
 public class SystemCommonCode extends PrimaryKeyEntity {
+
+    protected SystemCommonCode() {
+    }
+
+    private SystemCommonCode(String codeType,
+                             String codeValue,
+                             String codeName,
+                             int displayOrder,
+                             CommonCodeKind codeKind,
+                             boolean active,
+                             String description,
+                             String metadataJson,
+                             String updatedBy,
+                             OffsetDateTime updatedAt) {
+        this.codeType = codeType;
+        this.codeValue = codeValue;
+        this.codeName = codeName;
+        this.displayOrder = displayOrder;
+        this.codeKind = codeKind == null ? CommonCodeKind.DYNAMIC : codeKind;
+        this.active = active;
+        this.description = description;
+        this.metadataJson = metadataJson;
+        this.updatedBy = updatedBy;
+        this.updatedAt = updatedAt == null ? OffsetDateTime.now(ZoneOffset.UTC) : updatedAt;
+    }
+
+    public static SystemCommonCode create(String codeType,
+                                          String codeValue,
+                                          String codeName,
+                                          int displayOrder,
+                                          CommonCodeKind codeKind,
+                                          boolean active,
+                                          String description,
+                                          String metadataJson,
+                                          String updatedBy,
+                                          OffsetDateTime updatedAt) {
+        return new SystemCommonCode(normalize(codeType), codeValue, codeName, displayOrder,
+                codeKind, active, description, metadataJson, updatedBy, updatedAt);
+    }
 
     @Column(name = "code_type", nullable = false, length = 64)
     private String codeType;
@@ -53,48 +91,40 @@ public class SystemCommonCode extends PrimaryKeyEntity {
     @Column(name = "updated_by", nullable = false, length = 128)
     private String updatedBy;
 
-    public void setCodeType(String codeType) {
-        this.codeType = codeType == null ? null : codeType.toUpperCase(Locale.ROOT);
-    }
-
-    public void updateFrom(SystemCommonCode update) {
-        this.codeName = update.codeName;
-        this.displayOrder = update.displayOrder;
-        this.codeKind = update.codeKind;
-        this.active = update.active;
-        this.description = update.description;
-        this.metadataJson = update.metadataJson;
-        this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
-        this.updatedBy = update.updatedBy;
-    }
-
-    public static SystemCommonCode of(String codeType, SystemCommonCode code) {
-        SystemCommonCode entity = new SystemCommonCode();
-        entity.codeType = codeType;
-        entity.codeValue = code.codeValue;
-        entity.codeName = code.codeName;
-        entity.displayOrder = code.displayOrder;
-        entity.codeKind = code.codeKind == null ? CommonCodeKind.DYNAMIC : code.codeKind;
-        entity.active = code.active;
-        entity.description = code.description;
-        entity.metadataJson = code.metadataJson;
-        entity.updatedBy = code.updatedBy;
-        entity.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
-        return entity;
+    public void update(String codeName,
+                       int displayOrder,
+                       CommonCodeKind codeKind,
+                       boolean active,
+                       String description,
+                       String metadataJson,
+                       String updatedBy,
+                       OffsetDateTime updatedAt) {
+        enforceKind(codeKind, this.codeType);
+        this.codeName = codeName;
+        this.displayOrder = displayOrder;
+        this.codeKind = codeKind == null ? this.codeKind : codeKind;
+        this.active = active;
+        this.description = description;
+        this.metadataJson = metadataJson;
+        this.updatedBy = updatedBy;
+        this.updatedAt = updatedAt == null ? OffsetDateTime.now(ZoneOffset.UTC) : updatedAt;
     }
 
     public SystemCommonCode copy() {
-        SystemCommonCode clone = new SystemCommonCode();
-        clone.codeType = this.codeType;
-        clone.codeValue = this.codeValue;
-        clone.codeName = this.codeName;
-        clone.displayOrder = this.displayOrder;
-        clone.codeKind = this.codeKind;
-        clone.active = this.active;
-        clone.description = this.description;
-        clone.metadataJson = this.metadataJson;
-        clone.updatedAt = this.updatedAt;
-        clone.updatedBy = this.updatedBy;
-        return clone;
+        return new SystemCommonCode(codeType, codeValue, codeName, displayOrder, codeKind, active,
+                description, metadataJson, updatedBy, updatedAt);
+    }
+
+    private static void enforceKind(CommonCodeKind requestedKind, String codeType) {
+        SystemCommonCodeType.fromCode(codeType).ifPresent(type -> {
+            CommonCodeKind expected = type.defaultKind();
+            if (requestedKind != null && requestedKind != expected) {
+                throw new IllegalArgumentException("코드 타입 " + codeType + "는 kind=" + expected + "만 허용");
+            }
+        });
+    }
+
+    private static String normalize(String codeType) {
+        return codeType == null ? null : codeType.toUpperCase(Locale.ROOT);
     }
 }

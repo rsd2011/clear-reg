@@ -100,8 +100,9 @@ public class DwIngestionOutbox extends PrimaryKeyEntity {
         return lockedBy;
     }
 
-    public void setPayload(String payload) {
+    public DwIngestionOutbox withPayload(String payload) {
         this.payload = payload;
+        return this;
     }
 
     public int getRetryCount() {

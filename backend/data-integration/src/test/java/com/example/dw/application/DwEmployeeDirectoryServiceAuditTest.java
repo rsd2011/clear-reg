@@ -27,19 +27,19 @@ class DwEmployeeDirectoryServiceAuditTest {
     DwEmployeeDirectoryService service = new DwEmployeeDirectoryService(repo, auditPort);
 
     private HrEmployeeEntity employeeEntity() {
-        HrEmployeeEntity e = new HrEmployeeEntity();
-        e.setEmployeeId("E1");
-        e.setVersion(1);
-        e.setFullName("홍길동");
-        e.setEmail("a@b.com");
-        e.setOrganizationCode("ORG1");
-        e.setEmploymentType("FULL");
-        e.setEmploymentStatus("ACTIVE");
-        e.setEffectiveStart(LocalDate.of(2024, 1, 1));
-        e.setEffectiveEnd(LocalDate.of(2024, 12, 31));
-        e.setSourceBatchId(UUID.fromString("123e4567-e89b-12d3-a456-426614174001"));
-        e.setSyncedAt(OffsetDateTime.of(2024, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC));
-        return e;
+        return HrEmployeeEntity.snapshot(
+                "E1",
+                1,
+                "홍길동",
+                "a@b.com",
+                "ORG1",
+                "FULL",
+                "ACTIVE",
+                LocalDate.of(2024, 1, 1),
+                LocalDate.of(2024, 12, 31),
+                UUID.fromString("123e4567-e89b-12d3-a456-426614174001"),
+                OffsetDateTime.of(2024, 1, 2, 0, 0, 0, 0, ZoneOffset.UTC)
+        );
     }
 
     @Test

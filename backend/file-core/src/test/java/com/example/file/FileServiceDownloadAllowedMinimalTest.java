@@ -50,20 +50,17 @@ class FileServiceDownloadAllowedMinimalTest {
     @DisplayName("CLEAN 상태이고 actor가 허용 목록이면 다운로드가 성공한다")
     void download_allowed_success() throws Exception {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setOriginalName("ok.txt");
-        file.setOwnerUsername("owner");
-        file.setStatus(FileStatus.ACTIVE);
-        file.setScanStatus(ScanStatus.CLEAN);
-        file.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile file = StoredFile.create("ok.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        file.markScanResult(ScanStatus.CLEAN, OffsetDateTime.now(clock), null);
 
-        StoredFileVersion version = new StoredFileVersion();
-        version.setStoragePath("path");
-        version.setVersionNumber(1);
-        version.setChecksum("chk");
-        version.setCreatedAt(OffsetDateTime.now(clock));
-        version.setCreatedBy("owner");
-        version.setFile(file);
+        StoredFileVersion version = StoredFileVersion.createVersion(
+                1,
+                "path",
+                "chk",
+                "owner",
+                OffsetDateTime.now(clock)
+        );
+        file.addVersion(version);
 
         given(storedFileRepository.findById(id)).willReturn(Optional.of(file));
         given(versionRepository.findFirstByFileIdOrderByVersionNumberDesc(Mockito.any(UUID.class)))

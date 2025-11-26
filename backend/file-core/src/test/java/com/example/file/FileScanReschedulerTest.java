@@ -64,10 +64,8 @@ class FileScanReschedulerTest {
         FileScanRescheduler rescheduler = new FileScanRescheduler(
                 storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), false);
 
-        StoredFile file = new StoredFile();
-        file.setOriginalName("doc.txt");
-        file.setScanStatus(ScanStatus.PENDING);
-        file.setBlockedReason("old");
+        StoredFile file = StoredFile.create("doc.txt", null, "owner", null, "owner", java.time.OffsetDateTime.now());
+        file.markScanResult(ScanStatus.PENDING, java.time.OffsetDateTime.now(), "old");
         when(storedFileRepository.findTop20ByScanStatusInOrderByCreatedAtAsc(List.of(ScanStatus.PENDING, ScanStatus.FAILED)))
                 .thenReturn(List.of(file));
         when(versionRepository.findFirstByFileIdOrderByVersionNumberDesc(any()))
@@ -91,9 +89,8 @@ class FileScanReschedulerTest {
         FileScanRescheduler rescheduler = new FileScanRescheduler(
                 storedFileRepository, versionRepository, fileScanner, storageClient, properties, nullProvider(), false);
 
-        StoredFile file = new StoredFile();
-        file.setOriginalName("doc.txt");
-        file.setScanStatus(ScanStatus.PENDING);
+        StoredFile file = StoredFile.create("doc.txt", null, "owner", null, "owner", java.time.OffsetDateTime.now());
+        file.markScanResult(ScanStatus.PENDING, java.time.OffsetDateTime.now(), null);
 
         when(storedFileRepository.findTop20ByScanStatusInOrderByCreatedAtAsc(List.of(ScanStatus.PENDING, ScanStatus.FAILED)))
                 .thenReturn(List.of(file));

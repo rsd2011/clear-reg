@@ -18,6 +18,44 @@ import jakarta.persistence.Table;
         })
 public class DwHolidayEntity extends PrimaryKeyEntity {
 
+    protected DwHolidayEntity() {
+    }
+
+    private DwHolidayEntity(LocalDate holidayDate,
+                            String countryCode,
+                            String localName,
+                            String englishName,
+                            boolean workingDay,
+                            UUID sourceBatchId,
+                            OffsetDateTime syncedAt) {
+        this.holidayDate = holidayDate;
+        this.countryCode = countryCode;
+        this.localName = localName;
+        this.englishName = englishName;
+        this.workingDay = workingDay;
+        this.sourceBatchId = sourceBatchId;
+        this.syncedAt = syncedAt;
+    }
+
+    public static DwHolidayEntity create(LocalDate date,
+                                         String countryCode,
+                                         String localName,
+                                         String englishName,
+                                         boolean workingDay,
+                                         UUID sourceBatchId,
+                                         OffsetDateTime syncedAt) {
+        return new DwHolidayEntity(date, countryCode, localName, englishName, workingDay,
+                sourceBatchId, syncedAt);
+    }
+
+    public void updateFromRecord(String localName, String englishName, boolean workingDay, UUID sourceBatchId, OffsetDateTime syncedAt) {
+        this.localName = localName;
+        this.englishName = englishName;
+        this.workingDay = workingDay;
+        this.sourceBatchId = sourceBatchId;
+        this.syncedAt = syncedAt;
+    }
+
     @Column(name = "holiday_date", nullable = false)
     private LocalDate holidayDate;
 
@@ -43,56 +81,28 @@ public class DwHolidayEntity extends PrimaryKeyEntity {
         return holidayDate;
     }
 
-    public void setHolidayDate(LocalDate holidayDate) {
-        this.holidayDate = holidayDate;
-    }
-
     public String getCountryCode() {
         return countryCode;
-    }
-
-    public void setCountryCode(String countryCode) {
-        this.countryCode = countryCode;
     }
 
     public String getLocalName() {
         return localName;
     }
 
-    public void setLocalName(String localName) {
-        this.localName = localName;
-    }
-
     public String getEnglishName() {
         return englishName;
-    }
-
-    public void setEnglishName(String englishName) {
-        this.englishName = englishName;
     }
 
     public boolean isWorkingDay() {
         return workingDay;
     }
 
-    public void setWorkingDay(boolean workingDay) {
-        this.workingDay = workingDay;
-    }
-
     public OffsetDateTime getSyncedAt() {
         return syncedAt;
     }
 
-    public void setSyncedAt(OffsetDateTime syncedAt) {
-        this.syncedAt = syncedAt;
-    }
-
     public UUID getSourceBatchId() {
         return sourceBatchId;
-    }
-
-    public void setSourceBatchId(UUID sourceBatchId) {
-        this.sourceBatchId = sourceBatchId;
     }
 
     public boolean sameBusinessState(String localName,

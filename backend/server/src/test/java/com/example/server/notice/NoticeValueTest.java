@@ -11,10 +11,8 @@ class NoticeValueTest {
     @Test
     @DisplayName("severity/audience/status가 null이면 기본값으로 설정된다")
     void defaultsWhenNull() {
-        Notice notice = new Notice();
-        notice.setSeverity(null);
-        notice.setAudience(null);
-        notice.setStatus(null);
+        Notice notice = Notice.createDraft("N-1", "title", "content", null, null,
+                null, null, false, "actor", java.time.OffsetDateTime.MIN);
 
         assertThat(notice.getSeverity()).isEqualTo(NoticeSeverity.INFO);
         assertThat(notice.getAudience()).isEqualTo(NoticeAudience.GLOBAL);
@@ -24,8 +22,8 @@ class NoticeValueTest {
     @Test
     @DisplayName("pinned 값은 setter로 보존된다")
     void pinnedPreserved() {
-        Notice notice = new Notice();
-        notice.setPinned(true);
+        Notice notice = Notice.createDraft("N-1", "title", "content", NoticeSeverity.INFO,
+                NoticeAudience.GLOBAL, null, null, true, "actor", java.time.OffsetDateTime.MIN);
 
         assertThat(notice.isPinned()).isTrue();
     }

@@ -25,21 +25,15 @@ class HrEmployeeRepositoryTest {
     @Test
     @DisplayName("employeeId로 최신 활성 레코드를 조회한다")
     void findActiveReturnsLatest() {
-        HrEmployeeEntity older = new HrEmployeeEntity();
-        older.setEmployeeId("E1");
-        older.setVersion(1);
-        older.setFullName("Old");
-        older.setEffectiveStart(LocalDate.parse("2024-01-01"));
-        older.setSourceBatchId(java.util.UUID.randomUUID());
-        older.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC).minusDays(1));
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
+        HrEmployeeEntity older = HrEmployeeEntity.snapshot(
+                "E1", 1, "Old", null, null, null, null,
+                LocalDate.parse("2024-01-01"), null, java.util.UUID.randomUUID(), now.minusDays(1));
         repository.save(older);
 
-        HrEmployeeEntity newer = new HrEmployeeEntity();
-        newer.setEmployeeId("E1");
-        newer.setVersion(2);
-        newer.setFullName("New");
-        newer.setEffectiveStart(LocalDate.parse("2024-01-02"));
-        newer.setSourceBatchId(java.util.UUID.randomUUID());
+        HrEmployeeEntity newer = HrEmployeeEntity.snapshot(
+                "E1", 2, "New", null, null, null, null,
+                LocalDate.parse("2024-01-02"), null, java.util.UUID.randomUUID(), now);
         repository.save(newer);
 
         Optional<HrEmployeeEntity> active = repository.findActive("E1");

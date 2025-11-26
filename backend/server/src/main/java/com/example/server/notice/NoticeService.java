@@ -30,12 +30,18 @@ public class NoticeService {
     @Transactional
     public NoticeAdminResponse createNotice(NoticeCreateRequest request, String actor) {
         OffsetDateTime now = now();
-        Notice notice = new Notice();
-        notice.setDisplayNumber(numberGenerator.nextDisplayNumber(now));
-        applyDetails(notice, request.title(), request.content(), request.severity(), request.audience(),
-                request.publishAt(), request.expireAt(), request.pinned());
-        notice.setStatus(NoticeStatus.DRAFT);
-        notice.markCreated(actor, now);
+        Notice notice = Notice.createDraft(
+                numberGenerator.nextDisplayNumber(now),
+                request.title(),
+                request.content(),
+                request.severity(),
+                request.audience(),
+                request.publishAt(),
+                request.expireAt(),
+                Boolean.TRUE.equals(request.pinned()),
+                actor,
+                now
+        );
         return NoticeAdminResponse.from(noticeRepository.save(notice));
     }
 
@@ -43,12 +49,17 @@ public class NoticeService {
     public NoticeAdminResponse updateNotice(UUID id, NoticeUpdateRequest request, String actor) {
         Notice notice = noticeRepository.findLockedById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
-        if (notice.isArchived()) {
-            throw new NoticeStateException("이미 보관된 공지사항은 수정할 수 없습니다.");
-        }
-        applyDetails(notice, request.title(), request.content(), request.severity(), request.audience(),
-                request.publishAt(), request.expireAt(), request.pinned());
-        notice.markUpdated(actor, now());
+        notice.updateContent(
+                request.title(),
+                request.content(),
+                request.severity(),
+                request.audience(),
+                request.publishAt(),
+                request.expireAt(),
+                Boolean.TRUE.equals(request.pinned()),
+                actor,
+                now()
+        );
         return NoticeAdminResponse.from(notice);
     }
 
@@ -56,17 +67,7 @@ public class NoticeService {
     public NoticeAdminResponse publishNotice(UUID id, NoticePublishRequest request, String actor) {
         Notice notice = noticeRepository.findLockedById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
-        if (notice.isArchived()) {
-            throw new NoticeStateException("보관된 공지사항은 게시할 수 없습니다.");
-        }
-        OffsetDateTime publishAt = request.publishAt() != null ? request.publishAt() : now();
-        notice.setPublishAt(publishAt);
-        if (request.expireAt() != null) {
-            notice.setExpireAt(request.expireAt());
-        }
-        notice.setPinned(Boolean.TRUE.equals(request.pinned()));
-        notice.setStatus(NoticeStatus.PUBLISHED);
-        notice.markUpdated(actor, now());
+        notice.publish(request.publishAt(), request.expireAt(), Boolean.TRUE.equals(request.pinned()), actor, now());
         return NoticeAdminResponse.from(notice);
     }
 
@@ -74,13 +75,7 @@ public class NoticeService {
     public NoticeAdminResponse archiveNotice(UUID id, NoticeArchiveRequest request, String actor) {
         Notice notice = noticeRepository.findLockedById(id)
                 .orElseThrow(() -> new NoticeNotFoundException(id));
-        if (notice.isArchived()) {
-            return NoticeAdminResponse.from(notice);
-        }
-        notice.setStatus(NoticeStatus.ARCHIVED);
-        notice.setPinned(false);
-        notice.setExpireAt(request.expireAt() != null ? request.expireAt() : now());
-        notice.markUpdated(actor, now());
+        notice.archive(request.expireAt(), actor, now());
         return NoticeAdminResponse.from(notice);
     }
 
@@ -97,29 +92,6 @@ public class NoticeService {
         return noticeRepository.findActiveNotices(target, now()).stream()
                 .map(NoticeResponse::from)
                 .toList();
-    }
-
-    private void applyDetails(Notice notice,
-                              String title,
-                              String content,
-                              NoticeSeverity severity,
-                              NoticeAudience audience,
-                              OffsetDateTime publishAt,
-                              OffsetDateTime expireAt,
-                              Boolean pinned) {
-        notice.setTitle(title);
-        notice.setContent(content);
-        notice.setSeverity(severity);
-        notice.setAudience(audience);
-        if (publishAt != null) {
-            notice.setPublishAt(publishAt);
-        }
-        if (expireAt != null) {
-            notice.setExpireAt(expireAt);
-        }
-        if (pinned != null) {
-            notice.setPinned(pinned);
-        }
     }
 
     private OffsetDateTime now() {

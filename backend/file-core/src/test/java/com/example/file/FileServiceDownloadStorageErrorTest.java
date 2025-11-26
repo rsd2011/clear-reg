@@ -48,15 +48,17 @@ class FileServiceDownloadStorageErrorTest {
     @DisplayName("스토리지가 IOException을 던지면 FileStorageException을 전파한다")
     void downloadFailsWhenStorageThrows() throws Exception {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setStatus(FileStatus.ACTIVE);
-        file.setOwnerUsername("user");
-        file.setScanStatus(ScanStatus.CLEAN);
+        StoredFile file = StoredFile.create("file.txt", null, "user", null, "user", OffsetDateTime.now(clock));
+        file.markScanResult(ScanStatus.CLEAN, OffsetDateTime.now(clock), null);
         when(storedFileRepository.findById(id)).thenReturn(java.util.Optional.of(file));
-        StoredFileVersion version = new StoredFileVersion();
-        version.setStoragePath("path");
-        version.setVersionNumber(1);
-        version.setCreatedAt(OffsetDateTime.now(clock));
+        StoredFileVersion version = StoredFileVersion.createVersion(
+                1,
+                "path",
+                "chk",
+                "user",
+                OffsetDateTime.now(clock)
+        );
+        file.addVersion(version);
         when(versionRepository.findFirstByFileIdOrderByVersionNumberDesc(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(java.util.Optional.of(version));
         when(storageClient.load("path")).thenThrow(new IOException("io"));

@@ -13,15 +13,9 @@ class FileAccessLogTest {
     @Test
     @DisplayName("FileAccessLog 필드 세터는 값을 보존한다")
     void settersPreserveValues() {
-        FileAccessLog log = new FileAccessLog();
-        StoredFile file = new StoredFile();
-        file.setOriginalName("file.txt");
-        log.setFile(file);
-        log.setActor("user");
-        log.setAction("DOWNLOAD");
-        log.setDetail("ok");
         OffsetDateTime now = OffsetDateTime.now();
-        log.setCreatedAt(now);
+        StoredFile file = StoredFile.create("file.txt", null, "owner", null, "owner", now);
+        FileAccessLog log = FileAccessLog.recordAccess(file, "DOWNLOAD", "user", "ok", now);
 
         assertThat(log.getFile()).isEqualTo(file);
         assertThat(log.getActor()).isEqualTo("user");

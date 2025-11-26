@@ -31,18 +31,11 @@ public class HrStagingService {
     @Transactional
     public void persistRecords(HrImportBatchEntity batch, List<HrEmployeeRecord> records) {
         for (HrEmployeeRecord record : records) {
-            HrEmployeeStagingEntity staging = new HrEmployeeStagingEntity();
-            staging.setBatch(batch);
-            staging.setEmployeeId(record.employeeId());
-            staging.setFullName(record.fullName());
-            staging.setEmail(record.email());
-            staging.setOrganizationCode(record.organizationCode());
-            staging.setEmploymentType(record.employmentType());
-            staging.setEmploymentStatus(record.employmentStatus());
-            staging.setStartDate(record.startDate());
-            staging.setEndDate(record.endDate());
-            staging.setPayloadHash(hash(record.rawPayload()));
-            staging.setRawPayload(record.rawPayload());
+            HrEmployeeStagingEntity staging = HrEmployeeStagingEntity.fromRecord(
+                    batch,
+                    record,
+                    hash(record.rawPayload())
+            );
             stagingRepository.save(staging);
         }
     }
@@ -50,14 +43,15 @@ public class HrStagingService {
     @Transactional
     public void persistErrors(HrImportBatchEntity batch, List<HrValidationError> errors) {
         for (HrValidationError error : errors) {
-            HrImportErrorEntity entity = new HrImportErrorEntity();
-            entity.setBatch(batch);
-            entity.setLineNumber(error.lineNumber());
-            entity.setRecordType("EMPLOYEE");
-            entity.setReferenceCode(error.employeeId());
-            entity.setErrorCode(error.errorCode());
-            entity.setErrorMessage(error.errorMessage());
-            entity.setRawPayload(error.rawPayload());
+            HrImportErrorEntity entity = HrImportErrorEntity.of(
+                    batch,
+                    error.lineNumber(),
+                    "EMPLOYEE",
+                    error.employeeId(),
+                    error.errorCode(),
+                    error.errorMessage(),
+                    error.rawPayload()
+            );
             errorRepository.save(entity);
         }
     }

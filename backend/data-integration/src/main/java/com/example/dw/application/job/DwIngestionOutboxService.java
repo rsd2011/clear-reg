@@ -44,7 +44,7 @@ public class DwIngestionOutboxService {
     public void enqueue(DwIngestionJob job) {
         DwIngestionOutbox entry = DwIngestionOutbox.pending(job.type(), clock);
         if (job.payload() != null) {
-            entry.setPayload(job.payload());
+            entry.withPayload(job.payload());
         }
         try {
             repository.save(entry);

@@ -15,6 +15,32 @@ import jakarta.persistence.Table;
 @Table(name = "file_access_logs")
 public class FileAccessLog extends PrimaryKeyEntity {
 
+    protected FileAccessLog() {
+    }
+
+    private FileAccessLog(StoredFile file,
+                          String action,
+                          String actor,
+                          String detail,
+                          OffsetDateTime createdAt) {
+        this.file = file;
+        this.action = action;
+        this.actor = actor;
+        this.detail = detail;
+        this.createdAt = createdAt;
+    }
+
+    public static FileAccessLog recordAccess(StoredFile file,
+                                             String action,
+                                             String actor,
+                                             String detail,
+                                             OffsetDateTime createdAt) {
+        if (file == null || action == null || actor == null || createdAt == null) {
+            throw new IllegalArgumentException("file, action, actor, createdAt must be provided");
+        }
+        return new FileAccessLog(file, action, actor, detail, createdAt);
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id", nullable = false)
     private StoredFile file;
@@ -35,39 +61,19 @@ public class FileAccessLog extends PrimaryKeyEntity {
         return file;
     }
 
-    public void setFile(StoredFile file) {
-        this.file = file;
-    }
-
     public String getAction() {
         return action;
-    }
-
-    public void setAction(String action) {
-        this.action = action;
     }
 
     public String getActor() {
         return actor;
     }
 
-    public void setActor(String actor) {
-        this.actor = actor;
-    }
-
     public String getDetail() {
         return detail;
     }
 
-    public void setDetail(String detail) {
-        this.detail = detail;
-    }
-
     public OffsetDateTime getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
     }
 }

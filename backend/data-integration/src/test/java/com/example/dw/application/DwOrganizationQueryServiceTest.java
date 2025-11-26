@@ -228,16 +228,16 @@ class DwOrganizationQueryServiceTest {
     }
 
     private HrOrganizationEntity sample(String code, String parent) {
-        HrOrganizationEntity entity = new HrOrganizationEntity();
-        entity.setOrganizationCode(code);
-        entity.setVersion(1);
-        entity.setName("Org-" + code);
-        entity.setParentOrganizationCode(parent);
-        entity.setStatus("ACTIVE");
-        entity.setEffectiveStart(LocalDate.of(2020, 1, 1));
-        entity.setEffectiveEnd(null);
-        entity.setSourceBatchId(UUID.randomUUID());
-        entity.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
-        return entity;
+        return HrOrganizationEntity.snapshot(
+                code,
+                1,
+                "Org-" + code,
+                parent,
+                "ACTIVE",
+                LocalDate.of(2020, 1, 1),
+                null,
+                UUID.randomUUID(),
+                OffsetDateTime.now(ZoneOffset.UTC)
+        );
     }
 }

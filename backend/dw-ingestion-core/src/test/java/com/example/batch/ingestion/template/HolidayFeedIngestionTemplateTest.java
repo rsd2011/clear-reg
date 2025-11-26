@@ -16,6 +16,7 @@ import com.example.batch.ingestion.DwHolidaySynchronizationService;
 import com.example.batch.ingestion.DwHolidayValidationResult;
 import com.example.batch.ingestion.DwHolidayValidator;
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.DwHolidayRecord;
 import com.example.dw.dto.HrSyncResult;
 
@@ -30,7 +31,9 @@ class HolidayFeedIngestionTemplateTest {
     @Test
     @DisplayName("휴일 피드를 파싱·검증·동기화한다")
     void ingestHappyPath() {
-        HrImportBatchEntity batch = new HrImportBatchEntity();
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "holiday.csv", DataFeedType.HOLIDAY, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
         List<DwHolidayRecord> parsed = List.of(new DwHolidayRecord(LocalDate.of(2025,1,1), "KR", "신정", "New Year", false));
         when(parser.parse("csv")).thenReturn(parsed);
         DwHolidayValidationResult validation = new DwHolidayValidationResult(parsed, List.of());
@@ -44,4 +47,3 @@ class HolidayFeedIngestionTemplateTest {
         assertThat(result.failedRecords()).isZero();
     }
 }
-

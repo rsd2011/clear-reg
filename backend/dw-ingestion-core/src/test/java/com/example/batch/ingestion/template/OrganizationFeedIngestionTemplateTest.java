@@ -17,6 +17,7 @@ import com.example.batch.ingestion.HrOrganizationSynchronizationService;
 import com.example.batch.ingestion.HrOrganizationValidator;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.HrOrganizationRecord;
 import com.example.dw.dto.HrOrganizationValidationError;
 import com.example.dw.dto.HrOrganizationValidationResult;
@@ -35,7 +36,9 @@ class OrganizationFeedIngestionTemplateTest {
     @Test
     @DisplayName("조직 피드를 파싱·검증·동기화하고 트리를 무효화한다")
     void ingestHappyPath() {
-        HrImportBatchEntity batch = new HrImportBatchEntity();
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "org.csv", DataFeedType.ORGANIZATION, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
         HrOrganizationRecord record = new HrOrganizationRecord("ORG1", "이름", "PARENT", "ACTIVE",
                 LocalDate.of(2024,1,1), null, "raw", 2);
         List<HrOrganizationRecord> parsed = List.of(record);
@@ -53,4 +56,3 @@ class OrganizationFeedIngestionTemplateTest {
         assertThat(result.failedRecords()).isZero();
     }
 }
-

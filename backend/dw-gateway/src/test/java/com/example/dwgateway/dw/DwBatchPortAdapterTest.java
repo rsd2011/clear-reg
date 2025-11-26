@@ -59,18 +59,17 @@ class DwBatchPortAdapterTest {
     }
 
     private HrImportBatchEntity sampleEntity() {
-        HrImportBatchEntity entity = new HrImportBatchEntity();
-        entity.setFeedType(DataFeedType.EMPLOYEE);
-        entity.setFileName("employee_20240101_001.csv");
-        entity.setSourceName("HR");
-        entity.setBusinessDate(LocalDate.of(2024, 1, 1));
-        entity.setStatus(HrBatchStatus.COMPLETED);
-        entity.setTotalRecords(10);
-        entity.setInsertedRecords(6);
-        entity.setUpdatedRecords(4);
-        entity.setFailedRecords(0);
-        entity.setReceivedAt(OffsetDateTime.of(2024, 1, 1, 3, 0, 0, 0, ZoneOffset.UTC));
-        entity.setCompletedAt(OffsetDateTime.of(2024, 1, 1, 3, 5, 0, 0, ZoneOffset.UTC));
+        HrImportBatchEntity entity = HrImportBatchEntity.receive(
+                "employee_20240101_001.csv",
+                DataFeedType.EMPLOYEE,
+                "HR",
+                LocalDate.of(2024, 1, 1),
+                1,
+                "chk",
+                "/tmp/employee_20240101_001.csv"
+        );
+        entity.markValidated(10, 0);
+        entity.markCompleted(6, 4, 0);
         return entity;
     }
 }

@@ -48,11 +48,7 @@ class FileServiceDeleteHappyPathTest {
     @DisplayName("삭제 시 상태가 DELETED로 변경된다")
     void delete_marksDeleted() {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setOriginalName("ok.txt");
-        file.setOwnerUsername("owner");
-        file.setStatus(FileStatus.ACTIVE);
-        file.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile file = StoredFile.create("ok.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
         given(storedFileRepository.findById(id)).willReturn(Optional.of(file));
         given(storedFileRepository.save(Mockito.any())).willAnswer(inv -> inv.getArgument(0));
 

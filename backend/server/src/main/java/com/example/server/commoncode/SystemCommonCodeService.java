@@ -49,8 +49,19 @@ public class SystemCommonCodeService {
                 .ifPresent(existing -> {
                     throw new IllegalArgumentException("이미 존재하는 코드입니다.");
                 });
-        SystemCommonCode entity = SystemCommonCode.of(normalizedType, normalizeRequest(normalizedType, request));
-        entity.setUpdatedAt(now());
+        SystemCommonCode normalized = normalizeRequest(normalizedType, request);
+        SystemCommonCode entity = SystemCommonCode.create(
+                normalizedType,
+                normalized.getCodeValue(),
+                normalized.getCodeName(),
+                normalized.getDisplayOrder(),
+                normalized.getCodeKind(),
+                normalized.isActive(),
+                normalized.getDescription(),
+                normalized.getMetadataJson(),
+                normalized.getUpdatedBy(),
+                now()
+        );
         return repository.save(entity).copy();
     }
 
@@ -61,23 +72,36 @@ public class SystemCommonCodeService {
         String normalizedType = normalizeType(codeType);
         SystemCommonCode entity = repository.findByCodeTypeAndCodeValue(normalizedType, codeValue)
                 .orElseThrow(() -> new IllegalArgumentException("코드가 존재하지 않습니다."));
-        entity.updateFrom(normalizeRequest(normalizedType, request));
-        entity.setUpdatedAt(now());
+        SystemCommonCode normalized = normalizeRequest(normalizedType, request);
+        entity.update(normalized.getCodeName(),
+                normalized.getDisplayOrder(),
+                normalized.getCodeKind(),
+                normalized.isActive(),
+                normalized.getDescription(),
+                normalized.getMetadataJson(),
+                normalized.getUpdatedBy(),
+                now());
         return repository.save(entity).copy();
     }
 
     private SystemCommonCode normalizeRequest(String codeType, SystemCommonCode request) {
         SystemCommonCode clone = request.copy();
-        clone.setCodeType(codeType);
-        if (clone.getCodeKind() == null) {
-            clone.setCodeKind(SystemCommonCodeType.fromCode(codeType)
-                    .map(SystemCommonCodeType::defaultKind)
-                    .orElse(CommonCodeKind.DYNAMIC));
-        }
-        enforceKind(codeType, clone.getCodeKind());
-        if (clone.getUpdatedBy() == null) {
-            clone.setUpdatedBy("system");
-        }
+        CommonCodeKind kind = clone.getCodeKind() == null
+                ? SystemCommonCodeType.fromCode(codeType).map(SystemCommonCodeType::defaultKind).orElse(CommonCodeKind.DYNAMIC)
+                : clone.getCodeKind();
+        enforceKind(codeType, kind);
+        clone = SystemCommonCode.create(
+                codeType,
+                clone.getCodeValue(),
+                clone.getCodeName(),
+                clone.getDisplayOrder(),
+                kind,
+                clone.isActive(),
+                clone.getDescription(),
+                clone.getMetadataJson(),
+                clone.getUpdatedBy() == null ? "system" : clone.getUpdatedBy(),
+                clone.getUpdatedAt()
+        );
         return clone;
     }
 

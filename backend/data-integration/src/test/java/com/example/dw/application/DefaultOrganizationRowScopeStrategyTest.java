@@ -21,8 +21,10 @@ class DefaultOrganizationRowScopeStrategyTest {
     @Test
     @DisplayName("Given 조직코드 When apply 호출 Then 레포지토리 결과를 DwOrganizationNode로 변환한다")
     void applyReturnsNodes() {
-        HrOrganizationEntity entity = new HrOrganizationEntity();
-        entity.setOrganizationCode("ORG1");
+        HrOrganizationEntity entity = HrOrganizationEntity.snapshot(
+                "ORG1", 1, "Org-ORG1", null, "ACTIVE",
+                java.time.LocalDate.of(2020, 1, 1), null, java.util.UUID.randomUUID(),
+                java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
         Page<HrOrganizationEntity> page = new PageImpl<>(java.util.List.of(entity));
         when(repo.findByOrganizationCode(Mockito.eq("ORG1"), Mockito.any())).thenReturn(page);
 

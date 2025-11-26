@@ -75,124 +75,40 @@ public class HrImportBatchEntity extends PrimaryKeyEntity {
         }
     }
 
-    public String getFileName() {
-        return fileName;
-    }
+    public String getFileName() { return fileName; }
+    public DataFeedType getFeedType() { return feedType; }
+    public String getSourceName() { return sourceName; }
+    public java.time.LocalDate getBusinessDate() { return businessDate; }
+    public int getSequenceNumber() { return sequenceNumber; }
+    public String getChecksum() { return checksum; }
+    public String getSourcePath() { return sourcePath; }
+    public OffsetDateTime getReceivedAt() { return receivedAt; }
+    public OffsetDateTime getCompletedAt() { return completedAt; }
+    public HrBatchStatus getStatus() { return status; }
+    public int getTotalRecords() { return totalRecords; }
+    public int getInsertedRecords() { return insertedRecords; }
+    public int getUpdatedRecords() { return updatedRecords; }
+    public int getFailedRecords() { return failedRecords; }
+    public String getErrorMessage() { return errorMessage; }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
-
-    public DataFeedType getFeedType() {
-        return feedType;
-    }
-
-    public void setFeedType(DataFeedType feedType) {
-        this.feedType = feedType;
-    }
-
-    public String getSourceName() {
-        return sourceName;
-    }
-
-    public void setSourceName(String sourceName) {
-        this.sourceName = sourceName;
-    }
-
-    public java.time.LocalDate getBusinessDate() {
-        return businessDate;
-    }
-
-    public void setBusinessDate(java.time.LocalDate businessDate) {
-        this.businessDate = businessDate;
-    }
-
-    public int getSequenceNumber() {
-        return sequenceNumber;
-    }
-
-    public void setSequenceNumber(int sequenceNumber) {
-        this.sequenceNumber = sequenceNumber;
-    }
-
-    public String getChecksum() {
-        return checksum;
-    }
-
-    public void setChecksum(String checksum) {
-        this.checksum = checksum;
-    }
-
-    public String getSourcePath() {
-        return sourcePath;
-    }
-
-    public void setSourcePath(String sourcePath) {
-        this.sourcePath = sourcePath;
-    }
-
-    public OffsetDateTime getReceivedAt() {
-        return receivedAt;
-    }
-
-    public void setReceivedAt(OffsetDateTime receivedAt) {
-        this.receivedAt = receivedAt;
-    }
-
-    public OffsetDateTime getCompletedAt() {
-        return completedAt;
-    }
-
-    public void setCompletedAt(OffsetDateTime completedAt) {
-        this.completedAt = completedAt;
-    }
-
-    public HrBatchStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(HrBatchStatus status) {
-        this.status = status;
-    }
-
-    public int getTotalRecords() {
-        return totalRecords;
-    }
-
-    public void setTotalRecords(int totalRecords) {
-        this.totalRecords = totalRecords;
-    }
-
-    public int getInsertedRecords() {
-        return insertedRecords;
-    }
-
-    public void setInsertedRecords(int insertedRecords) {
-        this.insertedRecords = insertedRecords;
-    }
-
-    public int getUpdatedRecords() {
-        return updatedRecords;
-    }
-
-    public void setUpdatedRecords(int updatedRecords) {
-        this.updatedRecords = updatedRecords;
-    }
-
-    public int getFailedRecords() {
-        return failedRecords;
-    }
-
-    public void setFailedRecords(int failedRecords) {
-        this.failedRecords = failedRecords;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    public static HrImportBatchEntity receive(String fileName,
+                                              DataFeedType feedType,
+                                              String sourceName,
+                                              java.time.LocalDate businessDate,
+                                              int sequenceNumber,
+                                              String checksum,
+                                              String sourcePath) {
+        HrImportBatchEntity batch = new HrImportBatchEntity();
+        batch.fileName = fileName;
+        batch.feedType = feedType;
+        batch.sourceName = sourceName;
+        batch.businessDate = businessDate;
+        batch.sequenceNumber = sequenceNumber;
+        batch.checksum = checksum;
+        batch.sourcePath = sourcePath;
+        batch.receivedAt = OffsetDateTime.now(ZoneOffset.UTC);
+        batch.status = HrBatchStatus.RECEIVED;
+        return batch;
     }
 
     public void markValidated(int totalRecords, int failedRecords) {
@@ -213,5 +129,9 @@ public class HrImportBatchEntity extends PrimaryKeyEntity {
         this.status = HrBatchStatus.FAILED;
         this.completedAt = OffsetDateTime.now(ZoneOffset.UTC);
         this.errorMessage = errorMessage;
+    }
+
+    public boolean isTerminal() {
+        return status == HrBatchStatus.COMPLETED || status == HrBatchStatus.FAILED;
     }
 }

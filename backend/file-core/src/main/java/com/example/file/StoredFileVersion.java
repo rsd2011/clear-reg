@@ -15,6 +15,32 @@ import jakarta.persistence.Table;
 @Table(name = "stored_file_versions")
 public class StoredFileVersion extends PrimaryKeyEntity {
 
+    protected StoredFileVersion() {
+    }
+
+    private StoredFileVersion(int versionNumber,
+                              String storagePath,
+                              String checksum,
+                              String createdBy,
+                              OffsetDateTime createdAt) {
+        this.versionNumber = versionNumber;
+        this.storagePath = storagePath;
+        this.checksum = checksum;
+        this.createdBy = createdBy;
+        this.createdAt = createdAt;
+    }
+
+    public static StoredFileVersion createVersion(int versionNumber,
+                                                  String storagePath,
+                                                  String checksum,
+                                                  String createdBy,
+                                                  OffsetDateTime createdAt) {
+        if (storagePath == null || checksum == null || createdBy == null || createdAt == null) {
+            throw new IllegalArgumentException("storagePath, checksum, createdBy, createdAt must be provided");
+        }
+        return new StoredFileVersion(versionNumber, storagePath, checksum, createdBy, createdAt);
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "file_id", nullable = false)
     private StoredFile file;
@@ -46,39 +72,19 @@ public class StoredFileVersion extends PrimaryKeyEntity {
         return versionNumber;
     }
 
-    public void setVersionNumber(int versionNumber) {
-        this.versionNumber = versionNumber;
-    }
-
     public String getStoragePath() {
         return storagePath;
-    }
-
-    public void setStoragePath(String storagePath) {
-        this.storagePath = storagePath;
     }
 
     public String getChecksum() {
         return checksum;
     }
 
-    public void setChecksum(String checksum) {
-        this.checksum = checksum;
-    }
-
     public OffsetDateTime getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(OffsetDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public String getCreatedBy() {
         return createdBy;
-    }
-
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
     }
 }

@@ -16,9 +16,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.application.DwEmployeeDirectoryService;
-import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.domain.HrEmployeeEntity;
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.HrEmployeeRecord;
 import com.example.dw.dto.HrSyncResult;
 import com.example.dw.infrastructure.persistence.HrEmployeeRepository;
@@ -44,7 +44,10 @@ class HrEmployeeSynchronizationServiceTest {
                 "FULL", "ACTIVE", LocalDate.now(), null, "payload", 2);
         given(repository.findActive("E-1")).willReturn(Optional.empty());
 
-        HrSyncResult result = service.synchronize(new HrImportBatchEntity(), List.of(record));
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "emp.csv", DataFeedType.EMPLOYEE, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
+        HrSyncResult result = service.synchronize(batch, List.of(record));
 
         assertThat(result.insertedRecords()).isEqualTo(1);
         verify(repository).save(any(HrEmployeeEntity.class));
@@ -53,10 +56,19 @@ class HrEmployeeSynchronizationServiceTest {
 
     @Test
     void givenExistingRecord_whenStateChanges_thenUpdateAndInsert() {
-        HrEmployeeEntity active = new HrEmployeeEntity();
-        active.setEmployeeId("E-1");
-        active.setVersion(1);
-        active.setEffectiveStart(LocalDate.now().minusDays(10));
+        HrEmployeeEntity active = HrEmployeeEntity.snapshot(
+                "E-1",
+                1,
+                "Old",
+                "old@example.com",
+                "ORG",
+                "FULL",
+                "ACTIVE",
+                LocalDate.now().minusDays(10),
+                null,
+                java.util.UUID.randomUUID(),
+                java.time.OffsetDateTime.now()
+        );
         HrEmployeeRecord record = new HrEmployeeRecord("E-1", "Kim", "kim@example.com", "ORG",
                 "FULL", "ACTIVE", LocalDate.now(), null, "payload", 2);
         given(repository.findActive("E-1")).willReturn(Optional.of(active));

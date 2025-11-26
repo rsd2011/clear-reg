@@ -16,6 +16,7 @@ import com.example.batch.ingestion.HrRecordValidator;
 import com.example.batch.ingestion.HrStagingService;
 import com.example.batch.ingestion.HrCsvRecordParser;
 import com.example.dw.domain.HrImportBatchEntity;
+import com.example.dw.dto.DataFeedType;
 import com.example.dw.dto.HrEmployeeRecord;
 import com.example.dw.dto.HrSyncResult;
 import com.example.dw.dto.HrValidationResult;
@@ -33,7 +34,9 @@ class EmployeeFeedIngestionTemplateTest {
     @Test
     @DisplayName("직원 피드를 파싱·검증·동기화하고 결과를 반환한다")
     void ingestHappyPath() {
-        HrImportBatchEntity batch = new HrImportBatchEntity();
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "emp.csv", DataFeedType.EMPLOYEE, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
         HrEmployeeRecord record = new HrEmployeeRecord(
                 "EMP-1", "홍길동", "hong@example.com", "ORG1", "FULLTIME", "ACTIVE",
                 LocalDate.of(2025, 1, 1), null, "raw", 2);
@@ -52,4 +55,3 @@ class EmployeeFeedIngestionTemplateTest {
         assertThat(result.failedRecords()).isZero();
     }
 }
-

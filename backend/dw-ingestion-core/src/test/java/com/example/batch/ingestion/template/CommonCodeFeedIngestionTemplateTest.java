@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -44,7 +45,10 @@ class CommonCodeFeedIngestionTemplateTest {
         given(validator.validate(any())).willReturn(new DwCommonCodeValidationResult(List.of(), List.of()));
         given(synchronizationService.synchronize(any(), any())).willReturn(new HrSyncResult(0, 0));
 
-        DwIngestionResult result = template.ingest(new HrImportBatchEntity(), "payload");
+        HrImportBatchEntity batch = HrImportBatchEntity.receive(
+                "common.csv", DataFeedType.COMMON_CODE, "SRC", LocalDate.now(), 1, "chk", "/tmp"
+        );
+        DwIngestionResult result = template.ingest(batch, "payload");
 
         assertThat(template.supportedType()).isEqualTo(DataFeedType.COMMON_CODE);
         assertThat(result.totalRecords()).isEqualTo(1);

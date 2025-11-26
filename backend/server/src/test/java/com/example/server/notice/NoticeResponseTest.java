@@ -15,12 +15,10 @@ class NoticeResponseTest {
     @Test
     @DisplayName("Given Notice When from 호출 & 마스킹 함수 제공 Then 제목/번호/본문에 적용된다")
     void fromAppliesMasker() {
-        Notice notice = new Notice();
-        notice.setDisplayNumber("N-001");
-        notice.setTitle("중요 공지");
-        notice.setContent("비공개 내용");
-        notice.setPublishAt(OffsetDateTime.now());
-        notice.setExpireAt(OffsetDateTime.now().plusDays(1));
+        OffsetDateTime now = OffsetDateTime.now();
+        Notice notice = Notice.createDraft("N-001", "중요 공지", "비공개 내용",
+                NoticeSeverity.INFO, NoticeAudience.GLOBAL, null, null, false, "actor", now);
+        notice.publish(now, now.plusDays(1), false, "actor", now);
 
         AtomicInteger called = new AtomicInteger();
         NoticeResponse masked = NoticeResponse.from(notice, v -> {

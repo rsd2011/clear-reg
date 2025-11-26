@@ -17,6 +17,38 @@ import jakarta.persistence.Table;
         })
 public class HrImportErrorEntity extends PrimaryKeyEntity {
 
+    protected HrImportErrorEntity() {
+    }
+
+    private HrImportErrorEntity(HrImportBatchEntity batch,
+                                int lineNumber,
+                                String recordType,
+                                String referenceCode,
+                                String errorCode,
+                                String errorMessage,
+                                String rawPayload) {
+        if (batch == null || recordType == null) {
+            throw new IllegalArgumentException("batch와 recordType은 필수입니다.");
+        }
+        this.batch = batch;
+        this.lineNumber = lineNumber;
+        this.recordType = recordType;
+        this.referenceCode = referenceCode;
+        this.errorCode = errorCode;
+        this.errorMessage = errorMessage;
+        this.rawPayload = rawPayload;
+    }
+
+    public static HrImportErrorEntity of(HrImportBatchEntity batch,
+                                         int lineNumber,
+                                         String recordType,
+                                         String referenceCode,
+                                         String errorCode,
+                                         String errorMessage,
+                                         String rawPayload) {
+        return new HrImportErrorEntity(batch, lineNumber, recordType, referenceCode, errorCode, errorMessage, rawPayload);
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "batch_id", nullable = false)
     private HrImportBatchEntity batch;
@@ -43,55 +75,27 @@ public class HrImportErrorEntity extends PrimaryKeyEntity {
         return batch;
     }
 
-    public void setBatch(HrImportBatchEntity batch) {
-        this.batch = batch;
-    }
-
     public int getLineNumber() {
         return lineNumber;
-    }
-
-    public void setLineNumber(int lineNumber) {
-        this.lineNumber = lineNumber;
     }
 
     public String getRecordType() {
         return recordType;
     }
 
-    public void setRecordType(String recordType) {
-        this.recordType = recordType;
-    }
-
     public String getReferenceCode() {
         return referenceCode;
-    }
-
-    public void setReferenceCode(String referenceCode) {
-        this.referenceCode = referenceCode;
     }
 
     public String getErrorCode() {
         return errorCode;
     }
 
-    public void setErrorCode(String errorCode) {
-        this.errorCode = errorCode;
-    }
-
     public String getErrorMessage() {
         return errorMessage;
     }
 
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
     public String getRawPayload() {
         return rawPayload;
-    }
-
-    public void setRawPayload(String rawPayload) {
-        this.rawPayload = rawPayload;
     }
 }

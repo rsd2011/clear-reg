@@ -32,11 +32,7 @@ public class DwCommonCodeSynchronizationService {
                     .findFirstByCodeTypeAndCodeValue(normalizedType, record.codeValue())
                     .orElse(null);
             boolean exists = entity != null;
-            if (!exists) {
-                entity = new DwCommonCodeEntity();
-                entity.setCodeType(normalizedType);
-                entity.setCodeValue(record.codeValue());
-            }
+            OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
             if (exists && entity.sameBusinessState(record.codeName(),
                     record.displayOrder() == null ? 0 : record.displayOrder(),
                     record.active(),
@@ -45,20 +41,32 @@ public class DwCommonCodeSynchronizationService {
                     record.metadataJson())) {
                 continue;
             }
-            entity.setCodeName(record.codeName());
-            entity.setDisplayOrder(record.displayOrder() == null ? 0 : record.displayOrder());
-            entity.setActive(record.active());
-            entity.setCategory(record.category());
-            entity.setDescription(record.description());
-            entity.setMetadataJson(record.metadataJson());
-            entity.setSourceBatchId(batch.getId());
-            entity.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
-            repository.save(entity);
             if (exists) {
+                entity.updateFromRecord(record.codeName(),
+                        record.displayOrder(),
+                        record.active(),
+                        record.category(),
+                        record.description(),
+                        record.metadataJson(),
+                        batch.getId(),
+                        now);
                 updated++;
             } else {
+                entity = DwCommonCodeEntity.create(
+                        normalizedType,
+                        record.codeValue(),
+                        record.codeName(),
+                        record.displayOrder(),
+                        record.active(),
+                        record.category(),
+                        record.description(),
+                        record.metadataJson(),
+                        batch.getId(),
+                        now
+                );
                 inserted++;
             }
+            repository.save(entity);
         }
         return new HrSyncResult(inserted, updated);
     }

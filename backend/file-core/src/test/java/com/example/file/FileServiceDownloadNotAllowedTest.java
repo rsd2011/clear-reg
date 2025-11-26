@@ -48,12 +48,8 @@ class FileServiceDownloadNotAllowedTest {
     @DisplayName("열람 권한이 없으면 다운로드 시 정책 위반 예외를 던진다")
     void download_notAllowed_throws() {
         UUID id = UUID.randomUUID();
-        StoredFile file = new StoredFile();
-        file.setOriginalName("secret.txt");
-        file.setOwnerUsername("owner");
-        file.setStatus(FileStatus.ACTIVE);
-        file.setScanStatus(ScanStatus.CLEAN);
-        file.markCreated("owner", OffsetDateTime.now(clock));
+        StoredFile file = StoredFile.create("secret.txt", null, "owner", null, "owner", OffsetDateTime.now(clock));
+        file.markScanResult(ScanStatus.CLEAN, OffsetDateTime.now(clock), null);
         given(storedFileRepository.findById(id)).willReturn(Optional.of(file));
 
         assertThatThrownBy(() -> service.download(id, "other", java.util.List.of()))

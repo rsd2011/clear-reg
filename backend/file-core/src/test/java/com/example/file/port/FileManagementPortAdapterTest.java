@@ -99,8 +99,7 @@ class FileManagementPortAdapterTest {
     @DisplayName("삭제 호출을 위임하고 감사 로그를 남긴다")
     void deleteDelegatesAndPublishes() {
         StoredFile file = sampleFile();
-        file.setStatus(FileStatus.DELETED);
-        file.markUpdated("tester", OffsetDateTime.now());
+        file.markDeleted("tester", OffsetDateTime.now());
         UUID id = UUID.randomUUID();
         given(fileService.delete(id, "tester")).willReturn(file);
 
@@ -136,13 +135,8 @@ class FileManagementPortAdapterTest {
     }
 
     private StoredFile sampleFile() {
-        StoredFile file = new StoredFile();
-        file.setOriginalName("test.txt");
-        file.setContentType("text/plain");
-        file.setSize(10);
-        file.setChecksum("abcd");
-        file.setOwnerUsername("tester");
-        file.markCreated("tester", OffsetDateTime.now());
+        StoredFile file = StoredFile.create("test.txt", "text/plain", "tester", null, "tester", OffsetDateTime.now());
+        file.updateHashes(10, "abcd", "abcd");
         return file;
     }
 

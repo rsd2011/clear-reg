@@ -84,11 +84,16 @@ public class UserAccount extends PrimaryKeyEntity {
     this.permissionGroupCode = permissionGroupCode != null ? permissionGroupCode : "DEFAULT";
   }
 
-  public void setSsoId(String ssoId) {
+  /** SSO 계정 식별자를 연결한다. 한번만 설정하도록 guard. */
+  public void linkSsoId(String ssoId) {
+    if (this.ssoId != null && !this.ssoId.equals(ssoId)) {
+      throw new IllegalStateException("SSO ID already linked");
+    }
     this.ssoId = ssoId;
   }
 
-  public void setActiveDirectoryDomain(String activeDirectoryDomain) {
+  /** AD 도메인을 지정한다. */
+  public void assignActiveDirectoryDomain(String activeDirectoryDomain) {
     this.activeDirectoryDomain = activeDirectoryDomain;
   }
 

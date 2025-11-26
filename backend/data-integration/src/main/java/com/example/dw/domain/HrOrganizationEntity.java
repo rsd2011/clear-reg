@@ -20,6 +20,42 @@ import jakarta.persistence.Table;
         })
 public class HrOrganizationEntity extends PrimaryKeyEntity {
 
+    protected HrOrganizationEntity() {
+    }
+
+    private HrOrganizationEntity(String organizationCode,
+                                 int version,
+                                 String name,
+                                 String parentOrganizationCode,
+                                 String status,
+                                 LocalDate effectiveStart,
+                                 LocalDate effectiveEnd,
+                                 UUID sourceBatchId,
+                                 OffsetDateTime syncedAt) {
+        this.organizationCode = organizationCode;
+        this.version = version;
+        this.name = name;
+        this.parentOrganizationCode = parentOrganizationCode;
+        this.status = status;
+        this.effectiveStart = effectiveStart;
+        this.effectiveEnd = effectiveEnd;
+        this.sourceBatchId = sourceBatchId;
+        this.syncedAt = syncedAt == null ? OffsetDateTime.now(ZoneOffset.UTC) : syncedAt;
+    }
+
+    public static HrOrganizationEntity snapshot(String organizationCode,
+                                                int version,
+                                                String name,
+                                                String parentOrganizationCode,
+                                                String status,
+                                                LocalDate effectiveStart,
+                                                LocalDate effectiveEnd,
+                                                UUID sourceBatchId,
+                                                OffsetDateTime syncedAt) {
+        return new HrOrganizationEntity(organizationCode, version, name, parentOrganizationCode, status,
+                effectiveStart, effectiveEnd, sourceBatchId, syncedAt);
+    }
+
     @Column(name = "organization_code", nullable = false, length = 64)
     private String organizationCode;
 
@@ -51,72 +87,36 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
         return organizationCode;
     }
 
-    public void setOrganizationCode(String organizationCode) {
-        this.organizationCode = organizationCode;
-    }
-
     public int getVersion() {
         return version;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getParentOrganizationCode() {
         return parentOrganizationCode;
-    }
-
-    public void setParentOrganizationCode(String parentOrganizationCode) {
-        this.parentOrganizationCode = parentOrganizationCode;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public LocalDate getEffectiveStart() {
         return effectiveStart;
-    }
-
-    public void setEffectiveStart(LocalDate effectiveStart) {
-        this.effectiveStart = effectiveStart;
     }
 
     public LocalDate getEffectiveEnd() {
         return effectiveEnd;
     }
 
-    public void setEffectiveEnd(LocalDate effectiveEnd) {
-        this.effectiveEnd = effectiveEnd;
-    }
-
     public UUID getSourceBatchId() {
         return sourceBatchId;
     }
 
-    public void setSourceBatchId(UUID sourceBatchId) {
-        this.sourceBatchId = sourceBatchId;
-    }
-
     public OffsetDateTime getSyncedAt() {
         return syncedAt;
-    }
-
-    public void setSyncedAt(OffsetDateTime syncedAt) {
-        this.syncedAt = syncedAt;
     }
 
     public boolean sameBusinessState(String name,
@@ -133,5 +133,13 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
 
     private static boolean safeEquals(Object left, Object right) {
         return left == null ? right == null : left.equals(right);
+    }
+
+    public void closeAt(LocalDate endDate) {
+        if (endDate != null && effectiveStart != null && endDate.isBefore(effectiveStart)) {
+            this.effectiveEnd = effectiveStart;
+        } else {
+            this.effectiveEnd = endDate;
+        }
     }
 }

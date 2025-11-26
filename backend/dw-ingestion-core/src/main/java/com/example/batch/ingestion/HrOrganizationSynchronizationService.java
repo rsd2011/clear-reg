@@ -48,23 +48,24 @@ public class HrOrganizationSynchronizationService {
                 if (closingDate.isBefore(active.getEffectiveStart())) {
                     closingDate = active.getEffectiveStart();
                 }
-                active.setEffectiveEnd(closingDate);
+                active.closeAt(closingDate);
                 organizationRepository.save(active);
                 updated++;
             } else {
                 inserted++;
             }
 
-            HrOrganizationEntity snapshot = new HrOrganizationEntity();
-            snapshot.setOrganizationCode(record.organizationCode());
-            snapshot.setVersion(nextVersion);
-            snapshot.setName(record.name());
-            snapshot.setParentOrganizationCode(record.parentOrganizationCode());
-            snapshot.setStatus(record.status());
-            snapshot.setEffectiveStart(newStart);
-            snapshot.setEffectiveEnd(newEnd);
-            snapshot.setSourceBatchId(batch.getId());
-            snapshot.setSyncedAt(OffsetDateTime.now(ZoneOffset.UTC));
+            HrOrganizationEntity snapshot = HrOrganizationEntity.snapshot(
+                    record.organizationCode(),
+                    nextVersion,
+                    record.name(),
+                    record.parentOrganizationCode(),
+                    record.status(),
+                    newStart,
+                    newEnd,
+                    batch.getId(),
+                    OffsetDateTime.now(ZoneOffset.UTC)
+            );
             organizationRepository.save(snapshot);
         }
         return new HrSyncResult(inserted, updated);

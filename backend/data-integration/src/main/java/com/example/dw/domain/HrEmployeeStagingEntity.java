@@ -19,6 +19,54 @@ import jakarta.persistence.Table;
         })
 public class HrEmployeeStagingEntity extends PrimaryKeyEntity {
 
+    protected HrEmployeeStagingEntity() {
+    }
+
+    private HrEmployeeStagingEntity(HrImportBatchEntity batch,
+                                    String employeeId,
+                                    String fullName,
+                                    String email,
+                                    String organizationCode,
+                                    String employmentType,
+                                    String employmentStatus,
+                                    LocalDate startDate,
+                                    LocalDate endDate,
+                                    String payloadHash,
+                                    String rawPayload) {
+        this.batch = batch;
+        this.employeeId = employeeId;
+        this.fullName = fullName;
+        this.email = email;
+        this.organizationCode = organizationCode;
+        this.employmentType = employmentType;
+        this.employmentStatus = employmentStatus;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.payloadHash = payloadHash;
+        this.rawPayload = rawPayload;
+    }
+
+    public static HrEmployeeStagingEntity fromRecord(HrImportBatchEntity batch,
+                                                     com.example.dw.dto.HrEmployeeRecord record,
+                                                     String payloadHash) {
+        if (batch == null || record == null) {
+            throw new IllegalArgumentException("batch and record are required");
+        }
+        return new HrEmployeeStagingEntity(
+                batch,
+                record.employeeId(),
+                record.fullName(),
+                record.email(),
+                record.organizationCode(),
+                record.employmentType(),
+                record.employmentStatus(),
+                record.startDate(),
+                record.endDate(),
+                payloadHash,
+                record.rawPayload()
+        );
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "batch_id", nullable = false)
     private HrImportBatchEntity batch;
@@ -57,87 +105,43 @@ public class HrEmployeeStagingEntity extends PrimaryKeyEntity {
         return batch;
     }
 
-    public void setBatch(HrImportBatchEntity batch) {
-        this.batch = batch;
-    }
-
     public String getEmployeeId() {
         return employeeId;
-    }
-
-    public void setEmployeeId(String employeeId) {
-        this.employeeId = employeeId;
     }
 
     public String getFullName() {
         return fullName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
     public String getEmail() {
         return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getOrganizationCode() {
         return organizationCode;
     }
 
-    public void setOrganizationCode(String organizationCode) {
-        this.organizationCode = organizationCode;
-    }
-
     public String getEmploymentType() {
         return employmentType;
-    }
-
-    public void setEmploymentType(String employmentType) {
-        this.employmentType = employmentType;
     }
 
     public String getEmploymentStatus() {
         return employmentStatus;
     }
 
-    public void setEmploymentStatus(String employmentStatus) {
-        this.employmentStatus = employmentStatus;
-    }
-
     public LocalDate getStartDate() {
         return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
     }
 
     public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
     public String getPayloadHash() {
         return payloadHash;
     }
 
-    public void setPayloadHash(String payloadHash) {
-        this.payloadHash = payloadHash;
-    }
-
     public String getRawPayload() {
         return rawPayload;
-    }
-
-    public void setRawPayload(String rawPayload) {
-        this.rawPayload = rawPayload;
     }
 }
