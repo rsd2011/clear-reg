@@ -1,6 +1,6 @@
 package com.example.draft.application;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
@@ -14,10 +14,9 @@ import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import static org.mockito.Mockito.when;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
+import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.ApprovalGroup;
-import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
@@ -25,22 +24,23 @@ import com.example.draft.domain.repository.DraftFormTemplateRepository;
 class TemplateAdminServiceAccessTest {
 
     @Test
-    @DisplayName("조직이 다르면 결재 그룹 업데이트를 거부한다")
-    void updateApprovalGroup_deniesOtherOrg() {
+    @DisplayName("결재 그룹 업데이트가 성공한다")
+    void updateApprovalGroup_success() {
         ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
-        ApprovalGroup group = ApprovalGroup.create("GC", "name", "desc", "ORG-1", null, OffsetDateTime.now());
+        ApprovalGroup group = ApprovalGroup.create("GC", "name", "desc", 0, OffsetDateTime.now());
+        UUID id = UUID.randomUUID();
         given(groupRepo.findById(any())).willReturn(Optional.of(group));
 
-        AuthContext ctx = mock(AuthContext.class);
-        when(ctx.organizationCode()).thenReturn("ORG-2");
-        when(ctx.rowScope()).thenReturn(RowScope.ORG);
-        ApprovalGroupRequest request = new ApprovalGroupRequest("GC", "name", null, "ORG-1", "cond");
+        AuthContext ctx = AuthContext.of("u", "ORG-1", null, null, null, RowScope.ORG);
+        ApprovalGroupRequest request = new ApprovalGroupRequest("GC", "new-name", null, 5);
 
-        assertThatThrownBy(() -> service.updateApprovalGroup(UUID.randomUUID(), request, ctx, false))
-                .isInstanceOf(DraftAccessDeniedException.class);
+        ApprovalGroupResponse res = service.updateApprovalGroup(id, request, ctx, false);
+
+        assertThat(res.name()).isEqualTo("new-name");
+        assertThat(res.priority()).isEqualTo(5);
     }
 }

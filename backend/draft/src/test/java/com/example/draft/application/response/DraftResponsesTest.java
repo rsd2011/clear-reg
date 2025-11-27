@@ -5,8 +5,6 @@ import com.example.draft.application.dto.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +15,6 @@ import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.draft.domain.TemplateScope;
 
 class DraftResponsesTest {
 
@@ -25,7 +22,7 @@ class DraftResponsesTest {
     @DisplayName("ApprovalGroupResponse apply/from에 마스킹 함수가 적용된다")
     void approvalGroupResponseApplyMasks() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalGroup group = ApprovalGroup.create("G1","Name","Desc","ORG","expr", now);
+        ApprovalGroup group = ApprovalGroup.create("G1", "Name", "Desc", 0, now);
         ApprovalGroupResponse resp = ApprovalGroupResponse.from(group, mask());
         assertThat(resp.name()).isEqualTo("x");
         ApprovalGroupResponse again = ApprovalGroupResponse.apply(resp, mask());

@@ -55,14 +55,12 @@ public class TemplateAdminService {
     }
 
     public ApprovalGroupResponse createApprovalGroup(ApprovalGroupRequest request, AuthContext context, boolean audit) {
-        String org = ensureOrganization(request.organizationCode(), context, audit);
         OffsetDateTime now = OffsetDateTime.now();
         ApprovalGroup group = ApprovalGroup.create(
                 request.groupCode(),
                 request.name(),
                 request.description(),
-                org,
-                request.conditionExpression(),
+                request.priority(),
                 now);
         return ApprovalGroupResponse.from(approvalGroupRepository.save(group));
     }
@@ -70,19 +68,17 @@ public class TemplateAdminService {
     public ApprovalGroupResponse updateApprovalGroup(UUID id, ApprovalGroupRequest request, AuthContext context, boolean audit) {
         ApprovalGroup group = approvalGroupRepository.findById(id)
                 .orElseThrow(() -> new DraftTemplateNotFoundException("결재 그룹을 찾을 수 없습니다."));
-        ensureOrganizationAccess(group.getOrganizationCode(), context, audit);
-        group.rename(request.name(), request.description(), request.conditionExpression(), OffsetDateTime.now());
+        OffsetDateTime now = OffsetDateTime.now();
+        group.rename(request.name(), request.description(), now);
+        if (request.priority() != null) {
+            group.updatePriority(request.priority(), now);
+        }
         return ApprovalGroupResponse.from(group);
     }
 
     @Transactional(readOnly = true)
     public List<ApprovalGroupResponse> listApprovalGroups(String organizationCode, AuthContext context, boolean audit) {
-        if (!audit) {
-            organizationCode = context.organizationCode();
-        }
-        String orgFilter = organizationCode;
         return approvalGroupRepository.findAll().stream()
-                .filter(g -> orgFilter == null || orgFilter.equals(g.getOrganizationCode()))
                 .map(ApprovalGroupResponse::from)
                 .toList();
     }

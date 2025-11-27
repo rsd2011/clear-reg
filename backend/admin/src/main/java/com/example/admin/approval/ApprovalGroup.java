@@ -16,8 +16,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "approval_groups",
         indexes = {
-                @Index(name = "idx_approval_group_code", columnList = "group_code", unique = true),
-                @Index(name = "idx_approval_group_org", columnList = "organization_code")
+                @Index(name = "idx_approval_group_code", columnList = "group_code", unique = true)
         })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -32,11 +31,8 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "organization_code", nullable = false, length = 64)
-    private String organizationCode;
-
-    @Column(name = "condition_expression", length = 1000)
-    private String conditionExpression;
+    @Column(name = "priority", nullable = false)
+    private Integer priority = 0;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -50,14 +46,12 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     private ApprovalGroup(String groupCode,
                           String name,
                           String description,
-                          String organizationCode,
-                          String conditionExpression,
+                          Integer priority,
                           OffsetDateTime now) {
         this.groupCode = groupCode;
         this.name = name;
         this.description = description;
-        this.organizationCode = organizationCode;
-        this.conditionExpression = conditionExpression;
+        this.priority = priority != null ? priority : 0;
         this.createdAt = now;
         this.updatedAt = now;
     }
@@ -65,16 +59,19 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     public static ApprovalGroup create(String groupCode,
                                        String name,
                                        String description,
-                                       String organizationCode,
-                                       String conditionExpression,
+                                       Integer priority,
                                        OffsetDateTime now) {
-        return new ApprovalGroup(groupCode, name, description, organizationCode, conditionExpression, now);
+        return new ApprovalGroup(groupCode, name, description, priority, now);
     }
 
-    public void rename(String name, String description, String conditionExpression, OffsetDateTime now) {
+    public void rename(String name, String description, OffsetDateTime now) {
         this.name = name;
         this.description = description;
-        this.conditionExpression = conditionExpression;
+        this.updatedAt = now;
+    }
+
+    public void updatePriority(Integer priority, OffsetDateTime now) {
+        this.priority = priority;
         this.updatedAt = now;
     }
 }

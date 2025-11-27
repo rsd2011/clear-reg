@@ -44,14 +44,14 @@ class TemplateAdminServiceEndToEndTest {
 
         // create group
         given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
-        ApprovalGroupRequest groupReq = new ApprovalGroupRequest("G1", "g-name", "desc", "ORG1", null);
+        ApprovalGroupRequest groupReq = new ApprovalGroupRequest("G1", "g-name", "desc", 0);
         ApprovalGroupResponse groupRes = service.createApprovalGroup(groupReq, ctx, false);
 
         // update group backing repo
-        ApprovalGroup groupEntity = ApprovalGroup.create("G1", "g-name", "desc", "ORG1", null, now);
+        ApprovalGroup groupEntity = ApprovalGroup.create("G1", "g-name", "desc", 0, now);
         UUID groupId = UUID.fromString("00000000-0000-0000-0000-00000000e2e2");
         given(groupRepo.findById(groupId)).willReturn(Optional.of(groupEntity));
-        ApprovalGroupResponse updatedGroup = service.updateApprovalGroup(groupId, new ApprovalGroupRequest("G1", "g-new", "d2", "ORG1", "expr"), ctx, false);
+        ApprovalGroupResponse updatedGroup = service.updateApprovalGroup(groupId, new ApprovalGroupRequest("G1", "g-new", "d2", 5), ctx, false);
 
         // create line template
         given(lineRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));

@@ -23,22 +23,23 @@ import com.example.draft.domain.repository.DraftFormTemplateRepository;
 class TemplateAdminServiceRowScopeAllTest {
 
     @Test
-    @DisplayName("RowScope.ALL이면 다른 조직 그룹도 업데이트를 허용한다")
-    void allowsOtherOrgWhenRowScopeAll() {
+    @DisplayName("RowScope.ALL이면 그룹 업데이트를 허용한다")
+    void allowsUpdateWhenRowScopeAll() {
         ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
-        ApprovalGroup group = ApprovalGroup.create("G1", "n", null, "ORG1", null, OffsetDateTime.now());
+        ApprovalGroup group = ApprovalGroup.create("G1", "n", null, 0, OffsetDateTime.now());
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
         given(groupRepo.findById(id)).willReturn(Optional.of(group));
 
         AuthContext ctx = AuthContext.of("u", "ORG2", null, null, null, RowScope.ALL);
-        ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "renamed", "desc", "ORG1", null);
+        ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "renamed", "desc", 5);
 
         ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);
 
         assertThat(res.name()).isEqualTo("renamed");
+        assertThat(res.priority()).isEqualTo(5);
     }
 }

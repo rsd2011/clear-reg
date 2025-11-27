@@ -34,16 +34,16 @@ class TemplateAdminServiceIntegratedFlowTest {
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         // create
-        ApprovalGroupRequest createReq = new ApprovalGroupRequest("G1", "name", "desc", "ORG1", null);
+        ApprovalGroupRequest createReq = new ApprovalGroupRequest("G1", "name", "desc", 0);
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
         given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
         ApprovalGroupResponse created = service.createApprovalGroup(createReq, ctx, false);
 
         // update
-        ApprovalGroup stored = ApprovalGroup.create("G1", "name", "desc", "ORG1", null, OffsetDateTime.now());
+        ApprovalGroup stored = ApprovalGroup.create("G1", "name", "desc", 0, OffsetDateTime.now());
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000001111");
         given(groupRepo.findById(id)).willReturn(Optional.of(stored));
-        ApprovalGroupRequest updateReq = new ApprovalGroupRequest("G1", "new-name", "new-desc", "ORG1", "expr");
+        ApprovalGroupRequest updateReq = new ApprovalGroupRequest("G1", "new-name", "new-desc", 5);
         ApprovalGroupResponse updated = service.updateApprovalGroup(id, updateReq, ctx, false);
 
         // list

@@ -32,17 +32,17 @@ class TemplateAdminServiceUpdateApprovalGroupTest {
                 mock(ApprovalLineTemplateRepository.class),
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
-        ApprovalGroup group = ApprovalGroup.create("G1", "old", "desc", "ORG1", null, OffsetDateTime.now());
+        ApprovalGroup group = ApprovalGroup.create("G1", "old", "desc", 0, OffsetDateTime.now());
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000021");
         given(groupRepo.findById(id)).willReturn(Optional.of(group));
         given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
-        ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "newName", "newDesc", "ORG1", "expr");
+        ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "newName", "newDesc", 10);
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);
 
         assertThat(res.name()).isEqualTo("newName");
-        assertThat(res.organizationCode()).isEqualTo("ORG1");
+        assertThat(res.priority()).isEqualTo(10);
     }
 }

@@ -22,28 +22,46 @@ class ApprovalDomainTest {
         @Test
         @DisplayName("Given 유효한 파라미터 When create 호출 Then ApprovalGroup이 생성된다")
         void createApprovalGroup() {
-            ApprovalGroup group = ApprovalGroup.create("G1", "결재그룹1", "설명", "ORG1", "expr", NOW);
+            ApprovalGroup group = ApprovalGroup.create("G1", "결재그룹1", "설명", 10, NOW);
 
             assertThat(group.getGroupCode()).isEqualTo("G1");
             assertThat(group.getName()).isEqualTo("결재그룹1");
             assertThat(group.getDescription()).isEqualTo("설명");
-            assertThat(group.getOrganizationCode()).isEqualTo("ORG1");
-            assertThat(group.getConditionExpression()).isEqualTo("expr");
+            assertThat(group.getPriority()).isEqualTo(10);
             assertThat(group.getCreatedAt()).isEqualTo(NOW);
             assertThat(group.getUpdatedAt()).isEqualTo(NOW);
         }
 
         @Test
+        @DisplayName("Given priority가 null When create 호출 Then 기본값 0이 설정된다")
+        void createApprovalGroupWithNullPriority() {
+            ApprovalGroup group = ApprovalGroup.create("G1", "결재그룹1", "설명", null, NOW);
+
+            assertThat(group.getPriority()).isEqualTo(0);
+        }
+
+        @Test
         @DisplayName("Given 기존 그룹 When rename 호출 Then 필드가 갱신된다")
         void renameApprovalGroup() {
-            ApprovalGroup group = ApprovalGroup.create("G1", "결재그룹1", "설명", "ORG1", "expr", NOW);
+            ApprovalGroup group = ApprovalGroup.create("G1", "결재그룹1", "설명", 10, NOW);
             OffsetDateTime later = NOW.plusHours(1);
 
-            group.rename("변경된이름", "변경된설명", "newExpr", later);
+            group.rename("변경된이름", "변경된설명", later);
 
             assertThat(group.getName()).isEqualTo("변경된이름");
             assertThat(group.getDescription()).isEqualTo("변경된설명");
-            assertThat(group.getConditionExpression()).isEqualTo("newExpr");
+            assertThat(group.getUpdatedAt()).isEqualTo(later);
+        }
+
+        @Test
+        @DisplayName("Given 기존 그룹 When updatePriority 호출 Then priority가 갱신된다")
+        void updatePriorityApprovalGroup() {
+            ApprovalGroup group = ApprovalGroup.create("G1", "결재그룹1", "설명", 0, NOW);
+            OffsetDateTime later = NOW.plusHours(1);
+
+            group.updatePriority(20, later);
+
+            assertThat(group.getPriority()).isEqualTo(20);
             assertThat(group.getUpdatedAt()).isEqualTo(later);
         }
     }

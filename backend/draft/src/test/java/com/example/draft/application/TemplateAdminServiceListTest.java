@@ -21,25 +21,22 @@ import com.example.draft.domain.repository.DraftFormTemplateRepository;
 class TemplateAdminServiceListTest {
 
     @Test
-    @DisplayName("audit=false이면 AuthContext 조직으로 필터링하고 audit=true이면 필터를 그대로 사용한다")
-    void listFiltersOrgWhenNotAudit() {
+    @DisplayName("listApprovalGroups는 모든 그룹을 반환한다")
+    void listReturnsAllGroups() {
         ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
-        ApprovalGroup org1 = ApprovalGroup.create("G1", "name", null, "ORG1", null, OffsetDateTime.now());
-        ApprovalGroup org2 = ApprovalGroup.create("G2", "name", null, "ORG2", null, OffsetDateTime.now());
-        given(groupRepo.findAll()).willReturn(List.of(org1, org2));
+        ApprovalGroup group1 = ApprovalGroup.create("G1", "name1", null, 0, OffsetDateTime.now());
+        ApprovalGroup group2 = ApprovalGroup.create("G2", "name2", null, 10, OffsetDateTime.now());
+        given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
-        // audit=false => context.organizationCode() 사용
-        List<ApprovalGroupResponse> filtered = service.listApprovalGroups(null, ctx, false);
-        assertThat(filtered).extracting(ApprovalGroupResponse::organizationCode).containsOnly("ORG1");
-
-        // audit=true => 전달된 organizationCode 그대로 사용
-        List<ApprovalGroupResponse> filteredAudit = service.listApprovalGroups("ORG2", ctx, true);
-        assertThat(filteredAudit).extracting(ApprovalGroupResponse::organizationCode).containsOnly("ORG2");
+        // audit=false든 true든 모든 그룹을 반환
+        List<ApprovalGroupResponse> result = service.listApprovalGroups(null, ctx, false);
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(ApprovalGroupResponse::groupCode).containsExactlyInAnyOrder("G1", "G2");
     }
 }
