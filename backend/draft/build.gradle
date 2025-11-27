@@ -12,24 +12,24 @@ dependencies {
     implementation project(':backend:approval')
 
     // 부트 스타터 제거: 코어 + 오토컨피규어
-    implementation 'org.springframework.boot:spring-boot'
-    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation libs.spring.boot.lib
+    implementation libs.spring.boot.autoconfigure
 
     // 스프링 코어/데이터/캐시/AOP
     implementation libs.spring.context
     implementation libs.spring.data.commons
-    implementation 'org.springframework.data:spring-data-jpa'
-    implementation 'org.springframework:spring-orm'
-    implementation 'org.springframework:spring-tx'
-    implementation 'org.springframework:spring-aop'
-    implementation 'org.springframework:spring-context-support' // cache abstraction helpers
-    implementation 'org.aspectj:aspectjweaver'
+    implementation libs.spring.data.jpa
+    implementation libs.spring.orm
+    implementation libs.spring.tx
+    implementation libs.spring.aop
+    implementation libs.spring.context.support // cache abstraction helpers
+    implementation libs.aspectjweaver
     implementation libs.jakarta.persistence
-    implementation 'org.hibernate.orm:hibernate-core'
+    implementation libs.hibernate.core
 
     // 검증
-    implementation 'org.hibernate.validator:hibernate-validator'
-    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
+    implementation libs.hibernate.validator
+    runtimeOnly libs.jakarta.el
 
     implementation libs.jackson.databind
     implementation libs.jackson.datatype.jsr310
@@ -37,7 +37,7 @@ dependencies {
     implementation libs.ulid.creator
     runtimeOnly libs.h2.database
 
-    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+    compileOnly libs.findbugs.jsr305
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

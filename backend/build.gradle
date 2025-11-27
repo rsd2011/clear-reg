@@ -8,18 +8,23 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     // SonarQube는 backend 루트에서만 적용 (주로 CI에서 실행)
-    id 'org.sonarqube' version '5.1.0.4882'
+    alias(libs.plugins.sonarqube)
     // SpotBugs 플러그인 클래스 로딩을 위해 선언 (루트 적용은 아님)
-    id 'com.github.spotbugs' version '5.2.1' apply false
+    alias(libs.plugins.spotbugs) apply false
 }
 
 // 공통 품질/버전 설정 (backend 프로젝트 기준)
 def backendProject = project
 ext {
+    // Version Catalog에서 버전 참조 (gradle/libs.versions.toml의 [versions] 섹션)
+    spotbugsVer = libs.versions.spotbugs.tool
+    checkstyleVer = libs.versions.checkstyle.tool
+    pmdVer = libs.versions.pmd.tool
+    jacocoVer = libs.versions.jacoco.tool
     quality = [
-            spotbugsVersion   : '4.8.6',
-            checkstyleVersion : '10.17.0',
-            pmdVersion        : '6.55.0'
+            spotbugsVersion   : spotbugsVer.get(),
+            checkstyleVersion : checkstyleVer.get(),
+            pmdVersion        : pmdVer.get()
     ]
     qualityConfig = [
             checkstyleClasspath : 'google_checks.xml',             // Checkstyle 기본 제공 Google 규칙
@@ -54,7 +59,7 @@ subprojects { subproject ->
         }
 
         subproject.extensions.configure(JacocoPluginExtension) { jacocoExt ->
-            jacocoExt.toolVersion = '0.8.11'
+            jacocoExt.toolVersion = backendProject.ext.jacocoVer.get()
         }
 
         tasks.withType(Test).configureEach {

@@ -11,22 +11,22 @@ dependencies {
     implementation project(':backend:admin')
 
     // 최소 부트 코어만 포함하고 스타터는 제거
-    implementation 'org.springframework.boot:spring-boot'
-    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+    implementation libs.spring.boot.lib
+    implementation libs.spring.boot.autoconfigure
 
     // 코어 스프링/데이터 의존성
     implementation libs.spring.context
     implementation libs.spring.data.commons
-    implementation 'org.springframework.data:spring-data-jpa'
-    implementation 'org.springframework:spring-orm'
-    implementation 'org.springframework:spring-tx'
-    implementation 'org.springframework:spring-aop'
-    implementation 'org.aspectj:aspectjweaver'
+    implementation libs.spring.data.jpa
+    implementation libs.spring.orm
+    implementation libs.spring.tx
+    implementation libs.spring.aop
+    implementation libs.aspectjweaver
     implementation libs.jakarta.persistence
 
     // 검증 엔진
-    implementation 'org.hibernate.validator:hibernate-validator'
-    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
+    implementation libs.hibernate.validator
+    runtimeOnly libs.jakarta.el
 
     // 보안은 Starter 번들 유지 (OAuth2/LDAP 의존성)
     implementation libs.bundles.spring.boot.security
@@ -37,7 +37,7 @@ dependencies {
     implementation libs.jjwt.api
     runtimeOnly libs.jjwt.impl
     runtimeOnly libs.jjwt.jackson
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
+    compileOnly libs.spotbugs.annotations
     compileOnly libs.lombok
     annotationProcessor libs.lombok
     testCompileOnly libs.lombok

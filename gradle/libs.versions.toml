@@ -16,6 +16,16 @@ koroman = "java-v1.0.12"
 poi = "5.2.5"
 pdfbox = "3.0.1"
 postgresql = "42.7.2"
+# 품질 도구 버전
+sonarqube-plugin = "5.1.0.4882"
+spotbugs-plugin = "5.2.1"
+spotbugs-tool = "4.8.6"
+checkstyle-tool = "10.17.0"
+pmd-tool = "6.55.0"
+jacoco-tool = "0.8.11"
+# 추가 라이브러리 버전
+jakarta-el = "4.0.2"
+findbugs-jsr305 = "3.0.2"
 
 [libraries]
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter", version.ref = "spring-boot" }
@@ -66,6 +76,28 @@ koroman = { module = "com.github.gerosyab:koroman", version.ref = "koroman" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi" }
 pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+# Spring 코어 (BOM 관리, 버전 생략)
+spring-boot-lib = { module = "org.springframework.boot:spring-boot" }
+spring-boot-autoconfigure = { module = "org.springframework.boot:spring-boot-autoconfigure" }
+spring-data-jpa = { module = "org.springframework.data:spring-data-jpa" }
+spring-orm = { module = "org.springframework:spring-orm" }
+spring-tx = { module = "org.springframework:spring-tx" }
+spring-aop = { module = "org.springframework:spring-aop" }
+spring-web = { module = "org.springframework:spring-web" }
+spring-webmvc = { module = "org.springframework:spring-webmvc" }
+spring-context-support = { module = "org.springframework:spring-context-support" }
+spring-security-core = { module = "org.springframework.security:spring-security-core" }
+spring-batch-core = { module = "org.springframework.batch:spring-batch-core" }
+# AOP
+aspectjweaver = { module = "org.aspectj:aspectjweaver" }
+# Hibernate/JPA
+hibernate-core = { module = "org.hibernate.orm:hibernate-core" }
+hibernate-validator = { module = "org.hibernate.validator:hibernate-validator" }
+# Jakarta EL (버전 명시 필요)
+jakarta-el = { module = "org.glassfish:jakarta.el", version.ref = "jakarta-el" }
+# 코드 분석 도구
+spotbugs-annotations = { module = "com.github.spotbugs:spotbugs-annotations", version.ref = "spotbugs-tool" }
+findbugs-jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "findbugs-jsr305" }
 
 [bundles]
 spring-boot-core = ["spring-boot-starter", "spring-boot-starter-validation"]
@@ -75,3 +107,5 @@ spring-test = ["spring-boot-starter-test", "spring-security-test"]
 [plugins]
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube-plugin" }
+spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs-plugin" }
