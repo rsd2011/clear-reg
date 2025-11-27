@@ -25,6 +25,7 @@ public class DataPolicyProviderAdapter implements DataPolicyProvider {
                 query.orgPolicyId(),
                 query.orgGroupCodes(),
                 query.businessType(),
+                query.sensitiveTag(),
                 query.nowOrDefault());
     }
 }

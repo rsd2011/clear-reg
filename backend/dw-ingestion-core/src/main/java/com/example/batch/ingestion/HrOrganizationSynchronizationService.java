@@ -38,7 +38,7 @@ public class HrOrganizationSynchronizationService {
             LocalDate newEnd = record.endDate();
 
             if (active != null && active.sameBusinessState(record.name(), record.parentOrganizationCode(),
-                    record.status(), newStart, newEnd)) {
+                    record.status(), record.leaderEmployeeId(), record.managerEmployeeId(), newStart, newEnd)) {
                 continue;
             }
 
@@ -61,6 +61,8 @@ public class HrOrganizationSynchronizationService {
                     record.name(),
                     record.parentOrganizationCode(),
                     record.status(),
+                    record.leaderEmployeeId(),
+                    record.managerEmployeeId(),
                     newStart,
                     newEnd,
                     batch.getId(),

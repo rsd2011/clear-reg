@@ -78,7 +78,7 @@ class NoticeAdminControllerWebMvcTest {
 
     @BeforeEach
     void setUpAuth() throws Throwable {
-        authContext = new AuthContext("tester", "ORG", "PG", FeatureCode.NOTICE, ActionCode.UPDATE, com.example.common.security.RowScope.ALL, null);
+        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.NOTICE, ActionCode.UPDATE, com.example.common.security.RowScope.ALL);
         allowDecision = org.mockito.Mockito.mock(PermissionDecision.class);
         given(allowDecision.toContext()).willReturn(authContext);
         given(permissionEvaluator.evaluate(any(), any())).willReturn(allowDecision);

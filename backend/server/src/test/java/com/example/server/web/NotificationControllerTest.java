@@ -55,9 +55,9 @@ class NotificationControllerTest {
 
     @BeforeEach
     void setUp() {
-        AuthContextHolder.set(new AuthContext("tester", "ORG", "DEFAULT",
+        AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
                 FeatureCode.ALERT, com.example.admin.permission.ActionCode.READ,
-                RowScope.ALL, java.util.Map.of()));
+                RowScope.ALL));
     }
 
     @AfterEach

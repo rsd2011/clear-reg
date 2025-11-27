@@ -83,6 +83,8 @@ class DwOrganizationTreeServiceTest {
                 "Org-" + code,
                 parentCode,
                 "ACTIVE",
+                null,
+                null,
                 LocalDate.of(2020, 1, 1),
                 null,
                 UUID.randomUUID(),

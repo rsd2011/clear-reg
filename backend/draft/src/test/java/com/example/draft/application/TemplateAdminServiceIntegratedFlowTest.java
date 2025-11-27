@@ -35,7 +35,7 @@ class TemplateAdminServiceIntegratedFlowTest {
 
         // create
         ApprovalGroupRequest createReq = new ApprovalGroupRequest("G1", "name", "desc", "ORG1", null);
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
         given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
         ApprovalGroupResponse created = service.createApprovalGroup(createReq, ctx, false);
 

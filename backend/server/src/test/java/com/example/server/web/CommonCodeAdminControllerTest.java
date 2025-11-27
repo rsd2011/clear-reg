@@ -56,8 +56,8 @@ class CommonCodeAdminControllerTest {
 
     @BeforeEach
     void setUp() {
-        AuthContextHolder.set(new AuthContext("admin", "ROOT", "ADMIN",
-                FeatureCode.COMMON_CODE, ActionCode.UPDATE, RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("admin", "ROOT", "ADMIN",
+                FeatureCode.COMMON_CODE, ActionCode.UPDATE, RowScope.ALL));
     }
 
     @AfterEach

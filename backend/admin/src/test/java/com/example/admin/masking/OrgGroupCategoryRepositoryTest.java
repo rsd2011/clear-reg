@@ -33,7 +33,7 @@ class OrgGroupCategoryRepositoryTest {
     @Test
     @DisplayName("그룹 코드로 카테고리 코드를 조회할 수 있다")
     void findCategoryCodes() {
-        em.persist(OrgGroup.builder().code("GRP_A").name("Group A").priority(50).build());
+        em.persist(OrgGroup.builder().code("GRP_A").name("Group A").sort(50).build());
         em.persist(OrgGroupCategory.builder().code("COMPLIANCE").label("준법").build());
         em.persist(OrgGroupCategory.builder().code("SALES").label("영업").build());
         categoryRepo.save(OrgGroupCategoryMap.builder().groupCode("GRP_A").categoryCode("COMPLIANCE").build());

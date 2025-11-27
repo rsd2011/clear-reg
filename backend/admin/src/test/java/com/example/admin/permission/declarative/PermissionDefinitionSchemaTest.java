@@ -46,7 +46,6 @@ class PermissionDefinitionSchemaTest {
           .isTrue();
 
       validateAssignments(definition);
-      validateMaskRules(definition);
     }
   }
 
@@ -57,12 +56,6 @@ class PermissionDefinitionSchemaTest {
       assertThatNoException()
           .describedAs("row condition for %s", definition.code())
           .isThrownBy(() -> rowConditionEvaluator.validate(assignment.condition()));
-    }
-  }
-
-  private void validateMaskRules(PermissionGroupDefinition definition) {
-    for (FieldMaskRuleDefinition rule : definition.maskRulesOrEmpty()) {
-      assertThat(rule.tag()).describedAs("mask rule tag for %s", definition.code()).isNotBlank();
     }
   }
 }

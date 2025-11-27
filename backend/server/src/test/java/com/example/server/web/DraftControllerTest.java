@@ -75,8 +75,8 @@ class DraftControllerTest {
 
     @BeforeEach
     void setUp() {
-        AuthContextHolder.set(new AuthContext("writer", "ORG-001", "DEFAULT",
-                FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("writer", "ORG-001", "DEFAULT",
+                FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ALL));
     }
 
     @AfterEach
@@ -95,7 +95,7 @@ class DraftControllerTest {
         mockMvc.perform(post("/api/drafts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftCreateRequest(
-                                "제목", "본문", "NOTICE", UUID.randomUUID(), UUID.randomUUID(), "{}", java.util.List.of(), null, java.util.Map.of()))))
+                                "제목", "본문", "NOTICE", UUID.randomUUID(), UUID.randomUUID(), "{}", java.util.List.of(), null, null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("제목"));
 
@@ -268,8 +268,8 @@ class DraftControllerTest {
     @Test
     @DisplayName("Given 리스트 요청 When GET 호출 Then RowScope 조직으로 필터링한다")
     void givenListRequest_whenListing_thenFiltersByRowScope() throws Exception {
-        AuthContextHolder.set(new AuthContext("writer", "ORG-001", "DEFAULT",
-                FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("writer", "ORG-001", "DEFAULT",
+                FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
         given(organizationQueryService.getOrganizations(Pageable.unpaged(), RowScope.ORG, "ORG-001"))
                 .willReturn(new PageImpl<>(List.of(sampleOrgNode("ORG-001"))));
         DraftResponse response = sampleResponse(DraftStatus.DRAFT);

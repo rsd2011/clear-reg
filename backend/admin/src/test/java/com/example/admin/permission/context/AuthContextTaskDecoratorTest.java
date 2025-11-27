@@ -23,14 +23,13 @@ class AuthContextTaskDecoratorTest {
   @DisplayName("TaskDecorator가 AuthContext를 비동기 실행기로 전달한다")
   void decoratorPropagatesContext() {
     AuthContext context =
-        new AuthContext(
+        AuthContext.of(
             "async-user",
             "ORG",
             "DEFAULT",
             FeatureCode.FILE,
             ActionCode.DOWNLOAD,
-            RowScope.OWN,
-            java.util.Map.of());
+            RowScope.OWN);
     AuthContextHolder.set(context);
     AtomicReference<AuthContext> observed = new AtomicReference<>();
 

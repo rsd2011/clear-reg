@@ -8,11 +8,6 @@ permissionGroups:
         action: READ
         rowScope: ORG
         condition: "organizationCode == 'ROOT'"
-    maskRules:
-      - tag: SECRET
-        maskWith: "###"
-        requiredAction: UNMASK
-        audit: true
   - code: TEST_AUDIT
     name: 테스트 감사
     assignments:

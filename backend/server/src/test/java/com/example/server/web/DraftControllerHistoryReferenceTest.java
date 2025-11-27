@@ -60,8 +60,8 @@ class DraftControllerHistoryReferenceTest {
 
     @BeforeEach
     void setUp() {
-        AuthContextHolder.set(new AuthContext("writer", ORG, "DEFAULT",
-                FeatureCode.DRAFT, ActionCode.DRAFT_READ, com.example.common.security.RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("writer", ORG, "DEFAULT",
+                FeatureCode.DRAFT, ActionCode.DRAFT_READ, com.example.common.security.RowScope.ALL));
         given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT))
                 .willThrow(new com.example.admin.permission.PermissionDeniedException("denied"));
     }

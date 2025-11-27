@@ -34,7 +34,7 @@ class TemplateAdminServiceRowScopeAllTest {
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000002");
         given(groupRepo.findById(id)).willReturn(Optional.of(group));
 
-        AuthContext ctx = new AuthContext("u", "ORG2", null, null, null, RowScope.ALL, null);
+        AuthContext ctx = AuthContext.of("u", "ORG2", null, null, null, RowScope.ALL);
         ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "renamed", "desc", "ORG1", null);
 
         ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);

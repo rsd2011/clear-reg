@@ -53,7 +53,6 @@ class PermissionEvaluatorTest {
     PermissionGroup group = mock(PermissionGroup.class);
     PermissionAssignment assignment =
         new PermissionAssignment(FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ORG);
-    FieldMaskRule maskRule = new FieldMaskRule("ORG_NAME", "***", ActionCode.UNMASK, true);
     given(group.getCode()).willReturn("AUDIT");
     given(group.getName()).willReturn("Auditor");
     given(group.getDefaultRowScope()).willReturn(RowScope.ORG);
@@ -65,7 +64,6 @@ class PermissionEvaluatorTest {
     given(permissionGroupService.getByCodeOrThrow("AUDIT")).willReturn(group);
     given(group.assignmentFor(FeatureCode.ORGANIZATION, ActionCode.READ))
         .willReturn(Optional.of(assignment));
-    given(group.maskRulesByTag()).willReturn(Map.of("ORG_NAME", maskRule));
     given(rowConditionEvaluator.isAllowed(any(), any())).willReturn(true);
 
     Scenario.given("권한 평가", () -> evaluator.evaluate(FeatureCode.ORGANIZATION, ActionCode.READ))

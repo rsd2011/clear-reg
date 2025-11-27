@@ -18,4 +18,10 @@ public interface HrOrganizationRepository extends JpaRepository<HrOrganizationEn
     Page<HrOrganizationEntity> findByOrganizationCodeOrParentOrganizationCode(String organizationCode,
                                                                                String parentOrganizationCode,
                                                                                Pageable pageable);
+
+    /** 특정 직원이 리더인 활성 조직을 조회한다 (JIT Provisioning용). */
+    Optional<HrOrganizationEntity> findFirstByLeaderEmployeeIdAndEffectiveEndIsNullOrderByVersionDesc(String employeeId);
+
+    /** 특정 직원이 업무 매니저인 활성 조직을 조회한다 (JIT Provisioning용). */
+    Optional<HrOrganizationEntity> findFirstByManagerEmployeeIdAndEffectiveEndIsNullOrderByVersionDesc(String employeeId);
 }

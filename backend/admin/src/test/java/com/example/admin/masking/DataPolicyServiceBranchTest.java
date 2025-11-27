@@ -30,7 +30,7 @@ class DataPolicyServiceBranchTest {
                 .build();
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-        Optional<DataPolicyMatch> result = service.evaluate("OTHER", null, null, null, null, null, Instant.now());
+        Optional<DataPolicyMatch> result = service.evaluate("OTHER", null, null, null, null, null, null, Instant.now());
 
         assertThat(result).isEmpty();
     }
@@ -49,7 +49,7 @@ class DataPolicyServiceBranchTest {
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
         Optional<DataPolicyMatch> result = service.evaluate("CUSTOMER_READ", null, null, null,
-                List.of("branch_a"), null, Instant.now());
+                List.of("branch_a"), null, null, Instant.now());
 
         assertThat(result).isPresent();
         assertThat(result.get().getRowScope()).isEqualTo("ORG");
@@ -69,7 +69,7 @@ class DataPolicyServiceBranchTest {
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
         Optional<DataPolicyMatch> result = service.evaluate("CUSTOMER_EXPORT", null, null, null,
-                List.of("BRANCH_A"), null, Instant.now());
+                List.of("BRANCH_A"), null, null, Instant.now());
 
         assertThat(result).isEmpty();
     }
@@ -89,7 +89,7 @@ class DataPolicyServiceBranchTest {
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
         Optional<DataPolicyMatch> result = service.evaluate("CUSTOMER_EXPORT", null, null, null,
-                List.of("BRANCH_A"), null, Instant.now());
+                List.of("BRANCH_A"), null, null, Instant.now());
 
         assertThat(result).isEmpty();
     }
@@ -108,7 +108,7 @@ class DataPolicyServiceBranchTest {
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
         Optional<DataPolicyMatch> result = service.evaluate("CUSTOMER_EXPORT", null, "PG_USER", null,
-                List.of("BRANCH_A"), null, Instant.now());
+                List.of("BRANCH_A"), null, null, Instant.now());
 
         assertThat(result).isEmpty();
     }
@@ -127,7 +127,7 @@ class DataPolicyServiceBranchTest {
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
         Optional<DataPolicyMatch> result = service.evaluate("CUSTOMER_EXPORT", null, null, 9L,
-                List.of("BRANCH_A"), null, Instant.now());
+                List.of("BRANCH_A"), null, null, Instant.now());
 
         assertThat(result).isEmpty();
     }
@@ -146,7 +146,7 @@ class DataPolicyServiceBranchTest {
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
         Optional<DataPolicyMatch> result = service.evaluate("CUSTOMER_EXPORT", null, null, null,
-                List.of("BRANCH_A"), "CARD", Instant.now());
+                List.of("BRANCH_A"), "CARD", null, Instant.now());
 
         assertThat(result).isEmpty();
     }

@@ -36,7 +36,7 @@ class DataPolicyServiceTest {
                 .build();
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-        Optional<DataPolicyMatch> match = service.evaluate("F", "A", "PG", null, List.of(), "BT", now);
+        Optional<DataPolicyMatch> match = service.evaluate("F", "A", "PG", null, List.of(), "BT", null, now);
         assertThat(match).isPresent();
         assertThat(match.get().getMaskRule()).isEqualTo("FULL");
     }
@@ -51,7 +51,7 @@ class DataPolicyServiceTest {
                 .effectiveFrom(now.minusSeconds(20)).effectiveTo(now.minusSeconds(1)).build();
         given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of());
 
-        Optional<DataPolicyMatch> match = service.evaluate("F", null, null, null, null, null, now);
+        Optional<DataPolicyMatch> match = service.evaluate("F", null, null, null, null, null, null, now);
         assertThat(match).isEmpty();
     }
 }

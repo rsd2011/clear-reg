@@ -35,7 +35,7 @@ class TemplateAdminServiceListFormTemplateAuditNullTest {
         f2.update("f2", "{}", false, now);
         given(formRepo.findAll()).willReturn(List.of(f1, f2));
 
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         List<DraftFormTemplateResponse> result = service.listDraftFormTemplates(null, null, false, ctx, true);
 

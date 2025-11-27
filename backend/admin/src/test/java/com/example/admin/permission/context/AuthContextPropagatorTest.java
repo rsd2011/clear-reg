@@ -22,14 +22,13 @@ class AuthContextPropagatorTest {
   @DisplayName("현재 AuthContext를 Runnable 로 전파한다")
   void runWithCurrentContext() {
     AuthContext context =
-        new AuthContext(
+        AuthContext.of(
             "tester",
             "ORG",
             "DEFAULT",
             FeatureCode.NOTICE,
             ActionCode.READ,
-            RowScope.OWN,
-            java.util.Map.of());
+            RowScope.OWN);
     AuthContextHolder.set(context);
     AtomicReference<AuthContext> observed = new AtomicReference<>();
 
@@ -48,23 +47,21 @@ class AuthContextPropagatorTest {
   @DisplayName("Callable에도 사용자 정의 컨텍스트를 적용 후 원래 상태를 복구한다")
   void callWithContext() throws Exception {
     AuthContext system =
-        new AuthContext(
+        AuthContext.of(
             "system",
             "ROOT",
             "AUDIT",
             FeatureCode.AUDIT_LOG,
             ActionCode.READ,
-            RowScope.ALL,
-            java.util.Map.of());
+            RowScope.ALL);
     AuthContextHolder.set(
-        new AuthContext(
+        AuthContext.of(
             "caller",
             "ORG",
             "DEFAULT",
             FeatureCode.NOTICE,
             ActionCode.READ,
-            RowScope.OWN,
-            java.util.Map.of()));
+            RowScope.OWN));
 
     Callable<String> callable =
         AuthContextPropagator.wrap(

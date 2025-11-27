@@ -58,7 +58,6 @@ class DeclarativePermissionGroupLoaderTest {
             assignment ->
                 assertThat(assignment.getRowConditionExpression())
                     .contains("organizationCode == 'ROOT'"));
-    assertThat(defaultGroup.maskRulesByTag()).containsKey("SECRET");
     assertThat(repository.findByCode("TEST_AUDIT")).isPresent();
   }
 

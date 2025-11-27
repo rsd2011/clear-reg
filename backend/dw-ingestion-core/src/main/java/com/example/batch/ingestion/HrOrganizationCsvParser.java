@@ -14,7 +14,7 @@ import com.example.dw.dto.HrOrganizationRecord;
 @Component
 public class HrOrganizationCsvParser {
 
-    private static final int EXPECTED_COLUMNS = 6;
+    private static final int EXPECTED_COLUMNS = 8;
 
     public List<HrOrganizationRecord> parse(String payload) {
         List<HrOrganizationRecord> records = new ArrayList<>();
@@ -37,12 +37,15 @@ public class HrOrganizationCsvParser {
                 if (columns.length < EXPECTED_COLUMNS) {
                     continue;
                 }
-                HrOrganizationRecord record = new HrOrganizationRecord(trim(columns[0]),
-                        trim(columns[1]),
-                        trim(columns[2]),
-                        trim(columns[3]),
-                        parseDate(columns[4]),
-                        parseDate(columns[5]),
+                HrOrganizationRecord record = new HrOrganizationRecord(
+                        trim(columns[0]),           // organizationCode
+                        trim(columns[1]),           // name
+                        trim(columns[2]),           // parentOrganizationCode
+                        trim(columns[3]),           // status
+                        trim(columns[4]),           // leaderEmployeeId
+                        trim(columns[5]),           // managerEmployeeId
+                        parseDate(columns[6]),      // startDate
+                        parseDate(columns[7]),      // endDate
                         line,
                         lineNumber);
                 records.add(record);

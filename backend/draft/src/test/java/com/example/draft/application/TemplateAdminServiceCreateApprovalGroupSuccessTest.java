@@ -33,7 +33,7 @@ class TemplateAdminServiceCreateApprovalGroupSuccessTest {
         given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "name", "desc", "ORG1", "expr");
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         ApprovalGroupResponse res = service.createApprovalGroup(req, ctx, false);
 

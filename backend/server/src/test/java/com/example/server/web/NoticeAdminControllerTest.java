@@ -42,8 +42,8 @@ class NoticeAdminControllerTest {
 
     @BeforeEach
     void setUp() {
-        AuthContextHolder.set(new AuthContext("tester", "ORG", "DEFAULT",
-                FeatureCode.NOTICE, ActionCode.UPDATE, RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
+                FeatureCode.NOTICE, ActionCode.UPDATE, RowScope.ALL));
     }
 
     @AfterEach

@@ -49,8 +49,8 @@ class NotificationAdminControllerTest {
 
     @BeforeEach
     void initContext() {
-        AuthContextHolder.set(new AuthContext("admin", "ORG", "ADMIN",
-                FeatureCode.ALERT, ActionCode.UPDATE, RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("admin", "ORG", "ADMIN",
+                FeatureCode.ALERT, ActionCode.UPDATE, RowScope.ALL));
     }
 
     @AfterEach

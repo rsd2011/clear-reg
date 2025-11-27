@@ -87,7 +87,7 @@ class RedisPermissionMenuReadModelPortTest {
         PermissionMenuReadModel snapshot = new PermissionMenuReadModel(
                 "v-perm",
                 OffsetDateTime.now(),
-                List.of(new PermissionMenuItem("MENU1", "메뉴1", "FEATURE1", "READ", "/menu1", Set.of("MASK1")))
+                List.of(new PermissionMenuItem("MENU1", "메뉴1", "FEATURE1", "READ", "/menu1"))
         );
         when(source.snapshot("user1")).thenReturn(snapshot);
 

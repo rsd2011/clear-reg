@@ -75,6 +75,9 @@ import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
 import com.example.audit.infra.masking.UnmaskAuditRepository;
 import com.example.file.StoredFileVersionRepository;
 import com.example.file.audit.FileAuditOutboxRelay;
+import com.example.admin.menu.MenuService;
+import com.example.admin.menu.MenuRepository;
+import com.example.admin.menu.MenuViewConfigRepository;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -257,6 +260,15 @@ class AuditPartitionSchedulerPolicyEventTest {
 
     @MockBean
     FileAuditOutboxRelay fileAuditOutboxRelay;
+
+    @MockBean
+    MenuService menuService;
+
+    @MockBean
+    MenuRepository menuRepository;
+
+    @MockBean
+    MenuViewConfigRepository menuViewConfigRepository;
 
     @org.junit.jupiter.api.BeforeEach
     void setUpPolicyRepository() {

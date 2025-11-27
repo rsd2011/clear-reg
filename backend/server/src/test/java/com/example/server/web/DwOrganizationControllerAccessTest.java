@@ -25,7 +25,7 @@ class DwOrganizationControllerAccessTest {
     @Test
     @DisplayName("rowScope가 없으면 조직 조회를 거부한다")
     void organizations_deniedWhenScopeMissing() {
-        AuthContextHolder.set(new AuthContext("user", null, null, null, null, (RowScope) null, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("user", null, null, null, null, null));
         DwOrganizationController controller = new DwOrganizationController(port);
 
         assertThatThrownBy(controller::organizations)

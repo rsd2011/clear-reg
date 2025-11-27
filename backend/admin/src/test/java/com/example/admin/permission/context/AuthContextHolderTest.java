@@ -22,14 +22,13 @@ class AuthContextHolderTest {
   @DisplayName("Given AuthContext When set 호출 Then clear 전까지 조회할 수 있다")
   void givenContext_whenSet_thenAvailableUntilCleared() {
     AuthContext context =
-        new AuthContext(
+        AuthContext.of(
             "tester",
             "ORG",
             "AUDIT",
             FeatureCode.ORGANIZATION,
             ActionCode.READ,
-            RowScope.OWN,
-            Map.of());
+            RowScope.OWN);
     AuthContextHolder.set(context);
 
     assertThat(AuthContextHolder.current()).contains(context);

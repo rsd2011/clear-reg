@@ -36,7 +36,7 @@ class TemplateAdminServiceListLineTemplateAuditNullTest {
         t2.rename("b", false, now);
         given(lineRepo.findAll()).willReturn(List.of(t1, t2));
 
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         List<ApprovalLineTemplateResponse> result = service.listApprovalLineTemplates(null, null, false, ctx, true);
 

@@ -35,14 +35,13 @@ class AuditLogAccessAspectTest {
         AuditPort auditPort = Mockito.mock(AuditPort.class);
         AuditLogAccessAspect aspect = new AuditLogAccessAspect(auditPort, "AUDIT_VIEWER,COMPLIANCE_ADMIN");
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "auditor",
                 "ORG1",
                 "AUDIT_VIEWER",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         JoinPoint jp = Mockito.mock(JoinPoint.class);
@@ -63,14 +62,13 @@ class AuditLogAccessAspectTest {
                 .when(auditPort).record(any(AuditEvent.class), Mockito.eq(AuditMode.ASYNC_FALLBACK));
         AuditLogAccessAspect aspect = new AuditLogAccessAspect(auditPort, "AUDIT_VIEWER");
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "auditor",
                 "ORG1",
                 "AUDIT_VIEWER",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         JoinPoint jp = Mockito.mock(JoinPoint.class);
@@ -87,14 +85,13 @@ class AuditLogAccessAspectTest {
         AuditPort auditPort = Mockito.mock(AuditPort.class);
         AuditLogAccessAspect aspect = new AuditLogAccessAspect(auditPort, "AUDIT_VIEWER");
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "user",
                 "ORG1",
                 "USER_ROLE",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         JoinPoint jp = Mockito.mock(JoinPoint.class);
@@ -112,14 +109,13 @@ class AuditLogAccessAspectTest {
         AuditPort auditPort = Mockito.mock(AuditPort.class);
         AuditLogAccessAspect aspect = new AuditLogAccessAspect(auditPort, "   ");
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "auditor",
                 "ORG1",
                 "AUDIT_VIEWER",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         JoinPoint jp = Mockito.mock(JoinPoint.class);

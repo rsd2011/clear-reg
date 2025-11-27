@@ -35,7 +35,7 @@ class TemplateAdminServiceEndToEndTest {
     ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
     TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
-    AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+    AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
     @Test
     @DisplayName("그룹/라인/폼 템플릿 생성 후 업데이트까지 일괄 플로우가 성공한다")

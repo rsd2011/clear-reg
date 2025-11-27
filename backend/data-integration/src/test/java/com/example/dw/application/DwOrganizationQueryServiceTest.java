@@ -234,6 +234,8 @@ class DwOrganizationQueryServiceTest {
                 "Org-" + code,
                 parent,
                 "ACTIVE",
+                null,
+                null,
                 LocalDate.of(2020, 1, 1),
                 null,
                 UUID.randomUUID(),

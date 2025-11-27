@@ -45,7 +45,7 @@ class DraftControllerBranchCoverageTest {
     @Test
     @DisplayName("rowScope null이면 기본값 ORG로 조회한다")
     void listDrafts_defaultsToOrgScope() {
-        AuthContextHolder.set(new AuthContext("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
@@ -61,7 +61,7 @@ class DraftControllerBranchCoverageTest {
     @Test
     @DisplayName("감사 권한이 있으면 RowScope.ALL로 조회하며 조직 목록을 비워 전달한다")
     void listDrafts_auditUsesAllScope() {
-        AuthContextHolder.set(new AuthContext("auditor", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("auditor", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT))).willReturn(null);
         given(draftService.listDrafts(any(), any(), any(), any(), any(), any(), any(), any()))
                 .willReturn(new PageImpl<>(List.of(sampleResponse())));
@@ -74,7 +74,7 @@ class DraftControllerBranchCoverageTest {
     @Test
     @DisplayName("알 수 없는 FeatureCode로 템플릿 조회 시 예외를 던진다")
     void listTemplates_unknownFeatureThrows() {
-        AuthContextHolder.set(new AuthContext("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT))).willThrow(new PermissionDeniedException("no audit"));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,

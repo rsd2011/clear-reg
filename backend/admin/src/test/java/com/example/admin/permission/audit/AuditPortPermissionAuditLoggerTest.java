@@ -22,7 +22,7 @@ class AuditPortPermissionAuditLoggerTest {
   @DisplayName("권한 부여 시 PERMISSION_GRANTED 감사 이벤트를 남긴다")
   void recordsAccessGranted() {
     AuthContext ctx =
-        new AuthContext("user", "ORG", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null, null);
+        AuthContext.of("user", "ORG", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null);
     logger.onAccessGranted(ctx);
     ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
     verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
@@ -32,7 +32,7 @@ class AuditPortPermissionAuditLoggerTest {
   @DisplayName("권한 거부 시 PERMISSION_DENIED 감사 이벤트를 남긴다")
   void recordsAccessDenied() {
     AuthContext ctx =
-        new AuthContext("user", "ORG", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null, null);
+        AuthContext.of("user", "ORG", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null);
     logger.onAccessDenied(ctx, new IllegalStateException("x"));
     ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
     verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));

@@ -14,12 +14,14 @@ class HrOrganizationCsvParserTest {
 
     @Test
     void givenCsv_whenParse_thenReturnRecords() {
-        String payload = "code,name,parent,status,start,end\n" +
-                "ORG001,Headquarters,,ACTIVE,2024-01-01,\n";
+        String payload = "code,name,parent,status,leader,manager,start,end\n" +
+                "ORG001,Headquarters,,ACTIVE,EMP001,,2024-01-01,\n";
 
         List<HrOrganizationRecord> records = parser.parse(payload);
 
         assertThat(records).hasSize(1);
+        assertThat(records.get(0).leaderEmployeeId()).isEqualTo("EMP001");
+        assertThat(records.get(0).managerEmployeeId()).isEmpty();
     }
 
     @Test
@@ -29,8 +31,8 @@ class HrOrganizationCsvParserTest {
 
     @Test
     void givenTooFewColumns_whenParse_thenSkipLine() {
-        String payload = "code,name,parent,status,start,end\n" +
-                "ORG002,Branch"; // columns fewer than expected
+        String payload = "code,name,parent,status,leader,manager,start,end\n" +
+                "ORG002,Branch"; // columns fewer than expected (8 required)
 
         List<HrOrganizationRecord> records = parser.parse(payload);
 

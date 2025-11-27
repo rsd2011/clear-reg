@@ -10,6 +10,8 @@ import com.example.auth.ad.ActiveDirectoryClient;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.LoginRequest;
+import com.example.auth.jit.JitProvisioningResult;
+import com.example.auth.jit.JitProvisioningService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,11 +27,15 @@ class ActiveDirectoryAuthenticationStrategyTest {
 
   @Mock private UserAccountService userAccountService;
 
+  @Mock private JitProvisioningService jitProvisioningService;
+
   private ActiveDirectoryAuthenticationStrategy strategy;
 
   @BeforeEach
   void setUp() {
-    strategy = new ActiveDirectoryAuthenticationStrategy(activeDirectoryClient, userAccountService);
+    strategy =
+        new ActiveDirectoryAuthenticationStrategy(
+            activeDirectoryClient, userAccountService, jitProvisioningService);
   }
 
   @Test
@@ -41,6 +47,7 @@ class ActiveDirectoryAuthenticationStrategyTest {
             .password("ignored")
             .email("ad@example.com")
             .build();
+    given(jitProvisioningService.isEnabledFor(LoginType.AD)).willReturn(false);
     given(activeDirectoryClient.authenticate("ad-user", "secret")).willReturn(true);
     given(userAccountService.getByUsernameOrThrow("ad-user")).willReturn(account);
 
@@ -58,5 +65,48 @@ class ActiveDirectoryAuthenticationStrategyTest {
     assertThatThrownBy(
             () -> strategy.authenticate(new LoginRequest(LoginType.AD, "ad-user", "bad", null)))
         .isInstanceOf(InvalidCredentialsException.class);
+  }
+
+  @Test
+  @DisplayName("Given JIT 활성화 When authenticate 호출 Then JIT 프로비저닝 수행")
+  void givenJitEnabledWhenAuthenticateThenProvision() {
+    var account =
+        UserAccount.builder()
+            .username("ad-user")
+            .password("ignored")
+            .email("ad@example.com")
+            .build();
+    given(activeDirectoryClient.authenticate("ad-user", "secret")).willReturn(true);
+    given(jitProvisioningService.isEnabledFor(LoginType.AD)).willReturn(true);
+    given(activeDirectoryClient.getDomain()).willReturn("CORP.LOCAL");
+    given(jitProvisioningService.provisionForAd("ad-user", "CORP.LOCAL"))
+        .willReturn(JitProvisioningResult.existing(account));
+
+    UserAccount result =
+        strategy.authenticate(new LoginRequest(LoginType.AD, "ad-user", "secret", null));
+
+    assertThat(result).isEqualTo(account);
+  }
+
+  @Test
+  @DisplayName("Given null username When authenticate 호출 Then InvalidCredentialsException을 던진다")
+  void givenNullUsernameWhenAuthenticateThenThrow() {
+    assertThatThrownBy(
+            () -> strategy.authenticate(new LoginRequest(LoginType.AD, null, "password", null)))
+        .isInstanceOf(InvalidCredentialsException.class);
+  }
+
+  @Test
+  @DisplayName("Given null password When authenticate 호출 Then InvalidCredentialsException을 던진다")
+  void givenNullPasswordWhenAuthenticateThenThrow() {
+    assertThatThrownBy(
+            () -> strategy.authenticate(new LoginRequest(LoginType.AD, "user", null, null)))
+        .isInstanceOf(InvalidCredentialsException.class);
+  }
+
+  @Test
+  @DisplayName("supportedType이 AD를 반환한다")
+  void supportedTypeReturnsAd() {
+    assertThat(strategy.supportedType()).isEqualTo(LoginType.AD);
   }
 }

@@ -28,6 +28,8 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
                                  String name,
                                  String parentOrganizationCode,
                                  String status,
+                                 String leaderEmployeeId,
+                                 String managerEmployeeId,
                                  LocalDate effectiveStart,
                                  LocalDate effectiveEnd,
                                  UUID sourceBatchId,
@@ -37,6 +39,8 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
         this.name = name;
         this.parentOrganizationCode = parentOrganizationCode;
         this.status = status;
+        this.leaderEmployeeId = leaderEmployeeId;
+        this.managerEmployeeId = managerEmployeeId;
         this.effectiveStart = effectiveStart;
         this.effectiveEnd = effectiveEnd;
         this.sourceBatchId = sourceBatchId;
@@ -48,12 +52,14 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
                                                 String name,
                                                 String parentOrganizationCode,
                                                 String status,
+                                                String leaderEmployeeId,
+                                                String managerEmployeeId,
                                                 LocalDate effectiveStart,
                                                 LocalDate effectiveEnd,
                                                 UUID sourceBatchId,
                                                 OffsetDateTime syncedAt) {
         return new HrOrganizationEntity(organizationCode, version, name, parentOrganizationCode, status,
-                effectiveStart, effectiveEnd, sourceBatchId, syncedAt);
+                leaderEmployeeId, managerEmployeeId, effectiveStart, effectiveEnd, sourceBatchId, syncedAt);
     }
 
     @Column(name = "organization_code", nullable = false, length = 64)
@@ -70,6 +76,14 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
 
     @Column(name = "status", length = 64)
     private String status;
+
+    /** 해당 조직의 리더 직원번호 */
+    @Column(name = "leader_employee_id", length = 64)
+    private String leaderEmployeeId;
+
+    /** 해당 조직의 업무 매니저 직원번호 */
+    @Column(name = "manager_employee_id", length = 64)
+    private String managerEmployeeId;
 
     @Column(name = "effective_start", nullable = false)
     private LocalDate effectiveStart;
@@ -103,6 +117,14 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
         return status;
     }
 
+    public String getLeaderEmployeeId() {
+        return leaderEmployeeId;
+    }
+
+    public String getManagerEmployeeId() {
+        return managerEmployeeId;
+    }
+
     public LocalDate getEffectiveStart() {
         return effectiveStart;
     }
@@ -122,11 +144,15 @@ public class HrOrganizationEntity extends PrimaryKeyEntity {
     public boolean sameBusinessState(String name,
                                      String parentOrganizationCode,
                                      String status,
+                                     String leaderEmployeeId,
+                                     String managerEmployeeId,
                                      LocalDate effectiveStart,
                                      LocalDate effectiveEnd) {
         return safeEquals(this.name, name)
                 && safeEquals(this.parentOrganizationCode, parentOrganizationCode)
                 && safeEquals(this.status, status)
+                && safeEquals(this.leaderEmployeeId, leaderEmployeeId)
+                && safeEquals(this.managerEmployeeId, managerEmployeeId)
                 && safeEquals(this.effectiveStart, effectiveStart)
                 && safeEquals(this.effectiveEnd, effectiveEnd);
     }

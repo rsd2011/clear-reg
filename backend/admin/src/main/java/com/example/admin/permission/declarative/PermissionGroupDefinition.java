@@ -11,14 +11,9 @@ record PermissionGroupDefinition(
     String name,
     String description,
     RowScope defaultRowScope,
-    List<PermissionAssignmentDefinition> assignments,
-    List<FieldMaskRuleDefinition> maskRules) {
+    List<PermissionAssignmentDefinition> assignments) {
 
   List<PermissionAssignmentDefinition> assignmentsOrEmpty() {
     return assignments == null ? List.of() : Collections.unmodifiableList(assignments);
-  }
-
-  List<FieldMaskRuleDefinition> maskRulesOrEmpty() {
-    return maskRules == null ? List.of() : Collections.unmodifiableList(maskRules);
   }
 }

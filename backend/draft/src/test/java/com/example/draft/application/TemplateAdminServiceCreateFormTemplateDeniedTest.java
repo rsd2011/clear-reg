@@ -25,7 +25,7 @@ class TemplateAdminServiceCreateFormTemplateDeniedTest {
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", "HR", "ORG2", "{}", true);
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         assertThatThrownBy(() -> service.createDraftFormTemplate(req, ctx, false))
                 .isInstanceOf(DraftAccessDeniedException.class);

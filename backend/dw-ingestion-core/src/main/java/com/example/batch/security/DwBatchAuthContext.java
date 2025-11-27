@@ -1,7 +1,5 @@
 package com.example.batch.security;
 
-import java.util.Map;
-
 import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
@@ -12,14 +10,13 @@ import com.example.common.security.RowScope;
  */
 public final class DwBatchAuthContext {
 
-    private static final AuthContext DW_SYSTEM_CONTEXT = new AuthContext(
+    private static final AuthContext DW_SYSTEM_CONTEXT = AuthContext.of(
             "dw-batch",
             "ROOT",
             "DEFAULT",
             FeatureCode.HR_IMPORT,
             ActionCode.UPDATE,
-            RowScope.ALL,
-            Map.of()
+            RowScope.ALL
     );
 
     private DwBatchAuthContext() {

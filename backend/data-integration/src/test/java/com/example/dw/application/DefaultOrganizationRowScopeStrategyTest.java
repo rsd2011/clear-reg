@@ -23,6 +23,7 @@ class DefaultOrganizationRowScopeStrategyTest {
     void applyReturnsNodes() {
         HrOrganizationEntity entity = HrOrganizationEntity.snapshot(
                 "ORG1", 1, "Org-ORG1", null, "ACTIVE",
+                null, null,
                 java.time.LocalDate.of(2020, 1, 1), null, java.util.UUID.randomUUID(),
                 java.time.OffsetDateTime.now(java.time.ZoneOffset.UTC));
         Page<HrOrganizationEntity> page = new PageImpl<>(java.util.List.of(entity));

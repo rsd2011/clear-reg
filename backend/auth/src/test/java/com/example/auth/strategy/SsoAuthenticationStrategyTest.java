@@ -7,6 +7,7 @@ import com.example.auth.LoginType;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.LoginRequest;
+import com.example.auth.jit.JitProvisioningService;
 import com.example.auth.sso.SsoClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,11 +24,13 @@ class SsoAuthenticationStrategyTest {
 
   @Mock private UserAccountService userAccountService;
 
+  @Mock private JitProvisioningService jitProvisioningService;
+
   private SsoAuthenticationStrategy strategy;
 
   @BeforeEach
   void setUp() {
-    strategy = new SsoAuthenticationStrategy(ssoClient, userAccountService);
+    strategy = new SsoAuthenticationStrategy(ssoClient, userAccountService, jitProvisioningService);
   }
 
   @Test
@@ -39,7 +42,9 @@ class SsoAuthenticationStrategyTest {
             .password("ignored")
             .email("user@example.com")
             .build();
+    given(jitProvisioningService.isEnabledFor(LoginType.SSO)).willReturn(false);
     given(ssoClient.resolveUsername("SSO-test-user")).willReturn("test-user");
+    given(ssoClient.resolveSsoId("SSO-test-user")).willReturn("SSO-test-user");
     given(userAccountService.getByUsernameOrThrow("test-user")).willReturn(account);
 
     UserAccount result =

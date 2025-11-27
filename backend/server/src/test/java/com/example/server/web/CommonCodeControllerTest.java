@@ -50,8 +50,8 @@ class CommonCodeControllerTest {
 
     @BeforeEach
     void setUp() {
-        AuthContextHolder.set(new AuthContext("tester", "ORG", "DEFAULT",
-                FeatureCode.COMMON_CODE, ActionCode.READ, RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
+                FeatureCode.COMMON_CODE, ActionCode.READ, RowScope.ALL));
     }
 
     @AfterEach

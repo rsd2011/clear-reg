@@ -38,6 +38,13 @@ public class DataPolicy extends PrimaryKeyEntity {
     @Column(length = 100)
     private String businessType;
 
+    /**
+     * 마스킹 대상 필드 태그 (예: SSN, PHONE, EMAIL).
+     * null이면 해당 feature/action 조합의 기본 정책.
+     */
+    @Column(length = 100)
+    private String sensitiveTag;
+
     @Column(nullable = false, length = 30)
     private String rowScope; // OWN | ORG | ORG_AND_DESC | ALL | CUSTOM
 
@@ -49,6 +56,20 @@ public class DataPolicy extends PrimaryKeyEntity {
 
     @Column(columnDefinition = "TEXT")
     private String maskParams; // JSON string
+
+    /**
+     * 마스킹 해제에 필요한 최소 액션 코드.
+     * 예: UNMASK - 해당 액션 이상의 권한이 있어야 원본 노출
+     */
+    @Column(length = 30)
+    private String requiredActionCode;
+
+    /**
+     * 마스킹/언마스킹 시 감사 로깅 여부.
+     */
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean auditEnabled = false;
 
     @Column(nullable = false)
     private Integer priority;

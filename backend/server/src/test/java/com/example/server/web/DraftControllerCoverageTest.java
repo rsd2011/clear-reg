@@ -41,7 +41,7 @@ class DraftControllerCoverageTest {
     @Test
     @DisplayName("RowScope OWN는 ORG로 정규화되어 listDrafts에 전달된다")
     void listDrafts_normalizesOwnScope() {
-        AuthContextHolder.set(new AuthContext("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.OWN, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.OWN));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new com.example.admin.permission.PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))

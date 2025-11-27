@@ -62,8 +62,8 @@ class FileControllerTest {
     }
 
     private void setAuth(ActionCode action) {
-        AuthContextHolder.set(new AuthContext("tester", "ORG", "DEFAULT",
-                FeatureCode.FILE, action, RowScope.ALL, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
+                FeatureCode.FILE, action, RowScope.ALL));
     }
 
     @Test

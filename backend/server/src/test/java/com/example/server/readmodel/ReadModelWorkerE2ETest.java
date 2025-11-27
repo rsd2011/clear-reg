@@ -163,7 +163,7 @@ class ReadModelWorkerE2ETest {
             PermissionMenuReadModelSource source = principal -> new PermissionMenuReadModel(
                     "perm-v1",
                     OffsetDateTime.now(),
-                    List.of(new PermissionMenuItem("PM1", "PM", "FILE", "READ", "/file", java.util.Set.of()))
+                    List.of(new PermissionMenuItem("PM1", "PM", "FILE", "READ", "/file"))
             );
             return new RedisPermissionMenuReadModelPort(template, mapper, source, props);
         }

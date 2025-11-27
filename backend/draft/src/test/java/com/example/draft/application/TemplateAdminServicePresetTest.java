@@ -52,7 +52,7 @@ class TemplateAdminServicePresetTest {
                 formTemplateRepository,
                 presetRepository,
                 new ObjectMapper());
-        context = new AuthContext("user", "ORG1", null, null, null, RowScope.ORG, null);
+        context = AuthContext.of("user", "ORG1", null, null, null, RowScope.ORG);
     }
 
     @Test

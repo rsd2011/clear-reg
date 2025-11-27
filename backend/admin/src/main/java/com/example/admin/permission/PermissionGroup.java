@@ -14,9 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,12 +40,6 @@ public class PermissionGroup extends PrimaryKeyEntity {
       name = "permission_group_assignments",
       joinColumns = @JoinColumn(name = "group_id"))
   private Set<PermissionAssignment> assignments = new HashSet<>();
-
-  @ElementCollection(fetch = FetchType.EAGER)
-  @CollectionTable(
-      name = "permission_group_mask_rules",
-      joinColumns = @JoinColumn(name = "group_id"))
-  private Set<FieldMaskRule> maskRules = new HashSet<>();
 
   @Enumerated(EnumType.STRING)
   @Column(name = "default_row_scope", nullable = false)
@@ -96,25 +88,10 @@ public class PermissionGroup extends PrimaryKeyEntity {
         .findFirst();
   }
 
-  public Map<String, FieldMaskRule> maskRulesByTag() {
-    Map<String, FieldMaskRule> map = new HashMap<>();
-    for (FieldMaskRule rule : maskRules) {
-      map.put(rule.getTag(), rule);
-    }
-    return Collections.unmodifiableMap(map);
-  }
-
   public void replaceAssignments(Collection<PermissionAssignment> replacements) {
     assignments.clear();
     if (replacements != null) {
       assignments.addAll(replacements);
-    }
-  }
-
-  public void replaceMaskRules(Collection<FieldMaskRule> replacements) {
-    maskRules.clear();
-    if (replacements != null) {
-      maskRules.addAll(replacements);
     }
   }
 

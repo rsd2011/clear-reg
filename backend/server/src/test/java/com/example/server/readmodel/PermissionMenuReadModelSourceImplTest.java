@@ -7,12 +7,14 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import com.example.admin.menu.MenuDefinition;
+import com.example.admin.menu.MenuDefinitionLoader;
+import com.example.admin.menu.MenuDefinitions;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.admin.organization.OrganizationPolicyService;
@@ -28,13 +30,14 @@ class PermissionMenuReadModelSourceImplTest {
     private final UserAccountService userAccountService = Mockito.mock(UserAccountService.class);
     private final PermissionGroupService permissionGroupService = Mockito.mock(PermissionGroupService.class);
     private final OrganizationPolicyService organizationPolicyService = Mockito.mock(OrganizationPolicyService.class);
+    private final MenuDefinitionLoader menuDefinitionLoader = Mockito.mock(MenuDefinitionLoader.class);
     private final Clock clock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);
 
     private PermissionMenuReadModelSourceImpl source;
 
     @BeforeEach
     void setUp() {
-        source = new PermissionMenuReadModelSourceImpl(userAccountService, permissionGroupService, organizationPolicyService, clock);
+        source = new PermissionMenuReadModelSourceImpl(userAccountService, permissionGroupService, organizationPolicyService, menuDefinitionLoader, clock);
     }
 
     @Test
@@ -50,8 +53,21 @@ class PermissionMenuReadModelSourceImplTest {
         PermissionGroup group = new PermissionGroup("GROUP1", "Group");
         PermissionAssignment assignment = new PermissionAssignment(FeatureCode.FILE, ActionCode.READ, com.example.common.security.RowScope.ORG);
         group.replaceAssignments(List.of(assignment));
-        group.replaceMaskRules(Set.of());
         when(permissionGroupService.getByCodeOrThrow("GROUP1")).thenReturn(group);
+
+        // MenuDefinitionLoader mock setup
+        MenuDefinition.CapabilityRef capRef = new MenuDefinition.CapabilityRef();
+        capRef.setFeature("FILE");
+        capRef.setAction("READ");
+        MenuDefinition menuDef = new MenuDefinition();
+        menuDef.setCode("FILE_MENU");
+        menuDef.setName("파일 관리");
+        menuDef.setPath("/file");
+        menuDef.setRequiredCapabilities(List.of(capRef));
+        menuDef.setChildren(List.of());
+        MenuDefinitions definitions = new MenuDefinitions();
+        definitions.setMenus(List.of(menuDef));
+        when(menuDefinitionLoader.load()).thenReturn(definitions);
 
         PermissionMenuReadModel model = source.snapshot("user1");
 
@@ -74,8 +90,12 @@ class PermissionMenuReadModelSourceImplTest {
 
         PermissionGroup group = new PermissionGroup("DEFAULT", "Default");
         group.replaceAssignments(List.of());
-        group.replaceMaskRules(Set.of());
         when(permissionGroupService.getByCodeOrThrow("DEFAULT")).thenReturn(group);
+
+        // Empty menu definitions
+        MenuDefinitions definitions = new MenuDefinitions();
+        definitions.setMenus(List.of());
+        when(menuDefinitionLoader.load()).thenReturn(definitions);
 
         PermissionMenuReadModel model = source.snapshot("user2");
 

@@ -36,7 +36,7 @@ class TemplateAdminServiceCreateLineTemplateAuditTest {
                 true,
                 List.of(new ApprovalTemplateStepRequest(1, "GRP", "desc")));
 
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         // save가 null을 반환하지 않도록 입력 그대로 반환
         org.mockito.BDDMockito.given(lineRepo.save(org.mockito.ArgumentMatchers.any())).willAnswer(invocation -> invocation.getArgument(0));

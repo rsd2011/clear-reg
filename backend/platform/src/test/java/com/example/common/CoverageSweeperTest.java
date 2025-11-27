@@ -48,7 +48,7 @@ class CoverageSweeperTest {
         assertThat(DataPolicyContextHolder.get().getRowScope()).isEqualTo("OWN");
         DataPolicyContextHolder.clear();
 
-        DataPolicyQuery query = new DataPolicyQuery("F", "A", "P", 1L, List.of("G1"), "BT", null);
+        DataPolicyQuery query = new DataPolicyQuery("F", "A", "P", 1L, List.of("G1"), "BT", null, null);
         assertThat(query.nowOrDefault()).isNotNull();
 
         PolicyToggleSettings settings = new PolicyToggleSettings(

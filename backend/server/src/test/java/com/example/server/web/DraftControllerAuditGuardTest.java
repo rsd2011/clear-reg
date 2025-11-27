@@ -44,7 +44,7 @@ class DraftControllerAuditGuardTest {
                 .thenReturn(Page.empty());
         Mockito.doThrow(new PermissionDeniedException("no audit"))
                 .when(permissionEvaluator).evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT);
-        AuthContextHolder.set(new AuthContext("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG, Collections.emptyMap()));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
 
         DraftController controller = new DraftController(draftApplicationService, permissionEvaluator, organizationQueryService);
         controller.listDrafts(Pageable.unpaged(), null, null, null, null);
@@ -60,7 +60,7 @@ class DraftControllerAuditGuardTest {
         when(organizationQueryService.getOrganizations(any(Pageable.class), any(RowScope.class), any()))
                 .thenReturn(Page.empty());
         when(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT)).thenReturn(null);
-        AuthContextHolder.set(new AuthContext("auditor", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG, Collections.emptyMap()));
+        AuthContextHolder.set(AuthContext.of("auditor", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
 
         DraftController controller = new DraftController(draftApplicationService, permissionEvaluator, organizationQueryService);
         controller.listDrafts(Pageable.unpaged(), null, null, null, null);

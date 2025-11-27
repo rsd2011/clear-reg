@@ -17,7 +17,7 @@ class DataPolicySupportTest {
     @Test
     void queryNowDefaultAndContextHolderLifecycle() {
         Instant fixed = Instant.parse("2025-01-01T00:00:00Z");
-        DataPolicyQuery q = new DataPolicyQuery("F", "A", "PG", 1L, List.of("ORG1"), "BT", fixed);
+        DataPolicyQuery q = new DataPolicyQuery("F", "A", "PG", 1L, List.of("ORG1"), "BT", null, fixed);
         assertThat(q.nowOrDefault()).isEqualTo(fixed);
 
         var match = DataPolicyMatch.builder()

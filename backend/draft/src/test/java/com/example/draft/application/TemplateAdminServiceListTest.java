@@ -32,15 +32,7 @@ class TemplateAdminServiceListTest {
         ApprovalGroup org2 = ApprovalGroup.create("G2", "name", null, "ORG2", null, OffsetDateTime.now());
         given(groupRepo.findAll()).willReturn(List.of(org1, org2));
 
-        AuthContext ctx = new AuthContext(
-                "u",
-                "ORG1",
-                null,
-                null,
-                null,
-                RowScope.ORG,
-                null
-        );
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         // audit=false => context.organizationCode() 사용
         List<ApprovalGroupResponse> filtered = service.listApprovalGroups(null, ctx, false);

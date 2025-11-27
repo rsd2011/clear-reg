@@ -32,7 +32,7 @@ class TemplateAdminServiceAuditTrueTest {
         ApprovalGroup org2 = ApprovalGroup.create("G2", "name", null, "ORG2", null, OffsetDateTime.now());
         given(groupRepo.findAll()).willReturn(List.of(org1, org2));
 
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         List<ApprovalGroupResponse> result = service.listApprovalGroups(null, ctx, true);
 

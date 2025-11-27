@@ -26,7 +26,7 @@ class TemplateAdminServiceFilterTest {
     ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
     TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
-    AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+    AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
     @Test
     @DisplayName("라인 템플릿은 businessType, org, activeOnly 필터를 모두 적용한다")

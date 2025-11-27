@@ -38,7 +38,7 @@ class TemplateAdminServiceUpdateFormTemplateTest {
         given(formRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form2", "HR", null, "{\"f\":1}", true);
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         DraftFormTemplateResponse res = service.updateDraftFormTemplate(id, req, ctx, false);
 

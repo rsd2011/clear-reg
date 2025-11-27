@@ -63,7 +63,7 @@ class FileControllerUnitTest {
     void downloadWithDraftNotAttachedThrows() {
         UUID fileId = UUID.randomUUID();
         UUID draftId = UUID.randomUUID();
-        AuthContextHolder.set(new AuthContext("user", "ORG", "PG", FeatureCode.FILE, ActionCode.READ, null, null));
+        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", FeatureCode.FILE, ActionCode.READ, null));
         DraftResponse draft = new DraftResponse(draftId, "t", "c", "BF", "ORG", "creator",
                 DraftStatus.DRAFT, null, null, null, null, null,
                 null, null, null, null, null, null, null,

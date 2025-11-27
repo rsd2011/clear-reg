@@ -16,7 +16,7 @@ class HrOrganizationValidatorTest {
     @Test
     void givenValidRecords_whenValidate_thenReturnValidList() {
         HrOrganizationRecord record = new HrOrganizationRecord("ORG001", "HQ", null, "ACTIVE",
-                LocalDate.of(2024, 1, 1), null, "payload", 2);
+                null, null, LocalDate.of(2024, 1, 1), null, "payload", 2);
 
         var result = validator.validate(List.of(record));
 
@@ -27,7 +27,7 @@ class HrOrganizationValidatorTest {
     @Test
     void givenInvalidRecord_whenValidate_thenReturnErrors() {
         HrOrganizationRecord record = new HrOrganizationRecord(null, null, null, "ACTIVE",
-                null, null, "payload", 2);
+                null, null, null, null, "payload", 2);
 
         var result = validator.validate(List.of(record));
 
@@ -39,9 +39,9 @@ class HrOrganizationValidatorTest {
     @Test
     void givenDuplicateAndInvalidDates_whenValidate_thenFlagsErrors() {
         HrOrganizationRecord base = new HrOrganizationRecord("ORG001", "HQ", null, "ACTIVE",
-                LocalDate.of(2024, 1, 1), LocalDate.of(2023, 12, 31), "payload1", 2);
+                null, null, LocalDate.of(2024, 1, 1), LocalDate.of(2023, 12, 31), "payload1", 2);
         HrOrganizationRecord duplicate = new HrOrganizationRecord("ORG001", "HQ2", null, "ACTIVE",
-                LocalDate.of(2024, 1, 1), null, "payload2", 3);
+                null, null, LocalDate.of(2024, 1, 1), null, "payload2", 3);
 
         var result = validator.validate(List.of(base, duplicate));
 

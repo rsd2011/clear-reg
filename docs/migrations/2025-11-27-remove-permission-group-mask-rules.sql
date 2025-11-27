@@ -1,0 +1,36 @@
+-- ============================================================================
+-- Migration: Remove permission_group_mask_rules table
+-- Date: 2025-11-27
+-- Description:
+--   PermissionGroup의 maskRules가 제거되었습니다.
+--   마스킹 규칙은 이제 DataPolicy(ABAC 기반)를 통해 관리됩니다.
+--
+--   Related changes:
+--   - PermissionGroup.maskRules 필드 제거
+--   - FieldMaskRule 엔티티 클래스 삭제
+--   - DeclarativePermissionGroupLoader의 maskRules 로딩 로직 제거
+--   - PermissionMenuItem.maskingTags 필드 제거
+-- ============================================================================
+
+-- Forward Migration
+-- Drop the permission_group_mask_rules table
+DROP TABLE IF EXISTS permission_group_mask_rules;
+
+-- ============================================================================
+-- Rollback Migration (주의: 데이터 복구 불가)
+-- ============================================================================
+--
+-- 롤백이 필요한 경우 아래 SQL을 실행하여 테이블을 재생성합니다.
+-- 단, 기존 데이터는 복구되지 않습니다.
+--
+-- CREATE TABLE permission_group_mask_rules (
+--     group_id UUID NOT NULL,
+--     mask_tag VARCHAR(255) NOT NULL,
+--     mask_with VARCHAR(255) NOT NULL DEFAULT '***',
+--     required_action VARCHAR(50) NOT NULL DEFAULT 'UNMASK',
+--     audit BOOLEAN NOT NULL DEFAULT FALSE,
+--     CONSTRAINT fk_mask_rules_group FOREIGN KEY (group_id)
+--         REFERENCES permission_groups(id) ON DELETE CASCADE
+-- );
+--
+-- CREATE INDEX idx_mask_rules_group_id ON permission_group_mask_rules(group_id);

@@ -57,9 +57,10 @@ public class DataPolicyMaskingFilter extends OncePerRequestFilter {
                         ctx.feature() != null ? ctx.feature().name() : null,
                         ctx.action() != null ? ctx.action().name() : null,
                         ctx.permissionGroupCode(),
-                        null,
+                        ctx.orgPolicyId(),
                         orgGroups,
-                        null,
+                        ctx.businessType(),
+                        null, // sensitiveTag - 필터에서는 기본 정책만 조회
                         Instant.now()
                 ));
 

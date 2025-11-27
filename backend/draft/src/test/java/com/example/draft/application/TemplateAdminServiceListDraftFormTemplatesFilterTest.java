@@ -36,7 +36,7 @@ class TemplateAdminServiceListDraftFormTemplatesFilterTest {
         DraftFormTemplate otherOrg = DraftFormTemplate.create("f3", "HR", "ORG2", "{}", now);
         given(formRepo.findAll()).willReturn(List.of(activeOrg1, inactiveOrg1, otherOrg));
 
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         List<DraftFormTemplateResponse> result = service.listDraftFormTemplates("HR", "ORG1", true, ctx, false);
 

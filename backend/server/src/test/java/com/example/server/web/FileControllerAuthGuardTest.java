@@ -82,7 +82,7 @@ class FileControllerAuthGuardTest {
                 "creator", FileStatus.ACTIVE, null, null, null);
         when(fileManagementPort.download(any(), any(), any()))
                 .thenReturn(new FileDownload(metadata, null));
-        AuthContextHolder.set(new com.example.admin.permission.context.AuthContext("user", "ORG", "PG", null, null, null, null));
+        AuthContextHolder.set(com.example.admin.permission.context.AuthContext.of("user", "ORG", "PG", null, null, null));
 
         controller.download(fileId, draftId);
     }

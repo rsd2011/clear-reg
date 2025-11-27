@@ -76,14 +76,13 @@ class DataPolicyMaskingFilterTest {
                         .build()
         ));
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "user1",
                 "ORG1",
                 "AUDIT_VIEWER",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         DataPolicyMaskingFilter filter = new DataPolicyMaskingFilter(provider);
@@ -113,14 +112,13 @@ class DataPolicyMaskingFilterTest {
         DataPolicyProvider provider = Mockito.mock(DataPolicyProvider.class);
         when(provider.evaluate(any())).thenReturn(Optional.empty());
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "user2",
                 null,
                 "AUDIT_VIEWER",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         DataPolicyMaskingFilter filter = new DataPolicyMaskingFilter(provider);
@@ -144,14 +142,13 @@ class DataPolicyMaskingFilterTest {
                 DataPolicyMatch.builder().maskRule("HASH").maskParams("name").priority(2).build()
         ));
 
-        AuthContextHolder.set(new AuthContext(
+        AuthContextHolder.set(AuthContext.of(
                 "auditor",
                 "ORG1",
                 "AUDIT_VIEWER",
                 FeatureCode.AUDIT_LOG,
                 ActionCode.READ,
-                null,
-                java.util.Map.of()
+                null
         ));
 
         MaskingTarget base = MaskingTarget.builder()

@@ -58,10 +58,10 @@ class DataPolicyBranchCoverageTest {
     @Test
     @DisplayName("DataPolicyQuery now 기본값")
     void dataPolicyQueryNowDefault() {
-        DataPolicyQuery queryWithNow = new DataPolicyQuery("F", "A", "PG", 1L, List.of("G1"), "BT", Instant.EPOCH);
+        DataPolicyQuery queryWithNow = new DataPolicyQuery("F", "A", "PG", 1L, List.of("G1"), "BT", null, Instant.EPOCH);
         assertThat(queryWithNow.nowOrDefault()).isEqualTo(Instant.EPOCH);
 
-        DataPolicyQuery queryNoNow = new DataPolicyQuery("F", "A", "PG", 1L, List.of("G1"), "BT", null);
+        DataPolicyQuery queryNoNow = new DataPolicyQuery("F", "A", "PG", 1L, List.of("G1"), "BT", null, null);
         assertThat(queryNoNow.nowOrDefault()).isNotNull();
     }
 }

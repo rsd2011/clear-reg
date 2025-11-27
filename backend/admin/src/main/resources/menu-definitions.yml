@@ -1,0 +1,289 @@
+# 메뉴 정의 파일
+# 메뉴는 하나 이상의 Capability(Feature + Action)를 참조할 수 있으며,
+# 사용자가 해당 Capability 중 하나라도 보유하면 메뉴가 표시된다.
+#
+# 메뉴 가시성은 다음 순서로 평가된다:
+# 1. (필수) 사용자의 Capability 보유 여부
+# 2. (선택) MenuViewConfig에 의한 역할/조직별 가시성 설정
+
+menus:
+  # ========================================
+  # 기안/결재 관련 메뉴
+  # ========================================
+  - code: DRAFT_MANAGEMENT
+    name: 기안 관리
+    path: /draft
+    icon: document-text
+    sortOrder: 100
+    description: 기안 문서를 작성하고 관리합니다.
+    requiredCapabilities:
+      - feature: DRAFT
+        action: DRAFT_READ
+    children:
+      - code: DRAFT_LIST
+        name: 기안 목록
+        path: /draft/list
+        icon: list
+        sortOrder: 110
+        description: 내가 작성한 기안 목록을 조회합니다.
+        requiredCapabilities:
+          - feature: DRAFT
+            action: DRAFT_READ
+
+      - code: DRAFT_CREATE
+        name: 기안 작성
+        path: /draft/new
+        icon: pencil
+        sortOrder: 120
+        description: 새로운 기안을 작성합니다.
+        requiredCapabilities:
+          - feature: DRAFT
+            action: DRAFT_CREATE
+
+  - code: APPROVAL_MANAGEMENT
+    name: 결재 관리
+    path: /approval
+    icon: check-circle
+    sortOrder: 200
+    description: 결재 요청을 처리하고 관리합니다.
+    requiredCapabilities:
+      - feature: APPROVAL
+        action: APPROVAL_REVIEW
+    children:
+      - code: APPROVAL_PENDING
+        name: 대기 결재
+        path: /approval/pending
+        icon: clock
+        sortOrder: 210
+        description: 내 결재를 기다리는 문서 목록입니다.
+        requiredCapabilities:
+          - feature: APPROVAL
+            action: APPROVAL_REVIEW
+
+      - code: APPROVAL_HISTORY
+        name: 결재 이력
+        path: /approval/history
+        icon: history
+        sortOrder: 220
+        description: 처리한 결재 이력을 조회합니다.
+        requiredCapabilities:
+          - feature: APPROVAL
+            action: APPROVAL_REVIEW
+
+  # ========================================
+  # 조직/인사 관련 메뉴
+  # ========================================
+  - code: ORGANIZATION_MANAGEMENT
+    name: 조직 관리
+    path: /organization
+    icon: building
+    sortOrder: 300
+    description: 조직 정보를 조회하고 관리합니다.
+    requiredCapabilities:
+      - feature: ORGANIZATION
+        action: READ
+    children:
+      - code: ORGANIZATION_TREE
+        name: 조직도
+        path: /organization/tree
+        icon: sitemap
+        sortOrder: 310
+        description: 조직 구조를 트리 형태로 조회합니다.
+        requiredCapabilities:
+          - feature: ORGANIZATION
+            action: READ
+
+      - code: ORGANIZATION_SEARCH
+        name: 조직 검색
+        path: /organization/search
+        icon: search
+        sortOrder: 320
+        description: 조직을 검색합니다.
+        requiredCapabilities:
+          - feature: ORGANIZATION
+            action: READ
+
+  - code: EMPLOYEE_MANAGEMENT
+    name: 직원 관리
+    path: /employee
+    icon: users
+    sortOrder: 400
+    description: 직원 정보를 조회하고 관리합니다.
+    requiredCapabilities:
+      - feature: EMPLOYEE
+        action: READ
+    children:
+      - code: EMPLOYEE_LIST
+        name: 직원 목록
+        path: /employee/list
+        icon: list
+        sortOrder: 410
+        description: 직원 목록을 조회합니다.
+        requiredCapabilities:
+          - feature: EMPLOYEE
+            action: READ
+
+      - code: EMPLOYEE_SEARCH
+        name: 직원 검색
+        path: /employee/search
+        icon: search
+        sortOrder: 420
+        description: 직원을 검색합니다.
+        requiredCapabilities:
+          - feature: EMPLOYEE
+            action: READ
+
+  # ========================================
+  # 공지사항/알림 관련 메뉴
+  # ========================================
+  - code: NOTICE_MANAGEMENT
+    name: 공지사항
+    path: /notice
+    icon: megaphone
+    sortOrder: 500
+    description: 공지사항을 조회하고 관리합니다.
+    requiredCapabilities:
+      - feature: NOTICE
+        action: READ
+    children:
+      - code: NOTICE_LIST
+        name: 공지 목록
+        path: /notice/list
+        icon: list
+        sortOrder: 510
+        description: 공지사항 목록을 조회합니다.
+        requiredCapabilities:
+          - feature: NOTICE
+            action: READ
+
+      - code: NOTICE_CREATE
+        name: 공지 작성
+        path: /notice/new
+        icon: pencil
+        sortOrder: 520
+        description: 새로운 공지사항을 작성합니다.
+        requiredCapabilities:
+          - feature: NOTICE
+            action: DRAFT_CREATE
+
+  - code: ALERT_MANAGEMENT
+    name: 알림 관리
+    path: /alert
+    icon: bell
+    sortOrder: 600
+    description: 시스템 알림을 조회하고 관리합니다.
+    requiredCapabilities:
+      - feature: ALERT
+        action: READ
+
+  # ========================================
+  # 파일 관련 메뉴
+  # ========================================
+  - code: FILE_MANAGEMENT
+    name: 파일 관리
+    path: /file
+    icon: folder
+    sortOrder: 700
+    description: 파일을 업로드하고 관리합니다.
+    requiredCapabilities:
+      - feature: FILE
+        action: READ
+    children:
+      - code: FILE_LIST
+        name: 파일 목록
+        path: /file/list
+        icon: list
+        sortOrder: 710
+        description: 업로드된 파일 목록을 조회합니다.
+        requiredCapabilities:
+          - feature: FILE
+            action: READ
+
+      - code: FILE_UPLOAD
+        name: 파일 업로드
+        path: /file/upload
+        icon: upload
+        sortOrder: 720
+        description: 새로운 파일을 업로드합니다.
+        requiredCapabilities:
+          - feature: FILE
+            action: UPLOAD
+
+  # ========================================
+  # 관리자 메뉴
+  # ========================================
+  - code: ADMIN
+    name: 관리
+    path: /admin
+    icon: cog
+    sortOrder: 900
+    description: 시스템 관리 메뉴입니다.
+    requiredCapabilities:
+      - feature: POLICY
+        action: READ
+      - feature: AUDIT_LOG
+        action: READ
+      - feature: COMMON_CODE
+        action: UPDATE
+      - feature: HR_IMPORT
+        action: READ
+    children:
+      - code: ADMIN_POLICY
+        name: 정책 관리
+        path: /admin/policy
+        icon: shield
+        sortOrder: 910
+        description: 시스템 정책을 관리합니다.
+        requiredCapabilities:
+          - feature: POLICY
+            action: READ
+
+      - code: ADMIN_AUDIT_LOG
+        name: 감사 로그
+        path: /admin/audit-log
+        icon: clipboard-list
+        sortOrder: 920
+        description: 시스템 감사 로그를 조회합니다.
+        requiredCapabilities:
+          - feature: AUDIT_LOG
+            action: READ
+
+      - code: ADMIN_COMMON_CODE
+        name: 공통 코드
+        path: /admin/common-code
+        icon: tag
+        sortOrder: 930
+        description: 공통 코드를 관리합니다.
+        requiredCapabilities:
+          - feature: COMMON_CODE
+            action: READ
+
+      - code: ADMIN_HR_IMPORT
+        name: HR 데이터 가져오기
+        path: /admin/hr-import
+        icon: database
+        sortOrder: 940
+        description: HR 시스템에서 데이터를 가져옵니다.
+        requiredCapabilities:
+          - feature: HR_IMPORT
+            action: READ
+
+      - code: ADMIN_RULE_MANAGE
+        name: 규칙 관리
+        path: /admin/rule
+        icon: code
+        sortOrder: 950
+        description: 비즈니스 규칙을 관리합니다.
+        requiredCapabilities:
+          - feature: RULE_MANAGE
+            action: READ
+
+      - code: ADMIN_CUSTOMER
+        name: 고객 관리
+        path: /admin/customer
+        icon: user-group
+        sortOrder: 960
+        description: 고객 정보를 관리합니다.
+        requiredCapabilities:
+          - feature: CUSTOMER
+            action: READ

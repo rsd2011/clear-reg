@@ -26,16 +26,6 @@ public class OrgGroupMember extends PrimaryKeyEntity {
   @Column(length = 255)
   private String orgName; // 참조용 표시
 
-  @Column(length = 100)
-  private String leaderPermGroupCode;
-
-  @Column(length = 100)
-  private String managerPermGroupCode;
-
-  @Column(length = 100)
-  private String memberPermGroupCode;
-
-  @Column(nullable = false)
-  @Builder.Default
-  private Integer priority = 100;
+  /** 표시 순서 (nullable) */
+  private Integer sort;
 }

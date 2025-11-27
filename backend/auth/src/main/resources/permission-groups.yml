@@ -41,11 +41,6 @@ permissionGroups:
       - feature: DRAFT
         action: DRAFT_DELEGATE
         rowScope: OWN
-    maskRules:
-      - tag: ORG_NAME
-        maskWith: "***"
-        requiredAction: UNMASK
-        audit: true
   - code: AUDIT
     name: 감사지원
     description: 감사를 수행하는 전사 감사팀
@@ -94,8 +89,3 @@ permissionGroups:
       - feature: DRAFT
         action: DRAFT_DELEGATE
         rowScope: ALL
-    maskRules:
-      - tag: SALARY
-        maskWith: "***"
-        requiredAction: UNMASK
-        audit: true

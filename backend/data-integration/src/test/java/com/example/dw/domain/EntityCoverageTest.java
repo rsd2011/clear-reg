@@ -56,7 +56,7 @@ class EntityCoverageTest {
         HrImportBatchEntity batch = HrImportBatchEntity.receive("f.csv", DataFeedType.ORGANIZATION, "SRC",
                 LocalDate.of(2024, 2, 1), 1, "chk", "/tmp/f.csv");
         HrOrganizationRecord record = new HrOrganizationRecord("ORG-100", "비밀조직", "PARENT", "ACTIVE",
-                LocalDate.of(2024, 2, 1), LocalDate.of(2024, 12, 31), "raw", 1);
+                null, null, LocalDate.of(2024, 2, 1), LocalDate.of(2024, 12, 31), "raw", 1);
         HrOrganizationStagingEntity org = HrOrganizationStagingEntity.fromRecord(batch, record, "hash");
 
         assertThat(org.getOrganizationCode()).isEqualTo("ORG-100");

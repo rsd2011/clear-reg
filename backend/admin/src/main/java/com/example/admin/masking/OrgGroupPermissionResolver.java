@@ -1,79 +1,84 @@
 package com.example.admin.masking;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+/**
+ * OrgGroup 기반으로 신규 사용자에게 자동 부여할 권한 그룹을 해석한다.
+ * 폴백은 System Policy(OrgGroupSettingsProperties.defaultGroups) 기반으로 처리한다.
+ */
 @Component
 public class OrgGroupPermissionResolver {
 
   private final OrgGroupRepository repository;
-  private final OrgGroupSettingsProperties properties;
+  private final OrgGroupSettingsProperties settings;
 
   public OrgGroupPermissionResolver(
-      OrgGroupRepository repository, OrgGroupSettingsProperties properties) {
+      OrgGroupRepository repository, OrgGroupSettingsProperties settings) {
     this.repository = repository;
-    this.properties = properties;
+    this.settings = settings;
   }
 
   /**
    * 조직이 속한 그룹을 기반으로 리더/일반 조직원 권한그룹 코드를 해석한다.
    *
    * @param orgIds 대상 조직 ID 목록(DW)
-   * @param isLeader true면 leader_perm_group_code, false면 member_perm_group_code 사용
+   * @param isLeader true면 leaderPermGroupCode, false면 memberPermGroupCode 사용
    */
   public Set<String> resolvePermGroups(List<String> orgIds, boolean isLeader) {
     if (orgIds == null || orgIds.isEmpty()) {
       return Set.of();
     }
-    var members = repository.findByOrgIdInOrderByPriorityAsc(orgIds);
-    var ordered = new java.util.LinkedHashSet<String>();
-    for (OrgGroupMember m : members) {
-      String code = isLeader ? m.getLeaderPermGroupCode() : m.getMemberPermGroupCode();
+
+    var ordered = new LinkedHashSet<String>();
+    var groups = repository.findByMemberOrgIdsOrderBySortAsc(orgIds);
+
+    for (OrgGroup g : groups) {
+      String code = isLeader ? g.getLeaderPermGroupCode() : g.getMemberPermGroupCode();
       if (StringUtils.hasText(code)) {
         ordered.add(code);
       }
     }
-    if (ordered.isEmpty()) {
-      if (properties.getDefaultGroups() != null && !properties.getDefaultGroups().isEmpty()) {
-        ordered.addAll(properties.getDefaultGroups());
-      } else if (properties.isFallbackToLowestPriorityGroup()) {
-        OrgGroup lowest = repository.findTopByOrderByPriorityDesc();
-        if (lowest != null) {
-          ordered.add(lowest.getCode());
-        }
-      }
+
+    // 폴백: System Policy (설정 기반)
+    if (ordered.isEmpty() && settings.getDefaultGroups() != null) {
+      ordered.addAll(settings.getDefaultGroups());
     }
+
     return ordered;
   }
 
   /**
-   * 조직 업무 매니저(리더와 별개 역할)에 대한 권한 그룹을 해석한다. 우선 순서: 구성원별 managerPermGroupCode → 설정
-   * defaultManagerGroups → defaultGroups → 우선순위 최저 그룹.
+   * 조직 업무 매니저(리더와 별개 역할)에 대한 권한 그룹을 해석한다.
+   * 우선 순서: 그룹별 managerPermGroupCode → 설정 defaultManagerGroups → defaultGroups.
    */
   public Set<String> resolveManagerPermGroups(List<String> orgIds) {
     if (orgIds == null || orgIds.isEmpty()) {
       return Set.of();
     }
-    var ordered = new java.util.LinkedHashSet<String>();
-    var members = repository.findByOrgIdInOrderByPriorityAsc(orgIds);
-    for (OrgGroupMember m : members) {
-      if (StringUtils.hasText(m.getManagerPermGroupCode())) {
-        ordered.add(m.getManagerPermGroupCode());
+
+    var ordered = new LinkedHashSet<String>();
+    var groups = repository.findByMemberOrgIdsOrderBySortAsc(orgIds);
+
+    for (OrgGroup g : groups) {
+      if (StringUtils.hasText(g.getManagerPermGroupCode())) {
+        ordered.add(g.getManagerPermGroupCode());
       }
     }
-    if (properties.getDefaultManagerGroups() != null
-        && !properties.getDefaultManagerGroups().isEmpty()) {
-      ordered.addAll(properties.getDefaultManagerGroups());
-    } else if (properties.getDefaultGroups() != null && !properties.getDefaultGroups().isEmpty()) {
-      ordered.addAll(properties.getDefaultGroups());
-    } else if (properties.isFallbackToLowestPriorityGroup()) {
-      OrgGroup lowest = repository.findTopByOrderByPriorityDesc();
-      if (lowest != null) {
-        ordered.add(lowest.getCode());
+
+    // 폴백: System Policy (설정 기반)
+    if (ordered.isEmpty()) {
+      if (settings.getDefaultManagerGroups() != null
+          && !settings.getDefaultManagerGroups().isEmpty()) {
+        ordered.addAll(settings.getDefaultManagerGroups());
+      } else if (settings.getDefaultGroups() != null) {
+        ordered.addAll(settings.getDefaultGroups());
       }
     }
+
     return ordered;
   }
 }

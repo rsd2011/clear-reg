@@ -31,7 +31,7 @@ class TemplateAdminServiceCreateFormTemplateInactiveTest {
         given(formRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", "HR", "ORG1", "{}", false);
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         DraftFormTemplateResponse res = service.createDraftFormTemplate(req, ctx, false);
         assertThat(res.active()).isFalse();

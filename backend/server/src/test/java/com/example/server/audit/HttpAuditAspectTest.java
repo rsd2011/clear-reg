@@ -44,8 +44,8 @@ class HttpAuditAspectTest {
         AuditPort auditPort = Mockito.mock(AuditPort.class);
         HttpAuditAspect aspect = new HttpAuditAspect(auditPort);
 
-        AuthContextHolder.set(new AuthContext("emp1", "ORG1", "ROLE_USER",
-                FeatureCode.AUDIT_LOG, ActionCode.READ, null, java.util.Map.of()));
+        AuthContextHolder.set(AuthContext.of("emp1", "ORG1", "ROLE_USER",
+                FeatureCode.AUDIT_LOG, ActionCode.READ, null));
 
         MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/hello");
         req.setRemoteAddr("127.0.0.1");

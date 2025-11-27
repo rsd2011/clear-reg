@@ -33,7 +33,7 @@ class TemplateAdminServiceAccessDeniedBranchTest {
         ApprovalGroup group = ApprovalGroup.create("G1", "n", null, "ORG1", null, OffsetDateTime.now());
         given(groupRepo.findById(UUID.fromString("00000000-0000-0000-0000-000000000001"))).willReturn(Optional.of(group));
 
-        AuthContext ctx = new AuthContext("u", "ORG2", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG2", null, null, null, RowScope.ORG);
         ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "n2", "desc", "ORG1", null);
 
         assertThatThrownBy(() -> service.updateApprovalGroup(

@@ -50,8 +50,8 @@ class DwOrganizationControllerTest {
         given(organizationPort.getOrganizations(pageable, RowScope.ALL, "ORG001"))
                 .willReturn(new PageImpl<>(List.of(record), pageable, 1));
 
-        AuthContextHolder.set(new AuthContext("tester", "ORG001", "DEFAULT",
-                FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL, Map.of()));
+        AuthContextHolder.set(AuthContext.of("tester", "ORG001", "DEFAULT",
+                FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL));
         List<DwOrganizationResponse> response = controller.organizations();
         AuthContextHolder.clear();
 

@@ -37,7 +37,7 @@ class HrOrganizationStagingServiceTest {
     @Test
     void givenRecords_whenPersistRecords_thenSaveStagingEntities() {
         HrOrganizationRecord record = new HrOrganizationRecord("ORG", "Org", null, "ACTIVE",
-                LocalDate.now(), null, "payload", 2);
+                null, null, LocalDate.now(), null, "payload", 2);
         HrImportBatchEntity batch = HrImportBatchEntity.receive(
                 "org.csv", DataFeedType.ORGANIZATION, "SRC", LocalDate.now(), 1, "chk", "/tmp"
         );

@@ -33,7 +33,7 @@ class DraftTemplateAdminControllerUnitCoverTest {
     @Test
     @DisplayName("listGroups는 현재 컨텍스트를 전달해 서비스 결과를 반환한다")
     void listGroupsReturnsServiceResult() {
-        AuthContextHolder.set(new AuthContext("u", "ORG", null, null, null, RowScope.ALL, null));
+        AuthContextHolder.set(AuthContext.of("u", "ORG", null, null, null, RowScope.ALL));
         ApprovalGroupResponse resp = new ApprovalGroupResponse(
                 UUID.randomUUID(),
                 "g",

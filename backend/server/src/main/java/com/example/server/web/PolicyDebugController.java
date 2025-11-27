@@ -38,10 +38,12 @@ public class PolicyDebugController {
     public PolicyDebugResponse effective(@RequestParam String featureCode,
                                          @RequestParam(required = false) String actionCode,
                                          @RequestParam(required = false) String permGroupCode,
+                                         @RequestParam(required = false) Long orgPolicyId,
                                          @RequestParam(required = false) List<String> orgGroupCodes,
-                                         @RequestParam(required = false) String businessType) {
+                                         @RequestParam(required = false) String businessType,
+                                         @RequestParam(required = false) String sensitiveTag) {
         var toggles = policySettingsProvider.currentSettings();
-        var query = new DataPolicyQuery(featureCode, actionCode, permGroupCode, null, orgGroupCodes, businessType, Instant.now());
+        var query = new DataPolicyQuery(featureCode, actionCode, permGroupCode, orgPolicyId, orgGroupCodes, businessType, sensitiveTag, Instant.now());
         var match = dataPolicyProvider.evaluate(query).orElse(null);
         return PolicyDebugResponse.of(toggles, match);
     }

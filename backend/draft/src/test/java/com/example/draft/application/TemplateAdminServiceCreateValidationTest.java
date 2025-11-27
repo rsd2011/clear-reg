@@ -24,7 +24,7 @@ class TemplateAdminServiceCreateValidationTest {
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "n", "d", " ", null);
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         assertThatThrownBy(() -> service.createApprovalGroup(req, ctx, false))
                 .isInstanceOf(IllegalArgumentException.class);

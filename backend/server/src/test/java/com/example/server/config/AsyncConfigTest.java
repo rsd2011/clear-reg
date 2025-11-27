@@ -32,8 +32,8 @@ class AsyncConfigTest {
     @Test
     @DisplayName("Async TaskExecutor가 AuthContext를 전파한다")
     void asyncExecutorPropagatesAuthContext() throws Exception {
-        AuthContext context = new AuthContext("tester", "ORG", "DEFAULT",
-                FeatureCode.NOTICE, ActionCode.READ, RowScope.OWN, java.util.Map.of());
+        AuthContext context = AuthContext.of("tester", "ORG", "DEFAULT",
+                FeatureCode.NOTICE, ActionCode.READ, RowScope.OWN);
         AuthContextHolder.set(context);
 
         Future<String> future = applicationTaskExecutor.submit(() ->

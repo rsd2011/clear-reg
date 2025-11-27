@@ -28,7 +28,7 @@ class TemplateAdminServiceCreateFormTemplateAuditTest {
         org.mockito.BDDMockito.given(formRepo.save(org.mockito.ArgumentMatchers.any())).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", "HR", null, "{}", true);
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         DraftFormTemplateResponse res = service.createDraftFormTemplate(req, ctx, true);
 

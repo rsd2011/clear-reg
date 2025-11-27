@@ -26,7 +26,18 @@ public class OrgGroup extends PrimaryKeyEntity {
     @Column(length = 500)
     private String description;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private Integer priority = 100;
+    /** 표시 순서 (nullable) */
+    private Integer sort;
+
+    /** 신규 사용자가 리더 역할로 최초 접근 시 자동 부여할 권한 그룹 */
+    @Column(length = 100)
+    private String leaderPermGroupCode;
+
+    /** 신규 사용자가 매니저 역할로 최초 접근 시 자동 부여할 권한 그룹 */
+    @Column(length = 100)
+    private String managerPermGroupCode;
+
+    /** 신규 사용자가 일반 구성원 역할로 최초 접근 시 자동 부여할 권한 그룹 */
+    @Column(length = 100)
+    private String memberPermGroupCode;
 }

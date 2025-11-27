@@ -53,7 +53,7 @@ class TemplateAdminServiceUpdateLineTemplateTest {
                         new ApprovalTemplateStepRequest(2, "GRP3", "d3")
                 )
         );
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         ApprovalLineTemplateResponse res = service.updateApprovalLineTemplate(id, req, ctx, false);
 

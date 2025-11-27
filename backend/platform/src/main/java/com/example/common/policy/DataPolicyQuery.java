@@ -8,6 +8,7 @@ public record DataPolicyQuery(String featureCode,
                               Long orgPolicyId,
                               java.util.List<String> orgGroupCodes,
                               String businessType,
+                              String sensitiveTag,
                               Instant now) {
     public Instant nowOrDefault() {
         return now != null ? now : Instant.now();

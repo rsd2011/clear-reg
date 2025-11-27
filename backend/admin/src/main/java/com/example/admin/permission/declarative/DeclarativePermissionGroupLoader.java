@@ -1,6 +1,5 @@
 package com.example.admin.permission.declarative;
 
-import com.example.admin.permission.FieldMaskRule;
 import com.example.admin.permission.PermissionAssignment;
 import com.example.admin.permission.PermissionGroup;
 import com.example.admin.permission.PermissionGroupRepository;
@@ -84,7 +83,6 @@ class DeclarativePermissionGroupLoader implements ApplicationRunner {
           definition.description(),
           definition.defaultRowScope() == null ? RowScope.OWN : definition.defaultRowScope());
       group.replaceAssignments(toAssignments(definition.assignmentsOrEmpty()));
-      group.replaceMaskRules(toMaskRules(definition.maskRulesOrEmpty()));
       repository.save(group);
       log.debug("PermissionGroup [{}] 동기화 완료", group.getCode());
     }
@@ -103,14 +101,5 @@ class DeclarativePermissionGroupLoader implements ApplicationRunner {
           new PermissionAssignment(definition.feature(), definition.action(), rowScope, condition));
     }
     return assignments;
-  }
-
-  private Set<FieldMaskRule> toMaskRules(List<FieldMaskRuleDefinition> definitions) {
-    Set<FieldMaskRule> rules = new LinkedHashSet<>();
-    for (FieldMaskRuleDefinition definition : definitions) {
-      Assert.hasText(definition.tag(), "mask rule tag는 필수입니다.");
-      rules.add(definition.toMaskRule());
-    }
-    return rules;
   }
 }

@@ -9,14 +9,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "policy.org-group")
 public class OrgGroupSettingsProperties {
 
-  /** 신규 조직이 자동으로 속하는 기본 그룹 코드 목록. */
+  /** 신규 사용자에게 기본으로 부여할 권한 그룹 코드 목록 (System Policy). */
   private List<String> defaultGroups = new ArrayList<>();
 
-  /** 조직 업무 매니저에게 기본으로 부여할 권한 그룹 코드. 지정되지 않으면 defaultGroups 를 재사용한다. */
+  /** 조직 업무 매니저에게 기본으로 부여할 권한 그룹 코드. 지정되지 않으면 defaultGroups를 재사용한다. */
   private List<String> defaultManagerGroups = new ArrayList<>();
-
-  /** defaultGroups가 비어있을 때, org_group에서 priority가 가장 낮은(숫자가 큰) 그룹을 기본으로 사용. */
-  private boolean fallbackToLowestPriorityGroup = true;
 
   public List<String> getDefaultGroups() {
     return defaultGroups;
@@ -33,13 +30,5 @@ public class OrgGroupSettingsProperties {
   public void setDefaultManagerGroups(List<String> defaultManagerGroups) {
     this.defaultManagerGroups =
         defaultManagerGroups == null ? new ArrayList<>() : new ArrayList<>(defaultManagerGroups);
-  }
-
-  public boolean isFallbackToLowestPriorityGroup() {
-    return fallbackToLowestPriorityGroup;
-  }
-
-  public void setFallbackToLowestPriorityGroup(boolean fallbackToLowestPriorityGroup) {
-    this.fallbackToLowestPriorityGroup = fallbackToLowestPriorityGroup;
   }
 }

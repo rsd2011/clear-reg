@@ -51,7 +51,7 @@ class DraftTemplateAdminControllerExtraTest {
     @Test
     @DisplayName("승인선 템플릿 생성 시 현재 컨텍스트를 전달한다")
     void createApprovalLineTemplateUsesContext() {
-        AuthContext ctx = new AuthContext("user", "ORG", "PG", null, null, RowScope.ALL, null);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
         ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("이름", "BT", "ORG", true, List.of());
@@ -77,7 +77,7 @@ class DraftTemplateAdminControllerExtraTest {
     @Test
     @DisplayName("서식 템플릿 목록 조회 시 파라미터와 컨텍스트를 그대로 전달한다")
     void listDraftFormTemplatesPassesArguments() {
-        AuthContext ctx = new AuthContext("user", "ORG", "PG", null, null, RowScope.ALL, null);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
         DraftFormTemplateResponse resp = mock(DraftFormTemplateResponse.class);
@@ -91,7 +91,7 @@ class DraftTemplateAdminControllerExtraTest {
     @Test
     @DisplayName("승인 그룹 생성 시 컨텍스트와 true 플래그가 전달된다")
     void createGroupUsesContext() {
-        AuthContext ctx = new AuthContext("user", "ORG", "PG", null, null, RowScope.ALL, null);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
         ApprovalGroupRequest request = new ApprovalGroupRequest("GC", "이름", "설명", "ORG", null);
@@ -107,7 +107,7 @@ class DraftTemplateAdminControllerExtraTest {
     @Test
     @DisplayName("승인선 템플릿 목록 조회도 컨텍스트와 파라미터를 그대로 전달한다")
     void listApprovalLineTemplatesPassesArguments() {
-        AuthContext ctx = new AuthContext("user", "ORG", "PG", null, null, RowScope.ALL, null);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
         ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(

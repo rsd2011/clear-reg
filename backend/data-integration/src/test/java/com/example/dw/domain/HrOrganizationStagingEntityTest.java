@@ -16,7 +16,7 @@ class HrOrganizationStagingEntityTest {
         HrImportBatchEntity batch = HrImportBatchEntity.receive("org.csv", DataFeedType.ORGANIZATION, "SRC",
                 java.time.LocalDate.now(), 1, "chk", "/tmp");
         HrOrganizationRecord record = new HrOrganizationRecord("ORG", "조직", "PARENT", "ACTIVE",
-                java.time.LocalDate.now(), null, "raw", 1);
+                null, null, java.time.LocalDate.now(), null, "raw", 1);
         HrOrganizationStagingEntity entity = HrOrganizationStagingEntity.fromRecord(batch, record, "hash");
         assertThat(entity.getOrganizationCode()).isEqualTo("ORG");
         assertThat(entity.getParentOrganizationCode()).isEqualTo("PARENT");

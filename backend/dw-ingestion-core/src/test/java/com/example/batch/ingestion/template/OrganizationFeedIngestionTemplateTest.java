@@ -40,7 +40,7 @@ class OrganizationFeedIngestionTemplateTest {
                 "org.csv", DataFeedType.ORGANIZATION, "SRC", LocalDate.now(), 1, "chk", "/tmp"
         );
         HrOrganizationRecord record = new HrOrganizationRecord("ORG1", "이름", "PARENT", "ACTIVE",
-                LocalDate.of(2024,1,1), null, "raw", 2);
+                null, null, LocalDate.of(2024,1,1), null, "raw", 2);
         List<HrOrganizationRecord> parsed = List.of(record);
         when(parser.parse("csv")).thenReturn(parsed);
         HrOrganizationValidationResult validation = new HrOrganizationValidationResult(parsed, List.of());

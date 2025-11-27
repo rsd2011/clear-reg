@@ -28,7 +28,7 @@ class TemplateAdminServiceListEmptyTest {
                 mock(ApprovalLineTemplateRepository.class),
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
-        AuthContext ctx = new AuthContext("u", "ORG1", null, null, null, RowScope.ORG, null);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
         List<ApprovalGroupResponse> result = service.listApprovalGroups(null, ctx, false);
 

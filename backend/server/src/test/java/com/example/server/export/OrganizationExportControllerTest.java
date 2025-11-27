@@ -56,8 +56,8 @@ class OrganizationExportControllerTest {
     @Test
     @DisplayName("조직 Excel export 엔드포인트가 200을 반환한다")
     void exportOrgExcelReturnsOk() throws Exception {
-        HrOrganizationEntity org = HrOrganizationEntity.snapshot("ORG1", 1, "본점", null, null,
-                java.time.LocalDate.now(), null, java.util.UUID.randomUUID(), java.time.OffsetDateTime.now());
+        HrOrganizationEntity org = HrOrganizationEntity.snapshot("ORG1", 1, "본점", null, "ACTIVE",
+                null, null, java.time.LocalDate.now(), null, java.util.UUID.randomUUID(), java.time.OffsetDateTime.now());
         given(repository.findAll()).willReturn(List.of(org));
         given(exportWriterService.exportExcel(any(), anyList(), any(), anyString(), anyString(), any())).willReturn(new byte[0]);
 
@@ -70,8 +70,8 @@ class OrganizationExportControllerTest {
     @Test
     @DisplayName("조직 PDF export 엔드포인트가 200을 반환한다")
     void exportOrgPdfReturnsOk() throws Exception {
-        HrOrganizationEntity org = HrOrganizationEntity.snapshot("ORG1", 1, "본점", null, null,
-                java.time.LocalDate.now(), null, java.util.UUID.randomUUID(), java.time.OffsetDateTime.now());
+        HrOrganizationEntity org = HrOrganizationEntity.snapshot("ORG1", 1, "본점", null, "ACTIVE",
+                null, null, java.time.LocalDate.now(), null, java.util.UUID.randomUUID(), java.time.OffsetDateTime.now());
         given(repository.findAll()).willReturn(List.of(org));
         given(exportWriterService.exportPdf(any(), anyList(), any(), anyString(), anyString(), any())).willReturn(new byte[0]);
 

@@ -3,7 +3,6 @@ package com.example.server.readmodel;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -29,7 +28,7 @@ public class DefaultPermissionMenuReadModelSource implements PermissionMenuReadM
         return new PermissionMenuReadModel(
                 UUID.randomUUID().toString(),
                 OffsetDateTime.now(clock),
-                List.of(new PermissionMenuItem("PM_ROOT", "Root", "DASHBOARD", "READ", "/", Set.of()))
+                List.of(new PermissionMenuItem("PM_ROOT", "Root", "DASHBOARD", "READ", "/"))
         );
     }
 }

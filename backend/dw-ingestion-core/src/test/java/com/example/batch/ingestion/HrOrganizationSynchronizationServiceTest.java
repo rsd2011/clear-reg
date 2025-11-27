@@ -38,7 +38,7 @@ class HrOrganizationSynchronizationServiceTest {
     @Test
     void givenNoActiveRecord_whenSynchronize_thenInsert() {
         HrOrganizationRecord record = new HrOrganizationRecord("ORG", "Org", null, "ACTIVE",
-                LocalDate.now(), null, "payload", 1);
+                null, null, LocalDate.now(), null, "payload", 1);
         given(repository.findFirstByOrganizationCodeAndEffectiveEndIsNullOrderByVersionDesc("ORG"))
                 .willReturn(Optional.empty());
 
@@ -59,13 +59,15 @@ class HrOrganizationSynchronizationServiceTest {
                 "Org",
                 null,
                 "ACTIVE",
+                null,
+                null,
                 LocalDate.now().minusDays(5),
                 null,
                 java.util.UUID.randomUUID(),
                 java.time.OffsetDateTime.now()
         );
         HrOrganizationRecord record = new HrOrganizationRecord("ORG", "Org", null, "INACTIVE",
-                LocalDate.now(), null, "payload", 2);
+                null, null, LocalDate.now(), null, "payload", 2);
         given(repository.findFirstByOrganizationCodeAndEffectiveEndIsNullOrderByVersionDesc("ORG"))
                 .willReturn(Optional.of(active));
 
