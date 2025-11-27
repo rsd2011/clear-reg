@@ -11,10 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.example.audit.AuditPort;
-import com.example.policy.PolicyAdminService;
-import com.example.policy.dto.PolicyUpdateRequest;
-import com.example.policy.dto.PolicyView;
-import com.example.policy.dto.PolicyYamlRequest;
+import com.example.admin.policy.PolicyAdminService;
+import com.example.admin.policy.dto.PolicyUpdateRequest;
+import com.example.admin.policy.dto.PolicyView;
+import com.example.admin.policy.dto.PolicyYamlRequest;
 
 @DisplayName("PolicyAdminPortAdapter 테스트")
 class PolicyAdminPortAdapterTest {

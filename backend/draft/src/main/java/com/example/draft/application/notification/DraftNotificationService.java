@@ -8,10 +8,12 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.auth.domain.UserAccount;
+import com.example.auth.domain.UserAccountRepository;
+import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalState;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 @Service
@@ -19,17 +21,17 @@ public class DraftNotificationService {
 
     private final DraftNotificationPublisher publisher;
     private final DraftReferenceRepository referenceRepository;
-    private final ApprovalGroupRepository approvalGroupRepository;
-    private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
+    private final PermissionGroupRepository permissionGroupRepository;
+    private final UserAccountRepository userAccountRepository;
 
     public DraftNotificationService(DraftNotificationPublisher publisher,
                                     DraftReferenceRepository referenceRepository,
-                                    ApprovalGroupRepository approvalGroupRepository,
-                                    ApprovalGroupMemberRepository approvalGroupMemberRepository) {
+                                    PermissionGroupRepository permissionGroupRepository,
+                                    UserAccountRepository userAccountRepository) {
         this.publisher = publisher;
         this.referenceRepository = referenceRepository;
-        this.approvalGroupRepository = approvalGroupRepository;
-        this.approvalGroupMemberRepository = approvalGroupMemberRepository;
+        this.permissionGroupRepository = permissionGroupRepository;
+        this.userAccountRepository = userAccountRepository;
     }
 
     @Transactional(readOnly = true)
@@ -76,12 +78,23 @@ public class DraftNotificationService {
         return draft.getApprovalSteps().stream()
                 .filter(step -> step.getState() == DraftApprovalState.WAITING)
                 .findFirst()
-                .map(step -> approvalGroupRepository.findByGroupCode(step.getApprovalGroupCode())
-                        .map(group -> approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId())
-                                .stream()
-                                .map(com.example.approval.domain.ApprovalGroupMember::getMemberUserId)
-                                .toList())
-                        .orElse(List.of()))
+                .map(step -> {
+                    List<PermissionGroup> groups =
+                            permissionGroupRepository.findByApprovalGroupCode(step.getApprovalGroupCode());
+
+                    if (groups.isEmpty()) {
+                        return List.<String>of();
+                    }
+
+                    List<String> groupCodes = groups.stream()
+                            .map(PermissionGroup::getCode)
+                            .toList();
+
+                    return userAccountRepository.findByPermissionGroupCodeIn(groupCodes)
+                            .stream()
+                            .map(UserAccount::getUsername)
+                            .toList();
+                })
                 .orElse(List.of());
     }
 }

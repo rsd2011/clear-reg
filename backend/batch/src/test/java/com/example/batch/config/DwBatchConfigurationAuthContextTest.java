@@ -17,8 +17,8 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.batch.ingestion.DwIngestionService;
 import com.example.dw.application.job.DwIngestionJob;
 import com.example.dw.application.job.DwIngestionOutboxService;

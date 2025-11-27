@@ -18,6 +18,7 @@ public class ApprovalRequest {
     private OffsetDateTime lastUpdatedAt;
     private ApprovalStatus status;
     private final List<ApprovalStep> steps;
+    private boolean approvalHookDispatched;
 
     private ApprovalRequest(UUID id,
                             UUID draftId,
@@ -82,8 +83,42 @@ public class ApprovalRequest {
         actOnCurrentStep(actor, now, ApprovalStatus.REJECTED);
     }
 
+    public void defer(String actor, OffsetDateTime now) {
+        actOnCurrentStep(actor, now, ApprovalStatus.DEFERRED);
+    }
+
+    public void approveDeferred(String actor, OffsetDateTime now) {
+        ApprovalStep deferred = steps.stream()
+                .filter(step -> step.getStatus() == ApprovalStatus.DEFERRED)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No deferred step"));
+        deferred.completeDeferred(actor, now);
+        recomputeStatus(now, actor);
+    }
+
+    public void delegate(String delegatedTo, String actor, String comment, OffsetDateTime now) {
+        if (status == ApprovalStatus.APPROVED || status == ApprovalStatus.REJECTED || status == ApprovalStatus.WITHDRAWN) {
+            throw new IllegalStateException("Approval already completed");
+        }
+        ApprovalStep waiting = steps.stream()
+                .filter(step -> step.getStatus() == ApprovalStatus.REQUESTED || step.getStatus() == ApprovalStatus.IN_PROGRESS)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No active step"));
+
+        waiting.delegateTo(delegatedTo, actor, comment, now);
+        lastUpdatedAt = now;
+    }
+
+    public void withdraw(String actor, OffsetDateTime now) {
+        if (status == ApprovalStatus.APPROVED || status == ApprovalStatus.REJECTED || status == ApprovalStatus.APPROVED_WITH_DEFER) {
+            throw new IllegalStateException("Cannot withdraw after completion");
+        }
+        this.status = ApprovalStatus.WITHDRAWN;
+        this.lastUpdatedAt = now;
+    }
+
     private void actOnCurrentStep(String actor, OffsetDateTime now, ApprovalStatus target) {
-        if (status == ApprovalStatus.APPROVED || status == ApprovalStatus.REJECTED) {
+        if (status == ApprovalStatus.APPROVED || status == ApprovalStatus.REJECTED || status == ApprovalStatus.WITHDRAWN) {
             throw new IllegalStateException("Approval already completed");
         }
 
@@ -92,19 +127,29 @@ public class ApprovalRequest {
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("No active step"));
 
-        if (target == ApprovalStatus.APPROVED) {
-            waiting.approve(actor, now);
-        } else {
-            waiting.reject(actor, now);
+        switch (target) {
+            case APPROVED -> waiting.approve(actor, now);
+            case REJECTED -> waiting.reject(actor, now);
+            case DEFERRED -> waiting.defer(actor, now);
+            default -> throw new IllegalArgumentException("Unsupported target: " + target);
         }
+        recomputeStatus(now, actor);
+    }
 
-        boolean allApproved = steps.stream().allMatch(step -> step.getStatus() == ApprovalStatus.APPROVED);
+    private void recomputeStatus(OffsetDateTime now, String actor) {
         boolean anyRejected = steps.stream().anyMatch(step -> step.getStatus() == ApprovalStatus.REJECTED);
+        boolean allApproved = steps.stream().allMatch(step -> step.getStatus() == ApprovalStatus.APPROVED);
+        boolean hasDeferred = steps.stream().anyMatch(step -> step.getStatus() == ApprovalStatus.DEFERRED);
+        boolean anyRequested = steps.stream().anyMatch(step -> step.getStatus() == ApprovalStatus.REQUESTED || step.getStatus() == ApprovalStatus.IN_PROGRESS);
 
         if (anyRejected) {
             status = ApprovalStatus.REJECTED;
         } else if (allApproved) {
             status = ApprovalStatus.APPROVED;
+        } else if (!anyRequested && hasDeferred) {
+            status = ApprovalStatus.APPROVED_WITH_DEFER;
+        } else if (hasDeferred) {
+            status = ApprovalStatus.DEFERRED;
         } else {
             status = ApprovalStatus.IN_PROGRESS;
         }

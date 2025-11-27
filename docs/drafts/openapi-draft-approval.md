@@ -106,7 +106,9 @@
       "approvalGroupCode": "TEAM_LEAD",
       "state": "IN_PROGRESS",
       "actedBy": "lead1",
-      "delegatedTo": null,
+      "delegatedTo": "delegatee1",
+      "delegateComment": "출장 중 위임",
+      "delegatedAt": "2025-11-20T10:06:00Z",
       "comment": null,
       "startedAt": "2025-11-20T10:05:00Z",
       "completedAt": null,
@@ -118,6 +120,8 @@
       "state": "WAITING",
       "actedBy": null,
       "delegatedTo": null,
+      "delegateComment": null,
+      "delegatedAt": null,
       "comment": null,
       "startedAt": null,
       "completedAt": null,
@@ -141,6 +145,11 @@
 ```json
 { "stepId": "UUID", "comment": "부재중 위임" }
 ```
+- 후결(보류): `POST /api/drafts/{id}/defer` (`DRAFT_APPROVE`) — 현재 스텝을 후결로 보내고 다음 스텝 진행 허용
+```json
+{ "stepId": "UUID", "comment": "후결" }
+```
+- 후결 승인: `POST /api/drafts/{id}/defer/approve` (`DRAFT_APPROVE`) — 후결 스텝을 처리해 최종 `APPROVED`로 승격
 - 취소: `POST /api/drafts/{id}/cancel` (`DRAFT_CANCEL`)
 - 응답: `DraftResponse`
 
@@ -196,14 +205,14 @@
   - `title, content`
   - `businessFeatureCode, organizationCode, templateCode`
   - `formTemplateCode, formTemplateVersion, formTemplateSnapshot, formPayload`
-  - `status: [DRAFT, IN_REVIEW, APPROVED, REJECTED, CANCELLED, WITHDRAWN]`
+  - `status: [DRAFT, IN_REVIEW, APPROVED, APPROVED_WITH_DEFER, REJECTED, CANCELLED, WITHDRAWN]`
   - `createdAt, updatedAt, submittedAt, completedAt, cancelledAt, withdrawnAt`
   - `approvalSteps: DraftApprovalStepResponse[]`
   - `attachments: DraftAttachmentResponse[]`
 
 - `DraftApprovalStepResponse`
-  - `id, approvalGroupCode, state[WAITING/IN_PROGRESS/APPROVED/REJECTED/SKIPPED]`
-  - `actedBy, delegatedTo, comment, startedAt, completedAt, lockedVersion`
+  - `id, approvalGroupCode, state[WAITING/IN_PROGRESS/APPROVED/REJECTED/DEFERRED/SKIPPED]`
+  - `actedBy, delegatedTo, delegateComment, delegatedAt, comment, startedAt, completedAt, lockedVersion`
 
 - `DraftHistoryResponse`
   - `eventType, actor, details, occurredAt`
@@ -217,9 +226,9 @@
 ## 밸리데이션/비즈니스 규칙(요약)
 - `title` 1~255, `businessFeatureCode`/`templateCode` 필수.
 - `formPayload` 는 JSON 문자열, 폼 스키마(`formTemplateSnapshot`)와 클라이언트 측에서 사전 검증 권장.
-- 결재/반려/회수/재상신/위임은 상태/권한 검증 후 처리. 종료 상태에서는 수정 불가.
+- 결재/반려/회수/재상신/위임/후결은 상태/권한 검증 후 처리. 종료 상태에서는 수정 불가.
 - 조직 접근 제한: RowScope=SELF 조직만 허용, AUDIT 권한 시 전체 조직 접근.
-- 위임(delegate): `delegatedTo`는 동일 그룹 멤버 제한(도메인 검증 수행).
+- 위임(delegate): `delegatedTo`는 결재 그룹 멤버이면서 조직 코드 일치 사용자를 허용(ApprovalAuthorizationService 검증).
 
 ## Nuxt4 연동 메모 (SSR 미사용)
 - Axios 기본 설정: `baseURL=/api`, 타임아웃/재시도 설정.

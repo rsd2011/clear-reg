@@ -1,6 +1,6 @@
-package com.example.auth.policy;
+package com.example.admin.masking;
 
-import com.example.auth.permission.ActionCode;
+import com.example.admin.permission.ActionCode;
 import com.example.common.masking.MaskRuleDefinition;
 import com.example.common.security.CurrentUser;
 import com.example.common.security.CurrentUserProvider;

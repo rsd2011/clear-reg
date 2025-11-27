@@ -8,8 +8,9 @@ import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.Test;
 
-import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
+import com.example.draft.domain.exception.DraftWorkflowException;
 
 class DraftDomainTest {
 
@@ -50,6 +51,47 @@ class DraftDomainTest {
                 .isInstanceOf(DraftAccessDeniedException.class);
 
         draft.assertOrganizationAccess("OTHER", true); // 감사 접근은 허용
+    }
+
+    @Test
+    void withdrawBlockedWhenApprovedWithDefer() {
+        Draft draft = createDraft();
+        draft.submit("writer", NOW.plusMinutes(1));
+        var firstStep = draft.getApprovalSteps().get(0);
+        draft.deferStep(firstStep.getId(), "approver1", "후결", NOW.plusMinutes(2));
+        var secondStep = draft.getApprovalSteps().get(1);
+        draft.approveStep(secondStep.getId(), "approver2", "ok", NOW.plusMinutes(3));
+
+        assertThat(draft.getStatus()).isEqualTo(DraftStatus.APPROVED_WITH_DEFER);
+        assertThatThrownBy(() -> draft.withdraw("writer", NOW.plusMinutes(4)))
+                .isInstanceOf(DraftWorkflowException.class);
+    }
+
+    @Test
+    void applyApprovalResultUpdatesNewStatuses() {
+        Draft draft = createDraft();
+        draft.applyApprovalResult(com.example.approval.api.ApprovalStatus.APPROVED_WITH_DEFER, "actor", "", NOW.plusMinutes(1));
+        assertThat(draft.getStatus()).isEqualTo(DraftStatus.APPROVED_WITH_DEFER);
+
+        draft.applyApprovalResult(com.example.approval.api.ApprovalStatus.WITHDRAWN, "actor", "", NOW.plusMinutes(2));
+        assertThat(draft.getStatus()).isEqualTo(DraftStatus.WITHDRAWN);
+    }
+
+    @Test
+    void givenDeferredStep_whenSubsequentApproved_thenStatusApprovedWithDeferUntilCleared() {
+        Draft draft = createDraft();
+        draft.submit("writer", NOW.plusMinutes(1));
+
+        var firstStep = draft.getApprovalSteps().get(0);
+        draft.deferStep(firstStep.getId(), "approver1", "후결", NOW.plusMinutes(2));
+
+        var secondStep = draft.getApprovalSteps().get(1);
+        draft.approveStep(secondStep.getId(), "approver2", "ok", NOW.plusMinutes(3));
+
+        assertThat(draft.getStatus()).isEqualTo(DraftStatus.APPROVED_WITH_DEFER);
+
+        draft.approveDeferredStep(firstStep.getId(), "approver1", "마감", NOW.plusMinutes(4));
+        assertThat(draft.getStatus()).isEqualTo(DraftStatus.APPROVED);
     }
 
     private Draft createDraft() {

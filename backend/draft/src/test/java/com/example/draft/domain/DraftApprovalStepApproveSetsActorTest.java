@@ -13,7 +13,7 @@ class DraftApprovalStepApproveSetsActorTest {
     @DisplayName("approve 호출 시 actedBy와 actedAt이 설정된다")
     void approveSetsActorAndTime() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         OffsetDateTime now = OffsetDateTime.now();

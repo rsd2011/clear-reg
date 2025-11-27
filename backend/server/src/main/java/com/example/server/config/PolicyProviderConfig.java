@@ -10,8 +10,8 @@ import com.example.auth.config.PolicyToggleProperties;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
 import com.example.common.policy.DataPolicyProvider;
-import com.example.policy.PolicyAdminService;
-import com.example.policy.datapolicy.DataPolicyProviderAdapter;
+import com.example.admin.policy.PolicyAdminService;
+import com.example.admin.masking.DataPolicyProviderAdapter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 

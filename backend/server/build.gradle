@@ -12,7 +12,7 @@ dependencies {
     implementation project(':backend:data-integration')
     implementation project(':backend:dw-gateway-client')
     implementation project(':backend:file-core')
-    implementation project(':backend:policy')
+    implementation project(':backend:admin')
     implementation libs.spring.boot.starter.web
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.boot.starter.aop

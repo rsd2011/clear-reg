@@ -47,10 +47,21 @@ public class ApprovalResultHandler implements ApprovalResultPort {
         draft.linkApprovalRequest(approvalRequestId);
         draft.applyApprovalResult(status, actor, comment, OffsetDateTime.now(clock));
 
+        DraftAction action = mapStatusToAction(status);
         // 감사 로깅
-        auditPublisher.publish(new DraftAuditEvent(DraftAction.valueOf(status.name()), draftId, actor,
+        auditPublisher.publish(new DraftAuditEvent(action, draftId, actor,
                 draft.getOrganizationCode(), comment, null, null, OffsetDateTime.now(clock)));
         // 알림 발송
         notificationService.notify("APPROVAL_RESULT", draft, actor, null, null, comment, OffsetDateTime.now(clock));
+    }
+
+    private DraftAction mapStatusToAction(ApprovalStatus status) {
+        return switch (status) {
+            case APPROVED -> DraftAction.APPROVED;
+            case APPROVED_WITH_DEFER -> DraftAction.APPROVED_WITH_DEFER;
+            case REJECTED -> DraftAction.REJECTED;
+            case WITHDRAWN -> DraftAction.WITHDRAWN;
+            default -> DraftAction.SUBMITTED;
+        };
     }
 }

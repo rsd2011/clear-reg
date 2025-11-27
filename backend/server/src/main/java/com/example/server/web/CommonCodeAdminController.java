@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.RequirePermission;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.RequirePermission;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.server.commoncode.SystemCommonCodeService;
 import com.example.server.commoncode.dto.SystemCommonCodeRequest;
 import com.example.server.commoncode.dto.SystemCommonCodeResponse;

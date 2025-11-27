@@ -17,12 +17,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.PermissionDeniedException;
-import com.example.auth.permission.PermissionEvaluator;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.response.DraftResponse;

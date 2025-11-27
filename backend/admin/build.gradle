@@ -1,0 +1,51 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    implementation platform(libs.spring.boot.bom)
+    testImplementation platform(libs.spring.boot.bom)
+
+    implementation project(':backend:platform')
+    implementation project(':backend:audit')
+
+    // 부트 코어
+    implementation 'org.springframework.boot:spring-boot'
+    implementation 'org.springframework.boot:spring-boot-autoconfigure'
+
+    // 스프링 코어/데이터
+    implementation libs.spring.context
+    implementation libs.spring.data.commons
+    implementation 'org.springframework.data:spring-data-jpa'
+    implementation 'org.springframework:spring-orm'
+    implementation 'org.springframework:spring-tx'
+    implementation 'org.springframework:spring-aop'
+    implementation 'org.springframework:spring-web'
+    implementation 'org.springframework.security:spring-security-core'
+    implementation 'org.aspectj:aspectjweaver'
+    implementation libs.jakarta.persistence
+
+    // 검증
+    implementation 'org.hibernate.validator:hibernate-validator'
+    runtimeOnly 'org.glassfish:jakarta.el:4.0.2'
+
+    // Jackson (YAML 포함)
+    implementation libs.jackson.databind
+    implementation libs.jackson.datatype.jsr310
+    implementation libs.jackson.dataformat.yaml
+
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.8.6'
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
+    compileOnly libs.lombok
+    annotationProcessor libs.lombok
+
+    testCompileOnly libs.lombok
+    testAnnotationProcessor libs.lombok
+    testImplementation libs.bundles.spring.test
+    testImplementation libs.h2.database
+    testImplementation libs.spring.boot.testcontainers
+    testImplementation libs.testcontainers.junit
+    testImplementation libs.junit.platform.launcher
+    testImplementation testFixtures(project(':backend:platform'))
+    testImplementation project(':backend:auth')
+}

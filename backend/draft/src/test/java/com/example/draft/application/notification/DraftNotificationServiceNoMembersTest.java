@@ -7,17 +7,15 @@ import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.approval.domain.ApprovalGroup;
+import com.example.auth.domain.UserAccountRepository;
+import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 class DraftNotificationServiceNoMembersTest {
@@ -27,13 +25,13 @@ class DraftNotificationServiceNoMembersTest {
     void delegatedOnlyWhenGroupHasNoMembers() {
         DraftNotificationServiceTest.DraftNotificationPublisherStub publisher = new DraftNotificationServiceTest.DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
-        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
-        ApprovalGroupMemberRepository memberRepo = mock(ApprovalGroupMemberRepository.class);
+        PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
+        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
 
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, groupRepo, memberRepo);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(
                 null,
                 1,
                 "GRP",
@@ -42,8 +40,10 @@ class DraftNotificationServiceNoMembersTest {
         draft.addApprovalStep(step);
 
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());
-        given(groupRepo.findByGroupCode("GRP")).willReturn(Optional.of(ApprovalGroup.create("GRP", "n", null, "ORG", null, OffsetDateTime.now())));
-        given(memberRepo.findByApprovalGroupIdAndActiveTrue(any())).willReturn(List.of());
+        PermissionGroup permGroup = new PermissionGroup("PERM_GRP", "Test Group");
+        permGroup.setApprovalGroupCode("GRP");
+        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of(permGroup));
+        given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of());
 
         svc.notify("ACTION", draft, null, step.getId(), "delegate", null, OffsetDateTime.now());
 

@@ -1,0 +1,21 @@
+permissionGroups:
+  - code: TEST_DEFAULT
+    name: 테스트 기본
+    description: 샘플 설명
+    defaultRowScope: ORG
+    assignments:
+      - feature: ORGANIZATION
+        action: READ
+        rowScope: ORG
+        condition: "organizationCode == 'ROOT'"
+    maskRules:
+      - tag: SECRET
+        maskWith: "###"
+        requiredAction: UNMASK
+        audit: true
+  - code: TEST_AUDIT
+    name: 테스트 감사
+    assignments:
+      - feature: AUDIT_LOG
+        action: READ
+        rowScope: ALL

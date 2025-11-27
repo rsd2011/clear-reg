@@ -16,11 +16,11 @@ import org.mockito.Mockito;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.auth.organization.OrganizationPolicyService;
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.PermissionAssignment;
-import com.example.auth.permission.PermissionGroup;
-import com.example.auth.permission.PermissionGroupService;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.PermissionAssignment;
+import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.PermissionGroupService;
 import com.example.dw.application.readmodel.PermissionMenuReadModel;
 
 class PermissionMenuReadModelSourceImplTest {

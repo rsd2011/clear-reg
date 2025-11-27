@@ -14,11 +14,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.PermissionEvaluator;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.response.DraftResponse;
@@ -43,7 +43,7 @@ class DraftControllerCoverageTest {
     void listDrafts_normalizesOwnScope() {
         AuthContextHolder.set(new AuthContext("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.OWN, java.util.Map.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.auth.permission.PermissionDeniedException("no audit"));
+                .willThrow(new com.example.admin.permission.PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
                 .willReturn(new PageImpl<>(List.of(new DwOrganizationNode(UUID.randomUUID(), "ORG1", 1, "ORG1", null, "ACTIVE", java.time.LocalDate.now(), null, null, java.time.OffsetDateTime.now()))));
         given(draftService.listDrafts(any(), any(), any(), any(), any(), any(), any(), any()))

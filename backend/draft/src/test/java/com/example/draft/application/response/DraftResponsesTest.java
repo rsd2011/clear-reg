@@ -10,8 +10,10 @@ import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.TemplateScope;
 

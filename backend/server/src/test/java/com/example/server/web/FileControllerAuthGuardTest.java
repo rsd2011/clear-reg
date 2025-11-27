@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.auth.permission.PermissionDeniedException;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
@@ -82,7 +82,7 @@ class FileControllerAuthGuardTest {
                 "creator", FileStatus.ACTIVE, null, null, null);
         when(fileManagementPort.download(any(), any(), any()))
                 .thenReturn(new FileDownload(metadata, null));
-        AuthContextHolder.set(new com.example.auth.permission.context.AuthContext("user", "ORG", "PG", null, null, null, null));
+        AuthContextHolder.set(new com.example.admin.permission.context.AuthContext("user", "ORG", "PG", null, null, null, null));
 
         controller.download(fileId, draftId);
     }

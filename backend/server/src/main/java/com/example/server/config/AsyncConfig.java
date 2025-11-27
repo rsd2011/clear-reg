@@ -8,7 +8,7 @@ import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.example.auth.permission.context.AuthContextTaskDecorator;
+import com.example.admin.permission.context.AuthContextTaskDecorator;
 
 @Configuration
 @EnableAsync

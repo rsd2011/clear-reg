@@ -5,9 +5,10 @@ public enum DraftApprovalState {
     IN_PROGRESS,
     APPROVED,
     REJECTED,
+    DEFERRED,
     SKIPPED;
 
     public boolean isCompleted() {
-        return this == APPROVED || this == REJECTED || this == SKIPPED;
+        return this == APPROVED || this == REJECTED || this == SKIPPED || this == DEFERRED;
     }
 }

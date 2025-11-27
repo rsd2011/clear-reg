@@ -21,7 +21,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.auth.permission.RequirePermissionAspect;
+import com.example.admin.permission.RequirePermissionAspect;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.server.security.JwtAuthenticationFilter;
 import com.example.common.file.FileDownload;

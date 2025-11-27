@@ -44,7 +44,7 @@ class FileControllerTest {
     FileManagementPort fileManagementPort;
 
     @MockBean
-    com.example.auth.permission.RequirePermissionAspect requirePermissionAspect;
+    com.example.admin.permission.RequirePermissionAspect requirePermissionAspect;
 
     @MockBean
     AuditPort auditPort;

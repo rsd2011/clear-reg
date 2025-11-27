@@ -14,7 +14,7 @@ import java.util.Set;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
 import com.example.common.policy.DataPolicyProvider;

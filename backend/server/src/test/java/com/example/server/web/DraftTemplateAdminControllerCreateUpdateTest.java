@@ -12,15 +12,15 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.TemplateAdminService;
-import com.example.draft.application.request.ApprovalGroupRequest;
-import com.example.draft.application.request.ApprovalLineTemplateRequest;
-import com.example.draft.application.request.ApprovalTemplateStepRequest;
+import com.example.admin.approval.dto.ApprovalGroupRequest;
+import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.draft.application.request.DraftFormTemplateRequest;
-import com.example.draft.application.response.ApprovalGroupResponse;
-import com.example.draft.application.response.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.response.DraftFormTemplateResponse;
 import com.example.draft.domain.TemplateScope;
 import java.time.OffsetDateTime;
@@ -51,7 +51,7 @@ class DraftTemplateAdminControllerCreateUpdateTest {
         AuthContextHolder.set(context);
         ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "ROLE", "COND");
         ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("이름", "BT", "ORG", true, java.util.List.of(step));
-        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", "BT", com.example.approval.domain.TemplateScope.ORGANIZATION, "ORG", true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
+        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", "BT", com.example.admin.approval.TemplateScope.ORGANIZATION, "ORG", true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
         UUID id = UUID.randomUUID();
         given(service.updateApprovalLineTemplate(eq(id), eq(request), eq(context), eq(true))).willReturn(response);
 

@@ -8,6 +8,7 @@ import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.approval.api.ApprovalStepSnapshot;
 import com.example.approval.domain.ApprovalRequest;
 import com.example.approval.domain.ApprovalStep;
+import com.example.approval.application.ApprovalAuthorizationService;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -17,9 +18,22 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class InMemoryApprovalFacade implements ApprovalFacade {
 
     private final Map<UUID, ApprovalRequest> approvals = new ConcurrentHashMap<>();
+    private final ApprovalAuthorizationService authorizationService;
+
+    public InMemoryApprovalFacade(ApprovalAuthorizationService authorizationService) {
+        this.authorizationService = authorizationService;
+    }
+
+    // 테스트 용이성을 위해 기본 생성자도 제공 (권한 검증 스킵)
+    public InMemoryApprovalFacade() {
+        this.authorizationService = null;
+    }
 
     @Override
     public ApprovalStatusSnapshot requestApproval(ApprovalRequestCommand command) {
@@ -51,10 +65,17 @@ public class InMemoryApprovalFacade implements ApprovalFacade {
         }
 
         OffsetDateTime now = OffsetDateTime.now();
-        if (command.action() == ApprovalAction.APPROVE) {
-            request.approve(command.actor(), now);
-        } else {
-            request.reject(command.actor(), now);
+        if (authorizationService != null) {
+            authorizationService.ensureAuthorized(request, command.action(), command.actor(), command.organizationCode());
+        }
+        switch (command.action()) {
+            case APPROVE -> request.approve(command.actor(), now);
+            case REJECT -> request.reject(command.actor(), now);
+            case DEFER -> request.defer(command.actor(), now);
+            case DEFER_APPROVE -> request.approveDeferred(command.actor(), now);
+            case WITHDRAW -> request.withdraw(command.actor(), now);
+            case DELEGATE -> request.delegate(command.delegatedTo(), command.actor(), command.comment(), now);
+            default -> throw new IllegalArgumentException("Unsupported action: " + command.action());
         }
 
         return toSnapshot(request);
@@ -75,7 +96,10 @@ public class InMemoryApprovalFacade implements ApprovalFacade {
                         step.getApprovalGroupCode(),
                         step.getStatus(),
                         step.getActedBy(),
-                        step.getActedAt()
+                        step.getActedAt(),
+                        step.getDelegatedTo(),
+                        step.getDelegatedAt(),
+                        step.getDelegateComment()
                 ))
                 .toList();
         return new ApprovalStatusSnapshot(request.getId(), request.getDraftId(), request.getStatus(), steps);

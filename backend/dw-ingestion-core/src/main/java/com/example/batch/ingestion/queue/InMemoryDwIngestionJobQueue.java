@@ -15,7 +15,7 @@ import com.example.dw.application.job.DwIngestionJob;
 import com.example.dw.application.job.DwIngestionJobQueue;
 import com.example.dw.application.job.DwIngestionJobType;
 import com.example.dw.application.job.DwIngestionOutboxService;
-import com.example.auth.permission.context.AuthContextPropagator;
+import com.example.admin.permission.context.AuthContextPropagator;
 
 @Component
 public class InMemoryDwIngestionJobQueue implements DwIngestionJobQueue {

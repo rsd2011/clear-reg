@@ -10,7 +10,7 @@ dependencies {
     implementation project(':backend:auth')
     implementation project(':backend:data-integration')
     implementation project(':backend:file-core')
-    implementation project(':backend:policy')
+    implementation project(':backend:admin')
     implementation project(':backend:audit')
 
     implementation libs.spring.boot.starter.web

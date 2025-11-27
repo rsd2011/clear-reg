@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.RequirePermission;
-import com.example.policy.dto.PolicyUpdateRequest;
-import com.example.policy.dto.PolicyView;
-import com.example.policy.dto.PolicyYamlRequest;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.RequirePermission;
+import com.example.admin.policy.dto.PolicyUpdateRequest;
+import com.example.admin.policy.dto.PolicyView;
+import com.example.admin.policy.dto.PolicyYamlRequest;
 import com.example.server.service.CacheMaintenanceService;
 import com.example.server.policy.PolicyAdminPort;
 import com.example.server.web.dto.CacheClearRequest;

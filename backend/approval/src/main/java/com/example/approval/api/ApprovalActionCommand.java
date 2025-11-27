@@ -3,7 +3,9 @@ package com.example.approval.api;
 public record ApprovalActionCommand(
         ApprovalAction action,
         String actor,
-        String comment
+        String organizationCode,
+        String comment,
+        String delegatedTo
 ) {
     public ApprovalActionCommand {
         if (action == null) {
@@ -11,6 +13,9 @@ public record ApprovalActionCommand(
         }
         if (actor == null || actor.isBlank()) {
             throw new IllegalArgumentException("actor is required");
+        }
+        if (organizationCode == null || organizationCode.isBlank()) {
+            throw new IllegalArgumentException("organizationCode is required");
         }
     }
 }

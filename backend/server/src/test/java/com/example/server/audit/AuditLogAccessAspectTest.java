@@ -16,10 +16,10 @@ import org.mockito.Mockito;
 import com.example.audit.AuditEvent;
 import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.ActionCode;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.ActionCode;
 
 @DisplayName("AuditLogAccessAspect")
 class AuditLogAccessAspectTest {

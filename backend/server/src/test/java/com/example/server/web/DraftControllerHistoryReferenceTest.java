@@ -23,11 +23,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.PermissionEvaluator;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.response.DraftHistoryResponse;
 import com.example.draft.application.response.DraftReferenceResponse;
@@ -63,7 +63,7 @@ class DraftControllerHistoryReferenceTest {
         AuthContextHolder.set(new AuthContext("writer", ORG, "DEFAULT",
                 FeatureCode.DRAFT, ActionCode.DRAFT_READ, com.example.common.security.RowScope.ALL, java.util.Map.of()));
         given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT))
-                .willThrow(new com.example.auth.permission.PermissionDeniedException("denied"));
+                .willThrow(new com.example.admin.permission.PermissionDeniedException("denied"));
     }
 
     @AfterEach

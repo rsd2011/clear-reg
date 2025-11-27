@@ -32,10 +32,8 @@ import com.example.draft.application.request.DraftAttachmentRequest;
 import com.example.draft.application.request.DraftCreateRequest;
 import com.example.draft.application.request.DraftDecisionRequest;
 import com.example.draft.application.response.DraftResponse;
-import com.example.approval.domain.ApprovalAccessDeniedException;
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalGroupMember;
-import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalAccessDeniedException;
+import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftFormTemplate;
@@ -46,9 +44,7 @@ import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.approval.api.ApprovalFacade;
 import com.example.approval.api.ApprovalStatus;
 import com.example.approval.api.ApprovalStatusSnapshot;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
@@ -75,12 +71,6 @@ class DraftApplicationServiceTest {
 
     @Mock
     private DraftFormTemplateRepository formTemplateRepository;
-
-    @Mock
-    private ApprovalGroupRepository approvalGroupRepository;
-
-    @Mock
-    private ApprovalGroupMemberRepository approvalGroupMemberRepository;
 
     @Mock
     private DraftNotificationService notificationService;
@@ -120,7 +110,7 @@ class DraftApplicationServiceTest {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         objectMapper = new ObjectMapper();
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
-                approvalGroupRepository, approvalGroupMemberRepository, mappingRepository,
+                mappingRepository,
                 draftHistoryRepository, draftReferenceRepository, presetRepository, notificationService, auditPublisher, businessPolicy,
                 approvalFacade, eventPublisher, objectMapper, clock);
         lenient().when(approvalFacade.requestApproval(any())).thenAnswer(invocation -> {
@@ -325,7 +315,6 @@ class DraftApplicationServiceTest {
     void givenDraft_whenApproveStep_thenMovesToNextStep() {
         Draft draft = inReviewDraft();
         UUID firstStep = draft.getApprovalSteps().get(0).getId();
-        stubGroupMember("GROUP-A", "approver");
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
 
         DraftResponse response = service.approve(draft.getId(), new DraftDecisionRequest(firstStep, "ok"),
@@ -343,11 +332,9 @@ class DraftApplicationServiceTest {
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
 
         UUID firstStep = draft.getApprovalSteps().get(0).getId();
-        stubGroupMember("GROUP-A", "approver1");
         service.approve(draft.getId(), new DraftDecisionRequest(firstStep, "first"), "approver1", ORG, false);
 
         UUID secondStep = draft.getApprovalSteps().get(1).getId();
-        stubGroupMember("GROUP-B", "approver2");
         DraftResponse response = service.approve(draft.getId(), new DraftDecisionRequest(secondStep, "second"),
                 "approver2", ORG, false);
 
@@ -362,7 +349,6 @@ class DraftApplicationServiceTest {
         Draft draft = inReviewDraft();
         UUID stepId = draft.getApprovalSteps().get(0).getId();
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
-        stubGroupMember("GROUP-A", "approver");
 
         DraftResponse response = service.reject(draft.getId(), new DraftDecisionRequest(stepId, "반려"),
                 "approver", ORG, false);
@@ -421,7 +407,6 @@ class DraftApplicationServiceTest {
         Draft draft = inReviewDraft();
         UUID stepId = draft.getApprovalSteps().get(0).getId();
         given(draftRepository.findById(draft.getId())).willReturn(Optional.of(draft));
-        stubGroupMember("GROUP-A", "approver");
 
         DraftResponse response = service.delegate(draft.getId(), new DraftDecisionRequest(stepId, "please handle"),
                 "delegatee", "approver", ORG, false);
@@ -474,14 +459,6 @@ class DraftApplicationServiceTest {
         Draft draft = draftReadyForReview();
         draft.submit("writer", NOW.plusMinutes(1));
         return draft;
-    }
-
-    private void stubGroupMember(String groupCode, String memberUserId) {
-        ApprovalGroup group = ApprovalGroup.create(groupCode, groupCode + " name", null, ORG, null, NOW);
-        ApprovalGroupMember member = ApprovalGroupMember.create(memberUserId, ORG, null, NOW);
-        given(approvalGroupRepository.findByGroupCode(groupCode)).willReturn(Optional.of(group));
-        given(approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId()))
-                .willReturn(List.of(member));
     }
 
     private ApprovalLineTemplate sampleTemplate(String organizationCode) {

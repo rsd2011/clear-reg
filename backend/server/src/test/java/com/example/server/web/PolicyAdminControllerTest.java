@@ -19,8 +19,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.policy.dto.PolicyUpdateRequest;
-import com.example.policy.dto.PolicyView;
+import com.example.admin.policy.dto.PolicyUpdateRequest;
+import com.example.admin.policy.dto.PolicyView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.server.service.CacheMaintenanceService;
 import com.example.server.policy.PolicyAdminPort;

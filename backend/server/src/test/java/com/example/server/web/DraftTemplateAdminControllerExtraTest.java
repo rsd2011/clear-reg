@@ -17,16 +17,16 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.permission.PermissionDeniedException;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.TemplateAdminService;
-import com.example.draft.application.request.ApprovalGroupRequest;
-import com.example.draft.application.request.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalGroupRequest;
+import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.draft.application.request.DraftFormTemplateRequest;
-import com.example.draft.application.response.ApprovalGroupResponse;
-import com.example.draft.application.response.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.response.DraftFormTemplateResponse;
 
 class DraftTemplateAdminControllerExtraTest {
@@ -60,7 +60,7 @@ class DraftTemplateAdminControllerExtraTest {
                 "CODE",
                 "이름",
                 "BT",
-                com.example.approval.domain.TemplateScope.ORGANIZATION,
+                com.example.admin.approval.TemplateScope.ORGANIZATION,
                 "ORG",
                 true,
                 OffsetDateTime.now(),
@@ -115,7 +115,7 @@ class DraftTemplateAdminControllerExtraTest {
                 "CODE",
                 "이름",
                 "BT",
-                com.example.approval.domain.TemplateScope.ORGANIZATION,
+                com.example.admin.approval.TemplateScope.ORGANIZATION,
                 "ORG",
                 true,
                 OffsetDateTime.now(),

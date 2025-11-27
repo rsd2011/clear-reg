@@ -13,7 +13,7 @@ import com.example.audit.AuditEvent;
 import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContextHolder;
 
 /**
  * 감사 로그 조회 자체를 감사로 남기는 AOP.

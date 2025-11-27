@@ -14,7 +14,9 @@
   `DRAFT_READ`, `DRAFT_CANCEL`, `DRAFT_AUDIT`)을 사용한다. 실제 업무별 기안 작성 권한은 해당 업무 Feature
   (예: `NOTICE`)에 `DRAFT_CREATE`를 매핑하여 제어하고, 공통 기능(조회/감사)은 `FeatureCode.DRAFT`에 매핑한다.
   - 신규 Action: `DRAFT_WITHDRAW`, `DRAFT_RESUBMIT`, `DRAFT_DELEGATE`, `DRAFT_REFERENCE_VIEW` (see `docs/draft-approval-todo.md` T5/T14).
-  - 결재자 검증: ApprovalGroupMember 기반 단계별 승인/반려 권한 검증을 추가(T4).
+  - 결재자/위임자 검증: Approval 모듈 내 `ApprovalAuthorizationService`가 활성 스텝의 `ApprovalGroupMember`를 actor/org 기준으로 검사하며 승인/반려/후결 승인/위임 공통 적용. Draft 계층의 중복 검증은 제거됨.
+  - 위임(Delegate): 진행/대기 스텝을 다른 사용자에게 위임해도 상태는 유지(IN_PROGRESS/REQUESTED). 스냅샷·응답에 `delegatedTo/At/comment` 포함, 알림·히스토리·열람 허용 대상에 위임 수신자 추가.
+  - 후결/보류: `DEFER`, `DEFER_APPROVE` 액션 추가. 모든 차단 스텝이 승인되면 `APPROVED_WITH_DEFER`로 업무 후속 처리 허용, 후결 스텝 완료 시 최종 `APPROVED` 승격.
   - 참조자 권한: DraftReference로 열람/알림만 허용, 수정/결재 권한은 부여하지 않음(T2/T14).
   - RowScope 확장: 작성자/결재자/참조자 스코프 필터를 지원하도록 list API 스펙을 확장(T14/T15).
   - 감사: `DRAFT_AUDIT` 보유자만 모든 조직/기안 감사 이력(`/api/drafts/{id}/audit`) 열람 가능(필터: action/actor/from/to). 감사 이벤트에 IP/UA 포함, 퍼블리셔(`draft.audit.publisher=event|kafka|siem|outbox`)로 중앙 적재/연계. 보존 정책: 감사 로그 최소 1년, outbox 재전송/TTL 관리.

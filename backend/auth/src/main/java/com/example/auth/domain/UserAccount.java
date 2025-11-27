@@ -1,5 +1,6 @@
 package com.example.auth.domain;
 
+import com.example.admin.permission.spi.UserInfo;
 import com.example.common.jpa.PrimaryKeyEntity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.CollectionTable;
@@ -25,7 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "users")
-public class UserAccount extends PrimaryKeyEntity {
+public class UserAccount extends PrimaryKeyEntity implements UserInfo {
 
   @Column(nullable = false, unique = true)
   private String username;

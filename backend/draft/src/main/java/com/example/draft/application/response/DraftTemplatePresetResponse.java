@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.DraftTemplatePreset;
 import com.example.draft.domain.TemplateScope;
 

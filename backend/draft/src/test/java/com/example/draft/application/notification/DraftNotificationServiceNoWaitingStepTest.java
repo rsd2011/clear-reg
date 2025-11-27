@@ -11,12 +11,12 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.auth.domain.UserAccountRepository;
+import com.example.admin.permission.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftApprovalState;
-import com.example.approval.domain.ApprovalTemplateStep;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 class DraftNotificationServiceNoWaitingStepTest {
@@ -26,9 +26,9 @@ class DraftNotificationServiceNoWaitingStepTest {
     void whenNoWaitingStep_returnsOnlyCreatorAndActor() {
         DraftNotificationServiceTest.DraftNotificationPublisherStub publisher = new DraftNotificationServiceTest.DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
-        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
-        ApprovalGroupMemberRepository memberRepo = mock(ApprovalGroupMemberRepository.class);
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, groupRepo, memberRepo);
+        PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
+        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
         DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", ""));

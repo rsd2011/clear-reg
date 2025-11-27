@@ -7,6 +7,9 @@ public record ApprovalStepSnapshot(
         String approvalGroupCode,
         ApprovalStatus status,
         String actedBy,
-        OffsetDateTime actedAt
+        OffsetDateTime actedAt,
+        String delegatedTo,
+        OffsetDateTime delegatedAt,
+        String delegateComment
 ) {
 }

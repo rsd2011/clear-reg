@@ -23,9 +23,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.server.config.JpaConfig;
 import com.example.server.config.SecurityConfig;
@@ -56,7 +56,7 @@ class NotificationControllerTest {
     @BeforeEach
     void setUp() {
         AuthContextHolder.set(new AuthContext("tester", "ORG", "DEFAULT",
-                FeatureCode.ALERT, com.example.auth.permission.ActionCode.READ,
+                FeatureCode.ALERT, com.example.admin.permission.ActionCode.READ,
                 RowScope.ALL, java.util.Map.of()));
     }
 

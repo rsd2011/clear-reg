@@ -10,10 +10,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalLineTemplate;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.common.policy.DataPolicyContextHolder;
 import com.example.common.policy.DataPolicyMatch;
 import com.example.common.security.RowScope;

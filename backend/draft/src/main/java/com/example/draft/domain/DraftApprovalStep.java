@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.draft.domain.exception.DraftWorkflowException;
-import com.example.approval.domain.ApprovalTemplateStep;
+import com.example.admin.approval.ApprovalTemplateStep;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -96,6 +96,24 @@ public class DraftApprovalStep extends PrimaryKeyEntity {
     public void reject(String actor, String comment, OffsetDateTime now) {
         ensureInProgress();
         this.state = DraftApprovalState.REJECTED;
+        this.actedBy = actor;
+        this.actedAt = now;
+        this.comment = comment;
+    }
+
+    public void defer(String actor, String comment, OffsetDateTime now) {
+        ensureInProgress();
+        this.state = DraftApprovalState.DEFERRED;
+        this.actedBy = actor;
+        this.actedAt = now;
+        this.comment = comment;
+    }
+
+    public void completeDeferred(String actor, String comment, OffsetDateTime now) {
+        if (this.state != DraftApprovalState.DEFERRED) {
+            throw new DraftWorkflowException("후결재 대상이 아닙니다.");
+        }
+        this.state = DraftApprovalState.APPROVED;
         this.actedBy = actor;
         this.actedAt = now;
         this.comment = comment;

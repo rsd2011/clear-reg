@@ -11,7 +11,7 @@ import org.mockito.Mockito;
 import org.quartz.JobExecutionContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.dw.application.job.DwIngestionJob;
 import com.example.dw.application.job.DwIngestionOutboxService;
 

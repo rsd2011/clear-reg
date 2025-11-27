@@ -1,4 +1,4 @@
-package com.example.auth.policy;
+package com.example.admin.masking;
 
 import com.example.common.annotation.Sensitive;
 import com.fasterxml.jackson.databind.BeanDescription;

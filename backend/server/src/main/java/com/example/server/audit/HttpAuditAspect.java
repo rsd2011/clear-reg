@@ -20,7 +20,7 @@ import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
 import com.example.audit.Subject;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
 

@@ -9,6 +9,7 @@ dependencies {
     implementation project(':backend:data-integration')
     implementation project(':backend:platform')
     implementation project(':backend:auth')
+    implementation project(':backend:admin')
 
     // 부트 스타터 제거: 코어 + 오토컨피규어
     implementation 'org.springframework.boot:spring-boot'

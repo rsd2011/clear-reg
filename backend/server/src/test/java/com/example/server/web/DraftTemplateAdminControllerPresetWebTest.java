@@ -36,14 +36,14 @@ class DraftTemplateAdminControllerPresetWebTest {
         DraftTemplatePresetRequest req = new DraftTemplatePresetRequest("n", "NOTICE", "ORG", "t", "c",
                 UUID.randomUUID(), UUID.randomUUID(), "{}", List.of("v"), true);
 
-        com.example.auth.permission.context.AuthContextHolder.set(
-                new com.example.auth.permission.context.AuthContext("u", "ORG", "PG", com.example.auth.permission.FeatureCode.DRAFT, com.example.auth.permission.ActionCode.DRAFT_AUDIT, RowScope.ALL, java.util.Map.of()));
+        com.example.admin.permission.context.AuthContextHolder.set(
+                new com.example.admin.permission.context.AuthContext("u", "ORG", "PG", com.example.admin.permission.FeatureCode.DRAFT, com.example.admin.permission.ActionCode.DRAFT_AUDIT, RowScope.ALL, java.util.Map.of()));
 
         assertThat(controller.createDraftTemplatePreset(req)).isNotNull();
         assertThat(controller.updateDraftTemplatePreset(UUID.randomUUID(), req)).isNotNull();
         assertThat(controller.listDraftTemplatePresets("NOTICE", "ORG", true)).hasSize(1);
 
-        com.example.auth.permission.context.AuthContextHolder.clear();
+        com.example.admin.permission.context.AuthContextHolder.clear();
     }
 
 }

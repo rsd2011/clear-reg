@@ -8,17 +8,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.RequirePermission;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.RequirePermission;
 import com.example.common.masking.MaskingFunctions;
 import com.example.common.policy.DataPolicyContextHolder;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeContextHolder;
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalLineTemplate;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
 
 @RestController
 @Tag(name = "Approval Admin", description = "승인 템플릿/그룹 관리 API")

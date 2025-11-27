@@ -15,7 +15,7 @@ class DraftWorkflowDomainTest {
     }
 
     private DraftApprovalStep step(int order, String group) {
-        return DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, order, group, ""));
+        return DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, order, group, ""));
     }
 
     @Test

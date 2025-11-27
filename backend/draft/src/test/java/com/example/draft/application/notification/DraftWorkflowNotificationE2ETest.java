@@ -4,24 +4,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalGroupMember;
-import com.example.approval.domain.ApprovalTemplateStep;
+import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.auth.domain.UserAccount;
+import com.example.auth.domain.UserAccountRepository;
+import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftApprovalState;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 class DraftWorkflowNotificationE2ETest {
@@ -31,10 +29,10 @@ class DraftWorkflowNotificationE2ETest {
     void notifyIncludesNextWaitingStepAndReferences() {
         DraftNotificationServiceTest.DraftNotificationPublisherStub publisher = new DraftNotificationServiceTest.DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
-        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
-        ApprovalGroupMemberRepository memberRepo = mock(ApprovalGroupMemberRepository.class);
+        PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
+        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
 
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, groupRepo, memberRepo);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
         DraftApprovalStep step1 = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP1", ""));
@@ -50,10 +48,11 @@ class DraftWorkflowNotificationE2ETest {
         com.example.draft.domain.DraftReference ref = com.example.draft.domain.DraftReference.create(
                 "ref-user", "ORG", "creator", OffsetDateTime.now());
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of(ref));
-        ApprovalGroup group2 = ApprovalGroup.create("GRP2", "name", null, "ORG", null, OffsetDateTime.now());
-        given(groupRepo.findByGroupCode("GRP2")).willReturn(Optional.of(group2));
-        given(memberRepo.findByApprovalGroupIdAndActiveTrue(any())).willReturn(List.of(
-                ApprovalGroupMember.create("next-user", "ORG", null, OffsetDateTime.now())
+        PermissionGroup permGroup2 = new PermissionGroup("PERM_GRP2", "Test Group 2");
+        permGroup2.setApprovalGroupCode("GRP2");
+        given(permGroupRepo.findByApprovalGroupCode("GRP2")).willReturn(List.of(permGroup2));
+        given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP2"))).willReturn(List.of(
+                UserAccount.builder().username("next-user").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP2").build()
         ));
 
         UUID stepId = step1.getId();

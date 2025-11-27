@@ -8,6 +8,7 @@ dependencies {
 
     implementation project(':backend:platform')
     implementation project(':backend:audit')
+    implementation project(':backend:admin')
 
     // 최소 부트 코어만 포함하고 스타터는 제거
     implementation 'org.springframework.boot:spring-boot'

@@ -13,20 +13,20 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.draft.application.request.ApprovalGroupRequest;
-import com.example.draft.application.request.ApprovalLineTemplateRequest;
-import com.example.draft.application.request.ApprovalTemplateStepRequest;
+import com.example.admin.approval.dto.ApprovalGroupRequest;
+import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.draft.application.request.DraftFormTemplateRequest;
-import com.example.draft.application.response.ApprovalGroupResponse;
-import com.example.draft.application.response.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.response.DraftFormTemplateResponse;
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceEndToEndTest {

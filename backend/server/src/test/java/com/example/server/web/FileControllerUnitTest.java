@@ -15,10 +15,10 @@ import org.mockito.Mockito;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;

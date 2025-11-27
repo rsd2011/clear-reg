@@ -137,8 +137,13 @@ public class Draft extends PrimaryKeyEntity {
         if (status == ApprovalStatus.APPROVED) {
             this.status = DraftStatus.APPROVED;
             this.completedAt = now;
+        } else if (status == ApprovalStatus.APPROVED_WITH_DEFER) {
+            this.status = DraftStatus.APPROVED_WITH_DEFER;
+            this.completedAt = now;
         } else if (status == ApprovalStatus.REJECTED) {
             this.status = DraftStatus.REJECTED;
+        } else if (status == ApprovalStatus.WITHDRAWN) {
+            this.status = DraftStatus.WITHDRAWN;
         }
         this.updatedBy = actor;
         this.updatedAt = now;
@@ -214,6 +219,28 @@ public class Draft extends PrimaryKeyEntity {
         skipRemainingSteps(now, "결재 반려로 인한 스킵");
     }
 
+    public void deferStep(UUID stepId, String actor, String comment, OffsetDateTime now) {
+        DraftApprovalStep step = findStep(stepId);
+        ensureWritable();
+        step.defer(actor, comment, now);
+        this.updatedAt = now;
+        this.updatedBy = actor;
+        this.history.add(DraftHistory.entry(this, "DEFERRED", actor, "후결재 요청: " + step.getApprovalGroupCode(), now));
+        moveToNextStep(now, actor);
+    }
+
+    public void approveDeferredStep(UUID stepId, String actor, String comment, OffsetDateTime now) {
+        DraftApprovalStep step = findStep(stepId);
+        if (step.getState() != DraftApprovalState.DEFERRED) {
+            throw new DraftWorkflowException("후결재 대상 단계가 아닙니다.");
+        }
+        step.completeDeferred(actor, comment, now);
+        this.updatedAt = now;
+        this.updatedBy = actor;
+        this.history.add(DraftHistory.entry(this, "DEFER_APPROVED", actor, comment, now));
+        finalizeIfCompleted(now, actor);
+    }
+
     public void cancel(String actor, OffsetDateTime now) {
         if (this.status.isTerminal()) {
             throw new DraftWorkflowException("이미 종료된 기안입니다.");
@@ -229,6 +256,9 @@ public class Draft extends PrimaryKeyEntity {
     public void withdraw(String actor, OffsetDateTime now) {
         if (this.status.isTerminal()) {
             throw new DraftWorkflowException("이미 종료된 기안입니다.");
+        }
+        if (this.status == DraftStatus.APPROVED_WITH_DEFER) {
+            throw new DraftWorkflowException("후결재 대기 상태에서는 회수할 수 없습니다.");
         }
         this.status = DraftStatus.WITHDRAWN;
         this.withdrawnAt = now;
@@ -288,11 +318,27 @@ public class Draft extends PrimaryKeyEntity {
                 .findFirst()
                 .orElse(null);
         if (next == null) {
-            this.status = DraftStatus.APPROVED;
-            this.completedAt = now;
-            this.history.add(DraftHistory.entry(this, "COMPLETED", actor, "모든 결재 완료", now));
+            finalizeIfCompleted(now, actor);
         } else {
             next.start(now);
+        }
+    }
+
+    private void finalizeIfCompleted(OffsetDateTime now, String actor) {
+        boolean anyWaiting = approvalSteps.stream().anyMatch(step -> step.getState() == DraftApprovalState.WAITING || step.getState() == DraftApprovalState.IN_PROGRESS);
+        boolean anyDeferred = approvalSteps.stream().anyMatch(step -> step.getState() == DraftApprovalState.DEFERRED);
+        boolean allApprovedOrDeferred = approvalSteps.stream().allMatch(step -> step.getState() == DraftApprovalState.APPROVED || step.getState() == DraftApprovalState.DEFERRED || step.getState() == DraftApprovalState.SKIPPED);
+
+        if (!anyWaiting && allApprovedOrDeferred) {
+            if (anyDeferred) {
+                this.status = DraftStatus.APPROVED_WITH_DEFER;
+                this.completedAt = now;
+                this.history.add(DraftHistory.entry(this, "COMPLETED_WITH_DEFER", actor, "모든 결재 완료(후결재 대기)", now));
+            } else {
+                this.status = DraftStatus.APPROVED;
+                this.completedAt = now;
+                this.history.add(DraftHistory.entry(this, "COMPLETED", actor, "모든 결재 완료", now));
+            }
         }
     }
 

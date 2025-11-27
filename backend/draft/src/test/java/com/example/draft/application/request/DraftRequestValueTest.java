@@ -7,6 +7,9 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
+
 @DisplayName("Draft 요청 DTO 값 보존")
 class DraftRequestValueTest {
 

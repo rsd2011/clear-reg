@@ -13,8 +13,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.TemplateAdminService;
 import com.example.draft.application.request.DraftFormTemplateRequest;
 import com.example.draft.application.response.DraftFormTemplateResponse;

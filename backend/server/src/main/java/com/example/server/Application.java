@@ -16,11 +16,11 @@ import com.example.server.readmodel.PermissionMenuReadModelProperties;
 @SpringBootApplication(scanBasePackages = {
         "com.example.server",
         "com.example.auth",
+        "com.example.admin",
         "com.example.common",
         "com.example.dw",
         "com.example.draft",
         "com.example.file",
-        "com.example.policy",
         "com.example.platform"
 })
 @EnableConfigurationProperties({JwtProperties.class, AuthPolicyProperties.class, SessionPolicyProperties.class,

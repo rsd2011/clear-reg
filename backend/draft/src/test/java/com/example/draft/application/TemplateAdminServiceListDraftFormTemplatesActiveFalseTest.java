@@ -10,12 +10,12 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.response.DraftFormTemplateResponse;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceListDraftFormTemplatesActiveFalseTest {

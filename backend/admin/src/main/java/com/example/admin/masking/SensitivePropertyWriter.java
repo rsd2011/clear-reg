@@ -1,4 +1,4 @@
-package com.example.auth.policy;
+package com.example.admin.masking;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;

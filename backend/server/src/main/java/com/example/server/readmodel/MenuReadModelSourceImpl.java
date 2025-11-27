@@ -10,11 +10,11 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Component;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.PermissionAssignment;
-import com.example.auth.permission.PermissionGroup;
-import com.example.auth.permission.PermissionGroupRepository;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.PermissionAssignment;
+import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.PermissionGroupRepository;
 import com.example.dw.application.readmodel.MenuItem;
 import com.example.dw.application.readmodel.MenuReadModel;
 import com.example.dw.application.readmodel.MenuReadModelSource;

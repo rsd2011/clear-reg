@@ -1,0 +1,22 @@
+package com.example.admin.permission.context;
+
+import java.util.Optional;
+
+public final class AuthContextHolder {
+
+  private static final ThreadLocal<AuthContext> CONTEXT = new ThreadLocal<>();
+
+  private AuthContextHolder() {}
+
+  public static void set(AuthContext context) {
+    CONTEXT.set(context);
+  }
+
+  public static Optional<AuthContext> current() {
+    return Optional.ofNullable(CONTEXT.get());
+  }
+
+  public static void clear() {
+    CONTEXT.remove();
+  }
+}

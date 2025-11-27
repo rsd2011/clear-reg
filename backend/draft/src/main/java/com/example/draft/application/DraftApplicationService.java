@@ -29,10 +29,12 @@ import com.example.draft.application.audit.DraftAuditEvent;
 import com.example.draft.application.audit.DraftAuditPublisher;
 import com.example.approval.api.ApprovalFacade;
 import com.example.approval.api.ApprovalRequestCommand;
+import com.example.approval.api.ApprovalAction;
+import com.example.approval.api.ApprovalActionCommand;
 import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.approval.api.event.DraftSubmittedEvent;
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftAttachment;
@@ -40,10 +42,9 @@ import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
+import com.example.draft.domain.exception.DraftWorkflowException;
 import com.example.draft.domain.DraftAction;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
@@ -69,8 +70,6 @@ public class DraftApplicationService {
     private final DraftRepository draftRepository;
     private final ApprovalLineTemplateRepository templateRepository;
     private final DraftFormTemplateRepository formTemplateRepository;
-    private final ApprovalGroupRepository approvalGroupRepository;
-    private final ApprovalGroupMemberRepository approvalGroupMemberRepository;
     private final BusinessTemplateMappingRepository mappingRepository;
     private final DraftHistoryRepository draftHistoryRepository;
     private final DraftReferenceRepository draftReferenceRepository;
@@ -86,8 +85,6 @@ public class DraftApplicationService {
     public DraftApplicationService(DraftRepository draftRepository,
                                    ApprovalLineTemplateRepository templateRepository,
                                    DraftFormTemplateRepository formTemplateRepository,
-                                   ApprovalGroupRepository approvalGroupRepository,
-                                   ApprovalGroupMemberRepository approvalGroupMemberRepository,
                                    BusinessTemplateMappingRepository mappingRepository,
                                    DraftHistoryRepository draftHistoryRepository,
                                    DraftReferenceRepository draftReferenceRepository,
@@ -102,8 +99,6 @@ public class DraftApplicationService {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
         this.formTemplateRepository = formTemplateRepository;
-        this.approvalGroupRepository = approvalGroupRepository;
-        this.approvalGroupMemberRepository = approvalGroupMemberRepository;
         this.mappingRepository = mappingRepository;
         this.draftHistoryRepository = draftHistoryRepository;
         this.draftReferenceRepository = draftReferenceRepository;
@@ -146,7 +141,7 @@ public class DraftApplicationService {
         }
         draft.attachFormTemplate(formTemplate, formPayload);
         template.getSteps().stream()
-                .sorted(java.util.Comparator.comparingInt(com.example.approval.domain.ApprovalTemplateStep::getStepOrder))
+                .sorted(java.util.Comparator.comparingInt(com.example.admin.approval.ApprovalTemplateStep::getStepOrder))
                 .map(com.example.draft.domain.DraftApprovalStep::fromTemplate)
                 .forEach(draft::addApprovalStep);
         attachFiles(request.attachments(), draft, actor, now);
@@ -177,7 +172,6 @@ public class DraftApplicationService {
                                  boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
-        ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.approveStep(request.stepId(), actor, request.comment(), now());
         publish(DraftAction.APPROVED, draft, actor, request.stepId(), null, request.comment());
         audit(DraftAction.APPROVED, draft, actor, request.comment(), organizationCode, null, null);
@@ -193,11 +187,42 @@ public class DraftApplicationService {
                                 boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
-        ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.rejectStep(request.stepId(), actor, request.comment(), now());
         publish(DraftAction.REJECTED, draft, actor, request.stepId(), null, request.comment());
         audit(DraftAction.REJECTED, draft, actor, request.comment(), organizationCode, null, null);
         businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.REJECTED, actor);
+        return toResponse(draft);
+    }
+
+    @Transactional
+    public DraftResponse defer(UUID draftId,
+                               DraftDecisionRequest request,
+                               String actor,
+                               String organizationCode,
+                               boolean auditAccess) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, auditAccess);
+        draft.deferStep(request.stepId(), actor, request.comment(), now());
+        syncApproval(draft, new ApprovalActionCommand(ApprovalAction.DEFER, actor, organizationCode, request.comment(), null));
+        publish(DraftAction.DEFERRED, draft, actor, request.stepId(), null, request.comment());
+        audit(DraftAction.DEFERRED, draft, actor, request.comment(), organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.DEFERRED, actor);
+        return toResponse(draft);
+    }
+
+    @Transactional
+    public DraftResponse approveDeferred(UUID draftId,
+                                         DraftDecisionRequest request,
+                                         String actor,
+                                         String organizationCode,
+                                         boolean auditAccess) {
+        Draft draft = loadDraft(draftId);
+        draft.assertOrganizationAccess(organizationCode, auditAccess);
+        draft.approveDeferredStep(request.stepId(), actor, request.comment(), now());
+        syncApproval(draft, new ApprovalActionCommand(ApprovalAction.DEFER_APPROVE, actor, organizationCode, request.comment(), null));
+        publish(DraftAction.DEFER_APPROVED, draft, actor, request.stepId(), null, request.comment());
+        audit(DraftAction.DEFER_APPROVED, draft, actor, request.comment(), organizationCode, null, null);
+        businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.DEFER_APPROVED, actor);
         return toResponse(draft);
     }
 
@@ -217,6 +242,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, false);
         draft.withdraw(actor, now());
+        syncApproval(draft, new ApprovalActionCommand(ApprovalAction.WITHDRAW, actor, organizationCode, "withdraw", null));
         publish(DraftAction.WITHDRAWN, draft, actor, null, null, null);
         audit(DraftAction.WITHDRAWN, draft, actor, null, organizationCode, null, null);
         businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.WITHDRAWN, actor);
@@ -243,8 +269,8 @@ public class DraftApplicationService {
                                   boolean auditAccess) {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
-        ensureStepAccess(draft, actor, organizationCode, request.stepId());
         draft.delegate(request.stepId(), delegatedTo, actor, request.comment(), now());
+        syncApproval(draft, new ApprovalActionCommand(ApprovalAction.DELEGATE, actor, organizationCode, request.comment(), delegatedTo));
         publish(DraftAction.DELEGATED, draft, actor, request.stepId(), delegatedTo, request.comment());
         audit(DraftAction.DELEGATED, draft, actor, request.comment(), organizationCode, null, null);
         businessPolicy.afterStateChanged(draft.getId(), draft.getBusinessFeatureCode(), draft.getStatus(), DraftAction.DELEGATED, actor);
@@ -447,6 +473,13 @@ public class DraftApplicationService {
         return OffsetDateTime.now(clock);
     }
 
+    private void syncApproval(Draft draft, ApprovalActionCommand command) {
+        if (draft.getApprovalRequestId() == null) {
+            return; // 아직 approval 요청을 만들지 않은 초안 상태일 수 있음
+        }
+        approvalFacade.actOnApproval(draft.getApprovalRequestId(), command);
+    }
+
     private void attachFiles(List<DraftAttachmentRequest> requests, Draft draft, String actor, OffsetDateTime now) {
         requests.forEach(attachment -> {
             DraftAttachment entity = DraftAttachment.create(
@@ -459,19 +492,6 @@ public class DraftApplicationService {
             );
             draft.addAttachment(entity);
         });
-    }
-
-    private void ensureStepAccess(Draft draft, String actor, String organizationCode, UUID stepId) {
-        DraftApprovalStep step = draft.findStep(stepId);
-        ApprovalGroup group = approvalGroupRepository.findByGroupCode(step.getApprovalGroupCode())
-                .orElseThrow(() -> new DraftNotFoundException("결재 그룹을 찾을 수 없습니다."));
-        boolean permitted = approvalGroupMemberRepository.findByApprovalGroupIdAndActiveTrue(group.getId())
-                .stream()
-                .anyMatch(member -> member.getMemberUserId().equals(actor)
-                        && (member.getMemberOrgCode() == null || member.getMemberOrgCode().equals(organizationCode)));
-        if (!permitted) {
-            throw new DraftAccessDeniedException("결재 권한이 없습니다.");
-        }
     }
 
     private void publish(DraftAction action, Draft draft, String actor, UUID stepId, String delegatedTo, String comment) {

@@ -4,26 +4,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.kafka.core.KafkaTemplate;
 
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalGroupMember;
-import com.example.approval.domain.ApprovalLineTemplate;
-import com.example.approval.domain.ApprovalTemplateStep;
+import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.auth.domain.UserAccount;
+import com.example.auth.domain.UserAccountRepository;
+import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
-import com.example.draft.domain.DraftApprovalState;
 import com.example.draft.domain.DraftApprovalStep;
-import com.example.approval.domain.repository.ApprovalGroupMemberRepository;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 
 class DraftNotificationServiceTest {
@@ -33,35 +29,32 @@ class DraftNotificationServiceTest {
     void notifyAddsRecipients() {
         DraftNotificationPublisherStub publisher = new DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
-        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
-        ApprovalGroupMemberRepository memberRepo = mock(ApprovalGroupMemberRepository.class);
+        PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
+        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
 
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, groupRepo, memberRepo);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
         ApprovalTemplateStep templateStep = new ApprovalTemplateStep(null, 1, "GRP", "");
         DraftApprovalStep step = DraftApprovalStep.fromTemplate(templateStep);
         draft.addApprovalStep(step);
 
-        given(groupRepo.findByGroupCode("GRP")).willReturn(Optional.of(ApprovalGroup.create("GRP", "n", null, "ORG", null, OffsetDateTime.now())));
-        ApprovalGroupMember member = ApprovalGroupMember.create("user1", "ORG", null, OffsetDateTime.now());
-        given(memberRepo.findByApprovalGroupIdAndActiveTrue(any())).willReturn(List.of(member));
+        PermissionGroup permGroup = new PermissionGroup("PERM_GRP", "Test Group");
+        permGroup.setApprovalGroupCode("GRP");
+        UserAccount user = UserAccount.builder()
+                .username("user1")
+                .password("password")
+                .organizationCode("ORG")
+                .permissionGroupCode("PERM_GRP")
+                .build();
+
+        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of(permGroup));
+        given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());
 
         svc.notify("ACTION", draft, "actor", step.getId(), null, null, OffsetDateTime.now());
 
         assertThat(publisher.lastPayload.recipients()).contains("creator", "actor", "user1");
-    }
-
-    @Test
-    @DisplayName("Kafka 퍼블리셔는 JSON을 직렬화해 send를 호출한다")
-    void kafkaPublisherSends() {
-        KafkaTemplate<String, String> kafka = mock(KafkaTemplate.class);
-        KafkaDraftNotificationPublisher publisher = new KafkaDraftNotificationPublisher(kafka);
-        DraftNotificationPayload payload = new DraftNotificationPayload(UUID.randomUUID(), "A", "actor", "creator", "ORG", "FEATURE", null, null,
-                null, null, List.of("x"));
-        publisher.publish(payload);
-        verify(kafka).send(any(), any(), any());
     }
 
     static final class DraftNotificationPublisherStub implements DraftNotificationPublisher {

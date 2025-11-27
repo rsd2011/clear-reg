@@ -15,7 +15,7 @@ class DraftApprovalStepRejectGuardTest {
     @DisplayName("IN_PROGRESS 상태가 아니면 reject 시 예외를 던진다")
     void rejectNotInProgressThrows() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.approval.domain.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         assertThatThrownBy(() -> step.reject("actor", "comment", OffsetDateTime.now()))

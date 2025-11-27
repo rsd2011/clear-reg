@@ -6,11 +6,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import com.example.approval.domain.ApprovalAccessDeniedException;
-import com.example.approval.domain.ApprovalGroup;
-import com.example.approval.domain.ApprovalGroupMember;
-import com.example.approval.domain.ApprovalLineTemplate;
-import com.example.approval.domain.TemplateScope;
+import com.example.admin.approval.ApprovalAccessDeniedException;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.TemplateScope;
 import org.junit.jupiter.api.Test;
 
 class ApprovalDomainEntitiesTest {
@@ -27,22 +26,6 @@ class ApprovalDomainEntitiesTest {
         assertThat(group.getUpdatedAt()).isAfter(NOW);
         assertThat(group.getOrganizationCode()).isEqualTo("ORG");
         assertThat(group.getDescription()).isEqualTo("새 desc");
-    }
-
-    @Test
-    void approvalGroupMemberUpdatesAndDeactivate() {
-        ApprovalGroup group = ApprovalGroup.create("CODE", "이름", null, "ORG", null, NOW);
-        ApprovalGroupMember member = ApprovalGroupMember.create("user", "ORG", "x>0", NOW);
-
-        member.attachTo(group);
-        member.update("ORG2", "x>1", false, NOW.plusSeconds(1));
-        assertThat(member.getMemberOrgCode()).isEqualTo("ORG2");
-        assertThat(member.getConditionExpression()).isEqualTo("x>1");
-        assertThat(member.isActive()).isFalse();
-        assertThat(member.getApprovalGroup()).isEqualTo(group);
-
-        member.deactivate(NOW.plusSeconds(2));
-        assertThat(member.isActive()).isFalse();
     }
 
     @Test
@@ -63,7 +46,7 @@ class ApprovalDomainEntitiesTest {
         orgTemplate.addStep(2, "GRP2", "desc2");
         assertThat(orgTemplate.getSteps()).hasSize(2);
 
-        var newSteps = List.of(new com.example.approval.domain.ApprovalTemplateStep(orgTemplate, 3, "GRP3", "d3"));
+        var newSteps = List.of(new com.example.admin.approval.ApprovalTemplateStep(orgTemplate, 3, "GRP3", "d3"));
         orgTemplate.replaceSteps(newSteps);
         assertThat(orgTemplate.getSteps()).hasSize(1);
         assertThat(orgTemplate.getSteps().getFirst().getApprovalGroupCode()).isEqualTo("GRP3");
@@ -83,7 +66,7 @@ class ApprovalDomainEntitiesTest {
     @Test
     void approvalTemplateStepStoresValues() {
         ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿", "HR", "ORG", NOW);
-        var step = new com.example.approval.domain.ApprovalTemplateStep(template, 2, "GRP2", "설명");
+        var step = new com.example.admin.approval.ApprovalTemplateStep(template, 2, "GRP2", "설명");
         assertThat(step.getTemplate()).isEqualTo(template);
         assertThat(step.getStepOrder()).isEqualTo(2);
         assertThat(step.getApprovalGroupCode()).isEqualTo("GRP2");

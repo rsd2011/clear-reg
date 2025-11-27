@@ -8,7 +8,7 @@ import org.springframework.lang.NonNull;
 import org.springframework.scheduling.quartz.QuartzJobBean;
 
 import com.example.batch.security.DwBatchAuthContext;
-import com.example.auth.permission.context.AuthContextPropagator;
+import com.example.admin.permission.context.AuthContextPropagator;
 import com.example.dw.application.job.DwIngestionJob;
 import com.example.dw.application.job.DwIngestionOutboxService;
 

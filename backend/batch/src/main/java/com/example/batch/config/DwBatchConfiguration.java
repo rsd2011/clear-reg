@@ -16,7 +16,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import com.example.batch.ingestion.DwIngestionService;
 import com.example.batch.security.DwBatchAuthContext;
-import com.example.auth.permission.context.AuthContextPropagator;
+import com.example.admin.permission.context.AuthContextPropagator;
 import com.example.dw.application.job.DwIngestionJob;
 import com.example.dw.application.job.DwIngestionOutboxService;
 

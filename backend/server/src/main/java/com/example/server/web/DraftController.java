@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import com.example.auth.permission.ActionCode;
-import com.example.auth.permission.FeatureCode;
-import com.example.auth.permission.PermissionDeniedException;
-import com.example.auth.permission.PermissionEvaluator;
-import com.example.auth.permission.RequirePermission;
-import com.example.auth.permission.context.AuthContext;
-import com.example.auth.permission.context.AuthContextHolder;
+import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.RequirePermission;
+import com.example.admin.permission.context.AuthContext;
+import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.request.DraftCreateRequest;
@@ -109,6 +109,28 @@ public class DraftController {
         DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
         ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
         return draftApplicationService.reject(id, request, context.username(), context.organizationCode(), audit);
+    }
+
+    @PostMapping("/{id}/defer")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_APPROVE)
+    public DraftResponse deferDraft(@PathVariable UUID id,
+                                    @Valid @RequestBody DraftDecisionRequest request) {
+        AuthContext context = currentContext();
+        boolean audit = hasAuditPermission();
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
+        return draftApplicationService.defer(id, request, context.username(), context.organizationCode(), audit);
+    }
+
+    @PostMapping("/{id}/defer/approve")
+    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_APPROVE)
+    public DraftResponse approveDeferredDraft(@PathVariable UUID id,
+                                              @Valid @RequestBody DraftDecisionRequest request) {
+        AuthContext context = currentContext();
+        boolean audit = hasAuditPermission();
+        DraftResponse snapshot = draftApplicationService.getDraft(id, context.organizationCode(), context.username(), audit);
+        ensureBusinessPermission(snapshot.businessFeatureCode(), ActionCode.DRAFT_APPROVE);
+        return draftApplicationService.approveDeferred(id, request, context.username(), context.organizationCode(), audit);
     }
 
     @PostMapping("/{id}/cancel")

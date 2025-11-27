@@ -1,8 +1,8 @@
 package com.example.server.policy;
 
-import com.example.policy.dto.PolicyUpdateRequest;
-import com.example.policy.dto.PolicyView;
-import com.example.policy.dto.PolicyYamlRequest;
+import com.example.admin.policy.dto.PolicyUpdateRequest;
+import com.example.admin.policy.dto.PolicyView;
+import com.example.admin.policy.dto.PolicyYamlRequest;
 
 /**
  * Port interface exposing policy administration operations required by the server module.

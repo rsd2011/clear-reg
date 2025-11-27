@@ -18,10 +18,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.example.approval.domain.ApprovalLineTemplate;
-import com.example.approval.domain.repository.ApprovalGroupRepository;
-import com.example.approval.domain.repository.ApprovalLineTemplateRepository;
-import com.example.auth.permission.context.AuthContext;
+import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.request.DraftTemplatePresetRequest;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;

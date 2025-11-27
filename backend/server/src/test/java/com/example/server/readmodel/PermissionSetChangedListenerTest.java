@@ -6,7 +6,7 @@ import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.example.auth.permission.event.PermissionSetChangedEvent;
+import com.example.admin.permission.event.PermissionSetChangedEvent;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
 import com.example.dw.application.readmodel.MenuReadModelPort;
 import com.example.dw.application.readmodel.PermissionMenuReadModelPort;

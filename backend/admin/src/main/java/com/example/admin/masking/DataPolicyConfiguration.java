@@ -1,4 +1,4 @@
-package com.example.auth.policy;
+package com.example.admin.masking;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

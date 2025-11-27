@@ -6,7 +6,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
-import com.example.auth.permission.event.PermissionSetChangedEvent;
+import com.example.admin.permission.event.PermissionSetChangedEvent;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
 import com.example.dw.application.readmodel.MenuReadModelPort;
 import com.example.dw.application.readmodel.PermissionMenuReadModelPort;
