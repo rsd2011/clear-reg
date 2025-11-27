@@ -21,7 +21,7 @@ class SystemCommonCodeTypeTest {
     void returnsTypeWhenMatched() {
         Optional<SystemCommonCodeType> type = SystemCommonCodeType.fromCode("notice_category");
         assertThat(type).contains(SystemCommonCodeType.NOTICE_CATEGORY);
-        assertThat(type.get().defaultKind()).isEqualTo(CommonCodeKind.DYNAMIC);
+        assertThat(type.get().defaultKind()).isEqualTo(CodeManageKind.DYNAMIC);
     }
 
     @Test

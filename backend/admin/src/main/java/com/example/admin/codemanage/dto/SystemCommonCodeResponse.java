@@ -2,14 +2,14 @@ package com.example.admin.codemanage.dto;
 
 import java.time.OffsetDateTime;
 
-import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CodeManageKind;
 import com.example.admin.codemanage.model.SystemCommonCode;
 
 public record SystemCommonCodeResponse(String codeType,
                                        String codeValue,
                                        String codeName,
                                        int displayOrder,
-                                       CommonCodeKind codeKind,
+                                       CodeManageKind codeKind,
                                        boolean active,
                                        String description,
                                        String metadataJson,

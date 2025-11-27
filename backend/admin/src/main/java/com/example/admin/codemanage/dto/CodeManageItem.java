@@ -1,15 +1,15 @@
 package com.example.admin.codemanage.dto;
 
-import com.example.admin.codemanage.model.CommonCodeKind;
-import com.example.admin.codemanage.model.CommonCodeSource;
+import com.example.admin.codemanage.model.CodeManageKind;
+import com.example.admin.codemanage.model.CodeManageSource;
 
-public record CommonCodeItem(String codeType,
+public record CodeManageItem(String codeType,
                              String codeValue,
                              String codeName,
                              Integer displayOrder,
                              boolean active,
-                             CommonCodeKind codeKind,
-                             CommonCodeSource source,
+                             CodeManageKind codeKind,
+                             CodeManageSource source,
                              String description,
                              String metadataJson) {
 }

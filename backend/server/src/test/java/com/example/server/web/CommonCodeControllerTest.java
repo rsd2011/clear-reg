@@ -24,10 +24,10 @@ import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
-import com.example.admin.codemanage.dto.CommonCodeItem;
-import com.example.admin.codemanage.CommonCodeQueryService;
-import com.example.admin.codemanage.model.CommonCodeKind;
-import com.example.admin.codemanage.model.CommonCodeSource;
+import com.example.admin.codemanage.dto.CodeManageItem;
+import com.example.admin.codemanage.CodeManageQueryService;
+import com.example.admin.codemanage.model.CodeManageKind;
+import com.example.admin.codemanage.model.CodeManageSource;
 import com.example.server.config.JpaConfig;
 import com.example.server.config.SecurityConfig;
 import com.example.server.security.JwtAuthenticationFilter;
@@ -46,7 +46,7 @@ class CommonCodeControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private CommonCodeQueryService commonCodeQueryService;
+    private CodeManageQueryService codeManageQueryService;
 
     @BeforeEach
     void setUp() {
@@ -62,9 +62,9 @@ class CommonCodeControllerTest {
     @Test
     @DisplayName("Given 공통 코드 요청 When 호출하면 Then 집계된 목록을 반환한다")
     void givenCodes_whenRequesting_thenReturnAggregatedList() throws Exception {
-        CommonCodeItem item = new CommonCodeItem("CATEGORY", "A", "Alpha", 1, true,
-                CommonCodeKind.DYNAMIC, CommonCodeSource.SYSTEM, "desc", null);
-        given(commonCodeQueryService.aggregate(eq("CATEGORY"), anyBoolean(), anyBoolean()))
+        CodeManageItem item = new CodeManageItem("CATEGORY", "A", "Alpha", 1, true,
+                CodeManageKind.DYNAMIC, CodeManageSource.SYSTEM, "desc", null);
+        given(codeManageQueryService.aggregate(eq("CATEGORY"), anyBoolean(), anyBoolean()))
                 .willReturn(List.of(item));
 
         mockMvc.perform(get("/api/common-codes/CATEGORY"))

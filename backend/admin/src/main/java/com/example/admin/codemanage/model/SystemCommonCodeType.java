@@ -4,15 +4,15 @@ import java.util.Locale;
 import java.util.Optional;
 
 public enum SystemCommonCodeType {
-    NOTICE_CATEGORY("NOTICE_CATEGORY", CommonCodeKind.DYNAMIC),
-    FILE_CLASSIFICATION("FILE_CLASSIFICATION", CommonCodeKind.STATIC),
-    ALERT_CHANNEL("ALERT_CHANNEL", CommonCodeKind.DYNAMIC),
-    CUSTOM("CUSTOM", CommonCodeKind.DYNAMIC);
+    NOTICE_CATEGORY("NOTICE_CATEGORY", CodeManageKind.DYNAMIC),
+    FILE_CLASSIFICATION("FILE_CLASSIFICATION", CodeManageKind.STATIC),
+    ALERT_CHANNEL("ALERT_CHANNEL", CodeManageKind.DYNAMIC),
+    CUSTOM("CUSTOM", CodeManageKind.DYNAMIC);
 
     private final String code;
-    private final CommonCodeKind defaultKind;
+    private final CodeManageKind defaultKind;
 
-    SystemCommonCodeType(String code, CommonCodeKind defaultKind) {
+    SystemCommonCodeType(String code, CodeManageKind defaultKind) {
         this.code = code;
         this.defaultKind = defaultKind;
     }
@@ -21,7 +21,7 @@ public enum SystemCommonCodeType {
         return code;
     }
 
-    public CommonCodeKind defaultKind() {
+    public CodeManageKind defaultKind() {
         return defaultKind;
     }
 

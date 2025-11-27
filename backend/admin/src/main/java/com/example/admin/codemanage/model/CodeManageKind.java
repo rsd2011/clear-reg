@@ -1,6 +1,6 @@
 package com.example.admin.codemanage.model;
 
-public enum CommonCodeKind {
+public enum CodeManageKind {
     STATIC,
     DYNAMIC,
     FEDERATED

@@ -28,7 +28,7 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.admin.codemanage.SystemCommonCodeService;
-import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CodeManageKind;
 import com.example.admin.codemanage.model.SystemCommonCode;
 import com.example.server.config.JpaConfig;
 import com.example.server.config.SecurityConfig;
@@ -69,7 +69,7 @@ class CommonCodeAdminControllerTest {
     @DisplayName("Given 공통 코드 When 조회하면 Then 전체 목록을 반환한다")
     void givenCodes_whenListing_thenReturnAll() throws Exception {
         SystemCommonCode code = SystemCommonCode.create("CATEGORY", "A", "Alpha", 1,
-                CommonCodeKind.DYNAMIC, true, null, null, "tester", null);
+                CodeManageKind.DYNAMIC, true, null, null, "tester", null);
         given(systemCommonCodeService.findAll("CATEGORY")).willReturn(List.of(code));
 
         mockMvc.perform(get("/api/admin/common-codes/CATEGORY"))
@@ -81,7 +81,7 @@ class CommonCodeAdminControllerTest {
     @DisplayName("Given 생성 요청 When POST 호출 Then 서비스에 위임해 신규 코드를 반환한다")
     void givenRequest_whenCreate_thenDelegateService() throws Exception {
         SystemCommonCode code = SystemCommonCode.create("CATEGORY", "B", "Bravo", 2,
-                CommonCodeKind.DYNAMIC, true, null, null, "tester", null);
+                CodeManageKind.DYNAMIC, true, null, null, "tester", null);
         given(systemCommonCodeService.create(eq("CATEGORY"), any(SystemCommonCode.class))).willReturn(code);
 
         mockMvc.perform(post("/api/admin/common-codes/CATEGORY")
@@ -103,7 +103,7 @@ class CommonCodeAdminControllerTest {
     @DisplayName("Given 수정 요청 When PUT 호출 Then 서비스에 위임해 코드 정보를 갱신한다")
     void givenRequest_whenUpdate_thenDelegateService() throws Exception {
         SystemCommonCode code = SystemCommonCode.create("CATEGORY", "B", "Updated", 3,
-                CommonCodeKind.DYNAMIC, false, null, null, "tester", null);
+                CodeManageKind.DYNAMIC, false, null, null, "tester", null);
         given(systemCommonCodeService.update(eq("CATEGORY"), eq("B"), any(SystemCommonCode.class)))
                 .willReturn(code);
 

@@ -12,16 +12,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.dw.application.DwCommonCodeDirectoryService;
 
 @ExtendWith(MockitoExtension.class)
-class CommonCodeQueryServiceBranchTest {
+class CodeManageQueryServiceBranchTest {
 
     @Mock DwCommonCodeDirectoryService dwService;
     @Mock SystemCommonCodeService systemService;
 
-    CommonCodeQueryService service;
+    CodeManageQueryService service;
 
     @BeforeEach
     void setUp() {
-        service = new CommonCodeQueryService(dwService, systemService);
+        service = new CodeManageQueryService(dwService, systemService);
     }
 
     @Test

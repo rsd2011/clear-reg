@@ -15,7 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CodeManageKind;
 import com.example.admin.codemanage.model.SystemCommonCode;
 import com.example.admin.codemanage.repository.SystemCommonCodeRepository;
 
@@ -53,7 +53,7 @@ class SystemCommonCodeServiceLineCoverTest {
     @DisplayName("create: STATIC 기본 타입에서 DYNAMIC을 요청하면 예외를 던진다")
     void enforceKindWhenStaticType() {
         SystemCommonCode req = SystemCommonCode.create("FILE_CLASSIFICATION", "001", "파일 분류", 0,
-                CommonCodeKind.DYNAMIC, true, null, null, null, null);
+                CodeManageKind.DYNAMIC, true, null, null, null, null);
 
         assertThatThrownBy(() -> service.create("FILE_CLASSIFICATION", req))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -76,9 +76,9 @@ class SystemCommonCodeServiceLineCoverTest {
         verify(repository).save(captor.capture());
         SystemCommonCode savedArg = captor.getValue();
 
-        assertThat(savedArg.getCodeKind()).isEqualTo(CommonCodeKind.DYNAMIC);
+        assertThat(savedArg.getCodeKind()).isEqualTo(CodeManageKind.DYNAMIC);
         assertThat(savedArg.getUpdatedBy()).isEqualTo("system");
-        assertThat(result.getCodeKind()).isEqualTo(CommonCodeKind.DYNAMIC);
+        assertThat(result.getCodeKind()).isEqualTo(CodeManageKind.DYNAMIC);
     }
 
     @Test

@@ -22,7 +22,7 @@ import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
-import com.example.admin.codemanage.CommonCodeQueryService;
+import com.example.admin.codemanage.CodeManageQueryService;
 import com.example.admin.codemanage.SystemCommonCodeService;
 import com.example.server.service.CacheMaintenanceService.CacheTarget;
 
@@ -45,7 +45,7 @@ class CacheMaintenanceServiceTest {
     @Mock
     private SystemCommonCodeService systemCommonCodeService;
     @Mock
-    private CommonCodeQueryService commonCodeQueryService;
+    private CodeManageQueryService codeManageQueryService;
     @Mock
     private OrganizationReadModelPort organizationReadModelPort;
 
@@ -59,7 +59,7 @@ class CacheMaintenanceServiceTest {
                 organizationTreeService,
                 dwCommonCodeDirectoryService,
                 systemCommonCodeService,
-                commonCodeQueryService,
+                codeManageQueryService,
                 organizationReadModelPort
         );
     }
@@ -87,7 +87,7 @@ class CacheMaintenanceServiceTest {
         verify(organizationTreeService).evict();
         verify(dwCommonCodeDirectoryService).evictAll();
         verify(systemCommonCodeService).evictAll();
-        verify(commonCodeQueryService).evictAll();
+        verify(codeManageQueryService).evictAll();
         verify(organizationRowScopeCache).clear();
         verify(latestDwBatchCache).clear();
         verify(organizationReadModelPort).isEnabled();
@@ -103,7 +103,7 @@ class CacheMaintenanceServiceTest {
 
         assertThat(clearedTargets).isEmpty();
         verifyNoInteractions(employeeDirectoryService, organizationTreeService, dwCommonCodeDirectoryService,
-                systemCommonCodeService, commonCodeQueryService, organizationReadModelPort);
+                systemCommonCodeService, codeManageQueryService, organizationReadModelPort);
     }
 
     @Test

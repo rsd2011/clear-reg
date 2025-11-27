@@ -14,39 +14,39 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwCommonCodeSnapshot;
-import com.example.admin.codemanage.dto.CommonCodeItem;
-import com.example.admin.codemanage.model.CommonCodeKind;
-import com.example.admin.codemanage.model.CommonCodeSource;
+import com.example.admin.codemanage.dto.CodeManageItem;
+import com.example.admin.codemanage.model.CodeManageKind;
+import com.example.admin.codemanage.model.CodeManageSource;
 import com.example.admin.codemanage.model.SystemCommonCode;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("CommonCodeQueryService 테스트")
-class CommonCodeQueryServiceTest {
+@DisplayName("CodeManageQueryService 테스트")
+class CodeManageQueryServiceTest {
 
     @Mock
     private DwCommonCodeDirectoryService dwCommonCodeDirectoryService;
     @Mock
     private SystemCommonCodeService systemCommonCodeService;
 
-    private CommonCodeQueryService service;
+    private CodeManageQueryService service;
 
     @BeforeEach
     void setUp() {
-        service = new CommonCodeQueryService(dwCommonCodeDirectoryService, systemCommonCodeService);
+        service = new CodeManageQueryService(dwCommonCodeDirectoryService, systemCommonCodeService);
     }
 
     @Test
     @DisplayName("Given 시스템/ DW 코드 When aggregate 호출 Then 병합 후 중복을 제거한다")
     void givenSystemAndDwCodes_whenAggregate_thenMergeAndDeduplicate() {
         SystemCommonCode systemCode = SystemCommonCode.create("CATEGORY", "A", "System Alpha", 1,
-                CommonCodeKind.DYNAMIC, true, null, null, "tester", null);
+                CodeManageKind.DYNAMIC, true, null, null, "tester", null);
         given(systemCommonCodeService.findActive("CATEGORY")).willReturn(List.of(systemCode));
 
         DwCommonCodeSnapshot dwCode = new DwCommonCodeSnapshot("CATEGORY", "A", "DW Alpha", 2,
                 true, "DW", "desc", "{\"source\":\"dw\"}");
         given(dwCommonCodeDirectoryService.findActive("CATEGORY")).willReturn(List.of(dwCode));
 
-        List<CommonCodeItem> result = service.aggregate("category", true, true);
+        List<CodeManageItem> result = service.aggregate("category", true, true);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().codeName()).isEqualTo("System Alpha");
@@ -59,17 +59,17 @@ class CommonCodeQueryServiceTest {
                 true, "DW", "desc", "{}");
         given(dwCommonCodeDirectoryService.findActive("CATEGORY")).willReturn(List.of(dwCode));
 
-        List<CommonCodeItem> result = service.aggregate("category", false, true);
+        List<CodeManageItem> result = service.aggregate("category", false, true);
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().codeValue()).isEqualTo("B");
-        assertThat(result.getFirst().source()).isEqualTo(CommonCodeSource.DW);
+        assertThat(result.getFirst().source()).isEqualTo(CodeManageSource.DW);
     }
 
     @Test
     @DisplayName("includeSystem/Dw 둘 다 false이면 빈 리스트를 반환한다")
     void givenBothSourcesDisabled_thenReturnEmpty() {
-        List<CommonCodeItem> result = service.aggregate("category", false, false);
+        List<CodeManageItem> result = service.aggregate("category", false, false);
         assertThat(result).isEmpty();
     }
 }

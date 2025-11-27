@@ -1,6 +1,6 @@
 package com.example.admin.codemanage.model;
 
-public enum CommonCodeSource {
+public enum CodeManageSource {
     SYSTEM,
     DW
 }

@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
-import com.example.admin.codemanage.CommonCodeQueryService;
-import com.example.admin.codemanage.dto.CommonCodeAggregateResponse;
+import com.example.admin.codemanage.CodeManageQueryService;
+import com.example.admin.codemanage.dto.CodeManageAggregateResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,22 +20,22 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "Common Codes")
 public class CommonCodeController {
 
-    private final CommonCodeQueryService commonCodeQueryService;
+    private final CodeManageQueryService codeManageQueryService;
 
-    public CommonCodeController(CommonCodeQueryService commonCodeQueryService) {
-        this.commonCodeQueryService = commonCodeQueryService;
+    public CommonCodeController(CodeManageQueryService codeManageQueryService) {
+        this.codeManageQueryService = codeManageQueryService;
     }
 
     @GetMapping("/{codeType}")
     @RequirePermission(feature = FeatureCode.COMMON_CODE, action = ActionCode.READ)
     @Operation(summary = "Fetch merged common codes from system + DW sources")
-    public CommonCodeAggregateResponse getCodes(@PathVariable String codeType,
+    public CodeManageAggregateResponse getCodes(@PathVariable String codeType,
                                                 @RequestParam(defaultValue = "true") boolean includeSystem,
                                                 @RequestParam(defaultValue = "true") boolean includeDw) {
         var match = com.example.common.policy.DataPolicyContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
-        return CommonCodeAggregateResponse.of(codeType,
-                commonCodeQueryService.aggregate(codeType, includeSystem, includeDw),
+        return CodeManageAggregateResponse.of(codeType,
+                codeManageQueryService.aggregate(codeType, includeSystem, includeDw),
                 masker);
     }
 }

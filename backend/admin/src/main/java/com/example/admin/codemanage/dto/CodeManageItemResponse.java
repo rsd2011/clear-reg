@@ -1,25 +1,25 @@
 package com.example.admin.codemanage.dto;
 
-import com.example.admin.codemanage.model.CommonCodeKind;
-import com.example.admin.codemanage.model.CommonCodeSource;
+import com.example.admin.codemanage.model.CodeManageKind;
+import com.example.admin.codemanage.model.CodeManageSource;
 import java.util.function.UnaryOperator;
 
-public record CommonCodeItemResponse(String codeValue,
+public record CodeManageItemResponse(String codeValue,
                                      String codeName,
                                      Integer displayOrder,
-                                     CommonCodeKind codeKind,
-                                     CommonCodeSource source,
+                                     CodeManageKind codeKind,
+                                     CodeManageSource source,
                                      boolean active,
                                      String description,
                                      String metadataJson) {
 
-    public static CommonCodeItemResponse from(CommonCodeItem item) {
+    public static CodeManageItemResponse from(CodeManageItem item) {
         return from(item, UnaryOperator.identity());
     }
 
-    public static CommonCodeItemResponse from(CommonCodeItem item, UnaryOperator<String> masker) {
+    public static CodeManageItemResponse from(CodeManageItem item, UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
-        return new CommonCodeItemResponse(fn.apply(item.codeValue()),
+        return new CodeManageItemResponse(fn.apply(item.codeValue()),
                 fn.apply(item.codeName()),
                 item.displayOrder(),
                 item.codeKind(),

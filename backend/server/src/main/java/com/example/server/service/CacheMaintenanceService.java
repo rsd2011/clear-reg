@@ -16,7 +16,7 @@ import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
-import com.example.admin.codemanage.CommonCodeQueryService;
+import com.example.admin.codemanage.CodeManageQueryService;
 import com.example.admin.codemanage.SystemCommonCodeService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,7 +29,7 @@ public class CacheMaintenanceService {
     private final DwOrganizationTreeService organizationTreeService;
     private final DwCommonCodeDirectoryService dwCommonCodeDirectoryService;
     private final SystemCommonCodeService systemCommonCodeService;
-    private final CommonCodeQueryService commonCodeQueryService;
+    private final CodeManageQueryService codeManageQueryService;
     private final OrganizationReadModelPort organizationReadModelPort;
 
     public CacheMaintenanceService(CacheManager cacheManager,
@@ -37,14 +37,14 @@ public class CacheMaintenanceService {
                                    DwOrganizationTreeService organizationTreeService,
                                    DwCommonCodeDirectoryService dwCommonCodeDirectoryService,
                                    SystemCommonCodeService systemCommonCodeService,
-                                   CommonCodeQueryService commonCodeQueryService,
+                                   CodeManageQueryService codeManageQueryService,
                                    @Nullable OrganizationReadModelPort organizationReadModelPort) {
         this.cacheManager = cacheManager;
         this.employeeDirectoryService = employeeDirectoryService;
         this.organizationTreeService = organizationTreeService;
         this.dwCommonCodeDirectoryService = dwCommonCodeDirectoryService;
         this.systemCommonCodeService = systemCommonCodeService;
-        this.commonCodeQueryService = commonCodeQueryService;
+        this.codeManageQueryService = codeManageQueryService;
         this.organizationReadModelPort = organizationReadModelPort;
     }
 
@@ -76,7 +76,7 @@ public class CacheMaintenanceService {
             case LATEST_DW_BATCH -> clearCache(CacheNames.LATEST_DW_BATCH);
             case DW_COMMON_CODES -> dwCommonCodeDirectoryService.evictAll();
             case SYSTEM_COMMON_CODES -> systemCommonCodeService.evictAll();
-            case COMMON_CODE_AGGREGATES -> commonCodeQueryService.evictAll();
+            case COMMON_CODE_AGGREGATES -> codeManageQueryService.evictAll();
             case ORGANIZATION_READ_MODEL -> refreshOrganizationReadModel();
         }
         cleared.add(target.name());

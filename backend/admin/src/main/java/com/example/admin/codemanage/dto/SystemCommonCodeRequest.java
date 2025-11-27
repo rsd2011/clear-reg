@@ -2,7 +2,7 @@ package com.example.admin.codemanage.dto;
 
 import org.hibernate.validator.constraints.Length;
 
-import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CodeManageKind;
 import com.example.admin.codemanage.model.SystemCommonCode;
 
 import jakarta.validation.constraints.NotBlank;
@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Size;
             @NotBlank String codeValue,
             @NotBlank String codeName,
             Integer displayOrder,
-            CommonCodeKind codeKind,
+            CodeManageKind codeKind,
             boolean active,
             @Size(max = 512) String description,
             @Length(max = 2000) String metadataJson) {

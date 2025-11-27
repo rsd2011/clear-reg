@@ -27,7 +27,7 @@ public class SystemCommonCode extends PrimaryKeyEntity {
                              String codeValue,
                              String codeName,
                              int displayOrder,
-                             CommonCodeKind codeKind,
+                             CodeManageKind codeKind,
                              boolean active,
                              String description,
                              String metadataJson,
@@ -37,7 +37,7 @@ public class SystemCommonCode extends PrimaryKeyEntity {
         this.codeValue = codeValue;
         this.codeName = codeName;
         this.displayOrder = displayOrder;
-        this.codeKind = codeKind == null ? CommonCodeKind.DYNAMIC : codeKind;
+        this.codeKind = codeKind == null ? CodeManageKind.DYNAMIC : codeKind;
         this.active = active;
         this.description = description;
         this.metadataJson = metadataJson;
@@ -49,7 +49,7 @@ public class SystemCommonCode extends PrimaryKeyEntity {
                                           String codeValue,
                                           String codeName,
                                           int displayOrder,
-                                          CommonCodeKind codeKind,
+                                          CodeManageKind codeKind,
                                           boolean active,
                                           String description,
                                           String metadataJson,
@@ -73,7 +73,7 @@ public class SystemCommonCode extends PrimaryKeyEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "code_kind", nullable = false, length = 16)
-    private CommonCodeKind codeKind = CommonCodeKind.DYNAMIC;
+    private CodeManageKind codeKind = CodeManageKind.DYNAMIC;
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
@@ -92,7 +92,7 @@ public class SystemCommonCode extends PrimaryKeyEntity {
 
     public void update(String codeName,
                        int displayOrder,
-                       CommonCodeKind codeKind,
+                       CodeManageKind codeKind,
                        boolean active,
                        String description,
                        String metadataJson,
@@ -114,9 +114,9 @@ public class SystemCommonCode extends PrimaryKeyEntity {
                 description, metadataJson, updatedBy, updatedAt);
     }
 
-    private static void enforceKind(CommonCodeKind requestedKind, String codeType) {
+    private static void enforceKind(CodeManageKind requestedKind, String codeType) {
         SystemCommonCodeType.fromCode(codeType).ifPresent(type -> {
-            CommonCodeKind expected = type.defaultKind();
+            CodeManageKind expected = type.defaultKind();
             if (requestedKind != null && requestedKind != expected) {
                 throw new IllegalArgumentException("코드 타입 " + codeType + "는 kind=" + expected + "만 허용");
             }

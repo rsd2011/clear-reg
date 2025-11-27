@@ -31,20 +31,20 @@ class SystemCommonCodeTest {
         SystemCommonCode copied = draft.copy();
 
         assertThat(copied.getCodeType()).isEqualTo("TYPE");
-        assertThat(copied.getCodeKind()).isEqualTo(CommonCodeKind.DYNAMIC);
+        assertThat(copied.getCodeKind()).isEqualTo(CodeManageKind.DYNAMIC);
     }
 
     @Test
     @DisplayName("copy는 모든 필드를 그대로 복사한다")
     void copyCopiesFields() {
         SystemCommonCode original = SystemCommonCode.create("TYPE", "V", "Name", 2,
-                CommonCodeKind.STATIC, false, "desc", "{\"a\":1}", "actor", OffsetDateTime.now(ZoneOffset.UTC));
+                CodeManageKind.STATIC, false, "desc", "{\"a\":1}", "actor", OffsetDateTime.now(ZoneOffset.UTC));
 
         SystemCommonCode copy = original.copy();
 
         assertThat(copy.getCodeType()).isEqualTo(original.getCodeType());
         assertThat(copy.getCodeValue()).isEqualTo(original.getCodeValue());
-        assertThat(copy.getCodeKind()).isEqualTo(CommonCodeKind.STATIC);
+        assertThat(copy.getCodeKind()).isEqualTo(CodeManageKind.STATIC);
         assertThat(copy.isActive()).isFalse();
         assertThat(copy.getMetadataJson()).contains("a");
     }

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import com.example.common.cache.CacheNames;
-import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CodeManageKind;
 import com.example.admin.codemanage.model.SystemCommonCode;
 import com.example.admin.codemanage.model.SystemCommonCodeType;
 import com.example.admin.codemanage.repository.SystemCommonCodeRepository;
@@ -86,8 +86,8 @@ public class SystemCommonCodeService {
 
     private SystemCommonCode normalizeRequest(String codeType, SystemCommonCode request) {
         SystemCommonCode clone = request.copy();
-        CommonCodeKind kind = clone.getCodeKind() == null
-                ? SystemCommonCodeType.fromCode(codeType).map(SystemCommonCodeType::defaultKind).orElse(CommonCodeKind.DYNAMIC)
+        CodeManageKind kind = clone.getCodeKind() == null
+                ? SystemCommonCodeType.fromCode(codeType).map(SystemCommonCodeType::defaultKind).orElse(CodeManageKind.DYNAMIC)
                 : clone.getCodeKind();
         enforceKind(codeType, kind);
         clone = SystemCommonCode.create(
@@ -105,11 +105,11 @@ public class SystemCommonCodeService {
         return clone;
     }
 
-    private void enforceKind(String codeType, CommonCodeKind requestedKind) {
+    private void enforceKind(String codeType, CodeManageKind requestedKind) {
         SystemCommonCodeType.fromCode(codeType)
-                .filter(type -> type.defaultKind() == CommonCodeKind.STATIC)
+                .filter(type -> type.defaultKind() == CodeManageKind.STATIC)
                 .ifPresent(type -> {
-                    if (requestedKind != CommonCodeKind.STATIC) {
+                    if (requestedKind != CodeManageKind.STATIC) {
                         throw new IllegalArgumentException("정적 코드 유형은 STATIC 으로만 저장할 수 있습니다.");
                     }
                 });
