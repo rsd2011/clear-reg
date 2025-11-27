@@ -19,6 +19,7 @@ import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwEmployeeSnapshot;
 import com.example.dw.domain.HrOrganizationEntity;
 import com.example.dw.infrastructure.persistence.HrOrganizationRepository;
+import com.example.auth.jit.dto.JitProvisioningResult;
 
 /**
  * SSO/AD 인증 시 JIT(Just-In-Time) Provisioning을 수행한다.

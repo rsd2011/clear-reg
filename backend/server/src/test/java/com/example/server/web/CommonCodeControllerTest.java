@@ -24,7 +24,7 @@ import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
-import com.example.server.commoncode.CommonCodeItem;
+import com.example.server.commoncode.dto.CommonCodeItem;
 import com.example.server.commoncode.CommonCodeQueryService;
 import com.example.server.commoncode.model.CommonCodeKind;
 import com.example.server.commoncode.model.CommonCodeSource;

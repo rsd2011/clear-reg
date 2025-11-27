@@ -40,12 +40,14 @@ import com.example.admin.permission.context.PermissionDecision;
 import com.example.admin.permission.PermissionDeniedException;
 import com.example.server.config.JpaConfig;
 import com.example.server.config.SecurityConfig;
-import com.example.server.notice.NoticeAdminResponse;
-import com.example.server.notice.NoticePublishRequest;
+import com.example.server.notice.NoticeAudience;
 import com.example.server.notice.NoticeService;
 import com.example.server.notice.NoticeSeverity;
-import com.example.server.notice.NoticeAudience;
 import com.example.server.notice.NoticeStatus;
+import com.example.server.notice.dto.NoticeAdminResponse;
+import com.example.server.notice.dto.NoticeArchiveRequest;
+import com.example.server.notice.dto.NoticePublishRequest;
+import com.example.server.notice.dto.NoticeUpdateRequest;
 import com.example.file.audit.FileAuditOutboxRelay;
 import com.example.server.security.JwtAuthenticationFilter;
 import com.example.server.security.RestAccessDeniedHandler;
@@ -189,7 +191,7 @@ class NoticeAdminControllerWebMvcTest {
 
         NoticeAdminController controller = new NoticeAdminController(noticeService);
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                controller.updateNotice(id, new com.example.server.notice.NoticeUpdateRequest(
+                controller.updateNotice(id, new NoticeUpdateRequest(
                         "t", "c", NoticeSeverity.INFO, NoticeAudience.ADMIN, null, null, false)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("boom");
@@ -204,7 +206,7 @@ class NoticeAdminControllerWebMvcTest {
 
         NoticeAdminController controller = new NoticeAdminController(noticeService);
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                controller.archiveNotice(id, new com.example.server.notice.NoticeArchiveRequest(null)))
+                controller.archiveNotice(id, new NoticeArchiveRequest(null)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("boom");
     }
@@ -218,7 +220,7 @@ class NoticeAdminControllerWebMvcTest {
 
         NoticeAdminController controller = new NoticeAdminController(noticeService);
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                controller.updateNotice(id, new com.example.server.notice.NoticeUpdateRequest(
+                controller.updateNotice(id, new NoticeUpdateRequest(
                         "t", "c", NoticeSeverity.INFO, NoticeAudience.ADMIN, null, null, false)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("update fail");
@@ -233,7 +235,7 @@ class NoticeAdminControllerWebMvcTest {
 
         NoticeAdminController controller = new NoticeAdminController(noticeService);
         org.assertj.core.api.Assertions.assertThatThrownBy(() ->
-                controller.archiveNotice(id, new com.example.server.notice.NoticeArchiveRequest(null)))
+                controller.archiveNotice(id, new NoticeArchiveRequest(null)))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("archive fail");
     }

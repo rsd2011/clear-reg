@@ -13,8 +13,8 @@ import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
 import com.example.server.notice.NoticeAudience;
-import com.example.server.notice.NoticeResponse;
 import com.example.server.notice.NoticeService;
+import com.example.server.notice.dto.NoticeResponse;
 
 @RestController
 @Validated

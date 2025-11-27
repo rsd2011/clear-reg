@@ -14,10 +14,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import com.example.server.notice.NoticeAudience;
-import com.example.server.notice.NoticeResponse;
 import com.example.server.notice.NoticeService;
 import com.example.server.notice.NoticeSeverity;
-import com.example.server.notice.NoticeStatus;
+import com.example.server.notice.dto.NoticeResponse;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("NoticeController 테스트")

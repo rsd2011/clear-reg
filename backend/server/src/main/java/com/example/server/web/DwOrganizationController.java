@@ -14,6 +14,7 @@ import com.example.admin.permission.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.dwgateway.dw.DwOrganizationPort;
+import com.example.server.web.dto.DwOrganizationResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

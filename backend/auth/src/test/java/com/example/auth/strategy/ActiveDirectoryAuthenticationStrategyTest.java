@@ -10,7 +10,7 @@ import com.example.auth.ad.ActiveDirectoryClient;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.LoginRequest;
-import com.example.auth.jit.JitProvisioningResult;
+import com.example.auth.jit.dto.JitProvisioningResult;
 import com.example.auth.jit.JitProvisioningService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

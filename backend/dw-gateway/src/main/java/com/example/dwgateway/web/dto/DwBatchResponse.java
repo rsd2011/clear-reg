@@ -1,4 +1,4 @@
-package com.example.dwgateway.web;
+package com.example.dwgateway.web.dto;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

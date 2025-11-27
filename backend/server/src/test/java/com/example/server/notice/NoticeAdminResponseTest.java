@@ -8,6 +8,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.server.notice.dto.NoticeAdminResponse;
+
 @DisplayName("NoticeAdminResponse 변환/마스킹")
 class NoticeAdminResponseTest {
 

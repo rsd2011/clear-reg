@@ -18,7 +18,7 @@ import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.file.FileService;
 import com.example.file.FileSummaryView;
-import com.example.file.FileUploadCommand;
+import com.example.file.dto.FileUploadCommand;
 import com.example.file.StoredFile;
 import com.example.file.audit.FileAuditEvent;
 import com.example.file.audit.FileAuditPublisher;

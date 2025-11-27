@@ -9,8 +9,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.server.notice.NoticeAdminResponse;
-import com.example.server.notice.NoticeResponse;
+import com.example.server.notice.dto.NoticeAdminResponse;
+import com.example.server.notice.dto.NoticeArchiveRequest;
+import com.example.server.notice.dto.NoticeCreateRequest;
+import com.example.server.notice.dto.NoticePublishRequest;
+import com.example.server.notice.dto.NoticeResponse;
+import com.example.server.notice.dto.NoticeUpdateRequest;
 
 @Service
 public class NoticeService {

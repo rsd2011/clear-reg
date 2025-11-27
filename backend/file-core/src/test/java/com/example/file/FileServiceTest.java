@@ -33,6 +33,7 @@ import com.example.common.policy.PolicyToggleSettings;
 import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
 import com.example.file.config.FileSecurityProperties;
+import com.example.file.dto.FileUploadCommand;
 
 @org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 @org.springframework.context.annotation.Import({FileService.class, FileServiceTest.TestConfig.class})

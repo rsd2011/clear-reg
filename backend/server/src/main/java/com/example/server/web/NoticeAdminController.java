@@ -17,12 +17,12 @@ import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.server.notice.NoticeAdminResponse;
-import com.example.server.notice.NoticeArchiveRequest;
-import com.example.server.notice.NoticeCreateRequest;
-import com.example.server.notice.NoticePublishRequest;
 import com.example.server.notice.NoticeService;
-import com.example.server.notice.NoticeUpdateRequest;
+import com.example.server.notice.dto.NoticeAdminResponse;
+import com.example.server.notice.dto.NoticeArchiveRequest;
+import com.example.server.notice.dto.NoticeCreateRequest;
+import com.example.server.notice.dto.NoticePublishRequest;
+import com.example.server.notice.dto.NoticeUpdateRequest;
 
 import jakarta.validation.Valid;
 

@@ -32,6 +32,7 @@ import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwEmployeeSnapshot;
 import com.example.dw.domain.HrOrganizationEntity;
 import com.example.dw.infrastructure.persistence.HrOrganizationRepository;
+import com.example.auth.jit.dto.JitProvisioningResult;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JitProvisioningService 테스트")

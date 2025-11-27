@@ -20,6 +20,7 @@ import com.example.file.audit.FileAuditPublisher;
 import com.example.file.config.FileSecurityProperties;
 import com.example.file.port.FileScanner;
 import com.example.file.storage.FileStorageClient;
+import com.example.file.dto.FileUploadCommand;
 
 class FileServiceUploadMimeMismatchTest {
 

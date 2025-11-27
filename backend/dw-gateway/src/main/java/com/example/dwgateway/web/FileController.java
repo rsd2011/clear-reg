@@ -34,7 +34,7 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
-import com.example.file.FileUploadCommand;
+import com.example.file.dto.FileUploadCommand;
 import com.example.file.api.FileUploadRequest;
 import com.example.file.port.FileManagementPort;
 

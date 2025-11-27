@@ -23,12 +23,12 @@ import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
-import com.example.server.notice.NoticeAdminResponse;
 import com.example.server.notice.NoticeAudience;
-import com.example.server.notice.NoticeCreateRequest;
 import com.example.server.notice.NoticeService;
 import com.example.server.notice.NoticeSeverity;
 import com.example.server.notice.NoticeStatus;
+import com.example.server.notice.dto.NoticeAdminResponse;
+import com.example.server.notice.dto.NoticeCreateRequest;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("NoticeAdminController 테스트")

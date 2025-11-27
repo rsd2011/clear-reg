@@ -1,4 +1,4 @@
-package com.example.server.commoncode;
+package com.example.server.commoncode.dto;
 
 import com.example.server.commoncode.model.CommonCodeKind;
 import com.example.server.commoncode.model.CommonCodeSource;

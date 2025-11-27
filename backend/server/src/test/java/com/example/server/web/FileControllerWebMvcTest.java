@@ -28,7 +28,7 @@ import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.file.port.FileManagementPort;
-import com.example.server.file.FileMetadataResponse;
+import com.example.server.file.dto.FileMetadataResponse;
 
 @WebMvcTest(FileController.class)
 @AutoConfigureMockMvc(addFilters = false)

@@ -8,6 +8,11 @@ import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.server.notice.dto.NoticeArchiveRequest;
+import com.example.server.notice.dto.NoticeCreateRequest;
+import com.example.server.notice.dto.NoticePublishRequest;
+import com.example.server.notice.dto.NoticeUpdateRequest;
+
 @DisplayName("Notice 요청 DTO 테스트")
 class NoticeRequestTest {
 

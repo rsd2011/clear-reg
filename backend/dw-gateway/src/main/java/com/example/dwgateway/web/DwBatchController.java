@@ -12,6 +12,7 @@ import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
 import com.example.dwgateway.dw.DwBatchPort;
+import com.example.dwgateway.web.dto.DwBatchResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

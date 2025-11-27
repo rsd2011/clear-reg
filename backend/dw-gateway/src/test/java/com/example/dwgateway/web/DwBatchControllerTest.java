@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import com.example.dw.domain.HrBatchStatus;
 import com.example.dw.dto.DataFeedType;
 import com.example.dwgateway.dw.DwBatchPort;
+import com.example.dwgateway.web.dto.DwBatchResponse;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DwBatchController 테스트")

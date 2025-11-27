@@ -1,4 +1,7 @@
-package com.example.server.notice;
+package com.example.server.notice.dto;
+
+import com.example.server.notice.NoticeAudience;
+import com.example.server.notice.NoticeSeverity;
 
 import java.time.OffsetDateTime;
 

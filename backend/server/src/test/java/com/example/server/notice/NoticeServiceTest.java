@@ -20,6 +20,12 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.data.domain.Sort;
 
+import com.example.server.notice.dto.NoticeAdminResponse;
+import com.example.server.notice.dto.NoticeArchiveRequest;
+import com.example.server.notice.dto.NoticeCreateRequest;
+import com.example.server.notice.dto.NoticePublishRequest;
+import com.example.server.notice.dto.NoticeUpdateRequest;
+
 class NoticeServiceTest {
 
     Clock clock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);

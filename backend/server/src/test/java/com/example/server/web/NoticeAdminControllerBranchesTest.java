@@ -23,8 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.admin.permission.RequirePermissionAspect;
 import com.example.auth.security.JwtTokenProvider;
-import com.example.server.notice.NoticeAdminResponse;
 import com.example.server.notice.NoticeService;
+import com.example.server.notice.dto.NoticeAdminResponse;
 
 import static org.mockito.Mockito.when;
 

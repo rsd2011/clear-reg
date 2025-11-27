@@ -22,7 +22,7 @@ import org.springframework.web.client.RestTemplate;
 import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
 import com.example.dwgateway.client.DwGatewayClientException;
-import com.example.file.FileUploadCommand;
+import com.example.file.dto.FileUploadCommand;
 import com.example.file.api.FileUploadRequest;
 import com.example.file.port.FileManagementPort;
 

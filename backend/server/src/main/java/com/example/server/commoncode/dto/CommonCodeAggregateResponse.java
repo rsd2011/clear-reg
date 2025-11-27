@@ -3,8 +3,6 @@ package com.example.server.commoncode.dto;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import com.example.server.commoncode.CommonCodeItem;
-
 public record CommonCodeAggregateResponse(String codeType,
                                           List<CommonCodeItemResponse> items) {
 

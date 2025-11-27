@@ -29,7 +29,7 @@ import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.dwgateway.client.DwGatewayClientException;
-import com.example.file.FileUploadCommand;
+import com.example.file.dto.FileUploadCommand;
 import com.example.file.port.FileManagementPort;
 
 class FileManagementPortClientTest {

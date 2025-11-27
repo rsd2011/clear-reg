@@ -1,4 +1,4 @@
-package com.example.server.web;
+package com.example.server.web.dto;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;

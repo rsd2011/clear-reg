@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
+import com.example.server.file.dto.FileMetadataResponse;
 
 @DisplayName("FileMetadataResponse 변환/마스킹")
 class FileMetadataResponseTest {

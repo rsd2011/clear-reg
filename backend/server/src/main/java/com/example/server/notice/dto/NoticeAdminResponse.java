@@ -1,4 +1,9 @@
-package com.example.server.notice;
+package com.example.server.notice.dto;
+
+import com.example.server.notice.Notice;
+import com.example.server.notice.NoticeAudience;
+import com.example.server.notice.NoticeSeverity;
+import com.example.server.notice.NoticeStatus;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

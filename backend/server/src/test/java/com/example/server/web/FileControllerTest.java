@@ -31,7 +31,7 @@ import com.example.common.file.FileDownload;
 import com.example.common.file.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.security.RowScope;
-import com.example.server.file.FileMetadataResponse;
+import com.example.server.file.dto.FileMetadataResponse;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.response.DraftAttachmentResponse;
 import com.example.draft.application.response.DraftApprovalStepResponse;

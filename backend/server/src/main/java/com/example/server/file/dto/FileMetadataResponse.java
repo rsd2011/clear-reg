@@ -1,4 +1,4 @@
-package com.example.server.file;
+package com.example.server.file.dto;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;

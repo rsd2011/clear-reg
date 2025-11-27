@@ -1,4 +1,4 @@
-package com.example.server.notice;
+package com.example.server.notice.dto;
 
 import java.time.OffsetDateTime;
 

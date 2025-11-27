@@ -1,4 +1,4 @@
-package com.example.file;
+package com.example.file.dto;
 
 import java.io.InputStream;
 import java.time.OffsetDateTime;

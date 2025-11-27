@@ -1,6 +1,7 @@
-package com.example.auth.jit;
+package com.example.auth.jit.dto;
 
 import com.example.auth.domain.UserAccount;
+import com.example.auth.jit.EmployeeRole;
 
 /**
  * JIT Provisioning 결과.

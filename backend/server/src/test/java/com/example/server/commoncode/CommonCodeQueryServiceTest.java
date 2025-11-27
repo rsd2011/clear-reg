@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwCommonCodeSnapshot;
+import com.example.server.commoncode.dto.CommonCodeItem;
 import com.example.server.commoncode.model.CommonCodeKind;
 import com.example.server.commoncode.model.SystemCommonCode;
 

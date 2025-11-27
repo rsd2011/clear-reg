@@ -1,6 +1,5 @@
 package com.example.server.commoncode.dto;
 
-import com.example.server.commoncode.CommonCodeItem;
 import com.example.server.commoncode.model.CommonCodeKind;
 import com.example.server.commoncode.model.CommonCodeSource;
 import java.util.function.UnaryOperator;

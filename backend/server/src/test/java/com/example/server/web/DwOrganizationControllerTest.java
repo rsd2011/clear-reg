@@ -28,6 +28,7 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.dwgateway.dw.DwOrganizationPort;
+import com.example.server.web.dto.DwOrganizationResponse;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DwOrganizationController 테스트")

@@ -8,6 +8,7 @@ dependencies {
 
     implementation project(':backend:platform')
     implementation project(':backend:audit')
+    implementation project(':backend:data-integration')
 
     // 부트 코어
     implementation libs.spring.boot.lib

@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.server.notice.dto.NoticeResponse;
+
 @DisplayName("NoticeResponse 변환/마스킹")
 class NoticeResponseTest {
 
