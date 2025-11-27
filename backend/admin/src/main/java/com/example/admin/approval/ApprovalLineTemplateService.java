@@ -1,9 +1,7 @@
 package com.example.admin.approval;
 
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -15,34 +13,30 @@ import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.TemplateCopyRequest;
 import com.example.admin.approval.dto.TemplateCopyResponse;
-import com.example.admin.approval.dto.TemplateHistoryResponse;
-import com.example.admin.approval.history.ApprovalLineTemplateHistory;
-import com.example.admin.approval.history.ApprovalLineTemplateHistoryRepository;
+import com.example.admin.approval.dto.VersionHistoryResponse;
+import com.example.admin.approval.version.ApprovalLineTemplateVersionService;
 import com.example.admin.permission.context.AuthContext;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 승인선 템플릿 관리 서비스 (v1 API용).
+ * <p>
+ * 모든 변경은 {@link ApprovalLineTemplateVersionService}를 통해 SCD Type 2 버전으로 기록됩니다.
+ * </p>
  */
 @Service
 @Transactional
-public class ApprovalLineTemplateAdminService {
+public class ApprovalLineTemplateService {
 
     private final ApprovalLineTemplateRepository templateRepository;
     private final ApprovalGroupRepository groupRepository;
-    private final ApprovalLineTemplateHistoryRepository historyRepository;
-    private final ObjectMapper objectMapper;
+    private final ApprovalLineTemplateVersionService versionService;
 
-    public ApprovalLineTemplateAdminService(ApprovalLineTemplateRepository templateRepository,
+    public ApprovalLineTemplateService(ApprovalLineTemplateRepository templateRepository,
                                             ApprovalGroupRepository groupRepository,
-                                            ApprovalLineTemplateHistoryRepository historyRepository,
-                                            ObjectMapper objectMapper) {
+                                            ApprovalLineTemplateVersionService versionService) {
         this.templateRepository = templateRepository;
         this.groupRepository = groupRepository;
-        this.historyRepository = historyRepository;
-        this.objectMapper = objectMapper;
+        this.versionService = versionService;
     }
 
     /**
@@ -85,15 +79,8 @@ public class ApprovalLineTemplateAdminService {
         addStepsToTemplate(template, request.steps());
         templateRepository.save(template);
 
-        // 이력 기록
-        String currentSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-        ApprovalLineTemplateHistory history = ApprovalLineTemplateHistory.createHistory(
-                template.getId(),
-                context.username(),
-                context.username(),
-                now,
-                currentSnapshot);
-        historyRepository.save(history);
+        // SCD Type 2 버전 생성
+        versionService.createInitialVersion(template, request, context, now);
 
         return ApprovalLineTemplateResponse.from(template);
     }
@@ -105,25 +92,12 @@ public class ApprovalLineTemplateAdminService {
         ApprovalLineTemplate template = findTemplateOrThrow(id);
         OffsetDateTime now = OffsetDateTime.now();
 
-        // 변경 전 상태 저장
-        String previousSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
         template.rename(request.name(), request.displayOrder(), request.description(), request.active(), now);
         template.getSteps().clear();
         addStepsToTemplate(template, request.steps());
 
-        // 변경 후 상태 저장
-        String currentSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
-        // 이력 기록
-        ApprovalLineTemplateHistory history = ApprovalLineTemplateHistory.updateHistory(
-                template.getId(),
-                context.username(),
-                context.username(),
-                now,
-                previousSnapshot,
-                currentSnapshot);
-        historyRepository.save(history);
+        // SCD Type 2 버전 생성
+        versionService.createUpdateVersion(template, request, context, now);
 
         return ApprovalLineTemplateResponse.from(template);
     }
@@ -135,23 +109,10 @@ public class ApprovalLineTemplateAdminService {
         ApprovalLineTemplate template = findTemplateOrThrow(id);
         OffsetDateTime now = OffsetDateTime.now();
 
-        // 변경 전 상태 저장
-        String previousSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
         template.rename(template.getName(), template.getDisplayOrder(), template.getDescription(), false, now);
 
-        // 변경 후 상태 저장
-        String currentSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
-        // 이력 기록
-        ApprovalLineTemplateHistory history = ApprovalLineTemplateHistory.deleteHistory(
-                template.getId(),
-                context.username(),
-                context.username(),
-                now,
-                previousSnapshot,
-                currentSnapshot);
-        historyRepository.save(history);
+        // SCD Type 2 버전 생성
+        versionService.createDeleteVersion(template, context, now);
     }
 
     /**
@@ -161,23 +122,10 @@ public class ApprovalLineTemplateAdminService {
         ApprovalLineTemplate template = findTemplateOrThrow(id);
         OffsetDateTime now = OffsetDateTime.now();
 
-        // 변경 전 상태 저장
-        String previousSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
         template.rename(template.getName(), template.getDisplayOrder(), template.getDescription(), true, now);
 
-        // 변경 후 상태 저장
-        String currentSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
-        // 이력 기록
-        ApprovalLineTemplateHistory history = ApprovalLineTemplateHistory.restoreHistory(
-                template.getId(),
-                context.username(),
-                context.username(),
-                now,
-                previousSnapshot,
-                currentSnapshot);
-        historyRepository.save(history);
+        // SCD Type 2 버전 생성
+        versionService.createRestoreVersion(template, context, now);
 
         return ApprovalLineTemplateResponse.from(template);
     }
@@ -203,31 +151,18 @@ public class ApprovalLineTemplateAdminService {
 
         templateRepository.save(copied);
 
-        // 이력 기록 (복사된 템플릿에 대한 이력)
-        String currentSnapshot = toJson(ApprovalLineTemplateResponse.from(copied));
-        ApprovalLineTemplateHistory history = ApprovalLineTemplateHistory.copyHistory(
-                copied.getId(),
-                context.username(),
-                context.username(),
-                now,
-                currentSnapshot,
-                sourceId);
-        historyRepository.save(history);
+        // SCD Type 2 버전 생성
+        versionService.createCopyVersion(copied, source, request.name(), request.description(), context, now);
 
         return TemplateCopyResponse.from(copied, source);
     }
 
     /**
-     * 변경 이력 조회.
+     * 변경 이력 조회 (SCD Type 2 버전 이력).
      */
     @Transactional(readOnly = true)
-    public List<TemplateHistoryResponse> getHistory(UUID templateId) {
-        // 템플릿 존재 여부 확인
-        findTemplateOrThrow(templateId);
-
-        return historyRepository.findByTemplateIdOrderByChangedAtDesc(templateId).stream()
-                .map(this::toHistoryResponse)
-                .toList();
+    public List<VersionHistoryResponse> getHistory(UUID templateId) {
+        return versionService.getVersionHistory(templateId);
     }
 
     /**
@@ -240,23 +175,22 @@ public class ApprovalLineTemplateAdminService {
                 .map(item -> {
                     ApprovalLineTemplate template = findTemplateOrThrow(item.id());
 
-                    // 변경 전 상태 저장
-                    String previousSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
+                    int previousDisplayOrder = template.getDisplayOrder();
                     template.rename(template.getName(), item.displayOrder(), template.getDescription(), template.isActive(), now);
 
-                    // 변경 후 상태 저장
-                    String currentSnapshot = toJson(ApprovalLineTemplateResponse.from(template));
-
-                    // 이력 기록
-                    ApprovalLineTemplateHistory history = ApprovalLineTemplateHistory.updateHistory(
-                            template.getId(),
-                            context.username(),
-                            context.username(),
-                            now,
-                            previousSnapshot,
-                            currentSnapshot);
-                    historyRepository.save(history);
+                    // 순서가 변경된 경우에만 버전 생성
+                    if (previousDisplayOrder != item.displayOrder()) {
+                        ApprovalLineTemplateRequest versionRequest = new ApprovalLineTemplateRequest(
+                                template.getName(),
+                                template.getDisplayOrder(),
+                                template.getDescription(),
+                                template.isActive(),
+                                template.getSteps().stream()
+                                        .map(s -> new ApprovalTemplateStepRequest(s.getStepOrder(), s.getApprovalGroup().getGroupCode()))
+                                        .toList()
+                        );
+                        versionService.createUpdateVersion(template, versionRequest, context, now);
+                    }
 
                     return ApprovalLineTemplateResponse.from(template);
                 })
@@ -292,68 +226,5 @@ public class ApprovalLineTemplateAdminService {
             return false;
         }
         return target.toLowerCase().contains(keyword);
-    }
-
-    private String toJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 직렬화 실패", e);
-        }
-    }
-
-    private TemplateHistoryResponse toHistoryResponse(ApprovalLineTemplateHistory history) {
-        Map<String, Object> changes = null;
-
-        if (history.getPreviousSnapshot() != null || history.getCurrentSnapshot() != null) {
-            changes = computeChanges(history.getPreviousSnapshot(), history.getCurrentSnapshot());
-        }
-
-        return new TemplateHistoryResponse(
-                history.getId(),
-                history.getAction().name(),
-                history.getChangedBy(),
-                history.getChangedByName(),
-                history.getChangedAt(),
-                changes);
-    }
-
-    private Map<String, Object> computeChanges(String previousJson, String currentJson) {
-        try {
-            Map<String, Object> result = new HashMap<>();
-            Map<String, Object> previous = previousJson != null
-                    ? objectMapper.readValue(previousJson, new TypeReference<>() {})
-                    : new HashMap<>();
-            Map<String, Object> current = currentJson != null
-                    ? objectMapper.readValue(currentJson, new TypeReference<>() {})
-                    : new HashMap<>();
-
-            // 변경된 필드만 추출
-            for (String key : current.keySet()) {
-                Object prevValue = previous.get(key);
-                Object currValue = current.get(key);
-
-                if (!objectsEqual(prevValue, currValue)) {
-                    Map<String, Object> change = new HashMap<>();
-                    change.put("before", prevValue);
-                    change.put("after", currValue);
-                    result.put(key, change);
-                }
-            }
-
-            return result.isEmpty() ? null : result;
-        } catch (JsonProcessingException e) {
-            return null;
-        }
-    }
-
-    private boolean objectsEqual(Object a, Object b) {
-        if (a == null && b == null) {
-            return true;
-        }
-        if (a == null || b == null) {
-            return false;
-        }
-        return a.equals(b);
     }
 }

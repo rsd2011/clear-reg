@@ -12,6 +12,9 @@ dependencies {
     implementation libs.spring.data.commons
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.jackson.databind
+
+    // Object diff (버전 비교용)
+    api libs.javers.core
     implementation libs.ulid.creator
     implementation libs.koroman
     implementation libs.poi.ooxml
