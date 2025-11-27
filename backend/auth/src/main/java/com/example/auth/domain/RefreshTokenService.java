@@ -35,8 +35,17 @@ public class RefreshTokenService {
 
   @Transactional
   public IssuedRefreshToken issue(UserAccount userAccount) {
+    return issue(userAccount, false);
+  }
+
+  @Transactional
+  public IssuedRefreshToken issue(UserAccount userAccount, boolean rememberMe) {
     String rawToken = generateTokenValue();
-    Instant expiresAt = Instant.now().plusSeconds(properties.getRefreshTokenSeconds());
+    long lifetimeSeconds =
+        rememberMe
+            ? properties.getRememberMeRefreshTokenSeconds()
+            : properties.getDefaultRefreshTokenSeconds();
+    Instant expiresAt = Instant.now().plusSeconds(lifetimeSeconds);
     RefreshToken refreshToken = new RefreshToken(hash(rawToken), expiresAt, userAccount);
     repository.save(refreshToken);
     enforceSessionLimit(userAccount);

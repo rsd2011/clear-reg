@@ -15,6 +15,7 @@ import com.example.auth.dto.LoginResponse;
 import com.example.auth.dto.PasswordChangeRequest;
 import com.example.auth.dto.TokenResponse;
 import com.example.auth.security.AccountStatusPolicy;
+import com.example.auth.security.InMemoryTokenBlacklistService;
 import com.example.auth.security.JwtProperties;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.auth.security.PasswordPolicyValidator;
@@ -55,7 +56,7 @@ class AuthServiceTests {
     properties.setSecret("test-secret-test-secret-test-secret");
     properties.setAccessTokenSeconds(3600);
     properties.setRefreshTokenSeconds(7200);
-    JwtTokenProvider provider = new JwtTokenProvider(properties);
+    JwtTokenProvider provider = new JwtTokenProvider(properties, new InMemoryTokenBlacklistService());
     AuthenticationStrategyResolver resolver =
         new AuthenticationStrategyResolver(List.of(new StubStrategy()));
     this.authService =
@@ -152,7 +153,7 @@ class AuthServiceTests {
     properties.setSecret("test-secret-test-secret-test-secret");
     properties.setAccessTokenSeconds(3600);
     properties.setRefreshTokenSeconds(7200);
-    JwtTokenProvider provider = new JwtTokenProvider(properties);
+    JwtTokenProvider provider = new JwtTokenProvider(properties, new InMemoryTokenBlacklistService());
 
     AuthenticationStrategy ssoStrategy =
         new AuthenticationStrategy() {
@@ -231,7 +232,7 @@ class AuthServiceTests {
     properties.setSecret("test-secret-test-secret-test-secret");
     properties.setAccessTokenSeconds(3600);
     properties.setRefreshTokenSeconds(7200);
-    JwtTokenProvider provider = new JwtTokenProvider(properties);
+    JwtTokenProvider provider = new JwtTokenProvider(properties, new InMemoryTokenBlacklistService());
     AuthService adAuthService =
         new AuthService(
             resolver,
@@ -284,7 +285,7 @@ class AuthServiceTests {
     properties.setSecret("test-secret-test-secret-test-secret");
     properties.setAccessTokenSeconds(3600);
     properties.setRefreshTokenSeconds(7200);
-    JwtTokenProvider provider = new JwtTokenProvider(properties);
+    JwtTokenProvider provider = new JwtTokenProvider(properties, new InMemoryTokenBlacklistService());
     AuthService adAuthService =
         new AuthService(
             resolver,
