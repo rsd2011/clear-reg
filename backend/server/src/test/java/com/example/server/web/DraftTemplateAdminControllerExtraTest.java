@@ -2,8 +2,6 @@ package com.example.server.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -22,10 +20,7 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.TemplateAdminService;
-import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 
@@ -44,7 +39,7 @@ class DraftTemplateAdminControllerExtraTest {
     void throwsWhenContextMissing() {
         AuthContextHolder.clear();
 
-        assertThatThrownBy(() -> controller.listGroups(null))
+        assertThatThrownBy(() -> controller.listApprovalLineTemplates(null, null, true))
                 .isInstanceOf(PermissionDeniedException.class);
     }
 
@@ -66,7 +61,7 @@ class DraftTemplateAdminControllerExtraTest {
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
                 List.of());
-        when(service.createApprovalLineTemplate(eq(request), eq(ctx), anyBoolean())).thenReturn(response);
+        when(service.createApprovalLineTemplate(eq(request), eq(ctx), eq(true))).thenReturn(response);
 
         ApprovalLineTemplateResponse result = controller.createApprovalLineTemplate(request);
 
@@ -86,22 +81,6 @@ class DraftTemplateAdminControllerExtraTest {
         List<DraftFormTemplateResponse> result = controller.listDraftFormTemplates("BT", "ORG", false);
 
         assertThat(result).containsExactly(resp);
-    }
-
-    @Test
-    @DisplayName("승인 그룹 생성 시 컨텍스트와 true 플래그가 전달된다")
-    void createGroupUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
-        AuthContextHolder.set(ctx);
-
-        ApprovalGroupRequest request = new ApprovalGroupRequest("GC", "이름", "설명", "ORG", null);
-        ApprovalGroupResponse response = mock(ApprovalGroupResponse.class);
-        when(service.createApprovalGroup(eq(request), eq(ctx), eq(true))).thenReturn(response);
-
-        ApprovalGroupResponse result = controller.createGroup(request);
-
-        assertThat(result).isEqualTo(response);
-        verify(service).createApprovalGroup(eq(request), eq(ctx), eq(true));
     }
 
     @Test

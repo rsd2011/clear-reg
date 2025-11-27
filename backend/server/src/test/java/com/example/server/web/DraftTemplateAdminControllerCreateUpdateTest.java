@@ -15,11 +15,9 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.TemplateAdminService;
-import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.draft.domain.TemplateScope;
@@ -30,20 +28,6 @@ class DraftTemplateAdminControllerCreateUpdateTest {
     private final TemplateAdminService service = mock(TemplateAdminService.class);
     private final AuthContext context = mock(AuthContext.class);
     private final DraftTemplateAdminController controller = new DraftTemplateAdminController(service);
-
-    @Test
-    @DisplayName("승인 그룹 생성 시 AuthContext와 감사 플래그를 전달한다")
-    void createGroupUsesContext() {
-        AuthContextHolder.set(context);
-        ApprovalGroupRequest request = new ApprovalGroupRequest("GRP", "이름", null, "ORG", "expr");
-        ApprovalGroupResponse response = new ApprovalGroupResponse(UUID.randomUUID(), "GRP", "이름", null, "ORG", "expr", OffsetDateTime.now(), OffsetDateTime.now());
-        given(service.createApprovalGroup(eq(request), eq(context), eq(true))).willReturn(response);
-
-        ApprovalGroupResponse result = controller.createGroup(request);
-
-        assertThat(result).isEqualTo(response);
-        verify(service).createApprovalGroup(eq(request), eq(context), eq(true));
-    }
 
     @Test
     @DisplayName("승인선 템플릿 업데이트 시 AuthContext와 감사 플래그를 전달한다")

@@ -16,16 +16,14 @@ import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceFilterTest {
 
-    ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
     ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-    TemplateAdminService service = new TemplateAdminService(groupRepo, lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
+    TemplateAdminService service = new TemplateAdminService(lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
     AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
     @Test

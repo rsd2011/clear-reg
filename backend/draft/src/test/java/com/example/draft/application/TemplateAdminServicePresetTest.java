@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
@@ -47,7 +46,6 @@ class TemplateAdminServicePresetTest {
         formTemplateRepository = mock(DraftFormTemplateRepository.class);
         approvalTemplateRepository = mock(ApprovalLineTemplateRepository.class);
         service = new TemplateAdminService(
-                mock(ApprovalGroupRepository.class),
                 approvalTemplateRepository,
                 formTemplateRepository,
                 presetRepository,

@@ -30,37 +30,44 @@ class ApprovalAdminControllerTest {
     }
 
     @Test
-    @DisplayName("businessType/organization 필터가 적용된다")
-    void filtersTemplatesAndGroups() {
+    @DisplayName("businessType 필터가 적용된다")
+    void filtersTemplates() {
         ApprovalLineTemplate orgTpl = ApprovalLineTemplate.create("org", "HR", "ORG1", OffsetDateTime.now());
         ApprovalLineTemplate other = ApprovalLineTemplate.create("other", "IT", "ORG2", OffsetDateTime.now());
         org.mockito.BDDMockito.given(lineRepo.findAll()).willReturn(List.of(orgTpl, other));
 
-        ApprovalGroup grp1 = ApprovalGroup.create("G1", "g1", "d", "ORG1", null, OffsetDateTime.now());
-        ApprovalGroup grp2 = ApprovalGroup.create("G2", "g2", "d", "ORG2", null, OffsetDateTime.now());
-        org.mockito.BDDMockito.given(groupRepo.findAll()).willReturn(List.of(grp1, grp2));
-
         RowScopeContextHolder.set(new RowScopeContext("ORG1", List.of("ORG1")));
 
         var templates = controller.listApprovalTemplates("HR");
-        var groups = controller.listGroups("ORG1");
 
         assertThat(templates).hasSize(1);
         assertThat(templates.getFirst().organizationCode()).isEqualTo("ORG1");
-        assertThat(groups).extracting(ApprovalAdminController.ApprovalGroupSummary::organizationCode)
-                .containsExactly("ORG1");
     }
 
     @Test
-    @DisplayName("RowScope.ALL이면 모든 조직을 반환한다")
-    void allowsAllWhenAllScope() {
-        ApprovalGroup grp1 = ApprovalGroup.create("G1", "g1", "d", "ORG1", null, OffsetDateTime.now());
-        org.mockito.BDDMockito.given(groupRepo.findAll()).willReturn(List.of(grp1));
-        RowScopeContextHolder.set(new RowScopeContext(null, List.of()));
+    @DisplayName("activeOnly 필터가 적용된다")
+    void filtersActiveGroups() {
+        ApprovalGroup grp1 = ApprovalGroup.create("G1", "g1", "d", 0, OffsetDateTime.now());
+        ApprovalGroup grp2 = ApprovalGroup.create("G2", "g2", "d", 1, OffsetDateTime.now());
+        grp2.deactivate(OffsetDateTime.now());
+        org.mockito.BDDMockito.given(groupRepo.findAll()).willReturn(List.of(grp1, grp2));
 
-        var groups = controller.listGroups(null);
+        var groups = controller.listGroups(true);
 
         assertThat(groups).hasSize(1);
-        assertThat(groups.getFirst().organizationCode()).isEqualTo("ORG1");
+        assertThat(groups.getFirst().groupCode()).isEqualTo("G1");
+    }
+
+    @Test
+    @DisplayName("activeOnly=false이면 모든 그룹을 반환한다")
+    void allowsAllWhenActiveOnlyFalse() {
+        ApprovalGroup grp1 = ApprovalGroup.create("G1", "g1", "d", 0, OffsetDateTime.now());
+        ApprovalGroup grp2 = ApprovalGroup.create("G2", "g2", "d", 1, OffsetDateTime.now());
+        grp2.deactivate(OffsetDateTime.now());
+        org.mockito.BDDMockito.given(groupRepo.findAll()).willReturn(List.of(grp1, grp2));
+
+        var groups = controller.listGroups(false);
+
+        assertThat(groups).hasSize(2);
     }
 }

@@ -20,7 +20,6 @@ import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.admin.approval.ApprovalTemplateStep;
-import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
@@ -31,7 +30,7 @@ class TemplateAdminServiceUpdateLineTemplateTest {
     void updateLineTemplateReplacesSteps() {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
-                mock(ApprovalGroupRepository.class),
+                
                 lineRepo,
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 

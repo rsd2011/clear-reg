@@ -14,7 +14,6 @@ import com.example.common.security.RowScope;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
@@ -25,7 +24,6 @@ class TemplateAdminServiceCreateLineTemplateAuditTest {
     void createLineTemplateGlobalWhenAudit() {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
-                mock(ApprovalGroupRepository.class),
                 lineRepo,
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 

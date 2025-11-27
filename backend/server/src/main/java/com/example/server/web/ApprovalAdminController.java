@@ -50,14 +50,11 @@ public class ApprovalAdminController {
 
     @GetMapping("/groups")
     @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_ADMIN)
-    public List<ApprovalGroupSummary> listGroups(@RequestParam(required = false) String organizationCode) {
+    public List<ApprovalGroupSummary> listGroups(@RequestParam(defaultValue = "true") boolean activeOnly) {
         var match = DataPolicyContextHolder.get();
         var masker = MaskingFunctions.masker(match);
-        RowScope scope = effectiveScope(match);
-        var orgs = allowedOrganizations(scope);
         return approvalGroupRepository.findAll().stream()
-                .filter(g -> organizationCode == null || g.getOrganizationCode().equalsIgnoreCase(organizationCode))
-                .filter(g -> filterOrg(scope, orgs, g.getOrganizationCode()))
+                .filter(g -> !activeOnly || g.isActive())
                 .map(g -> ApprovalGroupSummary.from(g, masker))
                 .toList();
     }
@@ -106,15 +103,15 @@ public class ApprovalAdminController {
     public record ApprovalGroupSummary(java.util.UUID id,
                                        String groupCode,
                                        String name,
-                                       String organizationCode,
+                                       Integer priority,
                                        boolean active) {
         public static ApprovalGroupSummary from(ApprovalGroup group, java.util.function.UnaryOperator<String> masker) {
             java.util.function.UnaryOperator<String> fn = masker == null ? java.util.function.UnaryOperator.identity() : masker;
             return new ApprovalGroupSummary(group.getId(),
                     fn.apply(group.getGroupCode()),
                     fn.apply(group.getName()),
-                    group.getOrganizationCode(),
-                    true);
+                    group.getPriority(),
+                    group.isActive());
         }
     }
 }

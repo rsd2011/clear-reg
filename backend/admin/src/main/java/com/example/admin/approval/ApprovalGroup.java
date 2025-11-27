@@ -34,6 +34,9 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     @Column(name = "priority", nullable = false)
     private Integer priority = 0;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
@@ -73,5 +76,19 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     public void updatePriority(Integer priority, OffsetDateTime now) {
         this.priority = priority;
         this.updatedAt = now;
+    }
+
+    public void deactivate(OffsetDateTime now) {
+        this.active = false;
+        this.updatedAt = now;
+    }
+
+    public void activate(OffsetDateTime now) {
+        this.active = true;
+        this.updatedAt = now;
+    }
+
+    public boolean isActive() {
+        return this.active;
     }
 }

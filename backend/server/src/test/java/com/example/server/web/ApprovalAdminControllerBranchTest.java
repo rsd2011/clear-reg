@@ -60,18 +60,30 @@ class ApprovalAdminControllerBranchTest {
     }
 
     @Test
-    @DisplayName("RowScope.OWN이면 organizationCode가 null인 그룹은 제외된다")
-    void listApprovalGroups_ownScope() {
-        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.OWN.name()).build());
-        RowScopeContextHolder.set(new RowScopeContext("ORG1", List.of()));
-        ApprovalGroup g1 = ApprovalGroup.create("G1", "name", "desc", "ORG1", null, OffsetDateTime.now());
-        ApprovalGroup gNull = ApprovalGroup.create("G2", "name", "desc", null, null, OffsetDateTime.now());
-        given(groupRepo.findAll()).willReturn(List.of(g1, gNull));
+    @DisplayName("activeOnly=true이면 비활성 그룹은 제외된다")
+    void listApprovalGroups_activeOnly() {
+        ApprovalGroup g1 = ApprovalGroup.create("G1", "name", "desc", 0, OffsetDateTime.now());
+        ApprovalGroup g2 = ApprovalGroup.create("G2", "name2", "desc2", 1, OffsetDateTime.now());
+        g2.deactivate(OffsetDateTime.now());
+        given(groupRepo.findAll()).willReturn(List.of(g1, g2));
 
-        var result = controller.listGroups(null);
+        var result = controller.listGroups(true);
 
-        assertThat(result).extracting(ApprovalAdminController.ApprovalGroupSummary::organizationCode)
-                .containsExactly("ORG1");
+        assertThat(result).extracting(ApprovalAdminController.ApprovalGroupSummary::groupCode)
+                .containsExactly("G1");
+    }
+
+    @Test
+    @DisplayName("activeOnly=false이면 모든 그룹을 반환한다")
+    void listApprovalGroups_allGroups() {
+        ApprovalGroup g1 = ApprovalGroup.create("G1", "name", "desc", 0, OffsetDateTime.now());
+        ApprovalGroup g2 = ApprovalGroup.create("G2", "name2", "desc2", 1, OffsetDateTime.now());
+        g2.deactivate(OffsetDateTime.now());
+        given(groupRepo.findAll()).willReturn(List.of(g1, g2));
+
+        var result = controller.listGroups(false);
+
+        assertThat(result).hasSize(2);
     }
 }
 

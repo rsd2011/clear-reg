@@ -9,13 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.admin.approval.ApprovalGroup;
-import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.admin.approval.ApprovalTemplateStep;
-import com.example.admin.approval.dto.ApprovalGroupRequest;
-import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
@@ -36,51 +32,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Transactional
 public class TemplateAdminService {
 
-    private final ApprovalGroupRepository approvalGroupRepository;
     private final ApprovalLineTemplateRepository approvalLineTemplateRepository;
     private final DraftFormTemplateRepository draftFormTemplateRepository;
     private final DraftTemplatePresetRepository presetRepository;
     private final ObjectMapper objectMapper;
 
-    public TemplateAdminService(ApprovalGroupRepository approvalGroupRepository,
-                                ApprovalLineTemplateRepository approvalLineTemplateRepository,
+    public TemplateAdminService(ApprovalLineTemplateRepository approvalLineTemplateRepository,
                                 DraftFormTemplateRepository draftFormTemplateRepository,
                                 DraftTemplatePresetRepository presetRepository,
                                 ObjectMapper objectMapper) {
-        this.approvalGroupRepository = approvalGroupRepository;
         this.approvalLineTemplateRepository = approvalLineTemplateRepository;
         this.draftFormTemplateRepository = draftFormTemplateRepository;
         this.presetRepository = presetRepository;
         this.objectMapper = objectMapper;
-    }
-
-    public ApprovalGroupResponse createApprovalGroup(ApprovalGroupRequest request, AuthContext context, boolean audit) {
-        OffsetDateTime now = OffsetDateTime.now();
-        ApprovalGroup group = ApprovalGroup.create(
-                request.groupCode(),
-                request.name(),
-                request.description(),
-                request.priority(),
-                now);
-        return ApprovalGroupResponse.from(approvalGroupRepository.save(group));
-    }
-
-    public ApprovalGroupResponse updateApprovalGroup(UUID id, ApprovalGroupRequest request, AuthContext context, boolean audit) {
-        ApprovalGroup group = approvalGroupRepository.findById(id)
-                .orElseThrow(() -> new DraftTemplateNotFoundException("결재 그룹을 찾을 수 없습니다."));
-        OffsetDateTime now = OffsetDateTime.now();
-        group.rename(request.name(), request.description(), now);
-        if (request.priority() != null) {
-            group.updatePriority(request.priority(), now);
-        }
-        return ApprovalGroupResponse.from(group);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ApprovalGroupResponse> listApprovalGroups(String organizationCode, AuthContext context, boolean audit) {
-        return approvalGroupRepository.findAll().stream()
-                .map(ApprovalGroupResponse::from)
-                .toList();
     }
 
     public ApprovalLineTemplateResponse createApprovalLineTemplate(ApprovalLineTemplateRequest request,
@@ -308,14 +272,6 @@ public class TemplateAdminService {
         if (!template.getBusinessType().equalsIgnoreCase(businessFeatureCode)) {
             throw new IllegalArgumentException("비즈니스 유형에 맞지 않는 결재선 템플릿입니다.");
         }
-    }
-
-    private String ensureOrganization(String organizationCode, AuthContext context, boolean audit) {
-        if (organizationCode == null || organizationCode.isBlank()) {
-            throw new IllegalArgumentException("organizationCode는 필수입니다.");
-        }
-        ensureOrganizationAccess(organizationCode, context, audit);
-        return organizationCode;
     }
 
     private String ensureOrganizationNullable(String organizationCode, AuthContext context, boolean audit) {

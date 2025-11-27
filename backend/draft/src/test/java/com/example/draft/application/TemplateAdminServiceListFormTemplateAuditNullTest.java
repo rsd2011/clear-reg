@@ -14,7 +14,6 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
@@ -25,7 +24,6 @@ class TemplateAdminServiceListFormTemplateAuditNullTest {
     void returnsAllFormTemplatesWhenAuditAndNoFilters() {
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
-                mock(ApprovalGroupRepository.class),
                 mock(ApprovalLineTemplateRepository.class),
                 formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
