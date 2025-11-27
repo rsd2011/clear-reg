@@ -53,7 +53,7 @@ public class ApprovalLineTemplateController {
     }
 
     @GetMapping
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 목록 조회")
     public List<ApprovalLineTemplateResponse> listTemplates(
             @RequestParam(required = false) String keyword,
@@ -65,7 +65,7 @@ public class ApprovalLineTemplateController {
     }
 
     @GetMapping("/{id}")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 단일 조회")
     public ApprovalLineTemplateResponse getTemplate(@PathVariable UUID id) {
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
@@ -74,7 +74,7 @@ public class ApprovalLineTemplateController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.CREATE)
     @Operation(summary = "승인선 템플릿 생성")
     public ApprovalLineTemplateResponse createTemplate(@Valid @RequestBody ApprovalLineTemplateRequest request) {
         AuthContext context = currentContext();
@@ -83,7 +83,7 @@ public class ApprovalLineTemplateController {
     }
 
     @PutMapping("/{id}")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인선 템플릿 수정")
     public ApprovalLineTemplateResponse updateTemplate(@PathVariable UUID id,
                                                        @Valid @RequestBody ApprovalLineTemplateRequest request) {
@@ -94,7 +94,7 @@ public class ApprovalLineTemplateController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.DELETE)
     @Operation(summary = "승인선 템플릿 삭제 (비활성화)")
     public void deleteTemplate(@PathVariable UUID id) {
         AuthContext context = currentContext();
@@ -102,7 +102,7 @@ public class ApprovalLineTemplateController {
     }
 
     @PostMapping("/{id}/activate")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인선 템플릿 활성화 (복원)")
     public ApprovalLineTemplateResponse activateTemplate(@PathVariable UUID id) {
         AuthContext context = currentContext();
@@ -112,7 +112,7 @@ public class ApprovalLineTemplateController {
 
     @PostMapping("/{id}/copy")
     @ResponseStatus(HttpStatus.CREATED)
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.CREATE)
     @Operation(summary = "승인선 템플릿 복사")
     public TemplateCopyResponse copyTemplate(@PathVariable UUID id,
                                              @Valid @RequestBody TemplateCopyRequest request) {
@@ -122,7 +122,7 @@ public class ApprovalLineTemplateController {
     }
 
     @GetMapping("/{id}/history")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 변경 이력 조회")
     public List<TemplateHistoryResponse> getTemplateHistory(@PathVariable UUID id) {
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
@@ -132,7 +132,7 @@ public class ApprovalLineTemplateController {
     }
 
     @PatchMapping("/display-orders")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_TEMPLATE_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인선 템플릿 표시순서 일괄 변경")
     public List<ApprovalLineTemplateResponse> updateDisplayOrders(@Valid @RequestBody DisplayOrderUpdateRequest request) {
         AuthContext context = currentContext();

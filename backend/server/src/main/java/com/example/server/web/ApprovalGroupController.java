@@ -51,7 +51,7 @@ public class ApprovalGroupController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.CREATE)
     @Operation(summary = "승인그룹 등록")
     public ApprovalGroupResponse createGroup(@Valid @RequestBody ApprovalGroupRequest request) {
         AuthContext context = currentContext();
@@ -60,7 +60,7 @@ public class ApprovalGroupController {
     }
 
     @GetMapping("/{id}")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인그룹 상세 조회")
     public ApprovalGroupResponse getGroup(@PathVariable UUID id) {
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
@@ -68,7 +68,7 @@ public class ApprovalGroupController {
     }
 
     @PutMapping("/{id}")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인그룹 수정")
     public ApprovalGroupResponse updateGroup(@PathVariable UUID id,
                                              @Valid @RequestBody ApprovalGroupUpdateRequest request) {
@@ -79,7 +79,7 @@ public class ApprovalGroupController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.DELETE)
     @Operation(summary = "승인그룹 삭제 (비활성화)")
     public void deleteGroup(@PathVariable UUID id) {
         AuthContext context = currentContext();
@@ -87,7 +87,7 @@ public class ApprovalGroupController {
     }
 
     @PostMapping("/{id}/activate")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인그룹 활성화 (복원)")
     public ApprovalGroupResponse activateGroup(@PathVariable UUID id) {
         AuthContext context = currentContext();
@@ -96,7 +96,7 @@ public class ApprovalGroupController {
     }
 
     @GetMapping
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인그룹 목록 조회")
     public List<ApprovalGroupResponse> listGroups(
             @RequestParam(required = false) String keyword,
@@ -109,14 +109,14 @@ public class ApprovalGroupController {
     }
 
     @GetMapping("/exists")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인그룹 코드 중복 검사")
     public GroupCodeExistsResponse checkGroupCodeExists(@RequestParam String groupCode) {
         return new GroupCodeExistsResponse(approvalGroupService.existsGroupCode(groupCode));
     }
 
     @PatchMapping("/display-orders")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인그룹 표시순서 일괄 업데이트")
     public List<ApprovalGroupResponse> updateGroupDisplayOrders(@Valid @RequestBody ApprovalGroupPriorityRequest request) {
         AuthContext context = currentContext();
@@ -127,7 +127,7 @@ public class ApprovalGroupController {
     }
 
     @GetMapping("/summary")
-    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인그룹 요약 목록 조회", description = "템플릿 매핑용 승인그룹 ID, 코드, 이름만 반환")
     public List<ApprovalGroupSummaryResponse> listGroupSummary(
             @RequestParam(defaultValue = "true") boolean activeOnly) {

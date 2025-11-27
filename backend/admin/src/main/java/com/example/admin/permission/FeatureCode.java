@@ -14,5 +14,6 @@ public enum FeatureCode {
   ALERT,
   COMMON_CODE,
   DRAFT,
-  APPROVAL;
+  APPROVAL,
+  APPROVAL_MANAGE;
 }
