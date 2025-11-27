@@ -73,4 +73,19 @@ class ExportExecutionHelperTest {
         String csv = new String(captor.getAllValues().getLast().get(), StandardCharsets.UTF_8);
         assertThat(csv).doesNotContain("900101-1234567");
     }
+
+    @Test
+    @DisplayName("JSON export에서 maskRule이 null이면 기본 PARTIAL 마스킹을 적용한다")
+    void jsonExportNullMaskRule() {
+        ExportCommand cmd = new ExportCommand("json", "masked.json", 1, Map.of(), null, null, null, null);
+        MaskingTarget target = MaskingTarget.builder().dataKind("rrn").build();
+        List<Map<String, Object>> rows = List.of(Map.of("rrn", "900101-1234567"));
+
+        helper.exportJson(cmd, rows, target, null, null);
+
+        ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
+        verify(exportService).export(any(), captor.capture());
+        String json = new String(captor.getAllValues().getLast().get(), StandardCharsets.UTF_8);
+        assertThat(json).doesNotContain("900101-1234567");
+    }
 }

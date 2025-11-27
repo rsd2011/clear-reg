@@ -35,4 +35,38 @@ class LdapActiveDirectoryClientTest {
     assertThat(client.authenticate("user", "ad-password")).isTrue();
     assertThat(client.authenticate("user", "nope")).isFalse();
   }
+
+  @Test
+  @DisplayName("Given LDAP에서 예외 발생 When authenticate Then false 반환")
+  void givenExceptionWhenAuthenticateThenReturnFalse() {
+    given(ldapTemplate.authenticate(anyString(), anyString(), anyString()))
+            .willThrow(new RuntimeException("LDAP connection error"));
+    LdapActiveDirectoryClient client = new LdapActiveDirectoryClient(Optional.of(ldapTemplate));
+
+    assertThat(client.authenticate("user", "pw")).isFalse();
+  }
+
+  @Test
+  @DisplayName("Given 폴백모드에서 null username When authenticate Then false 반환")
+  void givenNullUsernameInFallbackThenReturnFalse() {
+    LdapActiveDirectoryClient client = new LdapActiveDirectoryClient(Optional.empty());
+
+    assertThat(client.authenticate(null, "ad-password")).isFalse();
+  }
+
+  @Test
+  @DisplayName("Given 폴백모드에서 null password When authenticate Then false 반환")
+  void givenNullPasswordInFallbackThenReturnFalse() {
+    LdapActiveDirectoryClient client = new LdapActiveDirectoryClient(Optional.empty());
+
+    assertThat(client.authenticate("user", null)).isFalse();
+  }
+
+  @Test
+  @DisplayName("getDomain default 메서드는 DEFAULT를 반환한다")
+  void getDomain_returnsDefault() {
+    ActiveDirectoryClient client = new LdapActiveDirectoryClient(Optional.empty());
+
+    assertThat(client.getDomain()).isEqualTo("DEFAULT");
+  }
 }

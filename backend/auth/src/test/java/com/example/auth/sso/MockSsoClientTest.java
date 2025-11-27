@@ -24,4 +24,18 @@ class MockSsoClientTest {
     assertThatThrownBy(() -> client.resolveUsername("invalid"))
         .isInstanceOf(InvalidCredentialsException.class);
   }
+
+  @Test
+  @DisplayName("Given null 토큰 When resolve 호출 Then InvalidCredentialsException을 던진다")
+  void givenNullTokenWhenResolveThenThrow() {
+    assertThatThrownBy(() -> client.resolveUsername(null))
+        .isInstanceOf(InvalidCredentialsException.class);
+  }
+
+  @Test
+  @DisplayName("resolveSsoId default 메서드는 토큰 자체를 반환한다")
+  void resolveSsoId_returnsTokenAsIs() {
+    SsoClient ssoClient = client;
+    assertThat(ssoClient.resolveSsoId("any-token")).isEqualTo("any-token");
+  }
 }

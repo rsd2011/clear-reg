@@ -57,4 +57,42 @@ class ExportServiceTest {
         verify(notifier).notify(failureCaptor.capture());
         assertThat(failureCaptor.getValue().getFileName()).isEqualTo("fail.xlsx");
     }
+
+    @Test
+    @DisplayName("meta가 null이면 빈 맵으로 처리한다")
+    void exportWithNullMeta() {
+        ExportCommand cmd = new ExportCommand("csv", "test.csv", 5, null, null, null, null, null);
+
+        String result = exportService.export(cmd, () -> "done");
+
+        assertThat(result).isEqualTo("done");
+        ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
+        assertThat(captor.getValue().getExtra()).containsKey("fileName");
+    }
+
+    @Test
+    @DisplayName("meta에 이미 fileName이 있으면 덮어쓰지 않는다")
+    void exportWithExistingFileNameInMeta() {
+        ExportCommand cmd = new ExportCommand("csv", "actual.csv", 5, Map.of("fileName", "original.csv"), null, null, null, null);
+
+        exportService.export(cmd, () -> "ok");
+
+        ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
+        assertThat(captor.getValue().getExtra().get("fileName")).isEqualTo("original.csv");
+    }
+
+    @Test
+    @DisplayName("fileName이 null이면 meta에 추가하지 않는다")
+    void exportWithNullFileName() {
+        ExportCommand cmd = new ExportCommand("csv", null, 5, Map.of("key", "value"), null, null, null, null);
+
+        exportService.export(cmd, () -> "ok");
+
+        ArgumentCaptor<AuditEvent> captor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditPort).record(captor.capture(), Mockito.eq(AuditMode.ASYNC_FALLBACK));
+        assertThat(captor.getValue().getExtra()).containsKey("key");
+        assertThat(captor.getValue().getExtra()).doesNotContainKey("fileName");
+    }
 }

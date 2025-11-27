@@ -112,8 +112,38 @@ subprojects { subproject ->
                 rule {
                     element = 'PACKAGE'
                     enabled = true
-                    includes = ['com.example.service.*', 'com.example.domain.*']
-                    excludes = ['com.example.common.jpa.*', 'com.example.server.cache.*']
+                    includes = [
+                        // 핵심 비즈니스 로직 - 도메인 계층
+                        'com.example.admin.permission.*',
+                        'com.example.admin.approval.*',
+                        'com.example.admin.organization.*',
+                        'com.example.admin.masking.*',
+                        'com.example.approval.domain.*',
+                        'com.example.approval.application.*',
+                        'com.example.draft.domain.*',
+                        'com.example.draft.application.*',
+                        'com.example.auth.domain.*',
+                        'com.example.auth.security.*',
+                        'com.example.auth.strategy.*',
+                        'com.example.file.storage.*',
+                        'com.example.file.port.*',
+                        'com.example.dw.application.*',
+                        // 공통 핵심 로직
+                        'com.example.common.security.*',
+                        'com.example.common.policy.*',
+                        'com.example.common.masking.*'
+                    ]
+                    excludes = [
+                        // 인프라/설정 패키지
+                        '*.config.*',
+                        '*.dto.*',
+                        '*.infra.*',
+                        'com.example.common.jpa.*',
+                        'com.example.common.util.*',
+                        'com.example.common.cache.*',
+                        'com.example.server.cache.*',
+                        'com.example.audit.infra.*'
+                    ]
                     limit { counter = 'BRANCH'; value = 'COVEREDRATIO'; minimum = 0.80 }
                 }
             }
