@@ -1,4 +1,4 @@
-package com.example.draft.application.request;
+package com.example.draft.application.dto;
 
 import java.util.List;
 import java.util.Map;

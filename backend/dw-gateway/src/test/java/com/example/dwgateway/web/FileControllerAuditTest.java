@@ -19,7 +19,7 @@ import com.example.audit.AuditEvent;
 import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.file.port.FileManagementPort;
 
 class FileControllerAuditTest {

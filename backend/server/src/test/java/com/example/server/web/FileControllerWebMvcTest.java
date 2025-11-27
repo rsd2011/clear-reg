@@ -25,7 +25,7 @@ import com.example.admin.permission.RequirePermissionAspect;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.server.security.JwtAuthenticationFilter;
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.file.port.FileManagementPort;
 import com.example.server.file.dto.FileMetadataResponse;

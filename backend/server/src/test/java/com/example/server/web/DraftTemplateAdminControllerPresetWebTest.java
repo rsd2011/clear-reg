@@ -12,8 +12,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.draft.application.TemplateAdminService;
-import com.example.draft.application.request.DraftTemplatePresetRequest;
-import com.example.draft.application.response.DraftTemplatePresetResponse;
+import com.example.draft.application.dto.DraftTemplatePresetRequest;
+import com.example.draft.application.dto.DraftTemplatePresetResponse;
 import com.example.draft.domain.TemplateScope;
 import com.example.common.security.RowScope;
 

@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.file.dto.FileUploadCommand;
 
 public interface FileManagementPort {

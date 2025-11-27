@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.example.common.api.ErrorResponse;
+import com.example.common.api.dto.ErrorResponse;
 import com.example.common.error.BusinessException;
 import com.example.common.error.CommonErrorCode;
 import com.example.common.error.ErrorCode;

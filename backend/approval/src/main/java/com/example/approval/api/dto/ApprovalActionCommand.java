@@ -1,4 +1,6 @@
-package com.example.approval.api;
+package com.example.approval.api.dto;
+
+import com.example.approval.api.ApprovalAction;
 
 public record ApprovalActionCommand(
         ApprovalAction action,

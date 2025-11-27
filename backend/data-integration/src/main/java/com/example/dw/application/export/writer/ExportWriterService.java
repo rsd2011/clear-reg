@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.common.masking.MaskingTarget;
 import com.example.dw.application.export.ExcelMaskingAdapter;
-import com.example.dw.application.export.ExportCommand;
+import com.example.dw.application.dto.ExportCommand;
 import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.dw.application.export.ExportMaskingHelper;
 import com.example.dw.application.export.ExportService;

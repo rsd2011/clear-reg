@@ -11,7 +11,7 @@ import org.mockito.Mockito;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 
 class FileManagementPortClientUnauthorizedTest {
 

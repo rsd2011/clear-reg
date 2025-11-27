@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 
 public record FileMetadataResponse(UUID id,

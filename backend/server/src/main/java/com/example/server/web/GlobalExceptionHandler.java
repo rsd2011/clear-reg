@@ -10,7 +10,7 @@ import com.example.auth.InvalidCredentialsException;
 import com.example.file.FilePolicyViolationException;
 import com.example.file.FileStorageException;
 import com.example.file.StoredFileNotFoundException;
-import com.example.common.api.ErrorResponse;
+import com.example.common.api.dto.ErrorResponse;
 import com.example.common.error.BusinessException;
 import com.example.common.error.CommonErrorCode;
 import com.example.common.error.ErrorCode;

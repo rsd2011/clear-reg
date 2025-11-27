@@ -11,8 +11,7 @@ import org.springframework.retry.support.RetryTemplate;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.common.file.FileMetadataDto;
-import com.example.file.api.FileUploadRequest;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.file.dto.FileUploadCommand;
 
 class FileManagementPortClientUploadNullResponseTest {

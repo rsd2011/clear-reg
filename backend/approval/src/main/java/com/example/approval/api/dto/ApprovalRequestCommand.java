@@ -1,4 +1,4 @@
-package com.example.approval.api;
+package com.example.approval.api.dto;
 
 import java.util.UUID;
 

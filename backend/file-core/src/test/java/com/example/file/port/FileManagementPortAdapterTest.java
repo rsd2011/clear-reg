@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.file.FileService;
 import com.example.file.FileSummaryView;

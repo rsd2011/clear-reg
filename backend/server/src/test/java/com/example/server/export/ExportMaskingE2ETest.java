@@ -27,7 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.example.audit.AuditPort;
 import com.example.common.masking.MaskingTarget;
 import com.example.dw.application.export.ExportAuditService;
-import com.example.dw.application.export.ExportCommand;
+import com.example.dw.application.dto.ExportCommand;
 import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.dw.application.export.ExportMaskingHelper;
 import com.example.dw.application.export.ExportService;

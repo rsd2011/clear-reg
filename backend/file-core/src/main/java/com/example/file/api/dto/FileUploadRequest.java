@@ -1,4 +1,4 @@
-package com.example.file.api;
+package com.example.file.api.dto;
 
 import java.time.OffsetDateTime;
 

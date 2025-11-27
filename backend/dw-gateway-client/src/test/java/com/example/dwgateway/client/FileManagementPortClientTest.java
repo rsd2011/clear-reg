@@ -26,7 +26,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.dwgateway.client.DwGatewayClientException;
 import com.example.file.dto.FileUploadCommand;

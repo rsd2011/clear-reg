@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.draft.application.request.DraftFormTemplateRequest;
+import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;

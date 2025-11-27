@@ -12,7 +12,7 @@ import org.mockito.Mockito;
 
 import com.example.audit.AuditMode;
 import com.example.dw.application.export.ExportAuditService;
-import com.example.dw.application.export.ExportCommand;
+import com.example.dw.application.dto.ExportCommand;
 import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.dw.application.export.ExportFailureNotifier;
 import com.example.dw.application.export.ExportService;

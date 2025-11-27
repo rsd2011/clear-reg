@@ -11,7 +11,7 @@ import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.server.notification.NotificationSendCommand;
+import com.example.server.notification.dto.NotificationSendCommand;
 import com.example.server.notification.NotificationService;
 import com.example.server.notification.dto.NotificationSendRequest;
 

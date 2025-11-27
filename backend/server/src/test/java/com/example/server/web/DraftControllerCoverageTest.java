@@ -21,7 +21,7 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
-import com.example.draft.application.response.DraftResponse;
+import com.example.draft.application.dto.DraftResponse;
 import com.example.draft.domain.DraftStatus;
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationQueryService;

@@ -16,7 +16,7 @@ import org.mockito.Mockito;
 import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.common.masking.MaskingTarget;
-import com.example.dw.application.export.ExportCommand;
+import com.example.dw.application.dto.ExportCommand;
 import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.dw.application.export.ExportService;
 import com.example.dw.application.export.PdfMaskingAdapter;

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
-import com.example.dw.application.policy.DwIngestionPolicyUpdateRequest;
+import com.example.dw.application.dto.DwIngestionPolicyUpdateRequest;
 import com.example.dw.application.policy.DwIngestionPolicyView;
 import com.example.dwgateway.dw.DwIngestionPolicyPort;
 

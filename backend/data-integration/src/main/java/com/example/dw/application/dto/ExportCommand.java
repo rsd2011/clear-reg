@@ -1,6 +1,8 @@
-package com.example.dw.application.export;
+package com.example.dw.application.dto;
 
 import java.util.Map;
+
+import com.example.audit.AuditMode;
 
 /**
  * 대량 export 요청 파라미터.
@@ -13,6 +15,6 @@ public record ExportCommand(
         String reasonCode,          // 조회/다운로드 사유 코드
         String reasonText,          // 조회/다운로드 사유 텍스트
         String legalBasisCode,      // 법적 근거 코드
-        com.example.audit.AuditMode auditMode // STRICT / ASYNC_FALLBACK (null이면 ASYNC_FALLBACK)
+        AuditMode auditMode // STRICT / ASYNC_FALLBACK (null이면 ASYNC_FALLBACK)
 ) {
 }

@@ -3,7 +3,7 @@ package com.example.dwgateway.dw;
 import org.springframework.stereotype.Component;
 
 import com.example.dw.application.policy.DwIngestionPolicyService;
-import com.example.dw.application.policy.DwIngestionPolicyUpdateRequest;
+import com.example.dw.application.dto.DwIngestionPolicyUpdateRequest;
 import com.example.dw.application.policy.DwIngestionPolicyView;
 
 @Component

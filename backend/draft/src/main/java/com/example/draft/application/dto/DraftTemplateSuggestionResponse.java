@@ -1,4 +1,4 @@
-package com.example.draft.application.response;
+package com.example.draft.application.dto;
 
 import java.util.UUID;
 

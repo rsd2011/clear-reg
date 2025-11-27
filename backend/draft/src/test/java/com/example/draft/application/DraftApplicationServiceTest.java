@@ -28,10 +28,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import com.example.draft.application.request.DraftAttachmentRequest;
-import com.example.draft.application.request.DraftCreateRequest;
-import com.example.draft.application.request.DraftDecisionRequest;
-import com.example.draft.application.response.DraftResponse;
+import com.example.draft.application.dto.DraftAttachmentRequest;
+import com.example.draft.application.dto.DraftCreateRequest;
+import com.example.draft.application.dto.DraftDecisionRequest;
+import com.example.draft.application.dto.DraftResponse;
 import com.example.admin.approval.ApprovalAccessDeniedException;
 import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.DraftApprovalStep;

@@ -14,9 +14,9 @@ import org.springframework.test.web.client.response.MockRestResponseCreators;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.retry.support.RetryTemplate;
 
-import com.example.dw.application.policy.DwBatchJobScheduleRequest;
+import com.example.dw.application.dto.DwBatchJobScheduleRequest;
 import com.example.dw.application.policy.DwBatchJobScheduleView;
-import com.example.dw.application.policy.DwIngestionPolicyUpdateRequest;
+import com.example.dw.application.dto.DwIngestionPolicyUpdateRequest;
 import com.example.dw.application.policy.DwIngestionPolicyView;
 
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;

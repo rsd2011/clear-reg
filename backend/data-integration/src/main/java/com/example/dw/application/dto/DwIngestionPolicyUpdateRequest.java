@@ -1,4 +1,4 @@
-package com.example.dw.application.policy;
+package com.example.dw.application.dto;
 
 import java.time.Duration;
 import java.util.List;

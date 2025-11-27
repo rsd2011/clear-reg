@@ -28,13 +28,13 @@ import com.example.admin.permission.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.file.dto.FileUploadCommand;
-import com.example.file.api.FileUploadRequest;
+import com.example.file.api.dto.FileUploadRequest;
 import com.example.file.port.FileManagementPort;
 import com.example.server.file.dto.FileMetadataResponse;
-import com.example.draft.application.response.DraftReferenceResponse;
-import com.example.draft.application.response.DraftResponse;
+import com.example.draft.application.dto.DraftReferenceResponse;
+import com.example.draft.application.dto.DraftResponse;
 
 import jakarta.validation.Valid;
 

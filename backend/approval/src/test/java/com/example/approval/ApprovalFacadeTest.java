@@ -1,8 +1,8 @@
 package com.example.approval;
 
 import com.example.approval.api.ApprovalAction;
-import com.example.approval.api.ApprovalActionCommand;
-import com.example.approval.api.ApprovalRequestCommand;
+import com.example.approval.api.dto.ApprovalActionCommand;
+import com.example.approval.api.dto.ApprovalRequestCommand;
 import com.example.approval.api.ApprovalStatus;
 import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.approval.application.ApprovalAuthorizationService;

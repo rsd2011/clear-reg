@@ -18,7 +18,7 @@ import com.example.common.cache.CacheInvalidationEvent;
 import com.example.common.cache.CacheInvalidationType;
 import com.example.common.cache.CacheKeyUtils;
 import com.example.common.file.FileDownload;
-import com.example.common.file.FileMetadataDto;
+import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.identifier.*;
 import com.example.common.masking.*;

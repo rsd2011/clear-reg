@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.example.dw.application.policy.DwIngestionPolicyUpdateRequest;
+import com.example.dw.application.dto.DwIngestionPolicyUpdateRequest;
 import com.example.dw.application.policy.DwIngestionPolicyView;
 import com.example.dwgateway.dw.DwIngestionPolicyPort;
 

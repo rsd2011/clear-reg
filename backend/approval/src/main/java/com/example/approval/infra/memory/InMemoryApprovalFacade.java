@@ -1,9 +1,9 @@
 package com.example.approval.infra.memory;
 
 import com.example.approval.api.ApprovalAction;
-import com.example.approval.api.ApprovalActionCommand;
+import com.example.approval.api.dto.ApprovalActionCommand;
 import com.example.approval.api.ApprovalFacade;
-import com.example.approval.api.ApprovalRequestCommand;
+import com.example.approval.api.dto.ApprovalRequestCommand;
 import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.approval.api.ApprovalStepSnapshot;
 import com.example.approval.domain.ApprovalRequest;

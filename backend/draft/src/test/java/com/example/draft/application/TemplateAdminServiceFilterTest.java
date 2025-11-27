@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.draft.application.response.DraftFormTemplateResponse;
+import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.admin.approval.ApprovalGroupRepository;

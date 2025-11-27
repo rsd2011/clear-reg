@@ -30,19 +30,7 @@ ext {
             checkstyleClasspath : 'google_checks.xml',             // Checkstyle 기본 제공 Google 규칙
             spotbugsExclude     : 'config/spotbugs/exclude.xml'    // 선택: SpotBugs 제외 필터
     ]
-    jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**',
-                        '**/policy/AuditPartitionSettings.class',
-                        '**/auth/ad/ActiveDirectoryClient.class',
-                        '**/auth/sso/SsoClient.class',
-                        '**/auth/domain/UserInfoProviderAdapter.class',
-                        '**/readmodel/MenuItem$MenuCapabilityRef.class',
-                        '**/common/security/CurrentUser.class',
-                        '**/admin/menu/**',
-                        '**/admin/organization/**',
-                        '**/admin/masking/**',
-                        '**/admin/permission/RequirePermissionAspect.class',
-                        '**/admin/permission/check/PermissionEvaluationContext.class',
-                        '**/server/web/DraftController.class']
+    jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**']
     jacocoGlobalExcludes = (jacocoExclusions + ['**/generated/**']).unique()
     qualityGlobalExcludes = ['**/generated/**', '**/build/**']
 }

@@ -19,9 +19,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.dw.application.policy.DwBatchJobScheduleRequest;
+import com.example.dw.application.dto.DwBatchJobScheduleRequest;
 import com.example.dw.application.policy.DwBatchJobScheduleView;
-import com.example.dw.application.policy.DwIngestionPolicyUpdateRequest;
+import com.example.dw.application.dto.DwIngestionPolicyUpdateRequest;
 import com.example.dw.application.policy.DwIngestionPolicyView;
 import com.example.dwgateway.dw.DwIngestionPolicyPort;
 import com.fasterxml.jackson.databind.ObjectMapper;

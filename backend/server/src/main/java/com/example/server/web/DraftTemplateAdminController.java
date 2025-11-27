@@ -25,10 +25,10 @@ import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.draft.application.TemplateAdminService;
-import com.example.draft.application.request.DraftFormTemplateRequest;
-import com.example.draft.application.request.DraftTemplatePresetRequest;
-import com.example.draft.application.response.DraftFormTemplateResponse;
-import com.example.draft.application.response.DraftTemplatePresetResponse;
+import com.example.draft.application.dto.DraftFormTemplateRequest;
+import com.example.draft.application.dto.DraftTemplatePresetRequest;
+import com.example.draft.application.dto.DraftFormTemplateResponse;
+import com.example.draft.application.dto.DraftTemplatePresetResponse;
 
 import jakarta.validation.Valid;
 

@@ -24,10 +24,10 @@ import com.example.common.security.RowScope;
 import com.example.draft.application.TemplateAdminService;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.draft.application.request.DraftFormTemplateRequest;
+import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.draft.application.response.DraftFormTemplateResponse;
+import com.example.draft.application.dto.DraftFormTemplateResponse;
 
 class DraftTemplateAdminControllerExtraTest {
 

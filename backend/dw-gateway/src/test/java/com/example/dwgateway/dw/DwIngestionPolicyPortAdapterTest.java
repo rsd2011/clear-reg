@@ -11,10 +11,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.example.dw.application.policy.DwBatchJobScheduleRequest;
+import com.example.dw.application.dto.DwBatchJobScheduleRequest;
 import com.example.dw.application.policy.DwBatchJobScheduleView;
 import com.example.dw.application.policy.DwIngestionPolicyService;
-import com.example.dw.application.policy.DwIngestionPolicyUpdateRequest;
+import com.example.dw.application.dto.DwIngestionPolicyUpdateRequest;
 import com.example.dw.application.policy.DwIngestionPolicyView;
 
 @DisplayName("DwIngestionPolicyPortAdapter 테스트")
