@@ -1,4 +1,4 @@
-package com.example.server.commoncode.dto;
+package com.example.admin.codemanage.dto;
 
 import java.util.List;
 import java.util.function.UnaryOperator;

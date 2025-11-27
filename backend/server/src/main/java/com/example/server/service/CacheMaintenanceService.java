@@ -16,8 +16,8 @@ import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
-import com.example.server.commoncode.CommonCodeQueryService;
-import com.example.server.commoncode.SystemCommonCodeService;
+import com.example.admin.codemanage.CommonCodeQueryService;
+import com.example.admin.codemanage.SystemCommonCodeService;
 import lombok.extern.slf4j.Slf4j;
 
 @Service

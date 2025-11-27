@@ -1,4 +1,4 @@
-package com.example.server.commoncode.model;
+package com.example.admin.codemanage.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

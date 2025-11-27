@@ -1,4 +1,4 @@
-package com.example.server.commoncode;
+package com.example.admin.codemanage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,13 +15,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.server.commoncode.model.SystemCommonCode;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.SystemCommonCode;
+import com.example.admin.codemanage.repository.SystemCommonCodeRepository;
 
 @ExtendWith(MockitoExtension.class)
 class SystemCommonCodeServiceLineCoverTest {
 
     @Mock
-    com.example.server.commoncode.repository.SystemCommonCodeRepository repository;
+    SystemCommonCodeRepository repository;
 
     @InjectMocks
     SystemCommonCodeService service;
@@ -51,7 +53,7 @@ class SystemCommonCodeServiceLineCoverTest {
     @DisplayName("create: STATIC 기본 타입에서 DYNAMIC을 요청하면 예외를 던진다")
     void enforceKindWhenStaticType() {
         SystemCommonCode req = SystemCommonCode.create("FILE_CLASSIFICATION", "001", "파일 분류", 0,
-                com.example.server.commoncode.model.CommonCodeKind.DYNAMIC, true, null, null, null, null);
+                CommonCodeKind.DYNAMIC, true, null, null, null, null);
 
         assertThatThrownBy(() -> service.create("FILE_CLASSIFICATION", req))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -74,9 +76,9 @@ class SystemCommonCodeServiceLineCoverTest {
         verify(repository).save(captor.capture());
         SystemCommonCode savedArg = captor.getValue();
 
-        assertThat(savedArg.getCodeKind()).isEqualTo(com.example.server.commoncode.model.CommonCodeKind.DYNAMIC);
+        assertThat(savedArg.getCodeKind()).isEqualTo(CommonCodeKind.DYNAMIC);
         assertThat(savedArg.getUpdatedBy()).isEqualTo("system");
-        assertThat(result.getCodeKind()).isEqualTo(com.example.server.commoncode.model.CommonCodeKind.DYNAMIC);
+        assertThat(result.getCodeKind()).isEqualTo(CommonCodeKind.DYNAMIC);
     }
 
     @Test

@@ -1,7 +1,7 @@
-package com.example.server.commoncode.dto;
+package com.example.admin.codemanage.dto;
 
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.CommonCodeSource;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CommonCodeSource;
 import java.util.function.UnaryOperator;
 
 public record CommonCodeItemResponse(String codeValue,

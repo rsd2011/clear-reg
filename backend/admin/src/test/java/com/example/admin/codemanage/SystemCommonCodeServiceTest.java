@@ -1,4 +1,4 @@
-package com.example.server.commoncode;
+package com.example.admin.codemanage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,10 +13,9 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.SystemCommonCode;
-import com.example.server.commoncode.model.SystemCommonCodeType;
-import com.example.server.commoncode.repository.SystemCommonCodeRepository;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.SystemCommonCode;
+import com.example.admin.codemanage.repository.SystemCommonCodeRepository;
 
 class SystemCommonCodeServiceTest {
 

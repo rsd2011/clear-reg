@@ -15,10 +15,10 @@ import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.server.commoncode.SystemCommonCodeService;
-import com.example.server.commoncode.dto.SystemCommonCodeRequest;
-import com.example.server.commoncode.dto.SystemCommonCodeResponse;
-import com.example.server.commoncode.model.SystemCommonCode;
+import com.example.admin.codemanage.SystemCommonCodeService;
+import com.example.admin.codemanage.dto.SystemCommonCodeRequest;
+import com.example.admin.codemanage.dto.SystemCommonCodeResponse;
+import com.example.admin.codemanage.model.SystemCommonCode;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

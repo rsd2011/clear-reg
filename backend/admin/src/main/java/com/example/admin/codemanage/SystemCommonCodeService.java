@@ -1,4 +1,4 @@
-package com.example.server.commoncode;
+package com.example.admin.codemanage;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -13,10 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import com.example.common.cache.CacheNames;
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.SystemCommonCode;
-import com.example.server.commoncode.model.SystemCommonCodeType;
-import com.example.server.commoncode.repository.SystemCommonCodeRepository;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.SystemCommonCode;
+import com.example.admin.codemanage.model.SystemCommonCodeType;
+import com.example.admin.codemanage.repository.SystemCommonCodeRepository;
 
 @Service
 @RequiredArgsConstructor

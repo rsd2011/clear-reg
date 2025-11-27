@@ -1,9 +1,9 @@
-package com.example.server.commoncode.dto;
+package com.example.admin.codemanage.dto;
 
 import java.time.OffsetDateTime;
 
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.SystemCommonCode;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.SystemCommonCode;
 
 public record SystemCommonCodeResponse(String codeType,
                                        String codeValue,

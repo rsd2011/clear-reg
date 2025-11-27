@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
-import com.example.server.commoncode.CommonCodeQueryService;
-import com.example.server.commoncode.dto.CommonCodeAggregateResponse;
+import com.example.admin.codemanage.CommonCodeQueryService;
+import com.example.admin.codemanage.dto.CommonCodeAggregateResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

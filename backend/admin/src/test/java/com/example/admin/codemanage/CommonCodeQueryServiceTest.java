@@ -1,4 +1,4 @@
-package com.example.server.commoncode;
+package com.example.admin.codemanage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -14,9 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwCommonCodeSnapshot;
-import com.example.server.commoncode.dto.CommonCodeItem;
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.SystemCommonCode;
+import com.example.admin.codemanage.dto.CommonCodeItem;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CommonCodeSource;
+import com.example.admin.codemanage.model.SystemCommonCode;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CommonCodeQueryService 테스트")
@@ -62,7 +63,7 @@ class CommonCodeQueryServiceTest {
 
         assertThat(result).hasSize(1);
         assertThat(result.getFirst().codeValue()).isEqualTo("B");
-        assertThat(result.getFirst().source()).isEqualTo(com.example.server.commoncode.model.CommonCodeSource.DW);
+        assertThat(result.getFirst().source()).isEqualTo(CommonCodeSource.DW);
     }
 
     @Test

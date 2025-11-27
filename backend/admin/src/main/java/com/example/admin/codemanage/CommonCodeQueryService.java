@@ -1,4 +1,4 @@
-package com.example.server.commoncode;
+package com.example.admin.codemanage;
 
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 import com.example.common.cache.CacheNames;
 import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwCommonCodeSnapshot;
-import com.example.server.commoncode.dto.CommonCodeItem;
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.CommonCodeSource;
-import com.example.server.commoncode.model.SystemCommonCode;
+import com.example.admin.codemanage.dto.CommonCodeItem;
+import com.example.admin.codemanage.model.CommonCodeKind;
+import com.example.admin.codemanage.model.CommonCodeSource;
+import com.example.admin.codemanage.model.SystemCommonCode;
 
 @Service
 @RequiredArgsConstructor

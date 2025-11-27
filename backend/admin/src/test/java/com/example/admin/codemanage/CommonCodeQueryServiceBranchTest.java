@@ -1,10 +1,6 @@
-package com.example.server.commoncode;
+package com.example.admin.codemanage;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.BDDMockito.given;
-
-import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,10 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.dw.application.DwCommonCodeDirectoryService;
-import com.example.dw.application.DwCommonCodeSnapshot;
-import com.example.server.commoncode.model.CommonCodeKind;
-import com.example.server.commoncode.model.CommonCodeSource;
-import com.example.server.commoncode.model.SystemCommonCode;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCodeQueryServiceBranchTest {

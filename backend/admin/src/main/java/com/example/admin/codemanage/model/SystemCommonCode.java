@@ -1,4 +1,4 @@
-package com.example.server.commoncode.model;
+package com.example.admin.codemanage.model;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -6,7 +6,6 @@ import java.util.Locale;
 
 import com.example.common.jpa.PrimaryKeyEntity;
 import lombok.Getter;
-import lombok.Setter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -1,4 +1,4 @@
-package com.example.server.commoncode.model;
+package com.example.admin.codemanage.model;
 
 import java.util.Locale;
 import java.util.Optional;
