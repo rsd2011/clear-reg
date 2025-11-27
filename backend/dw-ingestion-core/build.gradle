@@ -24,6 +24,7 @@ dependencies {
     implementation libs.spring.aop
     implementation libs.aspectjweaver
     implementation libs.spring.batch.core
+    compileOnly libs.jakarta.persistence
     testImplementation libs.jakarta.persistence
 
     // 검증

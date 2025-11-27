@@ -57,6 +57,7 @@ import com.example.draft.application.business.DraftBusinessPolicy;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class DraftApplicationServiceTest {
 
     private static final String ORG = "ORG-001";

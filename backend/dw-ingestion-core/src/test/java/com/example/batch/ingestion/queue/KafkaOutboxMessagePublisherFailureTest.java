@@ -12,6 +12,7 @@ import com.example.dw.domain.DwIngestionOutbox;
 import com.example.dw.application.job.DwIngestionJobType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@SuppressWarnings("unchecked")
 class KafkaOutboxMessagePublisherFailureTest {
 
     KafkaTemplate<String, String> kafkaTemplate = Mockito.mock(KafkaTemplate.class);

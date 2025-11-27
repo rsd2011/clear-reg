@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import com.example.common.masking.MaskingTarget;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@SuppressWarnings("unchecked")
 class ExportExecutionHelperNullMaskTest {
 
     ExportService exportService = Mockito.mock(ExportService.class);

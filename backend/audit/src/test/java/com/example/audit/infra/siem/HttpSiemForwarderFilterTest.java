@@ -15,6 +15,7 @@ import com.example.audit.AuditEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+@SuppressWarnings("unchecked")
 class HttpSiemForwarderFilterTest {
 
     @Test

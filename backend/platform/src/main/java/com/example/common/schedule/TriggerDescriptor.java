@@ -1,8 +1,8 @@
 package com.example.common.schedule;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.lang.Nullable;
 import org.springframework.scheduling.Trigger;
@@ -47,8 +47,8 @@ public record TriggerDescriptor(
         return switch (type) {
             case CRON -> new CronTrigger(expression, zoneId == null ? ZoneId.systemDefault() : zoneId);
             case FIXED_DELAY -> {
-                PeriodicTrigger trigger = new PeriodicTrigger(fixedDelayMillis, TimeUnit.MILLISECONDS);
-                trigger.setInitialDelay(initialDelayMillis);
+                PeriodicTrigger trigger = new PeriodicTrigger(Duration.ofMillis(fixedDelayMillis));
+                trigger.setInitialDelay(Duration.ofMillis(initialDelayMillis));
                 yield trigger;
             }
         };

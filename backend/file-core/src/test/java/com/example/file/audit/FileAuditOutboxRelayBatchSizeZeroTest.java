@@ -11,6 +11,7 @@ import com.example.common.policy.PolicySettingsProvider;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unchecked")
 class FileAuditOutboxRelayBatchSizeZeroTest {
 
     @Test

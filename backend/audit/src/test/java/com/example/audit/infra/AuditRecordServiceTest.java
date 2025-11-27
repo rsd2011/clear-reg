@@ -27,6 +27,7 @@ import com.example.common.masking.MaskingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.audit.infra.persistence.AuditLogEntity;
 
+@SuppressWarnings("unchecked")
 class AuditRecordServiceTest {
 
     AuditLogRepository repository = Mockito.mock(AuditLogRepository.class);

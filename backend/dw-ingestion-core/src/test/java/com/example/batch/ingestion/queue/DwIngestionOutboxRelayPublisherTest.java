@@ -21,6 +21,7 @@ import com.example.dw.application.job.DwIngestionOutboxStatus;
 import com.example.dw.application.job.OutboxMessagePublisher;
 import com.example.dw.domain.DwIngestionOutbox;
 
+@SuppressWarnings("unchecked")
 class DwIngestionOutboxRelayPublisherTest {
 
     @Test

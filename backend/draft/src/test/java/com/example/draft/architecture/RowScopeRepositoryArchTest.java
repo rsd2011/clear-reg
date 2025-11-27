@@ -18,6 +18,7 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
  *     <p>allowEmptyShould(true)로 설정하여 매칭되는 클래스가 없어도 테스트가 실패하지 않도록 함.
  */
 @Deprecated(since = "2024.1", forRemoval = true)
+@SuppressWarnings("removal")
 @AnalyzeClasses(packages = "com.example.draft")
 @DisplayName("RowScope Repository 아키텍처 규칙 (deprecated)")
 class RowScopeRepositoryArchTest {

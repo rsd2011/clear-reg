@@ -135,7 +135,7 @@ class CurrentUserTest {
 
         @Test
         @DisplayName("Given 6개 파라미터 When deprecated 생성자 사용하면 Then 기본값이 설정된다")
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         void deprecatedConstructorSetsDefaults() {
             CurrentUser user = new CurrentUser(
                     "legacyUser",
@@ -159,7 +159,7 @@ class CurrentUserTest {
 
         @Test
         @DisplayName("Given deprecated 생성자 When RowScope 설정하면 Then 올바르게 저장된다")
-        @SuppressWarnings("deprecation")
+        @SuppressWarnings("removal")
         void deprecatedConstructorWithDifferentRowScopes() {
             CurrentUser userAll = new CurrentUser("u1", "O1", "G1", "F1", "A1", RowScope.ALL);
             CurrentUser userOrg = new CurrentUser("u2", "O2", "G2", "F2", "A2", RowScope.ORG);

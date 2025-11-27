@@ -23,6 +23,7 @@ import com.example.dw.application.policy.DwBatchJobSchedule;
 import com.example.dw.application.policy.DwIngestionPolicyProvider;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class DwQuartzScheduleManagerTest {
 
     private static final String JOB_GROUP = "DW_BATCH";

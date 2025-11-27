@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.kafka.core.KafkaTemplate;
 
+@SuppressWarnings("unchecked")
 class AuditDlqReprocessorTest {
 
     @Test

@@ -19,6 +19,7 @@ import com.example.common.policy.PolicySettingsProvider;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
+@SuppressWarnings("unchecked")
 class FileAuditOutboxRelayEmptyTest {
 
     @Test

@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.example.draft.domain.DraftAction;
 
+@SuppressWarnings("unchecked")
 class AuditSupportTest {
 
     @Test

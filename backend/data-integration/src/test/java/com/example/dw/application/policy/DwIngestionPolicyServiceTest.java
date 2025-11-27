@@ -28,6 +28,7 @@ import com.example.testing.bdd.Scenario;
 import org.springframework.context.ApplicationEventPublisher;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class DwIngestionPolicyServiceTest {
 
     private static final String DOCUMENT_CODE = "dw.ingestion.policy";

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.example.common.policy.PolicySettingsProvider;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unchecked")
 class OutboxDraftAuditRelayEmptyTest {
 
     @Test

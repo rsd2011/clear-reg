@@ -21,6 +21,7 @@ import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.dw.application.export.ExportService;
 import com.example.dw.application.export.PdfMaskingAdapter;
 
+@SuppressWarnings("unchecked")
 class ExportWriterServiceTest {
 
     AuditPort auditPort = Mockito.mock(AuditPort.class);

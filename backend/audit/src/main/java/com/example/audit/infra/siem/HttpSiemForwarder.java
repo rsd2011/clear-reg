@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import com.example.audit.AuditEvent;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
@@ -108,7 +109,7 @@ public class HttpSiemForwarder implements SiemForwarder {
     }
 
     private Map<String, Object> filter(AuditEvent event) {
-        Map<String, Object> map = objectMapper.convertValue(event, Map.class);
+        Map<String, Object> map = objectMapper.convertValue(event, new TypeReference<Map<String, Object>>() {});
         if (props.getWhitelist() == null || props.getWhitelist().isEmpty()) {
             return map;
         }

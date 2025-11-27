@@ -29,6 +29,7 @@ import com.example.common.masking.SubjectType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @DisplayName("AuditRecordService 해시체인/HMAC/발행 실패 분기")
+@SuppressWarnings("unchecked")
 class AuditRecordServiceHashTest {
 
     AuditLogRepository repository = Mockito.mock(AuditLogRepository.class);

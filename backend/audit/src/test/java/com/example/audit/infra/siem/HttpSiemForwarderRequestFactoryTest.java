@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -53,7 +54,7 @@ class HttpSiemForwarderRequestFactoryTest {
         boolean socketFactoryWasSet = false;
 
         FakeHttpsConnection() throws Exception {
-            super(new URL("https://localhost"));
+            super(URI.create("https://localhost").toURL());
         }
 
         @Override

@@ -36,6 +36,7 @@ public class SensitiveApiFilter extends OncePerRequestFilter {
         this.properties = properties;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {

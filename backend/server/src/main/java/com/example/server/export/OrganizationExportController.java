@@ -32,6 +32,7 @@ public class OrganizationExportController {
     private final HrOrganizationRepository organizationRepository;
     private final ExportWriterService exportWriterService;
 
+    @SuppressWarnings("unchecked")
     @GetMapping("/api/exports/orgs/excel")
     public ResponseEntity<byte[]> exportOrgsExcel(@RequestParam(name = "limit", defaultValue = "100") int limit,
                                                   @RequestParam String reasonCode,
@@ -62,6 +63,7 @@ public class OrganizationExportController {
                 .body(body);
     }
 
+    @SuppressWarnings("unchecked")
     @GetMapping("/api/exports/orgs/pdf")
     public ResponseEntity<byte[]> exportOrgsPdf(@RequestParam(name = "limit", defaultValue = "100") int limit,
                                                 @RequestParam String reasonCode,

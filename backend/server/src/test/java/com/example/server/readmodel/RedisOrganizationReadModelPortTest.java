@@ -24,6 +24,7 @@ import com.example.dw.application.DwOrganizationTreeService.OrganizationTreeSnap
 import com.example.dw.application.readmodel.OrganizationTreeReadModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@SuppressWarnings("unchecked")
 class RedisOrganizationReadModelPortTest {
 
     private final StringRedisTemplate redisTemplate = mock(StringRedisTemplate.class);

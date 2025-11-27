@@ -7,6 +7,7 @@ dependencies {
     implementation platform(libs.spring.boot.bom)
     testImplementation platform(libs.spring.boot.bom)
     implementation libs.spring.context
+    compileOnly libs.findbugs.jsr305
     implementation libs.jakarta.persistence
     implementation libs.spring.data.commons
     implementation libs.spring.boot.starter.data.jpa

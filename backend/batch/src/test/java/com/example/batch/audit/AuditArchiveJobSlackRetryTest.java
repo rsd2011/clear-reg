@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import org.springframework.test.util.ReflectionTestUtils;
 
+@SuppressWarnings("unchecked")
 class AuditArchiveJobSlackRetryTest {
 
     @Test
