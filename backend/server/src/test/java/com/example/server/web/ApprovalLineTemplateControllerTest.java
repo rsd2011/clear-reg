@@ -18,14 +18,17 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.ApprovalLineTemplateAdminService;
+import com.example.admin.approval.ApprovalLineTemplateService;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.TemplateCopyRequest;
 import com.example.admin.approval.dto.TemplateCopyResponse;
-import com.example.admin.approval.dto.TemplateHistoryResponse;
+import com.example.admin.approval.dto.VersionHistoryResponse;
+import com.example.admin.approval.version.ApprovalLineTemplateVersionService;
+import com.example.common.version.ChangeAction;
+import com.example.common.version.VersionStatus;
 import com.example.admin.permission.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
@@ -33,8 +36,9 @@ import com.example.common.security.RowScope;
 
 class ApprovalLineTemplateControllerTest {
 
-    ApprovalLineTemplateAdminService service = mock(ApprovalLineTemplateAdminService.class);
-    ApprovalLineTemplateController controller = new ApprovalLineTemplateController(service);
+    ApprovalLineTemplateService service = mock(ApprovalLineTemplateService.class);
+    ApprovalLineTemplateVersionService versionService = mock(ApprovalLineTemplateVersionService.class);
+    ApprovalLineTemplateController controller = new ApprovalLineTemplateController(service, versionService);
 
     @AfterEach
     void tearDown() {
@@ -220,24 +224,32 @@ class ApprovalLineTemplateControllerTest {
     class GetTemplateHistory {
 
         @Test
-        @DisplayName("Given: 이력이 있는 템플릿 / When: getTemplateHistory 호출 / Then: 이력 목록 반환")
+        @DisplayName("Given: 이력이 있는 템플릿 / When: getTemplateHistory 호출 / Then: SCD Type 2 버전 이력 목록 반환")
         void getHistoryReturns200() {
             setupContext();
 
             UUID templateId = UUID.randomUUID();
-            TemplateHistoryResponse h1 = new TemplateHistoryResponse(
-                    UUID.randomUUID(), "CREATE", "user", "사용자",
-                    OffsetDateTime.now().minusDays(1), null);
-            TemplateHistoryResponse h2 = new TemplateHistoryResponse(
-                    UUID.randomUUID(), "UPDATE", "user", "사용자",
-                    OffsetDateTime.now(), null);
+            VersionHistoryResponse v1 = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 1,
+                    OffsetDateTime.now().minusDays(1), OffsetDateTime.now(),
+                    "템플릿", 0, "설명", true,
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
+                    null, "user", "사용자", OffsetDateTime.now().minusDays(1),
+                    null, null, null, List.of());
+            VersionHistoryResponse v2 = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now(), null,
+                    "수정된 템플릿", 0, "수정 설명", true,
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
+                    "변경 사유", "user", "사용자", OffsetDateTime.now(),
+                    null, null, null, List.of());
 
-            when(service.getHistory(templateId)).thenReturn(List.of(h2, h1));
+            when(service.getHistory(templateId)).thenReturn(List.of(v2, v1));
 
-            List<TemplateHistoryResponse> result = controller.getTemplateHistory(templateId);
+            List<VersionHistoryResponse> result = controller.getTemplateHistory(templateId);
 
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).action()).isEqualTo("UPDATE");
+            assertThat(result.get(0).changeAction()).isEqualTo(ChangeAction.UPDATE);
             verify(service).getHistory(templateId);
         }
     }

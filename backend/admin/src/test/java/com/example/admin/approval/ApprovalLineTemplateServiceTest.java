@@ -3,10 +3,11 @@ package com.example.admin.approval;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -24,29 +25,26 @@ import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.TemplateCopyRequest;
 import com.example.admin.approval.dto.TemplateCopyResponse;
-import com.example.admin.approval.dto.TemplateHistoryResponse;
-import com.example.admin.approval.history.ApprovalLineTemplateHistory;
-import com.example.admin.approval.history.ApprovalLineTemplateHistoryRepository;
+import com.example.admin.approval.dto.VersionHistoryResponse;
+import com.example.admin.approval.version.ApprovalLineTemplateVersionService;
+import com.example.common.version.ChangeAction;
+import com.example.common.version.VersionStatus;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-class ApprovalLineTemplateAdminServiceTest {
+class ApprovalLineTemplateServiceTest {
 
     private ApprovalLineTemplateRepository templateRepo;
     private ApprovalGroupRepository groupRepo;
-    private ApprovalLineTemplateHistoryRepository historyRepo;
-    private ObjectMapper objectMapper;
-    private ApprovalLineTemplateAdminService service;
+    private ApprovalLineTemplateVersionService versionService;
+    private ApprovalLineTemplateService service;
 
     @BeforeEach
     void setUp() {
         templateRepo = mock(ApprovalLineTemplateRepository.class);
         groupRepo = mock(ApprovalGroupRepository.class);
-        historyRepo = mock(ApprovalLineTemplateHistoryRepository.class);
-        objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
-        service = new ApprovalLineTemplateAdminService(templateRepo, groupRepo, historyRepo, objectMapper);
+        versionService = mock(ApprovalLineTemplateVersionService.class);
+        service = new ApprovalLineTemplateService(templateRepo, groupRepo, versionService);
     }
 
     private AuthContext testContext() {
@@ -139,12 +137,11 @@ class ApprovalLineTemplateAdminServiceTest {
     class CreateTemplate {
 
         @Test
-        @DisplayName("Given: 유효한 요청 / When: create 호출 / Then: 템플릿 생성 및 이력 기록")
-        void createTemplateAndRecordsHistory() {
+        @DisplayName("Given: 유효한 요청 / When: create 호출 / Then: 템플릿 생성 및 SCD Type 2 버전 기록")
+        void createTemplateAndRecordsVersion() {
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
             given(groupRepo.findByGroupCode("TEAM_LEADER")).willReturn(Optional.of(group));
             given(templateRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
                     "새 템플릿", 1, "설명", true,
@@ -155,7 +152,7 @@ class ApprovalLineTemplateAdminServiceTest {
             assertThat(result.name()).isEqualTo("새 템플릿");
             assertThat(result.displayOrder()).isEqualTo(1);
             verify(templateRepo).save(any());
-            verify(historyRepo).save(any());
+            verify(versionService).createInitialVersion(any(), eq(request), eq(testContext()), any());
         }
 
         @Test
@@ -178,15 +175,14 @@ class ApprovalLineTemplateAdminServiceTest {
     class UpdateTemplate {
 
         @Test
-        @DisplayName("Given: 존재하는 템플릿 / When: update 호출 / Then: 템플릿 수정 및 이력 기록")
-        void updateTemplateAndRecordsHistory() {
+        @DisplayName("Given: 존재하는 템플릿 / When: update 호출 / Then: 템플릿 수정 및 SCD Type 2 버전 기록")
+        void updateTemplateAndRecordsVersion() {
             UUID id = UUID.randomUUID();
             ApprovalLineTemplate template = createTestTemplate("기존 템플릿");
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
 
             given(templateRepo.findById(id)).willReturn(Optional.of(template));
             given(groupRepo.findByGroupCode("TEAM_LEADER")).willReturn(Optional.of(group));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
                     "수정된 템플릿", 5, "수정된 설명", true,
@@ -196,7 +192,7 @@ class ApprovalLineTemplateAdminServiceTest {
 
             assertThat(result.name()).isEqualTo("수정된 템플릿");
             assertThat(result.displayOrder()).isEqualTo(5);
-            verify(historyRepo).save(any());
+            verify(versionService).createUpdateVersion(eq(template), eq(request), eq(testContext()), any());
         }
     }
 
@@ -205,17 +201,16 @@ class ApprovalLineTemplateAdminServiceTest {
     class DeleteTemplate {
 
         @Test
-        @DisplayName("Given: 존재하는 템플릿 / When: delete 호출 / Then: soft delete 수행 및 이력 기록")
-        void deleteSoftDeletesAndRecordsHistory() {
+        @DisplayName("Given: 존재하는 템플릿 / When: delete 호출 / Then: soft delete 수행 및 SCD Type 2 버전 기록")
+        void deleteSoftDeletesAndRecordsVersion() {
             UUID id = UUID.randomUUID();
             ApprovalLineTemplate template = createTestTemplate("삭제할 템플릿");
             given(templateRepo.findById(id)).willReturn(Optional.of(template));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             service.delete(id, testContext());
 
             assertThat(template.isActive()).isFalse();
-            verify(historyRepo).save(any());
+            verify(versionService).createDeleteVersion(eq(template), eq(testContext()), any());
         }
     }
 
@@ -224,18 +219,17 @@ class ApprovalLineTemplateAdminServiceTest {
     class ActivateTemplate {
 
         @Test
-        @DisplayName("Given: 비활성 템플릿 / When: activate 호출 / Then: 활성화 및 이력 기록")
-        void activateRestoresAndRecordsHistory() {
+        @DisplayName("Given: 비활성 템플릿 / When: activate 호출 / Then: 활성화 및 SCD Type 2 버전 기록")
+        void activateRestoresAndRecordsVersion() {
             UUID id = UUID.randomUUID();
             ApprovalLineTemplate template = createTestTemplate("비활성 템플릿");
             template.rename("비활성 템플릿", 0, "설명", false, OffsetDateTime.now());
             given(templateRepo.findById(id)).willReturn(Optional.of(template));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             ApprovalLineTemplateResponse result = service.activate(id, testContext());
 
             assertThat(result.active()).isTrue();
-            verify(historyRepo).save(any());
+            verify(versionService).createRestoreVersion(eq(template), eq(testContext()), any());
         }
     }
 
@@ -244,8 +238,8 @@ class ApprovalLineTemplateAdminServiceTest {
     class CopyTemplate {
 
         @Test
-        @DisplayName("Given: 존재하는 템플릿 / When: copy 호출 / Then: 새 템플릿 생성 및 이력 기록")
-        void copyCreatesNewTemplateWithHistory() {
+        @DisplayName("Given: 존재하는 템플릿 / When: copy 호출 / Then: 새 템플릿 생성 및 SCD Type 2 버전 기록")
+        void copyCreatesNewTemplateWithVersion() {
             ApprovalLineTemplate source = createTestTemplate("원본 템플릿");
             UUID sourceId = source.getId();
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
@@ -253,7 +247,6 @@ class ApprovalLineTemplateAdminServiceTest {
 
             given(templateRepo.findById(sourceId)).willReturn(Optional.of(source));
             given(templateRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             TemplateCopyRequest request = new TemplateCopyRequest("복사된 템플릿", "복사 설명");
 
@@ -262,7 +255,7 @@ class ApprovalLineTemplateAdminServiceTest {
             assertThat(result.name()).isEqualTo("복사된 템플릿");
             assertThat(result.copiedFrom().id()).isEqualTo(sourceId);
             verify(templateRepo).save(any());
-            verify(historyRepo).save(any());
+            verify(versionService).createCopyVersion(any(), eq(source), eq("복사된 템플릿"), eq("복사 설명"), eq(testContext()), any());
         }
 
         @Test
@@ -277,7 +270,6 @@ class ApprovalLineTemplateAdminServiceTest {
 
             given(templateRepo.findById(sourceId)).willReturn(Optional.of(source));
             given(templateRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             TemplateCopyRequest request = new TemplateCopyRequest("복사본", null);
 
@@ -292,35 +284,32 @@ class ApprovalLineTemplateAdminServiceTest {
     class GetHistory {
 
         @Test
-        @DisplayName("Given: 이력이 있는 템플릿 / When: getHistory 호출 / Then: 정렬된 이력 반환")
-        void getHistoryReturnsOrderedHistory() {
+        @DisplayName("Given: 이력이 있는 템플릿 / When: getHistory 호출 / Then: SCD Type 2 버전 이력 반환")
+        void getHistoryReturnsScdVersionHistory() {
             UUID templateId = UUID.randomUUID();
-            ApprovalLineTemplate template = createTestTemplate("템플릿");
-            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            VersionHistoryResponse v1 = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 1,
+                    OffsetDateTime.now().minusDays(1), OffsetDateTime.now(),
+                    "템플릿", 0, "설명", true,
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
+                    null, "user1", "사용자1", OffsetDateTime.now().minusDays(1),
+                    null, null, null, List.of());
+            VersionHistoryResponse v2 = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now(), null,
+                    "수정된 템플릿", 0, "수정 설명", true,
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
+                    "변경 사유", "user1", "사용자1", OffsetDateTime.now(),
+                    null, null, null, List.of());
+            given(versionService.getVersionHistory(templateId)).willReturn(List.of(v2, v1));
 
-            ApprovalLineTemplateHistory h1 = ApprovalLineTemplateHistory.createHistory(
-                    templateId, "user1", "사용자1", OffsetDateTime.now().minusDays(1), "{}");
-            ApprovalLineTemplateHistory h2 = ApprovalLineTemplateHistory.updateHistory(
-                    templateId, "user1", "사용자1", OffsetDateTime.now(),
-                    "{\"name\":\"old\"}", "{\"name\":\"new\"}");
-            given(historyRepo.findByTemplateIdOrderByChangedAtDesc(templateId))
-                    .willReturn(List.of(h2, h1));
-
-            List<TemplateHistoryResponse> result = service.getHistory(templateId);
+            List<VersionHistoryResponse> result = service.getHistory(templateId);
 
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).action()).isEqualTo("UPDATE");
-            assertThat(result.get(1).action()).isEqualTo("CREATE");
-        }
-
-        @Test
-        @DisplayName("Given: 존재하지 않는 템플릿 / When: getHistory 호출 / Then: ApprovalLineTemplateNotFoundException 발생")
-        void getHistoryThrowsNotFoundException() {
-            UUID id = UUID.randomUUID();
-            given(templateRepo.findById(id)).willReturn(Optional.empty());
-
-            assertThatThrownBy(() -> service.getHistory(id))
-                    .isInstanceOf(ApprovalLineTemplateNotFoundException.class);
+            assertThat(result.get(0).version()).isEqualTo(2);
+            assertThat(result.get(0).changeAction()).isEqualTo(ChangeAction.UPDATE);
+            assertThat(result.get(1).version()).isEqualTo(1);
+            assertThat(result.get(1).changeAction()).isEqualTo(ChangeAction.CREATE);
         }
     }
 
@@ -329,7 +318,7 @@ class ApprovalLineTemplateAdminServiceTest {
     class UpdateDisplayOrders {
 
         @Test
-        @DisplayName("Given: 여러 템플릿 / When: updateDisplayOrders 호출 / Then: 모든 순서 업데이트 및 이력 기록")
+        @DisplayName("Given: 여러 템플릿 / When: updateDisplayOrders 호출 / Then: 모든 순서 업데이트 및 변경된 것만 버전 기록")
         void updateDisplayOrdersUpdatesMultipleTemplates() {
             UUID id1 = UUID.randomUUID();
             UUID id2 = UUID.randomUUID();
@@ -338,7 +327,6 @@ class ApprovalLineTemplateAdminServiceTest {
 
             given(templateRepo.findById(id1)).willReturn(Optional.of(t1));
             given(templateRepo.findById(id2)).willReturn(Optional.of(t2));
-            given(historyRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             DisplayOrderUpdateRequest request = new DisplayOrderUpdateRequest(List.of(
                     new DisplayOrderUpdateRequest.DisplayOrderItem(id1, 10),
@@ -349,7 +337,28 @@ class ApprovalLineTemplateAdminServiceTest {
             assertThat(result).hasSize(2);
             assertThat(result).anyMatch(r -> r.name().equals("템플릿1") && r.displayOrder() == 10);
             assertThat(result).anyMatch(r -> r.name().equals("템플릿2") && r.displayOrder() == 20);
-            verify(historyRepo, times(2)).save(any());
+            // 순서가 변경되었으므로 버전 서비스가 호출되어야 함
+            verify(versionService).createUpdateVersion(eq(t1), any(), eq(testContext()), any());
+            verify(versionService).createUpdateVersion(eq(t2), any(), eq(testContext()), any());
+        }
+
+        @Test
+        @DisplayName("Given: 순서가 변경되지 않은 템플릿 / When: updateDisplayOrders 호출 / Then: 버전 기록 안함")
+        void noVersionRecordWhenDisplayOrderUnchanged() {
+            UUID id1 = UUID.randomUUID();
+            ApprovalLineTemplate t1 = createTestTemplate("템플릿1");
+            // 이미 displayOrder가 0임
+
+            given(templateRepo.findById(id1)).willReturn(Optional.of(t1));
+
+            DisplayOrderUpdateRequest request = new DisplayOrderUpdateRequest(List.of(
+                    new DisplayOrderUpdateRequest.DisplayOrderItem(id1, 0))); // 동일한 순서
+
+            List<ApprovalLineTemplateResponse> result = service.updateDisplayOrders(request, testContext());
+
+            assertThat(result).hasSize(1);
+            // 순서가 변경되지 않았으므로 버전 서비스가 호출되지 않아야 함
+            verify(versionService, never()).createUpdateVersion(any(), any(), any(), any());
         }
     }
 }
