@@ -1,4 +1,4 @@
-package com.example.auth.organization;
+package com.example.admin.organization;
 
 import java.util.Optional;
 import java.util.UUID;

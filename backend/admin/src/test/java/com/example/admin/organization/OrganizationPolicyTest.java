@@ -1,4 +1,4 @@
-package com.example.auth.organization;
+package com.example.admin.organization;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

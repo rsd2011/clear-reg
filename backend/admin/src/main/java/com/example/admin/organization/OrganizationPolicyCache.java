@@ -1,4 +1,4 @@
-package com.example.auth.organization;
+package com.example.admin.organization;
 
 import com.example.common.cache.CacheNames;
 import java.util.List;

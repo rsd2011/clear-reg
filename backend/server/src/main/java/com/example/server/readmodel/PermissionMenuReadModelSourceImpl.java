@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
-import com.example.auth.organization.OrganizationPolicyService;
+import com.example.admin.organization.OrganizationPolicyService;
 import com.example.admin.permission.ActionCode;
 import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.PermissionAssignment;

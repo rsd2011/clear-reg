@@ -67,7 +67,7 @@ import com.example.auth.security.JwtTokenProvider;
 import com.example.auth.security.JwtProperties;
 import com.example.auth.domain.RefreshTokenRepository;
 import com.example.auth.config.SessionPolicyProperties;
-import com.example.auth.organization.OrganizationPolicyRepository;
+import com.example.admin.organization.OrganizationPolicyRepository;
 import com.example.admin.permission.PermissionGroupRepository;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.AuditRecordService;
