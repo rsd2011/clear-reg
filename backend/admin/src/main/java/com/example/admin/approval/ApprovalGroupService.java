@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
 import com.example.admin.permission.context.AuthContext;
 
@@ -29,7 +30,7 @@ public class ApprovalGroupService {
                 request.groupCode(),
                 request.name(),
                 request.description(),
-                request.priority() != null ? request.priority() : 0,
+                request.displayOrder() != null ? request.displayOrder() : 0,
                 now);
         approvalGroupRepository.save(group);
         return ApprovalGroupResponse.from(group);
@@ -47,8 +48,8 @@ public class ApprovalGroupService {
                 .orElseThrow(() -> new ApprovalGroupNotFoundException("결재 그룹을 찾을 수 없습니다."));
         OffsetDateTime now = OffsetDateTime.now();
         group.rename(request.name(), request.description(), now);
-        if (request.priority() != null) {
-            group.updatePriority(request.priority(), now);
+        if (request.displayOrder() != null) {
+            group.updateDisplayOrder(request.displayOrder(), now);
         }
         return ApprovalGroupResponse.from(group);
     }
@@ -75,7 +76,7 @@ public class ApprovalGroupService {
                         || containsIgnoreCase(g.getName(), keyword)
                         || containsIgnoreCase(g.getDescription(), keyword))
                 .sorted((a, b) -> {
-                    int cmp = Integer.compare(a.getPriority(), b.getPriority());
+                    int cmp = Integer.compare(a.getDisplayOrder(), b.getDisplayOrder());
                     return cmp != 0 ? cmp : a.getName().compareToIgnoreCase(b.getName());
                 })
                 .map(ApprovalGroupResponse::from)
@@ -87,15 +88,30 @@ public class ApprovalGroupService {
         return approvalGroupRepository.existsByGroupCode(groupCode);
     }
 
-    public List<ApprovalGroupResponse> updateApprovalGroupPriorities(ApprovalGroupPriorityRequest request, AuthContext context, boolean audit) {
+    public List<ApprovalGroupResponse> updateApprovalGroupDisplayOrders(ApprovalGroupPriorityRequest request, AuthContext context, boolean audit) {
         OffsetDateTime now = OffsetDateTime.now();
-        return request.priorities().stream()
+        return request.displayOrders().stream()
                 .map(item -> {
                     ApprovalGroup group = approvalGroupRepository.findById(item.id())
                             .orElseThrow(() -> new ApprovalGroupNotFoundException("결재 그룹을 찾을 수 없습니다: " + item.id()));
-                    group.updatePriority(item.priority(), now);
+                    group.updateDisplayOrder(item.displayOrder(), now);
                     return ApprovalGroupResponse.from(group);
                 })
+                .toList();
+    }
+
+    /**
+     * 승인그룹 요약 목록 조회.
+     */
+    @Transactional(readOnly = true)
+    public List<ApprovalGroupSummaryResponse> listGroupSummary(boolean activeOnly) {
+        return approvalGroupRepository.findAll().stream()
+                .filter(g -> !activeOnly || g.isActive())
+                .sorted((a, b) -> {
+                    int cmp = Integer.compare(a.getDisplayOrder(), b.getDisplayOrder());
+                    return cmp != 0 ? cmp : a.getName().compareToIgnoreCase(b.getName());
+                })
+                .map(ApprovalGroupSummaryResponse::from)
                 .toList();
     }
 

@@ -534,7 +534,6 @@ public class DraftApplicationService {
         if (request.templateId() != null && request.formTemplateId() != null) {
             ApprovalLineTemplate template = templateRepository.findByIdAndActiveTrue(request.templateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-            template.assertOrganization(organizationCode);
             DraftFormTemplate formTemplate = formTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
             formTemplate.assertOrganization(organizationCode);
@@ -548,9 +547,6 @@ public class DraftApplicationService {
         if (preset != null) {
             approvalTemplate = preset.getDefaultApprovalTemplate();
             formTemplate = preset.getFormTemplate();
-            if (approvalTemplate != null) {
-                approvalTemplate.assertOrganization(organizationCode);
-            }
             formTemplate.assertOrganization(organizationCode);
             ensureBusinessMatches(formTemplate, request.businessFeatureCode());
         }
@@ -563,7 +559,6 @@ public class DraftApplicationService {
         }
 
         if (approvalTemplate == null && mapping != null) {
-            mapping.getApprovalLineTemplate().assertOrganization(organizationCode);
             approvalTemplate = mapping.getApprovalLineTemplate();
         }
         if (formTemplate == null && mapping != null) {

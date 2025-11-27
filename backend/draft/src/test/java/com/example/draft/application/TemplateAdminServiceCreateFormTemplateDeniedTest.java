@@ -21,6 +21,7 @@ class TemplateAdminServiceCreateFormTemplateDeniedTest {
         TemplateAdminService service = new TemplateAdminService(
                 
                 mock(ApprovalLineTemplateRepository.class),
+                mock(com.example.admin.approval.ApprovalGroupRepository.class),
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", "HR", "ORG2", "{}", true);

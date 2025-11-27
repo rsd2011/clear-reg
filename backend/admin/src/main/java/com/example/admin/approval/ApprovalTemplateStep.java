@@ -25,19 +25,15 @@ public class ApprovalTemplateStep extends PrimaryKeyEntity {
     @Column(name = "step_order", nullable = false)
     private int stepOrder;
 
-    @Column(name = "approval_group_code", nullable = false, length = 64)
-    private String approvalGroupCode;
-
-    @Column(name = "description", length = 500)
-    private String description;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "approval_group_id", nullable = false)
+    private ApprovalGroup approvalGroup;
 
     public ApprovalTemplateStep(ApprovalLineTemplate template,
                                 int stepOrder,
-                                String approvalGroupCode,
-                                String description) {
+                                ApprovalGroup approvalGroup) {
         this.template = template;
         this.stepOrder = stepOrder;
-        this.approvalGroupCode = approvalGroupCode;
-        this.description = description;
+        this.approvalGroup = approvalGroup;
     }
 }

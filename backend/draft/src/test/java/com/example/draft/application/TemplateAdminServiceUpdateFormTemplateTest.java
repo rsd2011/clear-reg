@@ -29,6 +29,7 @@ class TemplateAdminServiceUpdateFormTemplateTest {
         TemplateAdminService service = new TemplateAdminService(
                 
                 mock(ApprovalLineTemplateRepository.class),
+                mock(com.example.admin.approval.ApprovalGroupRepository.class),
                 formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         DraftFormTemplate template = DraftFormTemplate.create("form", "HR", null, "{}", OffsetDateTime.now());
@@ -42,6 +43,5 @@ class TemplateAdminServiceUpdateFormTemplateTest {
         DraftFormTemplateResponse res = service.updateDraftFormTemplate(id, req, ctx, false);
 
         assertThat(res.name()).isEqualTo("form2");
-        assertThat(res.organizationCode()).isNull();
     }
 }

@@ -21,7 +21,7 @@ class DraftTemplatePresetResponseTest {
     void responseFromAndApply() {
         OffsetDateTime now = OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
         DraftFormTemplate form = DraftFormTemplate.create("폼", "NOTICE", "ORG1", "{}", now);
-        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", "NOTICE", "ORG1", now);
+        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", 0, null, now);
         DraftTemplatePreset preset = DraftTemplatePreset.create(
                 "사전기안",
                 "NOTICE",

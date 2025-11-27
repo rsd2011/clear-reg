@@ -23,18 +23,18 @@ class TemplateAdminServiceFilterTest {
 
     ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-    TemplateAdminService service = new TemplateAdminService(lineRepo, formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
+    TemplateAdminService service = new TemplateAdminService(lineRepo, mock(com.example.admin.approval.ApprovalGroupRepository.class), formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
     AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
     @Test
     @DisplayName("라인 템플릿은 businessType, org, activeOnly 필터를 모두 적용한다")
     void filtersApprovalLineTemplates() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate global = ApprovalLineTemplate.createGlobal("g", "HR", now);
-        ApprovalLineTemplate org1 = ApprovalLineTemplate.create("o1", "HR", "ORG1", now);
-        org1.rename("o1", true, now);
-        ApprovalLineTemplate org2Inactive = ApprovalLineTemplate.create("o2", "FIN", "ORG2", now);
-        org2Inactive.rename("o2", false, now); // inactive
+        ApprovalLineTemplate global = ApprovalLineTemplate.create("g", 0, null, now);
+        ApprovalLineTemplate org1 = ApprovalLineTemplate.create("o1", 1, null, now);
+        org1.rename("o1", 1, null, true, now);
+        ApprovalLineTemplate org2Inactive = ApprovalLineTemplate.create("o2", 2, null, now);
+        org2Inactive.rename("o2", 2, null, false, now); // inactive
         given(lineRepo.findAll()).willReturn(List.of(global, org1, org2Inactive));
 
         List<ApprovalLineTemplateResponse> filtered = service.listApprovalLineTemplates("HR", null, true, ctx, false);
@@ -58,17 +58,17 @@ class TemplateAdminServiceFilterTest {
     }
 
     @Test
-    @DisplayName("라인 템플릿은 전달된 organizationCode로만 필터한다 (audit=true)")
-    void filtersByOrganizationWhenAuditTrue() {
+    @DisplayName("라인 템플릿은 activeOnly 필터를 적용한다 (audit=true)")
+    void filtersActiveOnlyWhenAuditTrue() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate org1 = ApprovalLineTemplate.create("o1", "HR", "ORG1", now);
-        org1.rename("o1", true, now);
-        ApprovalLineTemplate org2 = ApprovalLineTemplate.create("o2", "HR", "ORG2", now);
-        org2.rename("o2", true, now);
-        given(lineRepo.findAll()).willReturn(List.of(org1, org2));
+        ApprovalLineTemplate active = ApprovalLineTemplate.create("o1", 0, null, now);
+        active.rename("active", 0, null, true, now);
+        ApprovalLineTemplate inactive = ApprovalLineTemplate.create("o2", 1, null, now);
+        inactive.rename("inactive", 1, null, false, now);
+        given(lineRepo.findAll()).willReturn(List.of(active, inactive));
 
-        List<ApprovalLineTemplateResponse> filtered = service.listApprovalLineTemplates("HR", "ORG2", true, ctx, true);
+        List<ApprovalLineTemplateResponse> filtered = service.listApprovalLineTemplates(null, null, true, ctx, true);
 
-        assertThat(filtered).extracting(ApprovalLineTemplateResponse::organizationCode).containsExactly("ORG2");
+        assertThat(filtered).extracting(ApprovalLineTemplateResponse::name).containsExactly("active");
     }
 }

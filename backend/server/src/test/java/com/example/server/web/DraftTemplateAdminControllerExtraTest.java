@@ -3,6 +3,7 @@ package com.example.server.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,7 +40,7 @@ class DraftTemplateAdminControllerExtraTest {
     void throwsWhenContextMissing() {
         AuthContextHolder.clear();
 
-        assertThatThrownBy(() -> controller.listApprovalLineTemplates(null, null, true))
+        assertThatThrownBy(() -> controller.listApprovalLineTemplates(true))
                 .isInstanceOf(PermissionDeniedException.class);
     }
 
@@ -49,14 +50,17 @@ class DraftTemplateAdminControllerExtraTest {
         AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
-        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("이름", "BT", "ORG", true, List.of());
+        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
+                "이름",
+                0,
+                null,
+                true, List.of());
         ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(
                 UUID.randomUUID(),
                 "CODE",
                 "이름",
-                "BT",
-                com.example.admin.approval.TemplateScope.ORGANIZATION,
-                "ORG",
+                0,
+                null,
                 true,
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
@@ -93,17 +97,16 @@ class DraftTemplateAdminControllerExtraTest {
                 UUID.randomUUID(),
                 "CODE",
                 "이름",
-                "BT",
-                com.example.admin.approval.TemplateScope.ORGANIZATION,
-                "ORG",
+                0,
+                null,
                 true,
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
                 List.of());
-        when(service.listApprovalLineTemplates(eq("BT"), eq("ORG"), eq(false), eq(ctx), eq(true)))
+        when(service.listApprovalLineTemplates(isNull(), isNull(), eq(false), eq(ctx), eq(true)))
                 .thenReturn(List.of(response));
 
-        List<ApprovalLineTemplateResponse> result = controller.listApprovalLineTemplates("BT", "ORG", false);
+        List<ApprovalLineTemplateResponse> result = controller.listApprovalLineTemplates(false);
 
         assertThat(result).containsExactly(response);
     }

@@ -1,5 +1,7 @@
 package com.example.draft.application.notification;
 
+import com.example.draft.TestApprovalHelper;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -34,8 +36,8 @@ class DraftEndToEndWithNotificationTest {
         DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step1 = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP1", ""));
-        DraftApprovalStep step2 = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 2, "GRP2", ""));
+        DraftApprovalStep step1 = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 1, "GRP1", ""));
+        DraftApprovalStep step2 = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 2, "GRP2", ""));
         draft.addApprovalStep(step1);
         draft.addApprovalStep(step2);
 

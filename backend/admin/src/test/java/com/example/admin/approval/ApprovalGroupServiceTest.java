@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
@@ -51,7 +52,7 @@ class ApprovalGroupServiceTest {
 
             assertThat(res.groupCode()).isEqualTo("G1");
             assertThat(res.name()).isEqualTo("name");
-            assertThat(res.priority()).isEqualTo(10);
+            assertThat(res.displayOrder()).isEqualTo(10);
         }
     }
 
@@ -73,7 +74,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);
 
             assertThat(res.name()).isEqualTo("newName");
-            assertThat(res.priority()).isEqualTo(10);
+            assertThat(res.displayOrder()).isEqualTo(10);
         }
 
         @Test
@@ -211,12 +212,12 @@ class ApprovalGroupServiceTest {
     }
 
     @Nested
-    @DisplayName("updateApprovalGroupPriorities")
-    class UpdatePriorities {
+    @DisplayName("updateApprovalGroupDisplayOrders")
+    class UpdateDisplayOrders {
 
         @Test
-        @DisplayName("우선순위 일괄 업데이트 성공")
-        void updatePrioritiesSuccess() {
+        @DisplayName("표시순서 일괄 업데이트 성공")
+        void updateDisplayOrdersSuccess() {
             UUID id1 = UUID.randomUUID();
             UUID id2 = UUID.randomUUID();
             ApprovalGroup group1 = ApprovalGroup.create("G1", "name1", null, 0, OffsetDateTime.now());
@@ -226,15 +227,15 @@ class ApprovalGroupServiceTest {
             given(groupRepo.findById(id2)).willReturn(Optional.of(group2));
 
             ApprovalGroupPriorityRequest req = new ApprovalGroupPriorityRequest(List.of(
-                    new ApprovalGroupPriorityRequest.PriorityItem(id1, 5),
-                    new ApprovalGroupPriorityRequest.PriorityItem(id2, 15)));
+                    new ApprovalGroupPriorityRequest.DisplayOrderItem(id1, 5),
+                    new ApprovalGroupPriorityRequest.DisplayOrderItem(id2, 15)));
             AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
-            List<ApprovalGroupResponse> result = service.updateApprovalGroupPriorities(req, ctx, false);
+            List<ApprovalGroupResponse> result = service.updateApprovalGroupDisplayOrders(req, ctx, false);
 
             assertThat(result).hasSize(2);
-            assertThat(result).anyMatch(r -> r.groupCode().equals("G1") && r.priority() == 5);
-            assertThat(result).anyMatch(r -> r.groupCode().equals("G2") && r.priority() == 15);
+            assertThat(result).anyMatch(r -> r.groupCode().equals("G1") && r.displayOrder() == 5);
+            assertThat(result).anyMatch(r -> r.groupCode().equals("G2") && r.displayOrder() == 15);
         }
     }
 
@@ -262,6 +263,54 @@ class ApprovalGroupServiceTest {
 
             assertThatThrownBy(() -> service.getApprovalGroup(id))
                     .isInstanceOf(ApprovalGroupNotFoundException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("listGroupSummary")
+    class ListGroupSummary {
+
+        @Test
+        @DisplayName("Given: 승인그룹이 존재할 때 / When: listGroupSummary 호출 / Then: 요약 정보만 반환")
+        void listGroupSummaryReturnsOnlySummary() {
+            ApprovalGroup g1 = ApprovalGroup.create("TEAM_LEADER", "팀장", null, 1, OffsetDateTime.now());
+            ApprovalGroup g2 = ApprovalGroup.create("DEPT_HEAD", "부서장", null, 2, OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(g1, g2));
+
+            List<ApprovalGroupSummaryResponse> result = service.listGroupSummary(true);
+
+            assertThat(result).hasSize(2);
+            assertThat(result).extracting(ApprovalGroupSummaryResponse::groupCode)
+                    .containsExactlyInAnyOrder("TEAM_LEADER", "DEPT_HEAD");
+        }
+
+        @Test
+        @DisplayName("Given: 비활성 그룹 포함 / When: activeOnly=true / Then: 활성 그룹만 반환")
+        void listGroupSummaryFiltersInactive() {
+            ApprovalGroup active = ApprovalGroup.create("ACTIVE", "활성", null, 1, OffsetDateTime.now());
+            ApprovalGroup inactive = ApprovalGroup.create("INACTIVE", "비활성", null, 2, OffsetDateTime.now());
+            inactive.deactivate(OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(active, inactive));
+
+            List<ApprovalGroupSummaryResponse> result = service.listGroupSummary(true);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).groupCode()).isEqualTo("ACTIVE");
+        }
+
+        @Test
+        @DisplayName("Given: 비활성 그룹 포함 / When: activeOnly=false / Then: 모든 그룹 반환")
+        void listGroupSummaryReturnsAllGroups() {
+            ApprovalGroup active = ApprovalGroup.create("ACTIVE", "활성", null, 1, OffsetDateTime.now());
+            ApprovalGroup inactive = ApprovalGroup.create("INACTIVE", "비활성", null, 2, OffsetDateTime.now());
+            inactive.deactivate(OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(active, inactive));
+
+            List<ApprovalGroupSummaryResponse> result = service.listGroupSummary(false);
+
+            assertThat(result).hasSize(2);
+            assertThat(result).extracting(ApprovalGroupSummaryResponse::groupCode)
+                    .containsExactlyInAnyOrder("ACTIVE", "INACTIVE");
         }
     }
 }

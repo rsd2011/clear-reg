@@ -22,7 +22,10 @@ public enum ActionCode {
   DRAFT_DELEGATE,
 
   APPROVAL_ADMIN,
-  APPROVAL_REVIEW;
+  APPROVAL_REVIEW,
+
+  APPROVAL_GROUP_MANAGE,
+  APPROVAL_TEMPLATE_MANAGE;
 
   public boolean satisfies(ActionCode required) {
     if (required == null) {

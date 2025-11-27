@@ -13,10 +13,15 @@ class DraftApprovalStepSkipTest {
     @DisplayName("대기 상태에서는 skip 호출 시 상태가 SKIPPED로 변경된다")
     void skipChangesStateFromWaiting() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
-        draft.addApprovalStep(step);
 
         OffsetDateTime now = OffsetDateTime.now();
+        com.example.admin.approval.ApprovalGroup group = com.example.admin.approval.ApprovalGroup.create("GRP", "그룹", "설명", 1, now);
+        com.example.admin.approval.ApprovalLineTemplate template = com.example.admin.approval.ApprovalLineTemplate.create("템플릿", 0, null, now);
+        com.example.admin.approval.ApprovalTemplateStep templateStep = new com.example.admin.approval.ApprovalTemplateStep(template, 1, group);
+
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(templateStep);
+        draft.addApprovalStep(step);
+
         step.skip("no approver", now);
 
         assertThat(step.getState()).isEqualTo(DraftApprovalState.SKIPPED);

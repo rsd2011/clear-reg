@@ -8,6 +8,6 @@ public record ApprovalGroupRequest(
         @NotBlank @Size(max = 64) String groupCode,
         @NotBlank @Size(max = 255) String name,
         @Size(max = 500) String description,
-        @Min(0) Integer priority
+        @Min(0) Integer displayOrder
 ) {
 }

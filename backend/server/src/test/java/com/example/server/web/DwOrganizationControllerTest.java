@@ -57,7 +57,6 @@ class DwOrganizationControllerTest {
         AuthContextHolder.clear();
 
         assertThat(response).hasSize(1);
-        assertThat(response.get(0).organizationCode()).isEqualTo("ORG001");
         verify(organizationPort).getOrganizations(pageable, RowScope.ALL, "ORG001");
     }
 

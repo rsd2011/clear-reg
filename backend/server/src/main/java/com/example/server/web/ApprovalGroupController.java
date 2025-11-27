@@ -25,6 +25,7 @@ import com.example.admin.approval.ApprovalGroupService;
 import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
 import com.example.admin.approval.dto.GroupCodeExistsResponse;
 import com.example.admin.permission.ActionCode;
@@ -38,7 +39,7 @@ import com.example.common.policy.DataPolicyContextHolder;
 
 @RestController
 @Validated
-@RequestMapping("/api/admin/approval-groups")
+@RequestMapping("/api/approval-groups")
 @Tag(name = "Approval Group Admin", description = "승인그룹 관리 API")
 public class ApprovalGroupController {
 
@@ -50,7 +51,7 @@ public class ApprovalGroupController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 등록")
     public ApprovalGroupResponse createGroup(@Valid @RequestBody ApprovalGroupRequest request) {
         AuthContext context = currentContext();
@@ -59,7 +60,7 @@ public class ApprovalGroupController {
     }
 
     @GetMapping("/{id}")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 상세 조회")
     public ApprovalGroupResponse getGroup(@PathVariable UUID id) {
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
@@ -67,7 +68,7 @@ public class ApprovalGroupController {
     }
 
     @PutMapping("/{id}")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 수정")
     public ApprovalGroupResponse updateGroup(@PathVariable UUID id,
                                              @Valid @RequestBody ApprovalGroupUpdateRequest request) {
@@ -78,7 +79,7 @@ public class ApprovalGroupController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 삭제 (비활성화)")
     public void deleteGroup(@PathVariable UUID id) {
         AuthContext context = currentContext();
@@ -86,7 +87,7 @@ public class ApprovalGroupController {
     }
 
     @PostMapping("/{id}/activate")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 활성화 (복원)")
     public ApprovalGroupResponse activateGroup(@PathVariable UUID id) {
         AuthContext context = currentContext();
@@ -95,7 +96,7 @@ public class ApprovalGroupController {
     }
 
     @GetMapping
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 목록 조회")
     public List<ApprovalGroupResponse> listGroups(
             @RequestParam(required = false) String keyword,
@@ -108,20 +109,31 @@ public class ApprovalGroupController {
     }
 
     @GetMapping("/exists")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
     @Operation(summary = "승인그룹 코드 중복 검사")
     public GroupCodeExistsResponse checkGroupCodeExists(@RequestParam String groupCode) {
         return new GroupCodeExistsResponse(approvalGroupService.existsGroupCode(groupCode));
     }
 
-    @PatchMapping("/priorities")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
-    @Operation(summary = "승인그룹 우선순위 일괄 업데이트")
-    public List<ApprovalGroupResponse> updateGroupPriorities(@Valid @RequestBody ApprovalGroupPriorityRequest request) {
+    @PatchMapping("/display-orders")
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @Operation(summary = "승인그룹 표시순서 일괄 업데이트")
+    public List<ApprovalGroupResponse> updateGroupDisplayOrders(@Valid @RequestBody ApprovalGroupPriorityRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return approvalGroupService.updateApprovalGroupPriorities(request, context, true).stream()
+        return approvalGroupService.updateApprovalGroupDisplayOrders(request, context, true).stream()
                 .map(g -> ApprovalGroupResponse.apply(g, masker))
+                .toList();
+    }
+
+    @GetMapping("/summary")
+    @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_GROUP_MANAGE)
+    @Operation(summary = "승인그룹 요약 목록 조회", description = "템플릿 매핑용 승인그룹 ID, 코드, 이름만 반환")
+    public List<ApprovalGroupSummaryResponse> listGroupSummary(
+            @RequestParam(defaultValue = "true") boolean activeOnly) {
+        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        return approvalGroupService.listGroupSummary(activeOnly).stream()
+                .map(r -> ApprovalGroupSummaryResponse.apply(r, masker))
                 .toList();
     }
 

@@ -9,11 +9,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Min;
 
 public record ApprovalGroupPriorityRequest(
-        @NotEmpty @Valid List<PriorityItem> priorities
+        @NotEmpty @Valid List<DisplayOrderItem> displayOrders
 ) {
-    public record PriorityItem(
+    public record DisplayOrderItem(
             @NotNull UUID id,
-            @NotNull @Min(0) Integer priority
+            @NotNull @Min(0) Integer displayOrder
     ) {
     }
 }

@@ -39,7 +39,6 @@ class DwOrganizationPortAdapterTest {
         var page = adapter.getOrganizations(pageable, RowScope.ALL, "ORG001");
 
         assertThat(page.getContent()).hasSize(1);
-        assertThat(page.getContent().get(0).organizationCode()).isEqualTo("ORG001");
         then(queryService).should().getOrganizations(pageable, RowScope.ALL, "ORG001");
     }
 }

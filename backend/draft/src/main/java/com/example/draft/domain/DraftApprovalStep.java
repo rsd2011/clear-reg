@@ -69,8 +69,8 @@ public class DraftApprovalStep extends PrimaryKeyEntity {
 
     public static DraftApprovalStep fromTemplate(ApprovalTemplateStep templateStep) {
         return new DraftApprovalStep(templateStep.getStepOrder(),
-                templateStep.getApprovalGroupCode(),
-                templateStep.getDescription());
+                templateStep.getApprovalGroup().getGroupCode(),
+                templateStep.getApprovalGroup().getName());
     }
 
     void attachTo(Draft draft) {

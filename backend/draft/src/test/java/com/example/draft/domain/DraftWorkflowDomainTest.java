@@ -1,5 +1,7 @@
 package com.example.draft.domain;
 
+import com.example.draft.TestApprovalHelper;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
@@ -15,7 +17,7 @@ class DraftWorkflowDomainTest {
     }
 
     private DraftApprovalStep step(int order, String group) {
-        return DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, order, group, ""));
+        return DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(order, group));
     }
 
     @Test

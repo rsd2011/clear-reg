@@ -34,7 +34,6 @@ class DraftTemplatePresetRequestTest {
 
         assertThat(req.name()).isEqualTo("사전기안");
         assertThat(req.businessFeatureCode()).isEqualTo("NOTICE");
-        assertThat(req.organizationCode()).isEqualTo("ORG1");
         assertThat(req.formTemplateId()).isEqualTo(formId);
         assertThat(req.defaultApprovalTemplateId()).isEqualTo(approvalId);
         assertThat(req.defaultFormPayload()).contains("field");

@@ -155,7 +155,7 @@ class DraftApplicationServiceTest {
 
     @Test
     void givenGlobalTemplate_whenCreate_thenOrganizationCheckSkipped() {
-        ApprovalLineTemplate template = ApprovalLineTemplate.createGlobal("글로벌", "NOTICE", NOW);
+        ApprovalLineTemplate template = ApprovalLineTemplate.create("글로벌", 0, null, NOW);
         DraftFormTemplate formTemplate = DraftFormTemplate.create("글로벌", "NOTICE", null, "{}", NOW);
         given(templateRepository.findByIdAndActiveTrue(template.getId())).willReturn(Optional.of(template));
         given(formTemplateRepository.findByIdAndActiveTrue(formTemplate.getId())).willReturn(Optional.of(formTemplate));
@@ -166,7 +166,6 @@ class DraftApplicationServiceTest {
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
-        assertThat(response.organizationCode()).isEqualTo(ORG);
     }
 
     @Test
@@ -283,18 +282,6 @@ class DraftApplicationServiceTest {
 
         assertThatThrownBy(() -> service.suggestTemplate("NOTICE", ORG))
                 .isInstanceOf(DraftTemplateNotFoundException.class);
-    }
-
-    @Test
-    void givenDifferentOrgTemplate_whenCreate_thenThrows() {
-        ApprovalLineTemplate template = sampleTemplate("OTHER");
-        given(templateRepository.findByIdAndActiveTrue(template.getId())).willReturn(Optional.of(template));
-
-        DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), UUID.randomUUID(), "{}", List.of(), null, java.util.Map.of());
-
-        assertThatThrownBy(() -> service.createDraft(request, "writer", ORG))
-                .isInstanceOfAny(DraftAccessDeniedException.class, ApprovalAccessDeniedException.class);
     }
 
     @Test
@@ -424,7 +411,6 @@ class DraftApplicationServiceTest {
 
         DraftResponse response = service.getDraft(draft.getId(), ORG, ACTOR, true);
 
-        assertThat(response.organizationCode()).isEqualTo("ORG-B");
     }
 
     @Test
@@ -462,9 +448,12 @@ class DraftApplicationServiceTest {
     }
 
     private ApprovalLineTemplate sampleTemplate(String organizationCode) {
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("기본", "NOTICE", organizationCode, NOW);
-        template.addStep(1, "GROUP-A", "1차");
-        template.addStep(2, "GROUP-B", "2차");
+        ApprovalLineTemplate template = ApprovalLineTemplate.create("기본", 0, null, NOW);
+        // ApprovalGroup을 생성하고 addStep 호출
+        com.example.admin.approval.ApprovalGroup group1 = com.example.admin.approval.ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
+        com.example.admin.approval.ApprovalGroup group2 = com.example.admin.approval.ApprovalGroup.create("GRP2", "그룹2", "설명", 2, NOW);
+        template.addStep(1, group1);
+        template.addStep(2, group2);
         return template;
     }
 

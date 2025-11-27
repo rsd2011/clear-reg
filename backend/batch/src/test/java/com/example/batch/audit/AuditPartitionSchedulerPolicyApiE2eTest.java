@@ -83,6 +83,9 @@ import com.example.file.audit.FileAuditOutboxRelay;
 import com.example.admin.menu.MenuService;
 import com.example.admin.menu.MenuRepository;
 import com.example.admin.menu.MenuViewConfigRepository;
+import com.example.admin.approval.ApprovalGroupRepository;
+import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.history.ApprovalLineTemplateHistoryRepository;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -278,6 +281,15 @@ class AuditPartitionSchedulerPolicyApiE2eTest {
 
     @MockBean
     MenuViewConfigRepository menuViewConfigRepository;
+
+    @MockBean
+    ApprovalGroupRepository approvalGroupRepository;
+
+    @MockBean
+    ApprovalLineTemplateRepository approvalLineTemplateRepository;
+
+    @MockBean
+    ApprovalLineTemplateHistoryRepository approvalLineTemplateHistoryRepository;
 
     @org.junit.jupiter.api.BeforeEach
     void setUpPolicyRepository() {

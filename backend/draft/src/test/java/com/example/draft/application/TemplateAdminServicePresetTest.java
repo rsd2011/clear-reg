@@ -47,6 +47,7 @@ class TemplateAdminServicePresetTest {
         approvalTemplateRepository = mock(ApprovalLineTemplateRepository.class);
         service = new TemplateAdminService(
                 approvalTemplateRepository,
+                mock(com.example.admin.approval.ApprovalGroupRepository.class),
                 formTemplateRepository,
                 presetRepository,
                 new ObjectMapper());
@@ -57,7 +58,7 @@ class TemplateAdminServicePresetTest {
     @DisplayName("프리셋 생성 시 저장소에 persist하고 응답을 반환한다")
     void createPreset() {
         DraftFormTemplate form = DraftFormTemplate.create("폼", "NOTICE", "ORG1", "{}", now);
-        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", "NOTICE", "ORG1", now);
+        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", 0, null, now);
         given(formTemplateRepository.findByIdAndActiveTrue(form.getId())).willReturn(Optional.of(form));
         given(approvalTemplateRepository.findByIdAndActiveTrue(approval.getId())).willReturn(Optional.of(approval));
         ArgumentCaptor<DraftTemplatePreset> saved = ArgumentCaptor.forClass(DraftTemplatePreset.class);

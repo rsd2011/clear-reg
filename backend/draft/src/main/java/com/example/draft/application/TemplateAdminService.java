@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
+import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplate;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
 import com.example.admin.approval.ApprovalTemplateStep;
@@ -33,15 +35,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class TemplateAdminService {
 
     private final ApprovalLineTemplateRepository approvalLineTemplateRepository;
+    private final ApprovalGroupRepository approvalGroupRepository;
     private final DraftFormTemplateRepository draftFormTemplateRepository;
     private final DraftTemplatePresetRepository presetRepository;
     private final ObjectMapper objectMapper;
 
     public TemplateAdminService(ApprovalLineTemplateRepository approvalLineTemplateRepository,
+                                ApprovalGroupRepository approvalGroupRepository,
                                 DraftFormTemplateRepository draftFormTemplateRepository,
                                 DraftTemplatePresetRepository presetRepository,
                                 ObjectMapper objectMapper) {
         this.approvalLineTemplateRepository = approvalLineTemplateRepository;
+        this.approvalGroupRepository = approvalGroupRepository;
         this.draftFormTemplateRepository = draftFormTemplateRepository;
         this.presetRepository = presetRepository;
         this.objectMapper = objectMapper;
@@ -50,12 +55,15 @@ public class TemplateAdminService {
     public ApprovalLineTemplateResponse createApprovalLineTemplate(ApprovalLineTemplateRequest request,
                                                                     AuthContext context,
                                                                     boolean audit) {
-        String org = ensureOrganizationNullable(request.organizationCode(), context, audit);
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate template = org == null
-                ? ApprovalLineTemplate.createGlobal(request.name(), request.businessType(), now)
-                : ApprovalLineTemplate.create(request.name(), request.businessType(), org, now);
-        template.rename(request.name(), request.active(), now);
+        ApprovalLineTemplate template = ApprovalLineTemplate.create(
+                request.name(),
+                request.displayOrder(),
+                request.description(),
+                now);
+        if (!request.active()) {
+            template.rename(request.name(), request.displayOrder(), request.description(), request.active(), now);
+        }
         template.replaceSteps(toEntities(template, request.steps()));
         return ApprovalLineTemplateResponse.from(approvalLineTemplateRepository.save(template));
     }
@@ -66,11 +74,8 @@ public class TemplateAdminService {
                                                                     boolean audit) {
         ApprovalLineTemplate template = approvalLineTemplateRepository.findById(id)
                 .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-        if (template.getOrganizationCode() != null) {
-            ensureOrganizationAccess(template.getOrganizationCode(), context, audit);
-        }
         OffsetDateTime now = OffsetDateTime.now();
-        template.rename(request.name(), request.active(), now);
+        template.rename(request.name(), request.displayOrder(), request.description(), request.active(), now);
         template.replaceSteps(toEntities(template, request.steps()));
         return ApprovalLineTemplateResponse.from(template);
     }
@@ -81,13 +86,7 @@ public class TemplateAdminService {
                                                                          boolean activeOnly,
                                                                          AuthContext context,
                                                                          boolean audit) {
-        if (!audit) {
-            organizationCode = context.organizationCode();
-        }
-        String orgFilter = organizationCode;
         return approvalLineTemplateRepository.findAll().stream()
-                .filter(t -> businessType == null || businessType.equalsIgnoreCase(t.getBusinessType()))
-                .filter(t -> orgFilter == null || t.applicableTo(orgFilter))
                 .filter(t -> !activeOnly || t.isActive())
                 .map(ApprovalLineTemplateResponse::from)
                 .toList();
@@ -154,10 +153,6 @@ public class TemplateAdminService {
         if (request.defaultApprovalTemplateId() != null) {
             approvalTemplate = approvalLineTemplateRepository.findByIdAndActiveTrue(request.defaultApprovalTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-            if (approvalTemplate.getOrganizationCode() != null) {
-                ensureOrganizationAccess(approvalTemplate.getOrganizationCode(), context, audit);
-            }
-            ensureApprovalBusiness(approvalTemplate, request.businessFeatureCode());
         }
         DraftTemplatePreset preset = DraftTemplatePreset.create(
                 request.name(),
@@ -194,10 +189,6 @@ public class TemplateAdminService {
         if (request.defaultApprovalTemplateId() != null) {
             approvalTemplate = approvalLineTemplateRepository.findByIdAndActiveTrue(request.defaultApprovalTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-            if (approvalTemplate.getOrganizationCode() != null) {
-                ensureOrganizationAccess(approvalTemplate.getOrganizationCode(), context, audit);
-            }
-            ensureApprovalBusiness(approvalTemplate, preset.getBusinessFeatureCode());
         }
         preset.update(request.name(),
                 request.titleTemplate(),
@@ -231,7 +222,11 @@ public class TemplateAdminService {
 
     private List<ApprovalTemplateStep> toEntities(ApprovalLineTemplate template, List<ApprovalTemplateStepRequest> steps) {
         return steps.stream()
-                .map(req -> new ApprovalTemplateStep(template, req.stepOrder(), req.approvalGroupCode(), req.description()))
+                .map(req -> {
+                    ApprovalGroup group = approvalGroupRepository.findByGroupCode(req.approvalGroupCode())
+                            .orElseThrow(() -> new IllegalArgumentException("승인 그룹을 찾을 수 없습니다: " + req.approvalGroupCode()));
+                    return new ApprovalTemplateStep(template, req.stepOrder(), group);
+                })
                 .toList();
     }
 
@@ -268,11 +263,6 @@ public class TemplateAdminService {
         }
     }
 
-    private void ensureApprovalBusiness(ApprovalLineTemplate template, String businessFeatureCode) {
-        if (!template.getBusinessType().equalsIgnoreCase(businessFeatureCode)) {
-            throw new IllegalArgumentException("비즈니스 유형에 맞지 않는 결재선 템플릿입니다.");
-        }
-    }
 
     private String ensureOrganizationNullable(String organizationCode, AuthContext context, boolean audit) {
         if (organizationCode == null || organizationCode.isBlank()) {

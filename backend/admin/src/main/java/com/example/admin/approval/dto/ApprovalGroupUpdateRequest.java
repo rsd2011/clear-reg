@@ -7,6 +7,6 @@ import jakarta.validation.constraints.Size;
 public record ApprovalGroupUpdateRequest(
         @NotBlank @Size(max = 255) String name,
         @Size(max = 500) String description,
-        @Min(0) Integer priority
+        @Min(0) Integer displayOrder
 ) {
 }

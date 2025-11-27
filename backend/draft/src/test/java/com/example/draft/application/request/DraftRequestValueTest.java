@@ -18,20 +18,17 @@ class DraftRequestValueTest {
     @Test
     @DisplayName("ApprovalTemplateStepRequest는 필드를 그대로 보존한다")
     void approvalStepRequestPreserves() {
-        ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "GRP", "desc");
+        ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "GRP");
         assertThat(step.stepOrder()).isEqualTo(1);
         assertThat(step.approvalGroupCode()).isEqualTo("GRP");
-        assertThat(step.description()).isEqualTo("desc");
     }
 
     @Test
     @DisplayName("ApprovalLineTemplateRequest는 리스트와 비즈니스 타입을 보존한다")
     void approvalLineTemplateRequestPreserves() {
-        ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "GRP", "desc");
-        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("name", "HR", "ORG", true, List.of(step));
+        ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "GRP");
+        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("name", 0, null, true, List.of(step));
         assertThat(request.name()).isEqualTo("name");
-        assertThat(request.businessType()).isEqualTo("HR");
-        assertThat(request.organizationCode()).isEqualTo("ORG");
         assertThat(request.steps()).hasSize(1);
     }
 

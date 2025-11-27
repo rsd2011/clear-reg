@@ -18,10 +18,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.ApprovalGroupService;
+import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
+import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
-import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
 import com.example.admin.approval.dto.GroupCodeExistsResponse;
 import com.example.admin.permission.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContext;
@@ -193,14 +194,14 @@ class ApprovalGroupControllerTest {
     }
 
     @Test
-    @DisplayName("우선순위 일괄 업데이트 시 컨텍스트가 전달된다")
-    void updatePrioritiesUsesContext() {
+    @DisplayName("표시순서 일괄 업데이트 시 컨텍스트가 전달된다")
+    void updateDisplayOrdersUsesContext() {
         AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
         UUID id = UUID.randomUUID();
         ApprovalGroupPriorityRequest request = new ApprovalGroupPriorityRequest(
-                List.of(new ApprovalGroupPriorityRequest.PriorityItem(id, 5)));
+                List.of(new ApprovalGroupPriorityRequest.DisplayOrderItem(id, 5)));
         ApprovalGroupResponse response = new ApprovalGroupResponse(
                 id,
                 "GC",
@@ -210,12 +211,47 @@ class ApprovalGroupControllerTest {
                 true,
                 OffsetDateTime.now(),
                 OffsetDateTime.now());
-        when(service.updateApprovalGroupPriorities(eq(request), eq(ctx), eq(true))).thenReturn(List.of(response));
+        when(service.updateApprovalGroupDisplayOrders(eq(request), eq(ctx), eq(true))).thenReturn(List.of(response));
 
-        List<ApprovalGroupResponse> result = controller.updateGroupPriorities(request);
+        List<ApprovalGroupResponse> result = controller.updateGroupDisplayOrders(request);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).priority()).isEqualTo(5);
-        verify(service).updateApprovalGroupPriorities(eq(request), eq(ctx), eq(true));
+        assertThat(result.get(0).displayOrder()).isEqualTo(5);
+        verify(service).updateApprovalGroupDisplayOrders(eq(request), eq(ctx), eq(true));
+    }
+
+    @Test
+    @DisplayName("승인그룹 요약 목록 조회 시 경량 응답이 반환된다")
+    void listGroupSummaryReturnsLightweightResponse() {
+        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL));
+
+        UUID id1 = UUID.randomUUID();
+        UUID id2 = UUID.randomUUID();
+        ApprovalGroupSummaryResponse s1 = new ApprovalGroupSummaryResponse(id1, "TEAM_LEADER", "팀장");
+        ApprovalGroupSummaryResponse s2 = new ApprovalGroupSummaryResponse(id2, "DEPT_HEAD", "부서장");
+
+        when(service.listGroupSummary(true)).thenReturn(List.of(s1, s2));
+
+        List<ApprovalGroupSummaryResponse> result = controller.listGroupSummary(true);
+
+        assertThat(result).hasSize(2);
+        assertThat(result).extracting(ApprovalGroupSummaryResponse::groupCode)
+                .containsExactlyInAnyOrder("TEAM_LEADER", "DEPT_HEAD");
+        verify(service).listGroupSummary(eq(true));
+    }
+
+    @Test
+    @DisplayName("승인그룹 요약 목록 - activeOnly=false 시 모든 그룹 반환 요청")
+    void listGroupSummaryIncludesInactive() {
+        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL));
+
+        when(service.listGroupSummary(false)).thenReturn(List.of(
+                new ApprovalGroupSummaryResponse(UUID.randomUUID(), "ACTIVE", "활성"),
+                new ApprovalGroupSummaryResponse(UUID.randomUUID(), "INACTIVE", "비활성")));
+
+        List<ApprovalGroupSummaryResponse> result = controller.listGroupSummary(false);
+
+        assertThat(result).hasSize(2);
+        verify(service).listGroupSummary(eq(false));
     }
 }

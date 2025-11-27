@@ -13,8 +13,6 @@ import com.example.admin.permission.FeatureCode;
 import com.example.admin.permission.RequirePermission;
 import com.example.common.masking.MaskingFunctions;
 import com.example.common.policy.DataPolicyContextHolder;
-import com.example.common.security.RowScope;
-import com.example.common.security.RowScopeContextHolder;
 import com.example.admin.approval.ApprovalGroup;
 import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplate;
@@ -36,14 +34,10 @@ public class ApprovalAdminController {
 
     @GetMapping("/templates")
     @RequirePermission(feature = FeatureCode.APPROVAL, action = ActionCode.APPROVAL_ADMIN)
-    public List<ApprovalLineTemplateSummary> listApprovalTemplates(@RequestParam(required = false) String businessType) {
+    public List<ApprovalLineTemplateSummary> listApprovalTemplates() {
         var match = DataPolicyContextHolder.get();
         var masker = MaskingFunctions.masker(match);
-        RowScope scope = effectiveScope(match);
-        var orgs = allowedOrganizations(scope);
         return approvalLineTemplateRepository.findAll().stream()
-                .filter(t -> businessType == null || t.getBusinessType().equalsIgnoreCase(businessType))
-                .filter(t -> filterOrg(scope, orgs, t.getOrganizationCode()))
                 .map(t -> ApprovalLineTemplateSummary.from(t, masker))
                 .toList();
     }
@@ -59,43 +53,16 @@ public class ApprovalAdminController {
                 .toList();
     }
 
-    private RowScope effectiveScope(com.example.common.policy.DataPolicyMatch match) {
-        if (match != null && match.getRowScope() != null) {
-            return RowScope.of(match.getRowScope(), RowScope.ALL);
-        }
-        return RowScope.ALL;
-    }
-
-    private java.util.Collection<String> allowedOrganizations(RowScope scope) {
-        var ctx = RowScopeContextHolder.get();
-        return ctx != null && ctx.organizationHierarchy() != null && !ctx.organizationHierarchy().isEmpty()
-                ? ctx.organizationHierarchy()
-                : ctx != null && ctx.organizationCode() != null ? java.util.List.of(ctx.organizationCode()) : java.util.List.of();
-    }
-
-    private boolean filterOrg(RowScope scope, java.util.Collection<String> orgs, String targetOrg) {
-        return switch (scope) {
-            case OWN -> targetOrg != null && orgs.contains(targetOrg);
-            case ORG -> targetOrg != null && (orgs.isEmpty() || orgs.contains(targetOrg));
-            default -> true;
-        };
-    }
 
     public record ApprovalLineTemplateSummary(java.util.UUID id,
                                               String templateCode,
                                               String name,
-                                              String businessType,
-                                              String scope,
-                                              String organizationCode,
                                               boolean active) {
         public static ApprovalLineTemplateSummary from(ApprovalLineTemplate template, java.util.function.UnaryOperator<String> masker) {
             java.util.function.UnaryOperator<String> fn = masker == null ? java.util.function.UnaryOperator.identity() : masker;
             return new ApprovalLineTemplateSummary(template.getId(),
                     fn.apply(template.getTemplateCode()),
                     fn.apply(template.getName()),
-                    template.getBusinessType(),
-                    template.getScope().name(),
-                    template.getOrganizationCode(),
                     template.isActive());
         }
     }
@@ -110,7 +77,7 @@ public class ApprovalAdminController {
             return new ApprovalGroupSummary(group.getId(),
                     fn.apply(group.getGroupCode()),
                     fn.apply(group.getName()),
-                    group.getPriority(),
+                    group.getDisplayOrder(),
                     group.isActive());
         }
     }

@@ -11,7 +11,7 @@ public record ApprovalGroupResponse(
         String groupCode,
         String name,
         String description,
-        Integer priority,
+        Integer displayOrder,
         boolean active,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
@@ -27,7 +27,7 @@ public record ApprovalGroupResponse(
                 fn.apply(group.getGroupCode()),
                 fn.apply(group.getName()),
                 fn.apply(group.getDescription()),
-                group.getPriority(),
+                group.getDisplayOrder(),
                 group.isActive(),
                 group.getCreatedAt(),
                 group.getUpdatedAt()
@@ -41,7 +41,7 @@ public record ApprovalGroupResponse(
                 fn.apply(response.groupCode()),
                 fn.apply(response.name()),
                 fn.apply(response.description()),
-                response.priority(),
+                response.displayOrder(),
                 response.active(),
                 response.createdAt(),
                 response.updatedAt());

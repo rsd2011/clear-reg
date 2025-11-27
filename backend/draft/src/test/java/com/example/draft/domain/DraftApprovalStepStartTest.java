@@ -1,5 +1,7 @@
 package com.example.draft.domain;
 
+import com.example.draft.TestApprovalHelper;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
@@ -13,7 +15,7 @@ class DraftApprovalStepStartTest {
     @DisplayName("WAITING 상태에서 start 호출 시 IN_PROGRESS로 전환된다")
     void startChangesStateToInProgress() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());

@@ -30,12 +30,7 @@ class DraftNotificationServiceBranchTest {
         DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(
-                null,
-                1,
-                "GRP",
-                null
-        ));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(com.example.draft.TestApprovalHelper.createTemplateStep(1, "GRP"));
         draft.addApprovalStep(step);
 
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());

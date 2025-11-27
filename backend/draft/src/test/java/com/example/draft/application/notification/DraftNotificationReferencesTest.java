@@ -1,5 +1,7 @@
 package com.example.draft.application.notification;
 
+import com.example.draft.TestApprovalHelper;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -33,7 +35,7 @@ class DraftNotificationReferencesTest {
         DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", null));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 1, "GRP", ""));
         draft.addApprovalStep(step);
         step.delegateTo("delegate", "", OffsetDateTime.now());
 

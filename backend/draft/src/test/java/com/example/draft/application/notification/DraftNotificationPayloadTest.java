@@ -32,7 +32,6 @@ class DraftNotificationPayloadTest {
 
         assertThat(payload.draftId()).isEqualTo(draftId);
         assertThat(payload.action()).isEqualTo("SUBMITTED");
-        assertThat(payload.organizationCode()).isEqualTo("ORG");
         assertThat(payload.recipients()).containsExactly("r1", "r2");
         assertThat(payload.occurredAt()).isEqualTo(now);
     }

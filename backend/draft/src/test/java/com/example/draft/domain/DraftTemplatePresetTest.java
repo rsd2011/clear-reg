@@ -20,7 +20,7 @@ class DraftTemplatePresetTest {
     @DisplayName("조직 프리셋과 글로벌 프리셋 생성/속성/매칭 확인")
     void createAndAttributes() {
         DraftFormTemplate formOrg = DraftFormTemplate.create("폼", "NOTICE", "ORG1", "{}", now);
-        ApprovalLineTemplate approvalOrg = ApprovalLineTemplate.create("결재", "NOTICE", "ORG1", now);
+        ApprovalLineTemplate approvalOrg = ApprovalLineTemplate.create("결재", 0, null, now);
         DraftTemplatePreset orgPreset = DraftTemplatePreset.create("이름", "NOTICE", "ORG1",
                 "제목", "내용", formOrg, approvalOrg, "{}", "[]", true, now);
 
@@ -52,7 +52,7 @@ class DraftTemplatePresetTest {
         DraftTemplatePreset preset = DraftTemplatePreset.create("이름", "NOTICE", "ORG1",
                 "제목", "내용", form, null, "{}", "[]", true, now);
         DraftFormTemplate newForm = DraftFormTemplate.create("폼2", "NOTICE", "ORG1", "{}", now.plusDays(1));
-        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", "NOTICE", "ORG1", now);
+        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", 0, null, now);
 
         preset.update("새이름", "새제목", "새내용", newForm, approval, "{\"x\":1}", "[\"v\"]", false, now.plusDays(2));
 

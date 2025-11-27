@@ -33,30 +33,28 @@ class ApprovalAdminControllerBranchTest {
     }
 
     @Test
-    @DisplayName("RowScope.ALL이면 조직 필터 없이 템플릿을 반환한다")
+    @DisplayName("모든 템플릿을 반환한다")
     void listApprovalTemplates_allScope() {
-        ApprovalLineTemplate t1 = ApprovalLineTemplate.create("name1", "HR", null, OffsetDateTime.now());
-        ApprovalLineTemplate t2 = ApprovalLineTemplate.create("name2", "HR", "ORG1", OffsetDateTime.now());
+        ApprovalLineTemplate t1 = ApprovalLineTemplate.create("name1", 0, null, OffsetDateTime.now());
+        ApprovalLineTemplate t2 = ApprovalLineTemplate.create("name2", 1, null, OffsetDateTime.now());
         given(lineRepo.findAll()).willReturn(List.of(t1, t2));
 
-        var result = controller.listApprovalTemplates("HR");
+        var result = controller.listApprovalTemplates();
 
         assertThat(result).hasSize(2);
     }
 
     @Test
-    @DisplayName("RowScope.ORG이면 허용 조직만 반환한다")
-    void listApprovalTemplates_orgScope() {
-        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ORG.name()).build());
-        RowScopeContextHolder.set(new RowScopeContext("ORG1", List.of("ORG1")));
-        ApprovalLineTemplate org1 = ApprovalLineTemplate.create("name1", "HR", "ORG1", OffsetDateTime.now());
-        ApprovalLineTemplate org2 = ApprovalLineTemplate.create("name2", "HR", "ORG2", OffsetDateTime.now());
-        given(lineRepo.findAll()).willReturn(List.of(org1, org2));
+    @DisplayName("활성화된 템플릿만 반환한다")
+    void listApprovalTemplates_activeOnly() {
+        ApprovalLineTemplate t1 = ApprovalLineTemplate.create("name1", 0, null, OffsetDateTime.now());
+        ApprovalLineTemplate t2 = ApprovalLineTemplate.create("name2", 1, null, OffsetDateTime.now());
+        given(lineRepo.findAll()).willReturn(List.of(t1, t2));
 
-        var result = controller.listApprovalTemplates(null);
+        var result = controller.listApprovalTemplates();
 
-        assertThat(result).extracting(ApprovalAdminController.ApprovalLineTemplateSummary::organizationCode)
-                .containsExactly("ORG1");
+        assertThat(result).extracting(ApprovalAdminController.ApprovalLineTemplateSummary::name)
+                .containsExactly("name1", "name2");
     }
 
     @Test

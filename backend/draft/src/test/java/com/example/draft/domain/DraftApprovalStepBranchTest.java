@@ -11,11 +11,18 @@ import com.example.draft.domain.exception.DraftWorkflowException;
 
 class DraftApprovalStepBranchTest {
 
+    private com.example.admin.approval.ApprovalTemplateStep createTemplateStep() {
+        OffsetDateTime now = OffsetDateTime.now();
+        com.example.admin.approval.ApprovalGroup group = com.example.admin.approval.ApprovalGroup.create("GRP", "그룹", "설명", 1, now);
+        com.example.admin.approval.ApprovalLineTemplate template = com.example.admin.approval.ApprovalLineTemplate.create("템플릿", 0, null, now);
+        return new com.example.admin.approval.ApprovalTemplateStep(template, 1, group);
+    }
+
     @Test
     @DisplayName("완료된 단계는 delegateTo 호출 시 예외를 던진다")
     void delegateToAfterCompletedThrows() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(createTemplateStep());
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());
@@ -29,7 +36,7 @@ class DraftApprovalStepBranchTest {
     @DisplayName("대기 상태가 아니면 start는 상태를 변경하지 않는다")
     void startNoOpWhenNotWaiting() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(createTemplateStep());
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());
@@ -43,7 +50,7 @@ class DraftApprovalStepBranchTest {
     @DisplayName("완료된 단계에서 skip은 아무 동작도 하지 않는다")
     void skipNoOpWhenCompleted() {
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(createTemplateStep());
         draft.addApprovalStep(step);
 
         step.start(OffsetDateTime.now());
@@ -56,7 +63,7 @@ class DraftApprovalStepBranchTest {
     @Test
     @DisplayName("IN_PROGRESS 상태에서 defer하면 DEFERRED로 전환된다")
     void deferTransitions() {
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(createTemplateStep());
         step.start(OffsetDateTime.now());
         step.defer("actor", "later", OffsetDateTime.now());
         assertThatThrownBy(() -> step.defer("actor", "dup", OffsetDateTime.now()))
@@ -66,7 +73,7 @@ class DraftApprovalStepBranchTest {
     @Test
     @DisplayName("DEFERRED 상태가 아니면 completeDeferred는 예외를 던진다")
     void completeDeferredGuard() {
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new com.example.admin.approval.ApprovalTemplateStep(null, 1, "GRP", ""));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(createTemplateStep());
         step.start(OffsetDateTime.now());
         assertThatThrownBy(() -> step.completeDeferred("actor", "done", OffsetDateTime.now()))
                 .isInstanceOf(DraftWorkflowException.class);

@@ -31,8 +31,8 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "priority", nullable = false)
-    private Integer priority = 0;
+    @Column(name = "display_order", nullable = false)
+    private Integer displayOrder = 0;
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
@@ -49,12 +49,12 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     private ApprovalGroup(String groupCode,
                           String name,
                           String description,
-                          Integer priority,
+                          Integer displayOrder,
                           OffsetDateTime now) {
         this.groupCode = groupCode;
         this.name = name;
         this.description = description;
-        this.priority = priority != null ? priority : 0;
+        this.displayOrder = displayOrder != null ? displayOrder : 0;
         this.createdAt = now;
         this.updatedAt = now;
     }
@@ -62,9 +62,9 @@ public class ApprovalGroup extends PrimaryKeyEntity {
     public static ApprovalGroup create(String groupCode,
                                        String name,
                                        String description,
-                                       Integer priority,
+                                       Integer displayOrder,
                                        OffsetDateTime now) {
-        return new ApprovalGroup(groupCode, name, description, priority, now);
+        return new ApprovalGroup(groupCode, name, description, displayOrder, now);
     }
 
     public void rename(String name, String description, OffsetDateTime now) {
@@ -73,8 +73,8 @@ public class ApprovalGroup extends PrimaryKeyEntity {
         this.updatedAt = now;
     }
 
-    public void updatePriority(Integer priority, OffsetDateTime now) {
-        this.priority = priority;
+    public void updateDisplayOrder(Integer displayOrder, OffsetDateTime now) {
+        this.displayOrder = displayOrder;
         this.updatedAt = now;
     }
 

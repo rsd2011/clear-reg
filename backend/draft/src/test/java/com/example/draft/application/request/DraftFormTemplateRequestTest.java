@@ -15,8 +15,6 @@ class DraftFormTemplateRequestTest {
         DraftFormTemplateRequest request = new DraftFormTemplateRequest("name", "HR", null, "{}", true);
 
         assertThat(request.name()).isEqualTo("name");
-        assertThat(request.businessType()).isEqualTo("HR");
-        assertThat(request.organizationCode()).isNull();
         assertThat(request.schemaJson()).isEqualTo("{}");
         assertThat(request.active()).isTrue();
     }

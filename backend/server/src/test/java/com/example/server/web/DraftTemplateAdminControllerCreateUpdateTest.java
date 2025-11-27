@@ -33,9 +33,13 @@ class DraftTemplateAdminControllerCreateUpdateTest {
     @DisplayName("승인선 템플릿 업데이트 시 AuthContext와 감사 플래그를 전달한다")
     void updateApprovalLineTemplateUsesContext() {
         AuthContextHolder.set(context);
-        ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "ROLE", "COND");
-        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest("이름", "BT", "ORG", true, java.util.List.of(step));
-        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", "BT", com.example.admin.approval.TemplateScope.ORGANIZATION, "ORG", true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
+        ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "ROLE");
+        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
+                "이름",
+                0,
+                null,
+                true, java.util.List.of(step));
+        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", 0, null, true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
         UUID id = UUID.randomUUID();
         given(service.updateApprovalLineTemplate(eq(id), eq(request), eq(context), eq(true))).willReturn(response);
 

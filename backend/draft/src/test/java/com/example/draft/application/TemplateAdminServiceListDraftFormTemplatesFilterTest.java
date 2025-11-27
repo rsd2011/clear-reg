@@ -26,6 +26,7 @@ class TemplateAdminServiceListDraftFormTemplatesFilterTest {
         TemplateAdminService service = new TemplateAdminService(
                 
                 mock(ApprovalLineTemplateRepository.class),
+                mock(com.example.admin.approval.ApprovalGroupRepository.class),
                 formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();

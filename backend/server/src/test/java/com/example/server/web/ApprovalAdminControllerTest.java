@@ -11,11 +11,8 @@ import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.ApprovalGroup;
 import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.TemplateScope;
 import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
-import com.example.common.security.RowScope;
-import com.example.common.security.RowScopeContext;
 import com.example.common.security.RowScopeContextHolder;
 
 class ApprovalAdminControllerTest {
@@ -30,18 +27,15 @@ class ApprovalAdminControllerTest {
     }
 
     @Test
-    @DisplayName("businessType 필터가 적용된다")
+    @DisplayName("활성화된 템플릿만 반환한다")
     void filtersTemplates() {
-        ApprovalLineTemplate orgTpl = ApprovalLineTemplate.create("org", "HR", "ORG1", OffsetDateTime.now());
-        ApprovalLineTemplate other = ApprovalLineTemplate.create("other", "IT", "ORG2", OffsetDateTime.now());
-        org.mockito.BDDMockito.given(lineRepo.findAll()).willReturn(List.of(orgTpl, other));
+        ApprovalLineTemplate tpl1 = ApprovalLineTemplate.create("template1", 0, null, OffsetDateTime.now());
+        ApprovalLineTemplate tpl2 = ApprovalLineTemplate.create("template2", 1, null, OffsetDateTime.now());
+        org.mockito.BDDMockito.given(lineRepo.findAll()).willReturn(List.of(tpl1, tpl2));
 
-        RowScopeContextHolder.set(new RowScopeContext("ORG1", List.of("ORG1")));
+        var templates = controller.listApprovalTemplates();
 
-        var templates = controller.listApprovalTemplates("HR");
-
-        assertThat(templates).hasSize(1);
-        assertThat(templates.getFirst().organizationCode()).isEqualTo("ORG1");
+        assertThat(templates).hasSize(2);
     }
 
     @Test

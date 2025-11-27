@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 
 public record ApprovalTemplateStepRequest(
         @Min(1) int stepOrder,
-        @NotBlank @Size(max = 64) String approvalGroupCode,
-        @Size(max = 500) String description
+        @NotBlank @Size(max = 64) String approvalGroupCode
 ) {
 }

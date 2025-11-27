@@ -22,6 +22,7 @@ class TemplateAdminServiceCreateFormTemplateAuditTest {
         TemplateAdminService service = new TemplateAdminService(
                 
                 mock(ApprovalLineTemplateRepository.class),
+                mock(com.example.admin.approval.ApprovalGroupRepository.class),
                 formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         org.mockito.BDDMockito.given(formRepo.save(org.mockito.ArgumentMatchers.any())).willAnswer(invocation -> invocation.getArgument(0));
@@ -31,7 +32,6 @@ class TemplateAdminServiceCreateFormTemplateAuditTest {
 
         DraftFormTemplateResponse res = service.createDraftFormTemplate(req, ctx, true);
 
-        assertThat(res.organizationCode()).isNull();
         assertThat(res.name()).isEqualTo("form");
     }
 }

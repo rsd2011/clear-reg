@@ -11,10 +11,7 @@ import com.example.common.jpa.PrimaryKeyEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -23,10 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "approval_line_templates",
-        indexes = {
-                @Index(name = "idx_template_business_org", columnList = "business_type, organization_code")
-        })
+@Table(name = "approval_line_templates")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ApprovalLineTemplate extends PrimaryKeyEntity {
@@ -37,15 +31,11 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
 
-    @Column(name = "business_type", nullable = false, length = 100)
-    private String businessType;
+    @Column(name = "display_order", nullable = false)
+    private Integer displayOrder = 0;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "scope", nullable = false, length = 20)
-    private TemplateScope scope = TemplateScope.ORGANIZATION;
-
-    @Column(name = "organization_code", length = 64)
-    private String organizationCode;
+    @Column(name = "description", length = 500)
+    private String description;
 
     @Column(name = "active", nullable = false)
     private boolean active = true;
@@ -62,36 +52,25 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
 
     private ApprovalLineTemplate(String templateCode,
                                  String name,
-                                 String businessType,
-                                 TemplateScope scope,
-                                 String organizationCode,
+                                 Integer displayOrder,
+                                 String description,
                                  OffsetDateTime now) {
         this.templateCode = templateCode;
         this.name = name;
-        this.businessType = businessType;
-        this.scope = scope;
-        this.organizationCode = organizationCode;
+        this.displayOrder = displayOrder != null ? displayOrder : 0;
+        this.description = description;
         this.createdAt = now;
         this.updatedAt = now;
     }
 
-    public static ApprovalLineTemplate create(String name,
-                                              String businessType,
-                                              String organizationCode,
-                                              OffsetDateTime now) {
-        TemplateScope scope = organizationCode == null ? TemplateScope.GLOBAL : TemplateScope.ORGANIZATION;
-        return new ApprovalLineTemplate(UUID.randomUUID().toString(), name, businessType, scope, organizationCode, now);
+    public static ApprovalLineTemplate create(String name, Integer displayOrder, String description, OffsetDateTime now) {
+        return new ApprovalLineTemplate(UUID.randomUUID().toString(), name, displayOrder, description, now);
     }
 
-    public static ApprovalLineTemplate createGlobal(String name,
-                                                    String businessType,
-                                                    OffsetDateTime now) {
-        return new ApprovalLineTemplate(UUID.randomUUID().toString(), name, businessType,
-                TemplateScope.GLOBAL, null, now);
-    }
-
-    public void rename(String name, boolean active, OffsetDateTime now) {
+    public void rename(String name, Integer displayOrder, String description, boolean active, OffsetDateTime now) {
         this.name = name;
+        this.displayOrder = displayOrder != null ? displayOrder : this.displayOrder;
+        this.description = description;
         this.active = active;
         this.updatedAt = now;
     }
@@ -102,23 +81,9 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
         this.steps.sort(Comparator.comparingInt(ApprovalTemplateStep::getStepOrder));
     }
 
-    public void addStep(int stepOrder, String approvalGroupCode, String description) {
-        ApprovalTemplateStep step = new ApprovalTemplateStep(this, stepOrder, approvalGroupCode, description);
+    public void addStep(int stepOrder, ApprovalGroup approvalGroup) {
+        ApprovalTemplateStep step = new ApprovalTemplateStep(this, stepOrder, approvalGroup);
         this.steps.add(step);
         this.steps.sort(Comparator.comparingInt(ApprovalTemplateStep::getStepOrder));
-    }
-
-    public void assertOrganization(String organizationCode) {
-        if (this.scope == TemplateScope.ORGANIZATION && !this.organizationCode.equals(organizationCode)) {
-            throw new ApprovalAccessDeniedException("조직 템플릿이 아닙니다.");
-        }
-    }
-
-    public boolean isGlobal() {
-        return this.scope == TemplateScope.GLOBAL;
-    }
-
-    public boolean applicableTo(String organizationCode) {
-        return isGlobal() || this.organizationCode.equals(organizationCode);
     }
 }

@@ -25,13 +25,14 @@ class TemplateAdminServiceListLineTemplateAuditNullTest {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 lineRepo,
+                mock(com.example.admin.approval.ApprovalGroupRepository.class),
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate t1 = ApprovalLineTemplate.create("a", "HR", "ORG1", now);
-        ApprovalLineTemplate t2 = ApprovalLineTemplate.create("b", "FIN", null, now);
-        t1.rename("a", true, now);
-        t2.rename("b", false, now);
+        ApprovalLineTemplate t1 = ApprovalLineTemplate.create("a", 0, null, now);
+        ApprovalLineTemplate t2 = ApprovalLineTemplate.create("b", 1, null, now);
+        t1.rename("a", 0, null, true, now);
+        t2.rename("b", 1, null, false, now);
         given(lineRepo.findAll()).willReturn(List.of(t1, t2));
 
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);

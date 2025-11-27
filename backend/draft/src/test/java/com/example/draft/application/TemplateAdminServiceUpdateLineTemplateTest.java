@@ -1,5 +1,7 @@
 package com.example.draft.application;
 
+import com.example.draft.TestApprovalHelper;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -29,27 +31,34 @@ class TemplateAdminServiceUpdateLineTemplateTest {
     @DisplayName("라인 템플릿 업데이트 시 이름/active/steps가 교체된다")
     void updateLineTemplateReplacesSteps() {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
+        com.example.admin.approval.ApprovalGroupRepository groupRepo = mock(com.example.admin.approval.ApprovalGroupRepository.class);
         TemplateAdminService service = new TemplateAdminService(
-                
                 lineRepo,
+                groupRepo,
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("old", "HR", "ORG1", now);
-        template.replaceSteps(List.of(new ApprovalTemplateStep(template, 1, "GRP1", "desc1")));
+        ApprovalLineTemplate template = ApprovalLineTemplate.create("old", 0, null, now);
+        template.replaceSteps(List.of(TestApprovalHelper.createTemplateStep(template, 1, "GRP1", "")));
 
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000031");
         given(lineRepo.findById(id)).willReturn(Optional.of(template));
         given(lineRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
+        // ApprovalGroup mock 설정
+        com.example.admin.approval.ApprovalGroup grp2 = com.example.admin.approval.ApprovalGroup.create("GRP2", "그룹2", "설명", 1, now);
+        com.example.admin.approval.ApprovalGroup grp3 = com.example.admin.approval.ApprovalGroup.create("GRP3", "그룹3", "설명", 2, now);
+        given(groupRepo.findByGroupCode("GRP2")).willReturn(Optional.of(grp2));
+        given(groupRepo.findByGroupCode("GRP3")).willReturn(Optional.of(grp3));
+
         ApprovalLineTemplateRequest req = new ApprovalLineTemplateRequest(
                 "newName",
-                "HR",
-                "ORG1",
+                1,
+                "설명",
                 true,
                 List.of(
-                        new ApprovalTemplateStepRequest(1, "GRP2", "d2"),
-                        new ApprovalTemplateStepRequest(2, "GRP3", "d3")
+                        new ApprovalTemplateStepRequest(1, "GRP2"),
+                        new ApprovalTemplateStepRequest(2, "GRP3")
                 )
         );
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);

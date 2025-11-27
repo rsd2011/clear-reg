@@ -1,5 +1,7 @@
 package com.example.draft.application.notification;
 
+import com.example.draft.TestApprovalHelper;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -33,7 +35,7 @@ class DraftNotificationServiceIntegrationTest {
         DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
 
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
-        DraftApprovalStep step = DraftApprovalStep.fromTemplate(new ApprovalTemplateStep(null, 1, "GRP", "desc"));
+        DraftApprovalStep step = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 1, "GRP", "desc"));
         draft.addApprovalStep(step);
 
         // 진행된 단계 시뮬레이션: actor가 승인했지만 다음 결재자는 대기(WAITING)로 가정

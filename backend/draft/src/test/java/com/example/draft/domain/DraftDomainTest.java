@@ -95,9 +95,14 @@ class DraftDomainTest {
     }
 
     private Draft createDraft() {
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿", "NOTICE", "ORG-001", NOW);
-        template.addStep(1, "GROUP-A", "첫 번째");
-        template.addStep(2, "GROUP-B", "두 번째");
+        ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿", 0, null, NOW);
+
+        com.example.admin.approval.ApprovalGroup groupA = com.example.admin.approval.ApprovalGroup.create("GROUP-A", "첫 번째", "설명", 1, NOW);
+        com.example.admin.approval.ApprovalGroup groupB = com.example.admin.approval.ApprovalGroup.create("GROUP-B", "두 번째", "설명", 2, NOW);
+
+        template.addStep(1, groupA);
+        template.addStep(2, groupB);
+
         Draft draft = Draft.create("제목", "내용", "NOTICE", "ORG-001",
                 template.getTemplateCode(), "writer", NOW);
         template.getSteps().stream()

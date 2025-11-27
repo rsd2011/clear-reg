@@ -33,7 +33,7 @@ class DraftResponsesTest {
     @DisplayName("ApprovalLineTemplateResponse apply/from에 마스킹 함수가 적용된다")
     void approvalLineTemplateResponseApplyMasks() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("Name","BT","ORG", now);
+        ApprovalLineTemplate template = ApprovalLineTemplate.create("Name", 0, null, now);
         ApprovalLineTemplateResponse resp = ApprovalLineTemplateResponse.from(template, mask());
         assertThat(resp.name()).isEqualTo("x");
         ApprovalLineTemplateResponse again = ApprovalLineTemplateResponse.apply(resp, mask());

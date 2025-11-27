@@ -8,14 +8,14 @@ public record ApprovalTemplateStepResponse(
         UUID id,
         int stepOrder,
         String approvalGroupCode,
-        String description
+        String approvalGroupName
 ) {
     public static ApprovalTemplateStepResponse from(ApprovalTemplateStep step) {
         return new ApprovalTemplateStepResponse(
                 step.getId(),
                 step.getStepOrder(),
-                step.getApprovalGroupCode(),
-                step.getDescription()
+                step.getApprovalGroup().getGroupCode(),
+                step.getApprovalGroup().getName()
         );
     }
 }

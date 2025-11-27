@@ -15,7 +15,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.example.admin.approval.TemplateScope;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
@@ -40,16 +39,15 @@ class DraftTemplateAdminControllerUnitCoverTest {
                 UUID.randomUUID(),
                 "CODE",
                 "name",
-                "BT",
-                TemplateScope.ORGANIZATION,
-                "ORG",
+                0,
+                null,
                 true,
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
                 List.of());
         when(service.listApprovalLineTemplates(any(), any(), anyBoolean(), any(), anyBoolean())).thenReturn(List.of(resp));
 
-        List<ApprovalLineTemplateResponse> result = controller.listApprovalLineTemplates(null, null, true);
+        List<ApprovalLineTemplateResponse> result = controller.listApprovalLineTemplates(true);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).templateCode()).isEqualTo("CODE");

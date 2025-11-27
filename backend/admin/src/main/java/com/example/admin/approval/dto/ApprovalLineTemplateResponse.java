@@ -6,15 +6,13 @@ import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.TemplateScope;
 
 public record ApprovalLineTemplateResponse(
         UUID id,
         String templateCode,
         String name,
-        String businessType,
-        TemplateScope scope,
-        String organizationCode,
+        Integer displayOrder,
+        String description,
         boolean active,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
@@ -33,9 +31,8 @@ public record ApprovalLineTemplateResponse(
                 template.getId(),
                 fn.apply(template.getTemplateCode()),
                 fn.apply(template.getName()),
-                template.getBusinessType(),
-                template.getScope(),
-                template.getOrganizationCode(),
+                template.getDisplayOrder(),
+                fn.apply(template.getDescription()),
                 template.isActive(),
                 template.getCreatedAt(),
                 template.getUpdatedAt(),
@@ -49,9 +46,8 @@ public record ApprovalLineTemplateResponse(
                 response.id(),
                 fn.apply(response.templateCode()),
                 fn.apply(response.name()),
-                response.businessType(),
-                response.scope(),
-                response.organizationCode(),
+                response.displayOrder(),
+                fn.apply(response.description()),
                 response.active(),
                 response.createdAt(),
                 response.updatedAt(),

@@ -68,12 +68,10 @@ public class DraftTemplateAdminController {
     @GetMapping("/approval-line-templates")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     @Operation(summary = "승인선 템플릿 목록 조회")
-    public List<ApprovalLineTemplateResponse> listApprovalLineTemplates(@RequestParam(required = false) String businessType,
-                                                                         @RequestParam(required = false) String organizationCode,
-                                                                         @RequestParam(defaultValue = "true") boolean activeOnly) {
+    public List<ApprovalLineTemplateResponse> listApprovalLineTemplates(@RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return templateAdminService.listApprovalLineTemplates(businessType, organizationCode, activeOnly, context, true).stream()
+        return templateAdminService.listApprovalLineTemplates(null, null, activeOnly, context, true).stream()
                 .map(t -> ApprovalLineTemplateResponse.apply(t, masker))
                 .toList();
     }

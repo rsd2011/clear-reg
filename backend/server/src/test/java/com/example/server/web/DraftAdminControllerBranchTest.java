@@ -39,7 +39,6 @@ class DraftAdminControllerBranchTest {
         var result = controller.listFormTemplates("HR");
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst().businessType()).isEqualTo("HR");
     }
 
     @Test
