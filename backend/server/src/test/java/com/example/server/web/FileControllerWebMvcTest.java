@@ -64,7 +64,7 @@ class FileControllerWebMvcTest {
     @DisplayName("draftId가 첨부되지 않은 파일이면 400을 반환한다")
     void download_withDraftMismatch_returns400() throws Exception {
         UUID fileId = UUID.randomUUID();
-        com.example.draft.application.response.DraftResponse draft = new com.example.draft.application.response.DraftResponse(
+        com.example.draft.application.dto.DraftResponse draft = new com.example.draft.application.dto.DraftResponse(
                 UUID.randomUUID(), "t", "c", "BF", "ORG", "creator",
                 com.example.draft.domain.DraftStatus.IN_REVIEW, null, "tmpl", "form", 1, "{}", "{}",
                 java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(), null, null, null, null,

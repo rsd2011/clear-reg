@@ -7,6 +7,8 @@ import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.file.api.dto.FileUploadRequest;
+
 @DisplayName("FileUploadRequest 테스트")
 class FileUploadRequestTest {
 

@@ -1,5 +1,7 @@
 package com.example.dw.application.policy;
 
+import com.example.dw.application.dto.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;

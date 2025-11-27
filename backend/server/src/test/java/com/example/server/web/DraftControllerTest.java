@@ -94,7 +94,7 @@ class DraftControllerTest {
 
         mockMvc.perform(post("/api/drafts")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftCreateRequest(
+                        .content(objectMapper.writeValueAsString(new com.example.draft.application.dto.DraftCreateRequest(
                                 "제목", "본문", "NOTICE", UUID.randomUUID(), UUID.randomUUID(), "{}", java.util.List.of(), null, null))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("제목"));
@@ -132,7 +132,7 @@ class DraftControllerTest {
 
         mockMvc.perform(post("/api/drafts/" + snapshot.id() + "/approve")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftDecisionRequest(
+                        .content(objectMapper.writeValueAsString(new com.example.draft.application.dto.DraftDecisionRequest(
                                 UUID.randomUUID(), "승인"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(DraftStatus.APPROVED.name()));
@@ -153,7 +153,7 @@ class DraftControllerTest {
 
         mockMvc.perform(post("/api/drafts/" + snapshot.id() + "/reject")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftDecisionRequest(
+                        .content(objectMapper.writeValueAsString(new com.example.draft.application.dto.DraftDecisionRequest(
                                 UUID.randomUUID(), "반려"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(DraftStatus.REJECTED.name()));
@@ -231,7 +231,7 @@ class DraftControllerTest {
         mockMvc.perform(post("/api/drafts/" + snapshot.id() + "/delegate")
                         .param("delegatedTo", "delegatee")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.example.draft.application.request.DraftDecisionRequest(
+                        .content(objectMapper.writeValueAsString(new com.example.draft.application.dto.DraftDecisionRequest(
                                 UUID.randomUUID(), "위임 부탁"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.approvalSteps[0].delegatedTo").value("delegatee"));

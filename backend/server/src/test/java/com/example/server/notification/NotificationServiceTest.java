@@ -23,6 +23,8 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.example.server.notification.dto.NotificationSendCommand;
+
 class NotificationServiceTest {
 
     private final UserNotificationRepository repository = Mockito.mock(UserNotificationRepository.class);

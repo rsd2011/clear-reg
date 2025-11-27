@@ -114,7 +114,7 @@ class DraftApplicationServiceTest {
                 draftHistoryRepository, draftReferenceRepository, presetRepository, notificationService, auditPublisher, businessPolicy,
                 approvalFacade, eventPublisher, objectMapper, clock);
         lenient().when(approvalFacade.requestApproval(any())).thenAnswer(invocation -> {
-            var cmd = invocation.getArgument(0, com.example.approval.api.ApprovalRequestCommand.class);
+            var cmd = invocation.getArgument(0, com.example.approval.api.dto.ApprovalRequestCommand.class);
             return new ApprovalStatusSnapshot(UUID.randomUUID(), cmd.draftId(), ApprovalStatus.REQUESTED, List.of());
         });
     }

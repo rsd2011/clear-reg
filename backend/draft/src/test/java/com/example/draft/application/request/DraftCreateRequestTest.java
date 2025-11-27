@@ -1,5 +1,7 @@
 package com.example.draft.application.request;
 
+import com.example.draft.application.dto.*;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;

@@ -9,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
 
+import com.example.common.file.dto.FileMetadataDto;
+
 class FileDtoTest {
 
     @Test
