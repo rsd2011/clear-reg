@@ -9,6 +9,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.Collections;
 import java.util.UUID;
 
+import com.example.common.ulid.UlidUtils;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -180,6 +182,6 @@ class NoticeAdminControllerBranchesTest {
 
         mockMvc.perform(get("/api/admin/notices"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString(id.toString())));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString(UlidUtils.toUlidString(id))));
     }
 }

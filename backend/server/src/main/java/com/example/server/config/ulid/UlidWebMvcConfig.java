@@ -8,6 +8,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.example.common.ulid.UlidJacksonModule;
+import com.example.server.config.CurrentUserArgumentResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PostConstruct;
@@ -59,6 +60,7 @@ public class UlidWebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(new UlidArgumentResolver());
+        resolvers.add(new CurrentUserArgumentResolver());
     }
 
     @Override

@@ -1,5 +1,8 @@
 package com.example.common.masking;
 
+import com.example.common.codegroup.annotation.ManagedCode;
+
+@ManagedCode
 public enum MaskRule {
     NONE, PARTIAL, FULL, HASH, TOKENIZE;
 

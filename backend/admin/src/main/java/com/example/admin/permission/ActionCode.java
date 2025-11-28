@@ -1,6 +1,9 @@
 package com.example.admin.permission;
 
+import com.example.common.codegroup.annotation.ManagedCode;
+
 /** 기능에서 수행할 수 있는 행위를 정의한다. */
+@ManagedCode
 public enum ActionCode {
   CREATE,
   READ,

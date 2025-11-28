@@ -1,9 +1,12 @@
 package com.example.auth.jit;
 
+import com.example.common.codegroup.annotation.ManagedCode;
+
 /**
  * DW 조직 정보 기반 직원 역할.
  * OrgGroupPermissionResolver에서 역할별 권한 그룹을 해석할 때 사용된다.
  */
+@ManagedCode
 public enum EmployeeRole {
   /** 조직의 리더 (leaderEmployeeId와 일치). */
   LEADER,

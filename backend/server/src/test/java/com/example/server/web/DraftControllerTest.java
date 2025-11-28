@@ -16,6 +16,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.common.ulid.UlidUtils;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -248,7 +250,7 @@ class DraftControllerTest {
 
         mockMvc.perform(get("/api/drafts/" + snapshot.id()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(snapshot.id().toString()));
+                .andExpect(jsonPath("$.id").value(UlidUtils.toUlidString(snapshot.id())));
     }
 
     @Test
@@ -280,7 +282,7 @@ class DraftControllerTest {
 
         mockMvc.perform(get("/api/drafts"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].id").value(response.id().toString()));
+                .andExpect(jsonPath("$.content[0].id").value(UlidUtils.toUlidString(response.id())));
     }
 
     private void denyAuditAccess() {

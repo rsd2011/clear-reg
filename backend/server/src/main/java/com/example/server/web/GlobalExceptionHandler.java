@@ -72,6 +72,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ProblemResponse(message));
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemResponse> handleIllegalArgument(IllegalArgumentException exception) {
+        return ResponseEntity.badRequest().body(new ProblemResponse(exception.getMessage()));
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException exception) {
         ErrorCode code = exception.errorCode();

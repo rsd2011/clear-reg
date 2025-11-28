@@ -1,5 +1,8 @@
 package com.example.draft.domain;
 
+import com.example.common.codegroup.annotation.ManagedCode;
+
+@ManagedCode
 public enum DraftApprovalState {
     WAITING,
     IN_PROGRESS,

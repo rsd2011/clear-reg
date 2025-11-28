@@ -23,8 +23,11 @@ import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
+import com.example.admin.approval.dto.DraftRequest;
+import com.example.admin.approval.dto.RollbackRequest;
 import com.example.admin.approval.dto.TemplateCopyRequest;
 import com.example.admin.approval.dto.TemplateCopyResponse;
+import com.example.admin.approval.dto.VersionComparisonResponse;
 import com.example.admin.approval.dto.VersionHistoryResponse;
 import com.example.admin.approval.version.ApprovalLineTemplateVersionService;
 import com.example.common.version.ChangeAction;
@@ -283,6 +286,300 @@ class ApprovalLineTemplateControllerTest {
             assertThat(result).anyMatch(r -> r.displayOrder() == 10);
             assertThat(result).anyMatch(r -> r.displayOrder() == 20);
             verify(service).updateDisplayOrders(eq(request), eq(ctx));
+        }
+    }
+
+    // ==========================================================================
+    // SCD Type 2 버전 관리 API 테스트
+    // ==========================================================================
+
+    @Nested
+    @DisplayName("getVersionHistory")
+    class GetVersionHistory {
+
+        @Test
+        @DisplayName("Given: 버전 이력이 있는 템플릿 / When: getVersionHistory 호출 / Then: 전체 버전 이력 목록 반환")
+        void getVersionHistoryReturnsHistory() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            VersionHistoryResponse v1 = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 1,
+                    OffsetDateTime.now().minusDays(2), OffsetDateTime.now().minusDays(1),
+                    "템플릿", 0, "설명", true,
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
+                    null, "user1", "사용자1", OffsetDateTime.now().minusDays(2),
+                    null, null, null, List.of());
+            VersionHistoryResponse v2 = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now().minusDays(1), null,
+                    "수정 템플릿", 0, "수정 설명", true,
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
+                    "변경 사유", "user2", "사용자2", OffsetDateTime.now().minusDays(1),
+                    null, null, null, List.of());
+
+            when(versionService.getVersionHistory(templateId)).thenReturn(List.of(v2, v1));
+
+            List<VersionHistoryResponse> result = controller.getVersionHistory(templateId);
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).version()).isEqualTo(2);
+            verify(versionService).getVersionHistory(templateId);
+        }
+    }
+
+    @Nested
+    @DisplayName("getVersion")
+    class GetVersion {
+
+        @Test
+        @DisplayName("Given: 특정 버전 존재 / When: getVersion 호출 / Then: 해당 버전 상세 반환")
+        void getVersionReturnsSpecificVersion() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            VersionHistoryResponse response = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now().minusDays(1), null,
+                    "수정 템플릿", 0, "수정 설명", true,
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
+                    "변경 사유", "user", "사용자", OffsetDateTime.now().minusDays(1),
+                    null, null, null, List.of());
+
+            when(versionService.getVersion(templateId, 2)).thenReturn(response);
+
+            VersionHistoryResponse result = controller.getVersion(templateId, 2);
+
+            assertThat(result.version()).isEqualTo(2);
+            assertThat(result.name()).isEqualTo("수정 템플릿");
+            verify(versionService).getVersion(templateId, 2);
+        }
+    }
+
+    @Nested
+    @DisplayName("getVersionAsOf")
+    class GetVersionAsOf {
+
+        @Test
+        @DisplayName("Given: 특정 시점에 유효한 버전 / When: getVersionAsOf 호출 / Then: 해당 시점 버전 반환")
+        void getVersionAsOfReturnsPointInTimeVersion() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            OffsetDateTime asOf = OffsetDateTime.now().minusDays(5);
+            VersionHistoryResponse response = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 1,
+                    OffsetDateTime.now().minusDays(10), OffsetDateTime.now().minusDays(3),
+                    "템플릿", 0, "설명", true,
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
+                    null, "user", "사용자", OffsetDateTime.now().minusDays(10),
+                    null, null, null, List.of());
+
+            when(versionService.getVersionAsOf(templateId, asOf)).thenReturn(response);
+
+            VersionHistoryResponse result = controller.getVersionAsOf(templateId, asOf);
+
+            assertThat(result.version()).isEqualTo(1);
+            verify(versionService).getVersionAsOf(templateId, asOf);
+        }
+    }
+
+    @Nested
+    @DisplayName("compareVersions")
+    class CompareVersions {
+
+        @Test
+        @DisplayName("Given: 두 버전 존재 / When: compareVersions 호출 / Then: 버전 비교 결과 반환")
+        void compareVersionsReturnsDiff() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            VersionComparisonResponse.VersionSummary v1Summary = new VersionComparisonResponse.VersionSummary(
+                    1, "user1", "사용자1", "2024-01-01T00:00:00Z", "CREATE", null);
+            VersionComparisonResponse.VersionSummary v2Summary = new VersionComparisonResponse.VersionSummary(
+                    2, "user2", "사용자2", "2024-01-02T00:00:00Z", "UPDATE", "이름 변경");
+            List<VersionComparisonResponse.FieldDiff> fieldDiffs = List.of(
+                    new VersionComparisonResponse.FieldDiff("name", "이름", "템플릿", "수정 템플릿",
+                            VersionComparisonResponse.DiffType.MODIFIED));
+            VersionComparisonResponse response = new VersionComparisonResponse(
+                    templateId, "tpl-001", v1Summary, v2Summary, fieldDiffs, List.of());
+
+            when(versionService.compareVersions(templateId, 1, 2)).thenReturn(response);
+
+            VersionComparisonResponse result = controller.compareVersions(templateId, 1, 2);
+
+            assertThat(result.version1().version()).isEqualTo(1);
+            assertThat(result.version2().version()).isEqualTo(2);
+            assertThat(result.fieldDiffs()).hasSize(1);
+            verify(versionService).compareVersions(templateId, 1, 2);
+        }
+    }
+
+    @Nested
+    @DisplayName("rollbackToVersion")
+    class RollbackToVersion {
+
+        @Test
+        @DisplayName("Given: 롤백 가능한 버전 / When: rollbackToVersion 호출 / Then: 새 버전 생성 후 반환")
+        void rollbackCreatesNewVersion() {
+            AuthContext ctx = setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            RollbackRequest request = new RollbackRequest(1, "롤백 사유");
+            VersionHistoryResponse response = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 3,
+                    OffsetDateTime.now(), null,
+                    "템플릿", 0, "설명", true,
+                    VersionStatus.PUBLISHED, ChangeAction.ROLLBACK,
+                    "롤백 사유", "user", "사용자", OffsetDateTime.now(),
+                    null, 1, null, List.of());
+
+            when(versionService.rollbackToVersion(eq(templateId), eq(request), eq(ctx))).thenReturn(response);
+
+            VersionHistoryResponse result = controller.rollbackToVersion(templateId, request);
+
+            assertThat(result.version()).isEqualTo(3);
+            assertThat(result.changeAction()).isEqualTo(ChangeAction.ROLLBACK);
+            assertThat(result.rollbackFromVersion()).isEqualTo(1);
+            verify(versionService).rollbackToVersion(eq(templateId), eq(request), eq(ctx));
+        }
+    }
+
+    // ==========================================================================
+    // Draft/Published 시나리오 테스트
+    // ==========================================================================
+
+    @Nested
+    @DisplayName("getDraft")
+    class GetDraft {
+
+        @Test
+        @DisplayName("Given: 초안 존재 / When: getDraft 호출 / Then: 초안 정보 반환")
+        void getDraftReturnsDraft() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            VersionHistoryResponse draft = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now(), null,
+                    "초안 템플릿", 0, "초안 설명", true,
+                    VersionStatus.DRAFT, ChangeAction.UPDATE,
+                    "수정 중", "user", "사용자", OffsetDateTime.now(),
+                    null, null, null, List.of());
+
+            when(versionService.getDraft(templateId)).thenReturn(draft);
+
+            VersionHistoryResponse result = controller.getDraft(templateId);
+
+            assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
+            verify(versionService).getDraft(templateId);
+        }
+    }
+
+    @Nested
+    @DisplayName("hasDraft")
+    class HasDraft {
+
+        @Test
+        @DisplayName("Given: 초안 존재 / When: hasDraft 호출 / Then: true 반환")
+        void hasDraftReturnsTrueWhenExists() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            when(versionService.hasDraft(templateId)).thenReturn(true);
+
+            boolean result = controller.hasDraft(templateId);
+
+            assertThat(result).isTrue();
+            verify(versionService).hasDraft(templateId);
+        }
+
+        @Test
+        @DisplayName("Given: 초안 없음 / When: hasDraft 호출 / Then: false 반환")
+        void hasDraftReturnsFalseWhenNotExists() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            when(versionService.hasDraft(templateId)).thenReturn(false);
+
+            boolean result = controller.hasDraft(templateId);
+
+            assertThat(result).isFalse();
+            verify(versionService).hasDraft(templateId);
+        }
+    }
+
+    @Nested
+    @DisplayName("saveDraft")
+    class SaveDraft {
+
+        @Test
+        @DisplayName("Given: 유효한 초안 요청 / When: saveDraft 호출 / Then: 초안 저장 후 반환")
+        void saveDraftCreatesDraft() {
+            AuthContext ctx = setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            DraftRequest request = new DraftRequest("초안 이름", 10, "초안 설명", true, "수정 중",
+                    List.of(new ApprovalTemplateStepRequest(1, "TEAM_LEADER")));
+            VersionHistoryResponse response = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now(), null,
+                    "초안 이름", 10, "초안 설명", true,
+                    VersionStatus.DRAFT, ChangeAction.UPDATE,
+                    "수정 중", "user", "사용자", OffsetDateTime.now(),
+                    null, null, null, List.of());
+
+            when(versionService.saveDraft(eq(templateId), eq(request), eq(ctx))).thenReturn(response);
+
+            VersionHistoryResponse result = controller.saveDraft(templateId, request);
+
+            assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
+            assertThat(result.name()).isEqualTo("초안 이름");
+            verify(versionService).saveDraft(eq(templateId), eq(request), eq(ctx));
+        }
+    }
+
+    @Nested
+    @DisplayName("publishDraft")
+    class PublishDraft {
+
+        @Test
+        @DisplayName("Given: 초안 존재 / When: publishDraft 호출 / Then: 초안을 활성 버전으로 전환")
+        void publishDraftActivatesDraft() {
+            AuthContext ctx = setupContext();
+
+            UUID templateId = UUID.randomUUID();
+            VersionHistoryResponse response = new VersionHistoryResponse(
+                    UUID.randomUUID(), templateId, 2,
+                    OffsetDateTime.now(), null,
+                    "게시된 템플릿", 10, "설명", true,
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
+                    "수정 완료", "user", "사용자", OffsetDateTime.now(),
+                    null, null, null, List.of());
+
+            when(versionService.publishDraft(eq(templateId), eq(ctx))).thenReturn(response);
+
+            VersionHistoryResponse result = controller.publishDraft(templateId);
+
+            assertThat(result.status()).isEqualTo(VersionStatus.PUBLISHED);
+            verify(versionService).publishDraft(eq(templateId), eq(ctx));
+        }
+    }
+
+    @Nested
+    @DisplayName("discardDraft")
+    class DiscardDraft {
+
+        @Test
+        @DisplayName("Given: 초안 존재 / When: discardDraft 호출 / Then: 초안 삭제 완료")
+        void discardDraftRemovesDraft() {
+            setupContext();
+
+            UUID templateId = UUID.randomUUID();
+
+            controller.discardDraft(templateId);
+
+            verify(versionService).discardDraft(templateId);
         }
     }
 }

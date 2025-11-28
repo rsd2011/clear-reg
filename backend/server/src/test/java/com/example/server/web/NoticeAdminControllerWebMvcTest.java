@@ -13,6 +13,8 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
+import com.example.common.ulid.UlidUtils;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -119,7 +121,7 @@ class NoticeAdminControllerWebMvcTest {
                                 {"publishAt":"2025-11-21T00:00:00Z","expireAt":null,"pinned":true}
                                 """))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.id").value(UlidUtils.toUlidString(id)))
                 .andExpect(jsonPath("$.pinned").value(true));
     }
 
@@ -252,7 +254,7 @@ class NoticeAdminControllerWebMvcTest {
         mockMvc.perform(get("/api/admin/notices"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(id.toString()));
+                .andExpect(jsonPath("$[0].id").value(UlidUtils.toUlidString(id)));
     }
 
 }

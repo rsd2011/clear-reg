@@ -16,8 +16,8 @@ import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
-import com.example.admin.codemanage.CodeManageQueryService;
-import com.example.admin.codemanage.SystemCommonCodeService;
+import com.example.admin.codegroup.service.CodeGroupQueryService;
+import com.example.admin.codegroup.service.CodeGroupService;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -28,23 +28,23 @@ public class CacheMaintenanceService {
     private final DwEmployeeDirectoryService employeeDirectoryService;
     private final DwOrganizationTreeService organizationTreeService;
     private final DwCommonCodeDirectoryService dwCommonCodeDirectoryService;
-    private final SystemCommonCodeService systemCommonCodeService;
-    private final CodeManageQueryService codeManageQueryService;
+    private final CodeGroupService codeGroupService;
+    private final CodeGroupQueryService codeGroupQueryService;
     private final OrganizationReadModelPort organizationReadModelPort;
 
     public CacheMaintenanceService(CacheManager cacheManager,
                                    DwEmployeeDirectoryService employeeDirectoryService,
                                    DwOrganizationTreeService organizationTreeService,
                                    DwCommonCodeDirectoryService dwCommonCodeDirectoryService,
-                                   SystemCommonCodeService systemCommonCodeService,
-                                   CodeManageQueryService codeManageQueryService,
+                                   CodeGroupService codeGroupService,
+                                   CodeGroupQueryService codeGroupQueryService,
                                    @Nullable OrganizationReadModelPort organizationReadModelPort) {
         this.cacheManager = cacheManager;
         this.employeeDirectoryService = employeeDirectoryService;
         this.organizationTreeService = organizationTreeService;
         this.dwCommonCodeDirectoryService = dwCommonCodeDirectoryService;
-        this.systemCommonCodeService = systemCommonCodeService;
-        this.codeManageQueryService = codeManageQueryService;
+        this.codeGroupService = codeGroupService;
+        this.codeGroupQueryService = codeGroupQueryService;
         this.organizationReadModelPort = organizationReadModelPort;
     }
 
@@ -75,8 +75,8 @@ public class CacheMaintenanceService {
             case ORGANIZATION_ROW_SCOPE -> clearCache(CacheNames.ORGANIZATION_ROW_SCOPE);
             case LATEST_DW_BATCH -> clearCache(CacheNames.LATEST_DW_BATCH);
             case DW_COMMON_CODES -> dwCommonCodeDirectoryService.evictAll();
-            case SYSTEM_COMMON_CODES -> systemCommonCodeService.evictAll();
-            case COMMON_CODE_AGGREGATES -> codeManageQueryService.evictAll();
+            case SYSTEM_COMMON_CODES -> codeGroupService.evictAll();
+            case COMMON_CODE_AGGREGATES -> codeGroupQueryService.evictAllCaches();
             case ORGANIZATION_READ_MODEL -> refreshOrganizationReadModel();
         }
         cleared.add(target.name());

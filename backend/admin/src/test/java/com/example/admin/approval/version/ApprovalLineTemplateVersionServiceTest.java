@@ -595,5 +595,453 @@ class ApprovalLineTemplateVersionServiceTest {
             assertThat(result.getName()).isEqualTo("복사된 템플릿");
             verify(versionRepo).save(any());
         }
+
+        @Test
+        @DisplayName("Given: description이 null인 경우 / When: createCopyVersion 호출 / Then: 원본 설명 사용")
+        void createsCopyVersionWithNullDescription() {
+            ApprovalLineTemplate sourceTemplate = createTestTemplate("원본 템플릿");
+            ApprovalLineTemplateVersion sourceVersion = createTestVersion(sourceTemplate, 1, VersionStatus.PUBLISHED);
+            sourceTemplate.activateNewVersion(sourceVersion, OffsetDateTime.now());
+
+            ApprovalLineTemplate newTemplate = createTestTemplate("복사된 템플릿");
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            ApprovalLineTemplateVersion result = service.createCopyVersion(
+                    newTemplate, sourceTemplate, "복사된 템플릿", null, testContext(), now);
+
+            assertThat(result.getDescription()).isEqualTo(sourceTemplate.getDescription());
+        }
+
+        @Test
+        @DisplayName("Given: 원본에 현재 버전이 없을 때 / When: createCopyVersion 호출 / Then: Steps 없이 복사")
+        void createsCopyVersionWithoutSourceVersion() {
+            ApprovalLineTemplate sourceTemplate = createTestTemplate("원본 템플릿");
+            // 현재 버전을 설정하지 않음
+
+            ApprovalLineTemplate newTemplate = createTestTemplate("복사된 템플릿");
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            ApprovalLineTemplateVersion result = service.createCopyVersion(
+                    newTemplate, sourceTemplate, "복사된 템플릿", "설명", testContext(), now);
+
+            assertThat(result.getSteps()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("compareVersions - 브랜치 커버리지")
+    class CompareVersionsBranches {
+
+        @Test
+        @DisplayName("Given: v1 > v2 순서로 조회될 때 / When: compareVersions 호출 / Then: 버전 순서 정렬됨")
+        void sortsVersionsWhenReversed() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalLineTemplateVersion v1 = createTestVersion(template, 1, VersionStatus.HISTORICAL);
+            ApprovalLineTemplateVersion v2 = createTestVersion(template, 2, VersionStatus.PUBLISHED);
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            // 역순으로 반환
+            given(versionRepo.findVersionsForComparison(templateId, 1, 2)).willReturn(List.of(v2, v1));
+
+            VersionComparisonResponse result = service.compareVersions(templateId, 1, 2);
+
+            // 낮은 버전이 version1에 위치해야 함
+            assertThat(result.version1().version()).isEqualTo(1);
+            assertThat(result.version2().version()).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("compareSteps - 브랜치 커버리지")
+    class CompareStepsBranches {
+
+        private ApprovalGroup createGroup(String code, String name) {
+            return ApprovalGroup.create(code, name, "설명", 1, OffsetDateTime.now());
+        }
+
+        private ApprovalLineTemplateVersion createVersionWithSteps(ApprovalLineTemplate template, int version,
+                                                                    List<ApprovalGroup> groups) {
+            ApprovalLineTemplateVersion v = ApprovalLineTemplateVersion.create(
+                    template, version, template.getName(), template.getDisplayOrder(),
+                    template.getDescription(), template.isActive(),
+                    version == 1 ? ChangeAction.CREATE : ChangeAction.UPDATE,
+                    null, "testuser", "테스트사용자", OffsetDateTime.now()
+            );
+            int stepOrder = 1;
+            for (ApprovalGroup group : groups) {
+                ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(v, stepOrder++, group);
+                v.addStep(step);
+            }
+            return v;
+        }
+
+        @Test
+        @DisplayName("Given: v2에만 step이 있을 때 / When: compareVersions 호출 / Then: ADDED diff 반환")
+        void detectsAddedSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalGroup group = createGroup("TEAM_LEADER", "팀장");
+
+            // v1: 스텝 없음, v2: 스텝 있음
+            ApprovalLineTemplateVersion v1 = createVersionWithSteps(template, 1, List.of());
+            ApprovalLineTemplateVersion v2 = createVersionWithSteps(template, 2, List.of(group));
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findVersionsForComparison(templateId, 1, 2)).willReturn(List.of(v1, v2));
+
+            VersionComparisonResponse result = service.compareVersions(templateId, 1, 2);
+
+            assertThat(result.stepDiffs()).hasSize(1);
+            assertThat(result.stepDiffs().get(0).diffType())
+                    .isEqualTo(VersionComparisonResponse.DiffType.ADDED);
+        }
+
+        @Test
+        @DisplayName("Given: v1에만 step이 있을 때 / When: compareVersions 호출 / Then: REMOVED diff 반환")
+        void detectsRemovedSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalGroup group = createGroup("TEAM_LEADER", "팀장");
+
+            // v1: 스텝 있음, v2: 스텝 없음
+            ApprovalLineTemplateVersion v1 = createVersionWithSteps(template, 1, List.of(group));
+            ApprovalLineTemplateVersion v2 = createVersionWithSteps(template, 2, List.of());
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findVersionsForComparison(templateId, 1, 2)).willReturn(List.of(v1, v2));
+
+            VersionComparisonResponse result = service.compareVersions(templateId, 1, 2);
+
+            assertThat(result.stepDiffs()).hasSize(1);
+            assertThat(result.stepDiffs().get(0).diffType())
+                    .isEqualTo(VersionComparisonResponse.DiffType.REMOVED);
+        }
+
+        @Test
+        @DisplayName("Given: 양쪽에 다른 그룹의 step이 있을 때 / When: compareVersions 호출 / Then: MODIFIED diff 반환")
+        void detectsModifiedSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalGroup group1 = createGroup("TEAM_LEADER", "팀장");
+            ApprovalGroup group2 = createGroup("DEPT_HEAD", "부서장");
+
+            ApprovalLineTemplateVersion v1 = createVersionWithSteps(template, 1, List.of(group1));
+            ApprovalLineTemplateVersion v2 = createVersionWithSteps(template, 2, List.of(group2));
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findVersionsForComparison(templateId, 1, 2)).willReturn(List.of(v1, v2));
+
+            VersionComparisonResponse result = service.compareVersions(templateId, 1, 2);
+
+            assertThat(result.stepDiffs()).hasSize(1);
+            assertThat(result.stepDiffs().get(0).diffType())
+                    .isEqualTo(VersionComparisonResponse.DiffType.MODIFIED);
+        }
+
+        @Test
+        @DisplayName("Given: 양쪽에 같은 그룹의 step이 있을 때 / When: compareVersions 호출 / Then: 빈 diff 반환")
+        void detectsUnchangedSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalGroup group = createGroup("TEAM_LEADER", "팀장");
+
+            ApprovalLineTemplateVersion v1 = createVersionWithSteps(template, 1, List.of(group));
+            ApprovalLineTemplateVersion v2 = createVersionWithSteps(template, 2, List.of(group));
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findVersionsForComparison(templateId, 1, 2)).willReturn(List.of(v1, v2));
+
+            VersionComparisonResponse result = service.compareVersions(templateId, 1, 2);
+
+            assertThat(result.stepDiffs()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("rollbackToVersion - 브랜치 커버리지")
+    class RollbackToVersionBranches {
+
+        @Test
+        @DisplayName("Given: 현재 버전이 없을 때 / When: rollbackToVersion 호출 / Then: 롤백 성공")
+        void rollbacksWithoutCurrentVersion() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            // 현재 버전 설정 안함
+            ApprovalLineTemplateVersion targetVersion = createTestVersion(template, 1, VersionStatus.HISTORICAL);
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findByTemplateIdAndVersion(templateId, 1)).willReturn(Optional.of(targetVersion));
+            given(versionRepo.findMaxVersionByTemplateId(templateId)).willReturn(1);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            RollbackRequest request = new RollbackRequest(1, "원복 사유");
+
+            VersionHistoryResponse result = service.rollbackToVersion(templateId, request, testContext());
+
+            assertThat(result.version()).isEqualTo(2);
+            assertThat(result.changeAction()).isEqualTo(ChangeAction.ROLLBACK);
+        }
+
+        @Test
+        @DisplayName("Given: 롤백 대상에 steps가 있을 때 / When: rollbackToVersion 호출 / Then: steps 복사됨")
+        void rollbackCopiesSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalGroup group = ApprovalGroup.create("TEAM_LEADER", "팀장", "설명", 1, OffsetDateTime.now());
+
+            ApprovalLineTemplateVersion targetVersion = ApprovalLineTemplateVersion.create(
+                    template, 1, "이름", 0, "설명", true,
+                    ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
+            );
+            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(targetVersion, 1, group);
+            targetVersion.addStep(step);
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findByTemplateIdAndVersion(templateId, 1)).willReturn(Optional.of(targetVersion));
+            given(versionRepo.findMaxVersionByTemplateId(templateId)).willReturn(1);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            RollbackRequest request = new RollbackRequest(1, "원복 사유");
+
+            VersionHistoryResponse result = service.rollbackToVersion(templateId, request, testContext());
+
+            assertThat(result.version()).isEqualTo(2);
+        }
+    }
+
+    @Nested
+    @DisplayName("publishDraft - 브랜치 커버리지")
+    class PublishDraftBranches {
+
+        @Test
+        @DisplayName("Given: 현재 버전이 없을 때 / When: publishDraft 호출 / Then: 초안 게시 성공")
+        void publishesDraftWithoutCurrentVersion() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            // 현재 버전 설정 안함
+            ApprovalLineTemplateVersion draft = createTestVersion(template, 1, VersionStatus.DRAFT);
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findDraftByTemplateId(templateId)).willReturn(Optional.of(draft));
+
+            VersionHistoryResponse result = service.publishDraft(templateId, testContext());
+
+            assertThat(result.status()).isEqualTo(VersionStatus.PUBLISHED);
+        }
+    }
+
+    @Nested
+    @DisplayName("createUpdateVersion - 브랜치 커버리지")
+    class CreateUpdateVersionBranches {
+
+        @Test
+        @DisplayName("Given: 현재 버전이 없을 때 / When: createUpdateVersion 호출 / Then: 새 버전 생성")
+        void createsUpdateVersionWithoutCurrentVersion() {
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            // 현재 버전 설정 안함
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.findMaxVersionByTemplateId(template.getId())).willReturn(0);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            com.example.admin.approval.dto.ApprovalLineTemplateRequest request =
+                    new com.example.admin.approval.dto.ApprovalLineTemplateRequest(
+                            "수정된 템플릿", 2, "수정된 설명", true, null);
+
+            ApprovalLineTemplateVersion result = service.createUpdateVersion(template, request, testContext(), now);
+
+            assertThat(result.getVersion()).isEqualTo(1);
+            assertThat(result.getChangeAction()).isEqualTo(ChangeAction.UPDATE);
+        }
+
+        @Test
+        @DisplayName("Given: steps가 null인 경우 / When: createUpdateVersion 호출 / Then: steps 없이 버전 생성")
+        void createsUpdateVersionWithNullSteps() {
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.findMaxVersionByTemplateId(template.getId())).willReturn(1);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            // steps를 null로 전달
+            com.example.admin.approval.dto.ApprovalLineTemplateRequest request =
+                    new com.example.admin.approval.dto.ApprovalLineTemplateRequest(
+                            "수정된 템플릿", 2, "수정된 설명", true, null);
+
+            ApprovalLineTemplateVersion result = service.createUpdateVersion(template, request, testContext(), now);
+
+            assertThat(result.getSteps()).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("createDeleteVersion - 브랜치 커버리지")
+    class CreateDeleteVersionBranches {
+
+        @Test
+        @DisplayName("Given: 현재 버전이 없을 때 / When: createDeleteVersion 호출 / Then: DELETE 버전 생성 (steps 없음)")
+        void createsDeleteVersionWithoutCurrentVersion() {
+            ApprovalLineTemplate template = createTestTemplate("삭제할 템플릿");
+            // 현재 버전 설정 안함
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.findMaxVersionByTemplateId(template.getId())).willReturn(0);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            ApprovalLineTemplateVersion result = service.createDeleteVersion(template, testContext(), now);
+
+            assertThat(result.getVersion()).isEqualTo(1);
+            assertThat(result.getChangeAction()).isEqualTo(ChangeAction.DELETE);
+            assertThat(result.getSteps()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Given: 현재 버전에 steps가 있을 때 / When: createDeleteVersion 호출 / Then: steps 복사됨")
+        void createsDeleteVersionWithSteps() {
+            ApprovalLineTemplate template = createTestTemplate("삭제할 템플릿");
+            ApprovalGroup group = ApprovalGroup.create("TEAM_LEADER", "팀장", "설명", 1, OffsetDateTime.now());
+
+            ApprovalLineTemplateVersion currentVersion = ApprovalLineTemplateVersion.create(
+                    template, 1, "이름", 0, "설명", true,
+                    ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
+            );
+            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(currentVersion, 1, group);
+            currentVersion.addStep(step);
+            template.activateNewVersion(currentVersion, OffsetDateTime.now());
+
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.findMaxVersionByTemplateId(template.getId())).willReturn(1);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            ApprovalLineTemplateVersion result = service.createDeleteVersion(template, testContext(), now);
+
+            assertThat(result.getVersion()).isEqualTo(2);
+            assertThat(result.getSteps()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("createRestoreVersion - 브랜치 커버리지")
+    class CreateRestoreVersionBranches {
+
+        @Test
+        @DisplayName("Given: 현재 버전이 없을 때 / When: createRestoreVersion 호출 / Then: RESTORE 버전 생성 (steps 없음)")
+        void createsRestoreVersionWithoutCurrentVersion() {
+            ApprovalLineTemplate template = createTestTemplate("복원할 템플릿");
+            // 현재 버전 설정 안함
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.findMaxVersionByTemplateId(template.getId())).willReturn(0);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            ApprovalLineTemplateVersion result = service.createRestoreVersion(template, testContext(), now);
+
+            assertThat(result.getVersion()).isEqualTo(1);
+            assertThat(result.getChangeAction()).isEqualTo(ChangeAction.RESTORE);
+            assertThat(result.getSteps()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Given: 현재 버전에 steps가 있을 때 / When: createRestoreVersion 호출 / Then: steps 복사됨")
+        void createsRestoreVersionWithSteps() {
+            ApprovalLineTemplate template = createTestTemplate("복원할 템플릿");
+            ApprovalGroup group = ApprovalGroup.create("TEAM_LEADER", "팀장", "설명", 1, OffsetDateTime.now());
+
+            ApprovalLineTemplateVersion currentVersion = ApprovalLineTemplateVersion.create(
+                    template, 1, "이름", 0, "설명", false,
+                    ChangeAction.DELETE, null, "user", "사용자", OffsetDateTime.now()
+            );
+            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(currentVersion, 1, group);
+            currentVersion.addStep(step);
+            template.activateNewVersion(currentVersion, OffsetDateTime.now());
+
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.findMaxVersionByTemplateId(template.getId())).willReturn(1);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            ApprovalLineTemplateVersion result = service.createRestoreVersion(template, testContext(), now);
+
+            assertThat(result.getVersion()).isEqualTo(2);
+            assertThat(result.getSteps()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("saveDraft - 브랜치 커버리지")
+    class SaveDraftBranches {
+
+        @Test
+        @DisplayName("Given: steps가 null인 경우 / When: saveDraft 호출 / Then: steps 없이 저장")
+        void saveDraftWithNullSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findDraftByTemplateId(templateId)).willReturn(Optional.empty());
+            given(versionRepo.findMaxVersionByTemplateId(templateId)).willReturn(1);
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            // steps를 null로 전달
+            DraftRequest request = new DraftRequest(
+                    "수정된 이름", 10, "수정된 설명", true, "변경 사유", null);
+
+            VersionHistoryResponse result = service.saveDraft(templateId, request, testContext());
+
+            assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
+        }
+
+        @Test
+        @DisplayName("Given: 기존 초안에 steps를 추가할 때 / When: saveDraft 호출 / Then: steps 교체됨")
+        void updateDraftWithSteps() {
+            UUID templateId = UUID.randomUUID();
+            ApprovalLineTemplate template = createTestTemplate("템플릿");
+            ApprovalLineTemplateVersion existingDraft = createTestVersion(template, 2, VersionStatus.DRAFT);
+            ApprovalGroup group = ApprovalGroup.create("TEAM_LEADER", "팀장", "팀장 그룹", 1, OffsetDateTime.now());
+
+            given(templateRepo.findById(templateId)).willReturn(Optional.of(template));
+            given(versionRepo.findDraftByTemplateId(templateId)).willReturn(Optional.of(existingDraft));
+            given(groupRepo.findByGroupCode("TEAM_LEADER")).willReturn(Optional.of(group));
+
+            List<ApprovalTemplateStepRequest> steps = List.of(
+                    new ApprovalTemplateStepRequest(1, "TEAM_LEADER")
+            );
+            DraftRequest request = new DraftRequest(
+                    "새 이름", 10, "새 설명", true, "사유", steps);
+
+            VersionHistoryResponse result = service.saveDraft(templateId, request, testContext());
+
+            assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
+        }
+    }
+
+    @Nested
+    @DisplayName("createInitialVersion - 브랜치 커버리지")
+    class CreateInitialVersionBranches {
+
+        @Test
+        @DisplayName("Given: steps가 null인 경우 / When: createInitialVersion 호출 / Then: steps 없이 버전 생성")
+        void createsInitialVersionWithNullSteps() {
+            ApprovalLineTemplate template = createTestTemplate("새 템플릿");
+            OffsetDateTime now = OffsetDateTime.now();
+
+            given(versionRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+
+            // steps를 null로 전달
+            com.example.admin.approval.dto.ApprovalLineTemplateRequest request =
+                    new com.example.admin.approval.dto.ApprovalLineTemplateRequest(
+                            "새 템플릿", 1, "설명", true, null);
+
+            ApprovalLineTemplateVersion result = service.createInitialVersion(template, request, testContext(), now);
+
+            assertThat(result.getVersion()).isEqualTo(1);
+            assertThat(result.getSteps()).isEmpty();
+        }
     }
 }

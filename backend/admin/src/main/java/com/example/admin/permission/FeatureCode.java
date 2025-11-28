@@ -1,5 +1,8 @@
 package com.example.admin.permission;
 
+import com.example.common.codegroup.annotation.ManagedCode;
+
+@ManagedCode
 public enum FeatureCode {
   RULE_MANAGE,
   CUSTOMER,

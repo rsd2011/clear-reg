@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.common.ulid.UlidUtils;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -120,11 +122,11 @@ class FileFlowWebMvcTest {
         MockMultipartFile file = new MockMultipartFile("file", "hello.txt", "text/plain", "hi".getBytes());
         mockMvc.perform(multipart("/api/files").file(file).contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()));
+                .andExpect(jsonPath("$.id").value(UlidUtils.toUlidString(id)));
 
         mockMvc.perform(get("/api/files"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(id.toString()));
+                .andExpect(jsonPath("$[0].id").value(UlidUtils.toUlidString(id)));
 
         mockMvc.perform(get("/api/files/{id}", id))
                 .andExpect(status().isOk())
@@ -132,7 +134,7 @@ class FileFlowWebMvcTest {
 
         mockMvc.perform(delete("/api/files/{id}", id))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()));
+                .andExpect(jsonPath("$.id").value(UlidUtils.toUlidString(id)));
     }
 
     @Test

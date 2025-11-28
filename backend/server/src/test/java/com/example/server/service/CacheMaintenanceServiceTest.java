@@ -22,8 +22,8 @@ import com.example.dw.application.DwCommonCodeDirectoryService;
 import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.dw.application.DwOrganizationTreeService;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
-import com.example.admin.codemanage.CodeManageQueryService;
-import com.example.admin.codemanage.SystemCommonCodeService;
+import com.example.admin.codegroup.service.CodeGroupQueryService;
+import com.example.admin.codegroup.service.CodeGroupService;
 import com.example.server.service.CacheMaintenanceService.CacheTarget;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +43,9 @@ class CacheMaintenanceServiceTest {
     @Mock
     private DwCommonCodeDirectoryService dwCommonCodeDirectoryService;
     @Mock
-    private SystemCommonCodeService systemCommonCodeService;
+    private CodeGroupService codeGroupService;
     @Mock
-    private CodeManageQueryService codeManageQueryService;
+    private CodeGroupQueryService codeGroupQueryService;
     @Mock
     private OrganizationReadModelPort organizationReadModelPort;
 
@@ -58,8 +58,8 @@ class CacheMaintenanceServiceTest {
                 employeeDirectoryService,
                 organizationTreeService,
                 dwCommonCodeDirectoryService,
-                systemCommonCodeService,
-                codeManageQueryService,
+                codeGroupService,
+                codeGroupQueryService,
                 organizationReadModelPort
         );
     }
@@ -86,8 +86,8 @@ class CacheMaintenanceServiceTest {
         verify(employeeDirectoryService).evictAll();
         verify(organizationTreeService).evict();
         verify(dwCommonCodeDirectoryService).evictAll();
-        verify(systemCommonCodeService).evictAll();
-        verify(codeManageQueryService).evictAll();
+        verify(codeGroupService).evictAll();
+        verify(codeGroupQueryService).evictAllCaches();
         verify(organizationRowScopeCache).clear();
         verify(latestDwBatchCache).clear();
         verify(organizationReadModelPort).isEnabled();
@@ -103,7 +103,7 @@ class CacheMaintenanceServiceTest {
 
         assertThat(clearedTargets).isEmpty();
         verifyNoInteractions(employeeDirectoryService, organizationTreeService, dwCommonCodeDirectoryService,
-                systemCommonCodeService, codeManageQueryService, organizationReadModelPort);
+                codeGroupService, codeGroupQueryService, organizationReadModelPort);
     }
 
     @Test

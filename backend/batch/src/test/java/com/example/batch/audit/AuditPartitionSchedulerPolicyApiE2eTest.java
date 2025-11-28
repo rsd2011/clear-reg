@@ -85,7 +85,11 @@ import com.example.admin.menu.MenuRepository;
 import com.example.admin.menu.MenuViewConfigRepository;
 import com.example.admin.approval.ApprovalGroupRepository;
 import com.example.admin.approval.ApprovalLineTemplateRepository;
-import com.example.admin.approval.history.ApprovalLineTemplateHistoryRepository;
+import com.example.admin.approval.version.ApprovalLineTemplateVersionRepository;
+import com.example.admin.codegroup.locale.LocaleCodeProvider;
+import com.example.admin.codegroup.service.CodeGroupService;
+import com.example.admin.codegroup.service.CodeGroupQueryService;
+import com.example.admin.codegroup.registry.StaticCodeRegistry;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -289,7 +293,19 @@ class AuditPartitionSchedulerPolicyApiE2eTest {
     ApprovalLineTemplateRepository approvalLineTemplateRepository;
 
     @MockBean
-    ApprovalLineTemplateHistoryRepository approvalLineTemplateHistoryRepository;
+    ApprovalLineTemplateVersionRepository approvalLineTemplateHistoryRepository;
+
+    @MockBean
+    CodeGroupService codeGroupService;
+
+    @MockBean
+    LocaleCodeProvider localeCodeProvider;
+
+    @MockBean
+    CodeGroupQueryService codeGroupQueryService;
+
+    @MockBean
+    StaticCodeRegistry staticCodeRegistry;
 
     @org.junit.jupiter.api.BeforeEach
     void setUpPolicyRepository() {
