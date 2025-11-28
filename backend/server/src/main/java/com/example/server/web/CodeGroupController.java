@@ -163,18 +163,33 @@ public class CodeGroupController {
     // ========== 수정 API ==========
 
     /**
-     * 동적 코드 생성 (DYNAMIC_DB만)
+     * 코드 생성 (DYNAMIC_DB, LOCALE_COUNTRY, LOCALE_LANGUAGE)
+     *
+     * <p>생성 가능한 소스 타입:</p>
+     * <ul>
+     *   <li>DYNAMIC_DB: 동적 공통코드</li>
+     *   <li>LOCALE_COUNTRY: 커스텀 국가 코드 추가</li>
+     *   <li>LOCALE_LANGUAGE: 커스텀 언어 코드 추가</li>
+     * </ul>
+     *
+     * <p>STATIC_ENUM, DW, APPROVAL_GROUP은 생성 불가</p>
      */
     @PostMapping("/items")
     @RequirePermission(feature = FeatureCode.COMMON_CODE, action = ActionCode.CREATE)
     @Operation(
-            summary = "동적 코드 생성",
-            description = "새로운 동적 코드를 생성합니다. DYNAMIC_DB 타입만 생성 가능합니다."
+            summary = "코드 생성",
+            description = """
+                    새로운 코드를 생성합니다.
+                    - DYNAMIC_DB: 동적 공통코드 생성
+                    - LOCALE_COUNTRY: 커스텀 국가 코드 추가
+                    - LOCALE_LANGUAGE: 커스텀 언어 코드 추가
+                    - STATIC_ENUM, DW, APPROVAL_GROUP: 생성 불가
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "생성 성공"),
             @ApiResponse(responseCode = "400", description = "유효성 검사 실패"),
-            @ApiResponse(responseCode = "403", description = "Static Enum에 코드 추가 시도"),
+            @ApiResponse(responseCode = "403", description = "생성 불가능한 소스 (STATIC_ENUM, DW, APPROVAL_GROUP)"),
             @ApiResponse(responseCode = "409", description = "중복 코드")
     })
     public ResponseEntity<CodeGroupItemResponse> createItem(
@@ -184,18 +199,21 @@ public class CodeGroupController {
         String groupCode = request.groupCode();
         String itemCode = request.itemCode();
 
-        // Static Enum에 코드 추가 불가
-        if (staticCodeRegistry.hasGroup(groupCode)) {
+        // 소스 결정: 요청에 명시 > 기존 그룹에서 추론 > 기본값(DYNAMIC_DB)
+        CodeGroupSource source = determineSourceForCreate(request.source(), groupCode);
+
+        // 생성 가능 여부 체크
+        if (!source.isCreatable()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // DynamicCodeType 존재 검증 - 등록되지 않은 타입은 생성 불가
-        if (!DynamicCodeType.isDynamicType(groupCode)) {
+        // DYNAMIC_DB인 경우 DynamicCodeType 검증
+        if (source.isDynamic() && !DynamicCodeType.isDynamicType(groupCode)) {
             throw new IllegalArgumentException("등록되지 않은 동적 코드 타입입니다: " + groupCode);
         }
 
         CodeItem savedItem = codeGroupService.createItem(
-                CodeGroupSource.DYNAMIC_DB,
+                source,
                 groupCode,
                 itemCode,
                 request.itemName(),
@@ -208,6 +226,30 @@ public class CodeGroupController {
 
         CodeGroupItemResponse response = CodeGroupItemResponse.fromEntity(savedItem);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 생성 시 소스 타입 결정.
+     *
+     * @param requestedSource 요청에 명시된 소스 (nullable)
+     * @param groupCode       그룹 코드
+     * @return 결정된 소스 타입
+     */
+    private CodeGroupSource determineSourceForCreate(CodeGroupSource requestedSource, String groupCode) {
+        // 1. 요청에 명시된 소스가 있으면 사용
+        if (requestedSource != null) {
+            return requestedSource;
+        }
+
+        // 2. Static Enum에 등록된 그룹이면 생성 불가 (STATIC_ENUM은 creatable=false)
+        if (staticCodeRegistry.hasGroup(groupCode)) {
+            return CodeGroupSource.STATIC_ENUM;
+        }
+
+        // 3. 기존 그룹이 있으면 해당 소스 사용
+        return codeGroupService.findFirstGroupByCode(groupCode)
+                .map(group -> group.getSource())
+                .orElse(CodeGroupSource.DYNAMIC_DB);  // 4. 기본값
     }
 
     /**
@@ -249,12 +291,25 @@ public class CodeGroupController {
 
     /**
      * 코드 수정 (groupCode + itemCode로)
+     *
+     * <p>소스 타입에 따른 수정 동작:</p>
+     * <ul>
+     *   <li>STATIC_ENUM: 오버라이드 레코드 생성/수정</li>
+     *   <li>DYNAMIC_DB: 기존 레코드 수정</li>
+     *   <li>LOCALE_COUNTRY/LANGUAGE: 기존 레코드 수정 (builtIn 항목도 오버라이드 가능)</li>
+     *   <li>DW, APPROVAL_GROUP: 수정 불가 (읽기 전용)</li>
+     * </ul>
      */
     @PutMapping("/items")
     @RequirePermission(feature = FeatureCode.COMMON_CODE, action = ActionCode.UPDATE)
     @Operation(
             summary = "코드 수정 (그룹+항목코드로)",
-            description = "groupCode와 itemCode로 코드를 찾아 수정합니다. Static Enum 오버라이드 생성/수정에 사용합니다."
+            description = """
+                    groupCode와 itemCode로 코드를 찾아 수정합니다.
+                    - STATIC_ENUM: 오버라이드 레코드 생성/수정
+                    - DYNAMIC_DB, LOCALE_*: 기존 레코드 수정
+                    - DW, APPROVAL_GROUP: 수정 불가
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),
@@ -268,19 +323,22 @@ public class CodeGroupController {
             @Parameter(description = "항목 코드", required = true)
             @RequestParam String itemCode,
 
-            @Parameter(description = "소스 타입")
+            @Parameter(description = "소스 타입 (미지정 시 자동 추론)")
             @RequestParam(required = false) CodeGroupSource source,
 
             @Valid @RequestBody CodeGroupItemRequest request,
             CurrentUser currentUser
     ) {
-        // DW, APPROVAL_GROUP 등 읽기 전용 소스는 수정 불가
-        if (source != null && !source.isEditable()) {
+        // 소스 결정: 요청 파라미터 > 기존 그룹에서 추론
+        CodeGroupSource resolvedSource = determineSourceForUpdate(source, groupCode);
+
+        // 읽기 전용 소스는 수정 불가
+        if (!resolvedSource.isEditable()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         // Static Enum 오버라이드 처리
-        if (staticCodeRegistry.hasGroup(groupCode)) {
+        if (resolvedSource.isStaticEnum()) {
             // Static Enum에 해당 itemCode가 실제로 존재하는지 검증
             boolean enumValueExists = staticCodeRegistry.getItems(groupCode).stream()
                     .anyMatch(item -> item.itemCode().equals(itemCode));
@@ -301,8 +359,9 @@ public class CodeGroupController {
             return ResponseEntity.ok(response);
         }
 
-        // Dynamic DB 코드 수정
+        // DYNAMIC_DB, LOCALE_* 코드 수정
         CodeItem savedItem = codeGroupService.updateItemByGroupAndCode(
+                resolvedSource,
                 groupCode,
                 itemCode,
                 request.itemName(),
@@ -318,48 +377,80 @@ public class CodeGroupController {
     }
 
     /**
-     * 코드 삭제 (DYNAMIC_DB만)
+     * 수정 시 소스 타입 결정.
+     */
+    private CodeGroupSource determineSourceForUpdate(CodeGroupSource requestedSource, String groupCode) {
+        // 1. 요청에 명시된 소스가 있으면 사용
+        if (requestedSource != null) {
+            return requestedSource;
+        }
+
+        // 2. Static Enum에 등록된 그룹이면 STATIC_ENUM
+        if (staticCodeRegistry.hasGroup(groupCode)) {
+            return CodeGroupSource.STATIC_ENUM;
+        }
+
+        // 3. 기존 그룹에서 소스 추론
+        return codeGroupService.findFirstGroupByCode(groupCode)
+                .map(group -> group.getSource())
+                .orElse(CodeGroupSource.DYNAMIC_DB);
+    }
+
+    /**
+     * 코드 삭제 (통합 API)
+     *
+     * <p>소스 타입에 따른 삭제 동작:</p>
+     * <ul>
+     *   <li>STATIC_ENUM: DB 오버라이드 레코드 삭제 → Enum 원본값 복원</li>
+     *   <li>DYNAMIC_DB: 영구 삭제</li>
+     *   <li>LOCALE_COUNTRY/LOCALE_LANGUAGE (builtIn=true): ISO 원본 복원</li>
+     *   <li>LOCALE_COUNTRY/LOCALE_LANGUAGE (builtIn=false): 영구 삭제 (커스텀 항목)</li>
+     *   <li>DW, APPROVAL_GROUP: 삭제 불가 (읽기 전용)</li>
+     * </ul>
      */
     @DeleteMapping("/items/{id}")
     @RequirePermission(feature = FeatureCode.COMMON_CODE, action = ActionCode.DELETE)
     @Operation(
             summary = "코드 삭제",
-            description = "DYNAMIC_DB 코드를 삭제합니다. Static Enum은 삭제할 수 없습니다."
+            description = """
+                    소스 타입에 따라 자동으로 적절한 삭제 동작을 수행합니다.
+                    - STATIC_ENUM: 오버라이드 삭제 후 Enum 원본값 복원
+                    - DYNAMIC_DB: 영구 삭제
+                    - LOCALE_COUNTRY/LANGUAGE (builtIn): ISO 원본 복원
+                    - LOCALE_COUNTRY/LANGUAGE (custom): 영구 삭제
+                    - DW, APPROVAL_GROUP: 삭제 불가
+                    """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
-            @ApiResponse(responseCode = "403", description = "삭제 불가능한 소스"),
+            @ApiResponse(responseCode = "400", description = "삭제할 수 없는 소스 (DW, APPROVAL_GROUP)"),
             @ApiResponse(responseCode = "404", description = "코드 없음")
     })
     public ResponseEntity<Void> deleteItem(@PathVariable UUID id) {
-        CodeItem existing = codeGroupService.findItemById(id)
-                .orElseThrow(() -> new IllegalArgumentException("코드가 존재하지 않습니다: " + id));
-
-        // Static Enum 오버라이드는 별도 API로 삭제
-        String groupCode = existing.getGroupCode();
-        if (groupCode != null && staticCodeRegistry.hasGroup(groupCode)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
         codeGroupService.deleteItem(id);
         return ResponseEntity.noContent().build();
     }
 
     /**
      * Static Enum 오버라이드 삭제
+     *
+     * @deprecated 대신 DELETE /api/code-groups/items/{id} 를 사용하세요.
+     *             통합 삭제 API가 소스 타입에 따라 자동으로 적절한 동작을 수행합니다.
      */
+    @Deprecated(since = "2025.01", forRemoval = true)
     @DeleteMapping("/items/{id}/override")
     @RequirePermission(feature = FeatureCode.COMMON_CODE, action = ActionCode.DELETE)
     @Operation(
-            summary = "Static Enum 오버라이드 삭제",
-            description = "Static Enum의 DB 오버라이드 레코드를 삭제하여 원본 값으로 복원합니다."
+            summary = "[Deprecated] Static Enum 오버라이드 삭제",
+            description = "⚠️ Deprecated: DELETE /api/code-groups/items/{id} 를 사용하세요.",
+            deprecated = true
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "삭제 성공"),
             @ApiResponse(responseCode = "404", description = "오버라이드 레코드 없음")
     })
     public ResponseEntity<Void> deleteOverride(@PathVariable UUID id) {
-        codeGroupService.deleteOverride(id);
+        codeGroupService.deleteItem(id);  // 통합 API로 위임
         return ResponseEntity.noContent().build();
     }
 

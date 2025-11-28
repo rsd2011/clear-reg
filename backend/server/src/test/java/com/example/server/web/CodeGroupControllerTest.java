@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -305,8 +306,8 @@ class CodeGroupControllerTest {
             CodeItem updated = createMockCodeItem(id, "NOTICE_CATEGORY", "NC01", "수정된 카테고리");
 
             given(staticCodeRegistry.hasGroup("NOTICE_CATEGORY")).willReturn(false);
-            given(codeGroupService.updateItemByGroupAndCode(anyString(), anyString(), anyString(),
-                    any(), any(Boolean.class), any(), any(), anyString()))
+            given(codeGroupService.updateItemByGroupAndCode(any(), anyString(), anyString(),
+                    anyString(), any(), any(Boolean.class), any(), any(), anyString()))
                     .willReturn(updated);
 
             mockMvc.perform(put("/api/code-groups/items")
@@ -399,34 +400,36 @@ class CodeGroupControllerTest {
         @DisplayName("DELETE /api/code-groups/items/{id} - 존재하지 않으면 400")
         void deleteItem_notFound_returns400() throws Exception {
             UUID id = UUID.randomUUID();
-            given(codeGroupService.findItemById(id)).willReturn(Optional.empty());
+            // Service에서 아이템을 찾지 못하면 IllegalArgumentException 발생
+            doThrow(new IllegalArgumentException("아이템이 존재하지 않습니다."))
+                    .when(codeGroupService).deleteItem(id);
 
             mockMvc.perform(delete("/api/code-groups/items/{id}", id))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("DELETE /api/code-groups/items/{id} - Static Enum 삭제 시 403")
-        void deleteItem_staticEnum_returns403() throws Exception {
+        @DisplayName("DELETE /api/code-groups/items/{id} - Static Enum 삭제 시 오버라이드 삭제됨")
+        void deleteItem_staticEnum_deletesOverride() throws Exception {
+            // 통합 API로 변경됨 - Static Enum도 삭제 가능 (오버라이드 삭제/원본 복원)
             UUID id = UUID.randomUUID();
-            CodeItem existing = createMockCodeItem(id, "USER_STATUS", "ACTIVE", "활성");
-
-            given(codeGroupService.findItemById(id)).willReturn(Optional.of(existing));
-            given(staticCodeRegistry.hasGroup("USER_STATUS")).willReturn(true);
 
             mockMvc.perform(delete("/api/code-groups/items/{id}", id))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().isNoContent());
+
+            verify(codeGroupService).deleteItem(id);
         }
 
         @Test
-        @DisplayName("DELETE /api/code-groups/items/{id}/override - 오버라이드 삭제")
+        @DisplayName("DELETE /api/code-groups/items/{id}/override - 오버라이드 삭제 (deprecated, deleteItem으로 위임)")
         void deleteOverride_returns204() throws Exception {
             UUID id = UUID.randomUUID();
 
             mockMvc.perform(delete("/api/code-groups/items/{id}/override", id))
                     .andExpect(status().isNoContent());
 
-            verify(codeGroupService).deleteOverride(id);
+            // deprecated API도 deleteItem으로 위임됨
+            verify(codeGroupService).deleteItem(id);
         }
     }
 

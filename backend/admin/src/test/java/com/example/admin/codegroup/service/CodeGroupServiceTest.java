@@ -666,7 +666,7 @@ class CodeGroupServiceTest {
             // When / Then
             assertThatThrownBy(() -> service.deleteItem(itemId))
                     .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("동적 그룹의 아이템만 삭제");
+                    .hasMessageContaining("삭제할 수 없는 소스입니다");
         }
 
         @Test
@@ -683,19 +683,20 @@ class CodeGroupServiceTest {
         }
 
         @Test
-        @DisplayName("Given: STATIC_ENUM이 아닌 아이템 / When: deleteOverride 호출 / Then: 예외가 발생한다")
-        void deleteOverrideThrowsWhenNotStaticEnum() {
-            // Given
+        @DisplayName("Given: DYNAMIC_DB 아이템 / When: deleteOverride 호출 / Then: deleteItem으로 위임되어 정상 삭제된다")
+        void deleteOverrideDelegatesToDeleteItemForDynamicDb() {
+            // Given - deleteOverride는 이제 deleteItem으로 위임됨 (deprecated)
             UUID itemId = UUID.randomUUID();
             CodeGroup group = CodeGroup.createDynamic("LANG", "언어", null, "admin");
             CodeItem item = CodeItem.create(group, "KO", "한국어", 0, true, null, null, "admin", null);
             setItemId(item, itemId);
             given(itemRepository.findByIdWithGroup(itemId)).willReturn(Optional.of(item));
 
-            // When / Then
-            assertThatThrownBy(() -> service.deleteOverride(itemId))
-                    .isInstanceOf(IllegalStateException.class)
-                    .hasMessageContaining("Static Enum 오버라이드만 삭제");
+            // When
+            service.deleteOverride(itemId);
+
+            // Then - DYNAMIC_DB는 삭제 가능하므로 정상 처리됨
+            verify(itemRepository).delete(item);
         }
 
         @Test

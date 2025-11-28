@@ -51,6 +51,16 @@ public class CodeGroupService {
     }
 
     /**
+     * 그룹 코드로 첫 번째 매칭 그룹 조회 (소스 무관).
+     * 
+     * <p>소스를 미리 알 수 없는 경우 사용합니다.</p>
+     */
+    @Transactional(readOnly = true)
+    public Optional<CodeGroup> findFirstGroupByCode(String groupCode) {
+        return groupRepository.findFirstByGroupCode(normalizeCode(groupCode));
+    }
+
+    /**
      * 소스와 그룹 코드로 그룹 조회 (아이템 포함).
      */
     @Transactional(readOnly = true)
@@ -254,7 +264,16 @@ public class CodeGroupService {
     }
 
     /**
-     * 아이템 삭제 (동적 그룹의 아이템만).
+     * 아이템 삭제 (통합 API).
+     *
+     * <p>소스 타입에 따른 삭제 동작:</p>
+     * <ul>
+     *   <li>STATIC_ENUM: DB 오버라이드 레코드 삭제 → Enum 원본값 복원</li>
+     *   <li>DYNAMIC_DB: 영구 삭제</li>
+     *   <li>LOCALE_COUNTRY/LOCALE_LANGUAGE (builtIn=true): ISO 원본 복원</li>
+     *   <li>LOCALE_COUNTRY/LOCALE_LANGUAGE (builtIn=false): 영구 삭제 (커스텀 항목)</li>
+     *   <li>DW, APPROVAL_GROUP: 삭제 불가 (읽기 전용)</li>
+     * </ul>
      */
     @Transactional
     @CacheEvict(cacheNames = {CacheNames.SYSTEM_COMMON_CODES, CacheNames.COMMON_CODE_AGGREGATES}, allEntries = true)
@@ -262,17 +281,45 @@ public class CodeGroupService {
         CodeItem item = itemRepository.findByIdWithGroup(itemId)
                 .orElseThrow(() -> new IllegalArgumentException("아이템이 존재하지 않습니다."));
 
-        if (!item.isDeletable()) {
-            throw new IllegalStateException("동적 그룹의 아이템만 삭제할 수 있습니다.");
-        }
-
         CodeGroupSource source = item.getSource();
         String groupCode = item.getGroupCode();
         String itemCode = item.getItemCode();
 
-        itemRepository.delete(item);
+        // 삭제 가능 여부 체크
+        if (!source.isDeletable()) {
+            throw new IllegalStateException("삭제할 수 없는 소스입니다: " + source);
+        }
+
+        // 소스별 삭제 동작
+        if (source.isRestoreOnDelete() && item.isBuiltIn()) {
+            // LOCALE_* builtIn 항목: ISO 원본으로 복원
+            restoreToDefault(item);
+            log.info("Restored to default: {}/{}/{}", source, groupCode, itemCode);
+        } else {
+            // STATIC_ENUM 오버라이드, DYNAMIC_DB, LOCALE_* 커스텀: 영구 삭제
+            itemRepository.delete(item);
+            log.info("Deleted code item: {}/{}/{}", source, groupCode, itemCode);
+        }
+
         eventPublisher.publishEvent(CodeGroupChangedEvent.itemDeleted(this, source, groupCode, itemCode));
-        log.info("Deleted code item: {}/{}/{}", source, groupCode, itemCode);
+    }
+
+    /**
+     * Locale 항목을 기본값(ISO 표준)으로 복원.
+     */
+    private void restoreToDefault(CodeItem item) {
+        // ISO 기본값으로 복원 (itemName만 리셋, 나머지 필드 유지)
+        // 실제 ISO 기본값은 LocaleCodeInitializer 등에서 관리
+        item.update(
+                item.getItemCode(),  // ISO 코드를 이름으로 사용 (임시, 추후 ISO 데이터 소스 연동)
+                item.getDisplayOrder(),
+                true,  // 활성화
+                null,  // 설명 초기화
+                null,  // 메타데이터 초기화
+                "SYSTEM",
+                now()
+        );
+        itemRepository.save(item);
     }
 
     // ========== Static Enum 오버라이드 ==========
@@ -340,24 +387,16 @@ public class CodeGroupService {
 
     /**
      * Static Enum 오버라이드 삭제.
+     *
+     * @deprecated 대신 {@link #deleteItem(UUID)}을 사용하세요.
+     *             통합 삭제 API가 소스 타입에 따라 자동으로 적절한 동작을 수행합니다.
      */
+    @Deprecated(since = "2025.01", forRemoval = true)
     @Transactional
     @CacheEvict(cacheNames = {CacheNames.SYSTEM_COMMON_CODES, CacheNames.COMMON_CODE_AGGREGATES}, allEntries = true)
     public void deleteOverride(UUID itemId) {
-        CodeItem item = itemRepository.findByIdWithGroup(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("오버라이드 레코드가 존재하지 않습니다."));
-
-        if (item.getSource() != CodeGroupSource.STATIC_ENUM) {
-            throw new IllegalStateException("Static Enum 오버라이드만 삭제할 수 있습니다.");
-        }
-
-        CodeGroupSource source = item.getSource();
-        String groupCode = item.getGroupCode();
-        String itemCode = item.getItemCode();
-
-        itemRepository.delete(item);
-        eventPublisher.publishEvent(CodeGroupChangedEvent.itemDeleted(this, source, groupCode, itemCode));
-        log.debug("Deleted override for {}/{}", groupCode, itemCode);
+        // 통합 deleteItem으로 위임
+        deleteItem(itemId);
     }
 
     // ========== 마이그레이션 ==========
@@ -438,18 +477,37 @@ public class CodeGroupService {
 
     /**
      * 그룹 코드와 아이템 코드로 아이템 수정.
+     *
+     * <p>지원되는 소스: DYNAMIC_DB, LOCALE_COUNTRY, LOCALE_LANGUAGE</p>
+     *
+     * @param source       소스 타입 (nullable이면 그룹에서 추론)
+     * @param groupCode    그룹 코드
+     * @param itemCode     항목 코드
+     * @param itemName     항목명
+     * @param displayOrder 표시 순서
+     * @param active       활성 상태
+     * @param description  설명
+     * @param metadataJson 메타데이터
+     * @param updatedBy    수정자
+     * @return 수정된 아이템
      */
     @Transactional
     @CacheEvict(cacheNames = {CacheNames.SYSTEM_COMMON_CODES, CacheNames.COMMON_CODE_AGGREGATES}, allEntries = true)
-    public CodeItem updateItemByGroupAndCode(String groupCode, String itemCode, String itemName,
-                                              Integer displayOrder, boolean active, String description,
-                                              String metadataJson, String updatedBy) {
+    public CodeItem updateItemByGroupAndCode(CodeGroupSource source, String groupCode, String itemCode,
+                                              String itemName, Integer displayOrder, boolean active,
+                                              String description, String metadataJson, String updatedBy) {
         String normalizedGroupCode = normalizeCode(groupCode);
 
+        // 소스가 지정되지 않으면 그룹에서 추론
+        final CodeGroupSource resolvedSource = source != null ? source
+                : groupRepository.findFirstByGroupCode(normalizedGroupCode)
+                        .map(CodeGroup::getSource)
+                        .orElse(CodeGroupSource.DYNAMIC_DB);
+
         CodeItem item = itemRepository.findBySourceAndGroupCodeAndItemCode(
-                CodeGroupSource.DYNAMIC_DB, normalizedGroupCode, itemCode)
+                resolvedSource, normalizedGroupCode, itemCode)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "아이템이 존재하지 않습니다: " + groupCode + "/" + itemCode));
+                        "아이템이 존재하지 않습니다: " + resolvedSource + "/" + groupCode + "/" + itemCode));
 
         if (!item.isEditable()) {
             throw new IllegalStateException("수정 불가능한 아이템입니다.");
@@ -467,10 +525,25 @@ public class CodeGroupService {
 
         CodeItem saved = itemRepository.save(item);
         eventPublisher.publishEvent(CodeGroupChangedEvent.itemUpdated(
-                this, CodeGroupSource.DYNAMIC_DB, normalizedGroupCode, itemCode));
-        log.debug("Updated code item by group and code: {}/{}", normalizedGroupCode, itemCode);
+                this, resolvedSource, normalizedGroupCode, itemCode));
+        log.debug("Updated code item by group and code: {}/{}/{}", resolvedSource, normalizedGroupCode, itemCode);
 
         return saved;
+    }
+
+    /**
+     * 그룹 코드와 아이템 코드로 아이템 수정 (DYNAMIC_DB 기본값).
+     *
+     * @deprecated 대신 {@link #updateItemByGroupAndCode(CodeGroupSource, String, String, String, Integer, boolean, String, String, String)}을 사용하세요.
+     */
+    @Deprecated(since = "2025.01", forRemoval = true)
+    @Transactional
+    @CacheEvict(cacheNames = {CacheNames.SYSTEM_COMMON_CODES, CacheNames.COMMON_CODE_AGGREGATES}, allEntries = true)
+    public CodeItem updateItemByGroupAndCode(String groupCode, String itemCode, String itemName,
+                                              Integer displayOrder, boolean active, String description,
+                                              String metadataJson, String updatedBy) {
+        return updateItemByGroupAndCode(null, groupCode, itemCode, itemName, displayOrder,
+                active, description, metadataJson, updatedBy);
     }
 
     // ========== 유틸리티 ==========
