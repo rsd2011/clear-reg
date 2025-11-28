@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,12 +12,12 @@ import org.mockito.Mockito;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.common.security.RowScope;
 import com.example.dw.application.DwOrganizationQueryService;
 import com.example.draft.application.DraftApplicationService;

@@ -7,7 +7,7 @@ import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
 
 class BusinessTemplateMappingTest {
 

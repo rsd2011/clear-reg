@@ -9,11 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.admin.approval.ApprovalGroup;
-import com.example.admin.approval.ApprovalGroupRepository;
-import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
-import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.repository.ApprovalGroupRepository;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;

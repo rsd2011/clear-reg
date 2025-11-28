@@ -3,7 +3,7 @@ package com.example.draft.domain;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 

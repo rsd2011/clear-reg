@@ -1,9 +1,9 @@
 package com.example.admin.permission.declarative;
 
-import com.example.admin.permission.PermissionAssignment;
-import com.example.admin.permission.PermissionGroup;
-import com.example.admin.permission.PermissionGroupRepository;
-import com.example.admin.permission.RowConditionEvaluator;
+import com.example.admin.permission.domain.PermissionAssignment;
+import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.repository.PermissionGroupRepository;
+import com.example.admin.permission.service.RowConditionEvaluator;
 import com.example.common.security.RowScope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

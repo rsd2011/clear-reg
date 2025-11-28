@@ -3,7 +3,7 @@ package com.example.admin.approval.dto;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.domain.ApprovalGroup;
 
 /**
  * 승인그룹 요약 정보 응답 DTO.

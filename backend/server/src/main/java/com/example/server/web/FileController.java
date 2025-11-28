@@ -3,9 +3,9 @@ package com.example.server.web;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.UUID;
 
+import com.example.admin.permission.exception.PermissionDeniedException;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,9 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.RequirePermission;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.file.FileDownload;
@@ -100,7 +100,7 @@ public class FileController {
         allowed.add(actor);
         if (draftId != null) {
             AuthContext context = AuthContextHolder.current()
-                    .orElseThrow(() -> new com.example.admin.permission.PermissionDeniedException("인증 정보가 없습니다."));
+                    .orElseThrow(() -> new PermissionDeniedException("인증 정보가 없습니다."));
             DraftResponse draft = draftApplicationService.getDraft(draftId, context.organizationCode(), actor, false);
             java.util.List<DraftReferenceResponse> refs = draftApplicationService.listReferences(draftId, context.organizationCode(), actor, false);
             allowed.add(draft.createdBy());

@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.ApprovalGroup;
+import com.example.admin.approval.domain.ApprovalGroup;
 
 public record ApprovalGroupResponse(
         UUID id,

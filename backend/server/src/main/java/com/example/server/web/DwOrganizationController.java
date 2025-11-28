@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.RequirePermission;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.dwgateway.dw.DwOrganizationPort;

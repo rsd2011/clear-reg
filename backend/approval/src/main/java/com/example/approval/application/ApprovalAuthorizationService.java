@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component;
 
 import com.example.approval.api.ApprovalAction;
 import com.example.approval.api.ApprovalStatus;
-import com.example.admin.approval.ApprovalAccessDeniedException;
+import com.example.admin.approval.exception.ApprovalAccessDeniedException;
 import com.example.approval.domain.ApprovalRequest;
 import com.example.approval.domain.ApprovalStep;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
-import com.example.admin.permission.PermissionGroup;
-import com.example.admin.permission.PermissionGroupRepository;
+import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.repository.PermissionGroupRepository;
 
 @Component
 public class ApprovalAuthorizationService {

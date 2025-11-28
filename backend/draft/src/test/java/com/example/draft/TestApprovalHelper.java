@@ -2,9 +2,9 @@ package com.example.draft;
 
 import java.time.OffsetDateTime;
 
-import com.example.admin.approval.ApprovalGroup;
-import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 
 /**
  * 테스트에서 Approval 관련 객체를 쉽게 생성하기 위한 헬퍼 클래스

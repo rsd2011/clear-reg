@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.draft.domain.exception.DraftWorkflowException;
-import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

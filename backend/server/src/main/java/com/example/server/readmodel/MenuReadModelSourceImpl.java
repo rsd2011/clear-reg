@@ -1,8 +1,8 @@
 package com.example.server.readmodel;
 
-import com.example.admin.menu.MenuDefinition;
-import com.example.admin.menu.MenuDefinitionLoader;
-import com.example.admin.menu.MenuDefinitions;
+import com.example.admin.menu.domain.MenuDefinition;
+import com.example.admin.menu.service.MenuDefinitionLoader;
+import com.example.admin.menu.domain.MenuDefinitions;
 import com.example.dw.application.readmodel.MenuItem;
 import com.example.dw.application.readmodel.MenuItem.MenuCapabilityRef;
 import com.example.dw.application.readmodel.MenuReadModel;

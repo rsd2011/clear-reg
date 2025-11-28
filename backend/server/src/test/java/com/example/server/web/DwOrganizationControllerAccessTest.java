@@ -10,7 +10,6 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.common.security.RowScope;
 import com.example.dwgateway.dw.DwOrganizationPort;
 
 class DwOrganizationControllerAccessTest {

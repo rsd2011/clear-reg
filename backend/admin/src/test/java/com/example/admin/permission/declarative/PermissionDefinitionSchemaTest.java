@@ -3,7 +3,7 @@ package com.example.admin.permission.declarative;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import com.example.admin.permission.RowConditionEvaluator;
+import com.example.admin.permission.service.RowConditionEvaluator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;

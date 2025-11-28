@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
 
 /**
  * 승인선 템플릿 복사 응답 DTO.

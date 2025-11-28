@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
-import com.example.admin.permission.PermissionGroup;
-import com.example.admin.permission.PermissionGroupRepository;
+import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalState;
 import com.example.draft.domain.repository.DraftReferenceRepository;

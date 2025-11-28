@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
 import com.example.common.security.RowScope;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

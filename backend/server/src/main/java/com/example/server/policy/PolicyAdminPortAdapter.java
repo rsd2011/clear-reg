@@ -10,7 +10,7 @@ import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
 
-import com.example.admin.policy.PolicyAdminService;
+import com.example.admin.policy.service.PolicyAdminService;
 import com.example.admin.policy.dto.PolicyUpdateRequest;
 import com.example.admin.policy.dto.PolicyView;
 import com.example.admin.policy.dto.PolicyYamlRequest;

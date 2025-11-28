@@ -13,13 +13,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.dto.DraftTemplatePresetRequest;
@@ -47,7 +48,7 @@ class TemplateAdminServicePresetTest {
         approvalTemplateRepository = mock(ApprovalLineTemplateRepository.class);
         service = new TemplateAdminService(
                 approvalTemplateRepository,
-                mock(com.example.admin.approval.ApprovalGroupRepository.class),
+                mock(ApprovalGroupRepository.class),
                 formTemplateRepository,
                 presetRepository,
                 new ObjectMapper());

@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.example.admin.datapolicy.SensitiveDataMaskingModule;
+import com.example.admin.datapolicy.masking.SensitiveDataMaskingModule;
 
 @Configuration
 public class DataPolicyConfig {

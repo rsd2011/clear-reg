@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +13,7 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceCreateFormTemplateInactiveTest {
@@ -23,7 +24,7 @@ class TemplateAdminServiceCreateFormTemplateInactiveTest {
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 mock(ApprovalLineTemplateRepository.class),
-                mock(com.example.admin.approval.ApprovalGroupRepository.class),
+                mock(ApprovalGroupRepository.class),
                 formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         given(formRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));

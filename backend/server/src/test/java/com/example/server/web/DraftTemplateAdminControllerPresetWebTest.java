@@ -8,6 +8,8 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +39,7 @@ class DraftTemplateAdminControllerPresetWebTest {
                 UUID.randomUUID(), UUID.randomUUID(), "{}", List.of("v"), true);
 
         com.example.admin.permission.context.AuthContextHolder.set(
-                com.example.admin.permission.context.AuthContext.of("u", "ORG", "PG", com.example.admin.permission.FeatureCode.DRAFT, com.example.admin.permission.ActionCode.DRAFT_AUDIT, RowScope.ALL));
+                com.example.admin.permission.context.AuthContext.of("u", "ORG", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT, RowScope.ALL));
 
         assertThat(controller.createDraftTemplatePreset(req)).isNotNull();
         assertThat(controller.updateDraftTemplatePreset(UUID.randomUUID(), req)).isNotNull();

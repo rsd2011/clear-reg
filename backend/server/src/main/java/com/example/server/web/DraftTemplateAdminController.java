@@ -17,10 +17,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionDeniedException;
-import com.example.admin.permission.RequirePermission;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.exception.PermissionDeniedException;
+import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;

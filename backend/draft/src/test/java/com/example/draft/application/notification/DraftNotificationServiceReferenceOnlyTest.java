@@ -14,9 +14,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.ApprovalTemplateStep;
 import com.example.auth.domain.UserAccountRepository;
-import com.example.admin.permission.PermissionGroupRepository;
+import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.repository.DraftReferenceRepository;

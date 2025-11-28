@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.example.admin.approval.domain.ApprovalGroup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,19 +33,17 @@ import com.example.draft.application.dto.DraftAttachmentRequest;
 import com.example.draft.application.dto.DraftCreateRequest;
 import com.example.draft.application.dto.DraftDecisionRequest;
 import com.example.draft.application.dto.DraftResponse;
-import com.example.admin.approval.ApprovalAccessDeniedException;
-import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.DraftStatus;
 import com.example.draft.domain.DraftTemplatePreset;
-import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.approval.api.ApprovalFacade;
 import com.example.approval.api.ApprovalStatus;
 import com.example.approval.api.ApprovalStatusSnapshot;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
@@ -451,8 +450,8 @@ class DraftApplicationServiceTest {
     private ApprovalLineTemplate sampleTemplate(String organizationCode) {
         ApprovalLineTemplate template = ApprovalLineTemplate.create("기본", 0, null, NOW);
         // ApprovalGroup을 생성하고 addStep 호출
-        com.example.admin.approval.ApprovalGroup group1 = com.example.admin.approval.ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
-        com.example.admin.approval.ApprovalGroup group2 = com.example.admin.approval.ApprovalGroup.create("GRP2", "그룹2", "설명", 2, NOW);
+        ApprovalGroup group1 = ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
+        ApprovalGroup group2 = ApprovalGroup.create("GRP2", "그룹2", "설명", 2, NOW);
         template.addStep(1, group1);
         template.addStep(2, group2);
         return template;

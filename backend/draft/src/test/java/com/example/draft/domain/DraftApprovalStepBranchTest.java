@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.OffsetDateTime;
 
+import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,11 +14,11 @@ import com.example.draft.domain.exception.DraftWorkflowException;
 
 class DraftApprovalStepBranchTest {
 
-    private com.example.admin.approval.ApprovalTemplateStep createTemplateStep() {
+    private ApprovalTemplateStep createTemplateStep() {
         OffsetDateTime now = OffsetDateTime.now();
-        com.example.admin.approval.ApprovalGroup group = com.example.admin.approval.ApprovalGroup.create("GRP", "그룹", "설명", 1, now);
-        com.example.admin.approval.ApprovalLineTemplate template = com.example.admin.approval.ApprovalLineTemplate.create("템플릿", 0, null, now);
-        return new com.example.admin.approval.ApprovalTemplateStep(template, 1, group);
+        ApprovalGroup group = ApprovalGroup.create("GRP", "그룹", "설명", 1, now);
+        ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿", 0, null, now);
+        return new ApprovalTemplateStep(template, 1, group);
     }
 
     @Test

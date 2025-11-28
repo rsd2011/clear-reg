@@ -12,6 +12,7 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -33,8 +34,7 @@ import com.example.approval.api.ApprovalAction;
 import com.example.approval.api.dto.ApprovalActionCommand;
 import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.approval.api.event.DraftSubmittedEvent;
-import com.example.admin.approval.ApprovalGroup;
-import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftAttachment;
@@ -42,9 +42,8 @@ import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
-import com.example.draft.domain.exception.DraftWorkflowException;
 import com.example.draft.domain.DraftAction;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
@@ -141,7 +140,7 @@ public class DraftApplicationService {
         }
         draft.attachFormTemplate(formTemplate, formPayload);
         template.getSteps().stream()
-                .sorted(java.util.Comparator.comparingInt(com.example.admin.approval.ApprovalTemplateStep::getStepOrder))
+                .sorted(java.util.Comparator.comparingInt(ApprovalTemplateStep::getStepOrder))
                 .map(com.example.draft.domain.DraftApprovalStep::fromTemplate)
                 .forEach(draft::addApprovalStep);
         attachFiles(request.attachments(), draft, actor, now);

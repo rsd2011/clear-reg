@@ -20,7 +20,6 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.batch.ingestion.DwIngestionService;
-import com.example.dw.application.job.DwIngestionJob;
 import com.example.dw.application.job.DwIngestionOutboxService;
 
 class DwBatchConfigurationAuthContextTest {

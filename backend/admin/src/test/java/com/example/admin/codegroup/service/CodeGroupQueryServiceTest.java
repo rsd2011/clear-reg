@@ -24,7 +24,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.admin.approval.ApprovalGroupService;
+import com.example.admin.approval.service.ApprovalGroupService;
 import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.codegroup.domain.CodeGroup;
 import com.example.admin.codegroup.domain.CodeGroupSource;

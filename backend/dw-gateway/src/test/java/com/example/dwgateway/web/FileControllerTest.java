@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.admin.permission.aop.RequirePermissionAspect;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -24,7 +25,6 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import com.example.common.file.FileDownload;
 import com.example.common.file.dto.FileMetadataDto;
@@ -44,7 +44,7 @@ class FileControllerTest {
     FileManagementPort fileManagementPort;
 
     @MockBean
-    com.example.admin.permission.RequirePermissionAspect requirePermissionAspect;
+    RequirePermissionAspect requirePermissionAspect;
 
     @MockBean
     AuditPort auditPort;

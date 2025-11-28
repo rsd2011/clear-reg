@@ -23,14 +23,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.RequirePermissionAspect;
+import com.example.admin.permission.aop.RequirePermissionAspect;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.server.security.JwtAuthenticationFilter;
 import com.example.common.file.FileDownload;
 import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.file.port.FileManagementPort;
-import com.example.server.file.dto.FileMetadataResponse;
 
 @WebMvcTest(FileController.class)
 @AutoConfigureMockMvc(addFilters = false)

@@ -9,7 +9,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
 import com.example.draft.application.dto.DraftTemplatePresetResponse;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.DraftTemplatePreset;

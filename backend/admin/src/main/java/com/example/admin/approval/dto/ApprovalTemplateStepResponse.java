@@ -2,7 +2,7 @@ package com.example.admin.approval.dto;
 
 import java.util.UUID;
 
-import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 
 public record ApprovalTemplateStepResponse(
         UUID id,

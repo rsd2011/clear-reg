@@ -15,8 +15,8 @@ import org.mockito.Mockito;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.file.FileDownload;
@@ -25,7 +25,6 @@ import com.example.common.file.FileStatus;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.dto.DraftApprovalStepResponse;
 import com.example.draft.application.dto.DraftAttachmentResponse;
-import com.example.draft.application.dto.DraftReferenceResponse;
 import com.example.draft.application.dto.DraftResponse;
 import com.example.draft.domain.DraftStatus;
 import com.example.file.FilePolicyViolationException;

@@ -11,7 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.admin.orggroup.OrgGroupPermissionResolver;
+import com.example.admin.orggroup.service.OrgGroupPermissionResolver;
 import com.example.auth.LoginType;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;

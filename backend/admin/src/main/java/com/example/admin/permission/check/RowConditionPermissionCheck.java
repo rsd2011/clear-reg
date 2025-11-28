@@ -1,7 +1,7 @@
 package com.example.admin.permission.check;
 
-import com.example.admin.permission.PermissionDeniedException;
-import com.example.admin.permission.RowConditionEvaluator;
+import com.example.admin.permission.exception.PermissionDeniedException;
+import com.example.admin.permission.service.RowConditionEvaluator;
 import org.springframework.stereotype.Component;
 
 @Component

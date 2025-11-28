@@ -12,17 +12,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.example.admin.menu.MenuDefinition;
-import com.example.admin.menu.MenuDefinitionLoader;
-import com.example.admin.menu.MenuDefinitions;
+import com.example.admin.menu.domain.MenuDefinition;
+import com.example.admin.menu.service.MenuDefinitionLoader;
+import com.example.admin.menu.domain.MenuDefinitions;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.admin.organization.OrganizationPolicyService;
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionAssignment;
-import com.example.admin.permission.PermissionGroup;
-import com.example.admin.permission.PermissionGroupService;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.domain.PermissionAssignment;
+import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.service.PermissionGroupService;
 import com.example.dw.application.readmodel.PermissionMenuReadModel;
 
 class PermissionMenuReadModelSourceImplTest {

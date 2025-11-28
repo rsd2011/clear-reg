@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import com.example.admin.approval.ApprovalGroup;
-import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalTemplateStep;
+import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 import org.junit.jupiter.api.Test;
 
 class ApprovalDomainEntitiesTest {

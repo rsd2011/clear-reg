@@ -1,5 +1,7 @@
 package com.example.draft.application;
 
+import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.repository.ApprovalGroupRepository;
 import com.example.draft.TestApprovalHelper;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,9 +22,8 @@ import com.example.common.security.RowScope;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalTemplateStep;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceUpdateLineTemplateTest {
@@ -31,7 +32,7 @@ class TemplateAdminServiceUpdateLineTemplateTest {
     @DisplayName("라인 템플릿 업데이트 시 이름/active/steps가 교체된다")
     void updateLineTemplateReplacesSteps() {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
-        com.example.admin.approval.ApprovalGroupRepository groupRepo = mock(com.example.admin.approval.ApprovalGroupRepository.class);
+        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 lineRepo,
                 groupRepo,
@@ -46,8 +47,8 @@ class TemplateAdminServiceUpdateLineTemplateTest {
         given(lineRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         // ApprovalGroup mock 설정
-        com.example.admin.approval.ApprovalGroup grp2 = com.example.admin.approval.ApprovalGroup.create("GRP2", "그룹2", "설명", 1, now);
-        com.example.admin.approval.ApprovalGroup grp3 = com.example.admin.approval.ApprovalGroup.create("GRP3", "그룹3", "설명", 2, now);
+        ApprovalGroup grp2 = ApprovalGroup.create("GRP2", "그룹2", "설명", 1, now);
+        ApprovalGroup grp3 = ApprovalGroup.create("GRP3", "그룹3", "설명", 2, now);
         given(groupRepo.findByGroupCode("GRP2")).willReturn(Optional.of(grp2));
         given(groupRepo.findByGroupCode("GRP3")).willReturn(Optional.of(grp3));
 

@@ -7,14 +7,15 @@ import static org.mockito.Mockito.mock;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.admin.approval.ApprovalLineTemplate;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceListLineTemplateAuditNullTest {
@@ -25,7 +26,7 @@ class TemplateAdminServiceListLineTemplateAuditNullTest {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 lineRepo,
-                mock(com.example.admin.approval.ApprovalGroupRepository.class),
+                mock(ApprovalGroupRepository.class),
                 mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();

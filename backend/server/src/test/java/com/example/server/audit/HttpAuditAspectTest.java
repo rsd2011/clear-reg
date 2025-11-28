@@ -6,9 +6,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
 import org.junit.jupiter.api.AfterEach;
@@ -23,8 +20,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import com.example.audit.AuditEvent;
 import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.SubjectType;

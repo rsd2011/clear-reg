@@ -17,14 +17,14 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.ApprovalGroupService;
+import com.example.admin.approval.service.ApprovalGroupService;
 import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
 import com.example.admin.approval.dto.GroupCodeExistsResponse;
-import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;

@@ -1,7 +1,7 @@
 package com.example.admin.permission.audit;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import org.junit.jupiter.api.DisplayName;

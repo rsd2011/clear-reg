@@ -12,6 +12,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
+import com.example.admin.permission.domain.ActionCode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.FeatureCode;
+import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
@@ -32,7 +33,6 @@ import com.example.server.config.SecurityConfig;
 import com.example.server.notification.NotificationChannel;
 import com.example.server.notification.NotificationService;
 import com.example.server.notification.NotificationSeverity;
-import com.example.server.notification.NotificationStatus;
 import com.example.server.notification.UserNotification;
 import com.example.server.security.JwtAuthenticationFilter;
 import com.example.server.security.RestAccessDeniedHandler;
@@ -56,7 +56,7 @@ class NotificationControllerTest {
     @BeforeEach
     void setUp() {
         AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
-                FeatureCode.ALERT, com.example.admin.permission.ActionCode.READ,
+                FeatureCode.ALERT, ActionCode.READ,
                 RowScope.ALL));
     }
 

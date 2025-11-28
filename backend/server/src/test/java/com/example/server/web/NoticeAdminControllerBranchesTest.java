@@ -23,7 +23,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.RequirePermissionAspect;
+import com.example.admin.permission.aop.RequirePermissionAspect;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.server.notice.NoticeService;
 import com.example.server.notice.dto.NoticeAdminResponse;

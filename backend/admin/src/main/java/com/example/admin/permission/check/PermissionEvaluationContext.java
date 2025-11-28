@@ -1,9 +1,9 @@
 package com.example.admin.permission.check;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionAssignment;
-import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.domain.PermissionAssignment;
+import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.spi.UserInfo;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Map;

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.example.admin.permission.PermissionDeniedException;
+import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.file.FileDownload;
 import com.example.common.file.dto.FileMetadataDto;
@@ -24,7 +24,6 @@ import com.example.draft.application.dto.DraftApprovalStepResponse;
 import com.example.draft.application.dto.DraftReferenceResponse;
 import com.example.draft.application.dto.DraftResponse;
 import com.example.draft.domain.DraftStatus;
-import com.example.file.FilePolicyViolationException;
 import com.example.file.port.FileManagementPort;
 
 @DisplayName("FileController 권한/예외 분기")

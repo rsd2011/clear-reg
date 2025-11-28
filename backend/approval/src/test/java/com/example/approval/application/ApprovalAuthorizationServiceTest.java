@@ -14,13 +14,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.approval.api.ApprovalAction;
-import com.example.admin.approval.ApprovalAccessDeniedException;
+import com.example.admin.approval.exception.ApprovalAccessDeniedException;
 import com.example.approval.domain.ApprovalRequest;
 import com.example.approval.domain.ApprovalStep;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
-import com.example.admin.permission.PermissionGroup;
-import com.example.admin.permission.PermissionGroupRepository;
+import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.repository.PermissionGroupRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ApprovalAuthorizationServiceTest {

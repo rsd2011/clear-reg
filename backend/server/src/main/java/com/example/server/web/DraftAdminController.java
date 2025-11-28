@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.RequirePermission;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingFunctions;
 import com.example.common.policy.DataPolicyContextHolder;

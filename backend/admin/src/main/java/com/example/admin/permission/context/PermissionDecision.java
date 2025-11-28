@@ -1,7 +1,7 @@
 package com.example.admin.permission.context;
 
-import com.example.admin.permission.PermissionAssignment;
-import com.example.admin.permission.PermissionGroup;
+import com.example.admin.permission.domain.PermissionAssignment;
+import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.spi.UserInfo;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 

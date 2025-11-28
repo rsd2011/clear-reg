@@ -6,6 +6,8 @@ import static org.mockito.Mockito.mock;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +16,7 @@ import com.example.common.security.RowScope;
 import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.admin.approval.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 
 class TemplateAdminServiceCreateLineTemplateAuditTest {
@@ -23,7 +25,7 @@ class TemplateAdminServiceCreateLineTemplateAuditTest {
     @DisplayName("audit=true일 때 템플릿이 정상적으로 저장된다")
     void createLineTemplateGlobalWhenAudit() {
         ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
-        com.example.admin.approval.ApprovalGroupRepository groupRepo = mock(com.example.admin.approval.ApprovalGroupRepository.class);
+        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 lineRepo,
                 groupRepo,
@@ -40,7 +42,7 @@ class TemplateAdminServiceCreateLineTemplateAuditTest {
 
         // ApprovalGroup mock 설정
         OffsetDateTime now = OffsetDateTime.now();
-        com.example.admin.approval.ApprovalGroup grp = com.example.admin.approval.ApprovalGroup.create("GRP", "그룹", "설명", 1, now);
+        ApprovalGroup grp = ApprovalGroup.create("GRP", "그룹", "설명", 1, now);
         org.mockito.BDDMockito.given(groupRepo.findByGroupCode("GRP")).willReturn(java.util.Optional.of(grp));
 
         // save가 null을 반환하지 않도록 입력 그대로 반환

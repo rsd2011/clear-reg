@@ -12,9 +12,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-import com.example.admin.menu.MenuDefinition;
-import com.example.admin.menu.MenuDefinitionLoader;
-import com.example.admin.menu.MenuDefinitions;
+import com.example.admin.menu.domain.MenuDefinition;
+import com.example.admin.menu.service.MenuDefinitionLoader;
+import com.example.admin.menu.domain.MenuDefinitions;
 import com.example.dw.application.readmodel.MenuReadModel;
 
 class MenuReadModelSourceImplTest {

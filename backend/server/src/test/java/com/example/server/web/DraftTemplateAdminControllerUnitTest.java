@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.TemplateAdminService;
-import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.draft.domain.TemplateScope;
 import java.time.OffsetDateTime;

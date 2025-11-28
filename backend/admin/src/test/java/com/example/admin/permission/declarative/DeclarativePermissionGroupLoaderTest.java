@@ -5,11 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionGroup;
-import com.example.admin.permission.PermissionGroupRepository;
-import com.example.admin.permission.RowConditionEvaluator;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.repository.PermissionGroupRepository;
+import com.example.admin.permission.service.RowConditionEvaluator;
 import com.example.common.security.RowScope;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;

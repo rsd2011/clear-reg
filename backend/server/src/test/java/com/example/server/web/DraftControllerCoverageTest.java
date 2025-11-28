@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.admin.permission.exception.PermissionDeniedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,9 +15,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
@@ -52,7 +53,7 @@ class DraftControllerCoverageTest {
 
         // when & then
         org.junit.jupiter.api.Assertions.assertThrows(
-                com.example.admin.permission.PermissionDeniedException.class,
+                PermissionDeniedException.class,
                 () -> controller.listDrafts(PageRequest.of(0, 1), null, null, null, null)
         );
     }
@@ -62,7 +63,7 @@ class DraftControllerCoverageTest {
     void listDrafts_orgScopePassesThrough() {
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no audit"));
+                .willThrow(new PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
                 .willReturn(new PageImpl<>(List.of(new DwOrganizationNode(UUID.randomUUID(), "ORG1", 1, "ORG1", null, "ACTIVE", java.time.LocalDate.now(), null, null, java.time.OffsetDateTime.now()))));
         given(draftService.listDrafts(any(), any(), any(), any(), any(), any(), any(), any()))
@@ -78,7 +79,7 @@ class DraftControllerCoverageTest {
     void listDrafts_normalizesOwnScope() {
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.OWN));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no audit"));
+                .willThrow(new PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
                 .willReturn(new PageImpl<>(List.of(new DwOrganizationNode(UUID.randomUUID(), "ORG1", 1, "ORG1", null, "ACTIVE", java.time.LocalDate.now(), null, null, java.time.OffsetDateTime.now()))));
         given(draftService.listDrafts(any(), any(), any(), any(), any(), any(), any(), any()))
@@ -95,7 +96,7 @@ class DraftControllerCoverageTest {
         UUID id = UUID.randomUUID();
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_DELEGATE, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no"));
+                .willThrow(new PermissionDeniedException("no"));
         given(draftService.getDraft(eq(id), eq("ORG1"), eq("user"), eq(false))).willReturn(sampleResponse());
         given(draftService.delegate(any(), any(), any(), any(), any(), eq(false))).willReturn(sampleResponse());
 
@@ -110,7 +111,7 @@ class DraftControllerCoverageTest {
         UUID id = UUID.randomUUID();
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_APPROVE, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no"));
+                .willThrow(new PermissionDeniedException("no"));
         given(draftService.getDraft(eq(id), eq("ORG1"), eq("user"), eq(false))).willReturn(sampleResponse());
         given(draftService.approveDeferred(any(), any(), any(), any(), eq(false))).willReturn(sampleResponse());
 
@@ -124,7 +125,7 @@ class DraftControllerCoverageTest {
     void defaultTemplates_delegatesToService() {
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no"));
+                .willThrow(new PermissionDeniedException("no"));
         given(draftService.suggestTemplate(eq("DRAFT"), eq("ORG1")))
                 .willReturn(new com.example.draft.application.dto.DraftTemplateSuggestionResponse(null, null, null, null, false));
 
@@ -138,7 +139,7 @@ class DraftControllerCoverageTest {
     void recommendTemplates_delegatesToService() {
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no"));
+                .willThrow(new PermissionDeniedException("no"));
         given(draftService.recommendTemplatePresets(eq("DRAFT"), eq("ORG1"), eq("user")))
                 .willReturn(List.of());
 
@@ -166,7 +167,7 @@ class DraftControllerCoverageTest {
         UUID id = UUID.randomUUID();
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("no"));
+                .willThrow(new PermissionDeniedException("no"));
         given(draftService.getDraft(eq(id), eq("ORG1"), eq("user"), eq(false))).willReturn(sampleResponse());
 
         controller.getDraft(id);

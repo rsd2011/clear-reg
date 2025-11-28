@@ -18,8 +18,8 @@ import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.domain.ActionCode;
 
 @DisplayName("AuditLogAccessAspect")
 class AuditLogAccessAspectTest {

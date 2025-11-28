@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.version.ApprovalLineTemplateVersion;
-import com.example.admin.approval.version.ApprovalTemplateStepVersion;
+import com.example.admin.approval.domain.ApprovalLineTemplateVersion;
+import com.example.admin.approval.domain.ApprovalTemplateStepVersion;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 

@@ -12,6 +12,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 
+import com.example.admin.permission.exception.PermissionDeniedException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,9 +24,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.ActionCode;
-import com.example.admin.permission.FeatureCode;
-import com.example.admin.permission.PermissionEvaluator;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.DraftApplicationService;
@@ -63,7 +64,7 @@ class DraftControllerHistoryReferenceTest {
         AuthContextHolder.set(AuthContext.of("writer", ORG, "DEFAULT",
                 FeatureCode.DRAFT, ActionCode.DRAFT_READ, com.example.common.security.RowScope.ALL));
         given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT))
-                .willThrow(new com.example.admin.permission.PermissionDeniedException("denied"));
+                .willThrow(new PermissionDeniedException("denied"));
     }
 
     @AfterEach
