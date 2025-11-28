@@ -24,7 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.example.admin.masking.OrgGroupPermissionResolver;
+import com.example.admin.orggroup.OrgGroupPermissionResolver;
 import com.example.auth.LoginType;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountRepository;
