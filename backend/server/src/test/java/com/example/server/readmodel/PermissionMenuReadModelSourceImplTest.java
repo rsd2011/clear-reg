@@ -17,7 +17,6 @@ import com.example.admin.menu.service.MenuDefinitionLoader;
 import com.example.admin.menu.domain.MenuDefinitions;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
-import com.example.admin.organization.OrganizationPolicyService;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
@@ -29,7 +28,6 @@ class PermissionMenuReadModelSourceImplTest {
 
     private final UserAccountService userAccountService = Mockito.mock(UserAccountService.class);
     private final PermissionGroupService permissionGroupService = Mockito.mock(PermissionGroupService.class);
-    private final OrganizationPolicyService organizationPolicyService = Mockito.mock(OrganizationPolicyService.class);
     private final MenuDefinitionLoader menuDefinitionLoader = Mockito.mock(MenuDefinitionLoader.class);
     private final Clock clock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);
 
@@ -37,7 +35,7 @@ class PermissionMenuReadModelSourceImplTest {
 
     @BeforeEach
     void setUp() {
-        source = new PermissionMenuReadModelSourceImpl(userAccountService, permissionGroupService, organizationPolicyService, menuDefinitionLoader, clock);
+        source = new PermissionMenuReadModelSourceImpl(userAccountService, permissionGroupService, menuDefinitionLoader, clock);
     }
 
     @Test
@@ -78,7 +76,7 @@ class PermissionMenuReadModelSourceImplTest {
     }
 
     @Test
-    void fallsBackToOrgDefaultGroupWhenAccountHasNoGroup() {
+    void fallsBackToDefaultGroupWhenAccountHasNoGroup() {
         UserAccount account = UserAccount.builder()
                 .username("user2")
                 .password("pw")
@@ -86,7 +84,6 @@ class PermissionMenuReadModelSourceImplTest {
                 .permissionGroupCode(null)
                 .build();
         when(userAccountService.getByUsernameOrThrow("user2")).thenReturn(account);
-        when(organizationPolicyService.defaultPermissionGroup("ORG2")).thenReturn("DEFAULT");
 
         PermissionGroup group = new PermissionGroup("DEFAULT", "Default");
         group.replaceAssignments(List.of());

@@ -14,7 +14,6 @@ import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.exception.PermissionDeniedException;
-import com.example.admin.permission.spi.OrganizationPolicyProvider;
 import com.example.admin.permission.spi.UserInfo;
 import com.example.admin.permission.spi.UserInfoProvider;
 import com.example.common.security.RowScope;
@@ -37,7 +36,6 @@ class PermissionEvaluatorTest {
 
   @Mock private UserInfoProvider userInfoProvider;
   @Mock private PermissionGroupService permissionGroupService;
-  @Mock private OrganizationPolicyProvider organizationPolicyProvider;
   @Mock private RowConditionEvaluator rowConditionEvaluator;
 
   @AfterEach
@@ -52,7 +50,6 @@ class PermissionEvaluatorTest {
         new PermissionEvaluator(
             userInfoProvider,
             permissionGroupService,
-            organizationPolicyProvider,
             List.of(new RowConditionPermissionCheck(rowConditionEvaluator)));
     UserInfo userInfo = new TestUserInfo("auditor", "ORG1", "AUDIT", Set.of("ROLE_AUDITOR"));
     PermissionGroup group = mock(PermissionGroup.class);
@@ -88,7 +85,6 @@ class PermissionEvaluatorTest {
         new PermissionEvaluator(
             userInfoProvider,
             permissionGroupService,
-            organizationPolicyProvider,
             List.of(new RowConditionPermissionCheck(rowConditionEvaluator)));
 
     assertThatThrownBy(() -> evaluator.evaluate(FeatureCode.CUSTOMER, ActionCode.READ))
@@ -96,29 +92,27 @@ class PermissionEvaluatorTest {
   }
 
   @Test
-  @DisplayName("Given 그룹 코드가 없을 때 When evaluate 호출 Then 조직 기본 그룹을 사용한다")
-  void givenMissingPermissionGroup_whenEvaluating_thenUsesOrganizationDefault() {
+  @DisplayName("Given 그룹 코드가 없을 때 When evaluate 호출 Then DEFAULT 그룹을 사용한다")
+  void givenMissingPermissionGroup_whenEvaluating_thenUsesDefaultGroup() {
     PermissionEvaluator evaluator =
         new PermissionEvaluator(
             userInfoProvider,
             permissionGroupService,
-            organizationPolicyProvider,
             List.of(new RowConditionPermissionCheck(rowConditionEvaluator)));
     TestUserInfo userInfo = new TestUserInfo("auditor", "ORG2", "DEFAULT", Set.of("ROLE_AUDITOR"));
     userInfo.setPermissionGroupCode(null);
     PermissionGroup group = mock(PermissionGroup.class);
     PermissionAssignment assignment =
         new PermissionAssignment(FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ORG);
-    given(group.getCode()).willReturn("POLICY_ORG2");
-    given(group.getName()).willReturn("Policy Group");
+    given(group.getCode()).willReturn("DEFAULT");
+    given(group.getName()).willReturn("Default Group");
     given(group.getDefaultRowScope()).willReturn(RowScope.ORG);
 
     SecurityContextHolder.getContext()
         .setAuthentication(
             new UsernamePasswordAuthenticationToken("auditor", "token", java.util.List.of()));
     given(userInfoProvider.getByUsernameOrThrow("auditor")).willReturn(userInfo);
-    given(organizationPolicyProvider.defaultPermissionGroup("ORG2")).willReturn("POLICY_ORG2");
-    given(permissionGroupService.getByCodeOrThrow("POLICY_ORG2")).willReturn(group);
+    given(permissionGroupService.getByCodeOrThrow("DEFAULT")).willReturn(group);
     given(group.assignmentFor(FeatureCode.ORGANIZATION, ActionCode.READ))
         .willReturn(Optional.of(assignment));
     given(rowConditionEvaluator.isAllowed(any(), any())).willReturn(true);
@@ -135,7 +129,6 @@ class PermissionEvaluatorTest {
         new PermissionEvaluator(
             userInfoProvider,
             permissionGroupService,
-            organizationPolicyProvider,
             List.of(new RowConditionPermissionCheck(rowConditionEvaluator)));
     UserInfo userInfo = new TestUserInfo("analyst", "ORG3", "ANALYST", Set.of("ROLE_ANALYST"));
     PermissionGroup group = mock(PermissionGroup.class);

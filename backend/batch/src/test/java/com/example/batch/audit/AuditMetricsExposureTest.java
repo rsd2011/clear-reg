@@ -52,7 +52,6 @@ import com.example.auth.security.JwtTokenProvider;
 import com.example.auth.security.JwtProperties;
 import com.example.auth.domain.RefreshTokenRepository;
 import com.example.auth.config.SessionPolicyProperties;
-import com.example.admin.organization.OrganizationPolicyRepository;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.AuditRecordService;
@@ -207,9 +206,6 @@ class AuditMetricsExposureTest {
 
     @MockBean
     SessionPolicyProperties sessionPolicyProperties;
-
-    @MockBean
-    OrganizationPolicyRepository organizationPolicyRepository;
 
     @MockBean
     PermissionGroupRepository permissionGroupRepository;

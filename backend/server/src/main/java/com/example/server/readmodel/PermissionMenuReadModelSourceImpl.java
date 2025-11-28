@@ -3,7 +3,6 @@ package com.example.server.readmodel;
 import com.example.admin.menu.domain.MenuDefinition;
 import com.example.admin.menu.service.MenuDefinitionLoader;
 import com.example.admin.menu.domain.MenuDefinitions;
-import com.example.admin.organization.OrganizationPolicyService;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.domain.PermissionGroup;
@@ -31,20 +30,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadModelSource {
 
+    private static final String DEFAULT_PERMISSION_GROUP = "DEFAULT";
+
     private final UserAccountService userAccountService;
     private final PermissionGroupService permissionGroupService;
-    private final OrganizationPolicyService organizationPolicyService;
     private final MenuDefinitionLoader menuDefinitionLoader;
     private final Clock clock;
 
     public PermissionMenuReadModelSourceImpl(UserAccountService userAccountService,
                                              PermissionGroupService permissionGroupService,
-                                             OrganizationPolicyService organizationPolicyService,
                                              MenuDefinitionLoader menuDefinitionLoader,
                                              Clock clock) {
         this.userAccountService = userAccountService;
         this.permissionGroupService = permissionGroupService;
-        this.organizationPolicyService = organizationPolicyService;
         this.menuDefinitionLoader = menuDefinitionLoader;
         this.clock = clock;
     }
@@ -54,7 +52,7 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
         UserAccount account = userAccountService.getByUsernameOrThrow(principalId);
         String groupCode = account.getPermissionGroupCode();
         if (groupCode == null) {
-            groupCode = organizationPolicyService.defaultPermissionGroup(account.getOrganizationCode());
+            groupCode = DEFAULT_PERMISSION_GROUP;
         }
         PermissionGroup group = permissionGroupService.getByCodeOrThrow(groupCode);
 
