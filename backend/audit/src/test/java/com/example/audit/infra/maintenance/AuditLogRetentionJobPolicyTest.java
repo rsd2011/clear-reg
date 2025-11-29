@@ -75,4 +75,41 @@ class AuditLogRetentionJobPolicyTest {
 
         verify(repo).deleteByEventTimeBefore(Mockito.any());
     }
+
+    @Test
+    @DisplayName("정책의 retentionDays가 0이면 기본값 사용")
+    void usesDefaultWhenPolicyDaysZero() {
+        AuditLogRepository repo = Mockito.mock(AuditLogRepository.class);
+        Clock clock = Clock.fixed(Instant.parse("2025-11-24T03:00:00Z"), ZoneOffset.UTC);
+        // auditRetentionDays = 0
+        PolicyToggleSettings zeroRetention = new PolicyToggleSettings(true, true, true, java.util.List.of(), 0L, java.util.List.of(), true, 30,
+                true, true, true, 0, true, "MEDIUM", true, java.util.List.of(), java.util.List.of(),
+                false, "0 0 2 1 * *", 1,
+                true, "0 0 4 1 * *",
+                true, "0 0 3 * * *",
+                false, "0 30 2 2 * *",
+                true, "0 30 3 * * *");
+
+        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock, () -> zeroRetention, new AuditRetentionProperties(30));
+        job.setRetentionDays(100); // 기본값 설정
+
+        job.purgeExpired();
+
+        ArgumentCaptor<Instant> captor = ArgumentCaptor.forClass(Instant.class);
+        verify(repo).deleteByEventTimeBefore(captor.capture());
+        // days=0이면 retentionDays(100)으로 대체
+        Instant expected = clock.instant().minus(java.time.Duration.ofDays(100));
+        org.assertj.core.api.Assertions.assertThat(captor.getValue()).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("다른 정책 코드 이벤트는 로그만 남기지 않는다")
+    void onPolicyChangedIgnoresOtherCode() {
+        AuditLogRepository repo = Mockito.mock(AuditLogRepository.class);
+        Clock clock = Clock.fixed(Instant.parse("2025-11-24T03:00:00Z"), ZoneOffset.UTC);
+        AuditLogRetentionJob job = new AuditLogRetentionJob(repo, clock, () -> null, new AuditRetentionProperties(30));
+
+        // 다른 코드의 이벤트는 무시 (예외 없이 수행되어야 함)
+        job.onPolicyChanged(new com.example.common.policy.PolicyChangedEvent("other.code", ""));
+    }
 }

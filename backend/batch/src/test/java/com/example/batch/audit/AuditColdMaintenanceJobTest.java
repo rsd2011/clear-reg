@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
+
+import org.mockito.Mockito;
 import java.sql.Statement;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -162,5 +164,155 @@ class AuditColdMaintenanceJobTest {
 
         AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
         org.assertj.core.api.Assertions.assertThat(job.trigger().expression()).isEqualTo("0 15 * * * *");
+    }
+
+    @Test
+    @DisplayName("batchJobSchedule이 없으면 trigger는 currentCron을 사용한다")
+    void triggerUsesFallbackWhenPolicyMissing() {
+        PolicySettingsProvider provider = mock(PolicySettingsProvider.class);
+        when(provider.batchJobSchedule(com.example.common.schedule.BatchJobCode.AUDIT_COLD_MAINTENANCE))
+                .thenReturn(null);
+        when(provider.currentSettings()).thenReturn(toggles(true));
+
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "coldTablespace", "ts_cold");
+        ReflectionTestUtils.setField(job, "cron", "0 0 5 * * 0");
+
+        org.assertj.core.api.Assertions.assertThat(job.trigger().enabled()).isTrue();
+        // toggles(true)에서 auditColdArchiveCron = "0 30 2 2 * *" 이므로 해당 값 반환
+        org.assertj.core.api.Assertions.assertThat(job.trigger().expression()).isEqualTo("0 30 2 2 * *");
+    }
+
+    @Test
+    @DisplayName("runOnce 호출 시 moveOldPartitions를 실행한다")
+    void runOnceExecutesMovePartitions() throws Exception {
+        DataSource ds = mock(DataSource.class);
+        Connection conn = mock(Connection.class);
+        Statement stmt = mock(Statement.class);
+        when(ds.getConnection()).thenReturn(conn);
+        when(conn.createStatement()).thenReturn(stmt);
+
+        PolicySettingsProvider provider = () -> toggles(true);
+        Clock clock = Clock.fixed(LocalDate.of(2025, 5, 10).atStartOfDay().toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(ds, clock, provider);
+        ReflectionTestUtils.setField(job, "coldTablespace", "ts_cold");
+        ReflectionTestUtils.setField(job, "hotMonths", 0);
+
+        job.runOnce(java.time.Instant.now());
+
+        verify(stmt).execute(contains("ALTER TABLE audit_log_2025_04 SET TABLESPACE ts_cold"));
+    }
+
+    @Test
+    @DisplayName("configureTasks - centralScheduler가 비활성화되면 로컬 스케줄을 등록한다")
+    void configureTasksRegistersLocalSchedule() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "centralSchedulerEnabled", false);
+        ReflectionTestUtils.setField(job, "coldTablespace", "ts_cold");
+        ReflectionTestUtils.setField(job, "cron", "0 0 5 * * 0");
+
+        RecordingRegistrar registrar = new RecordingRegistrar();
+        job.configureTasks(registrar);
+
+        org.assertj.core.api.Assertions.assertThat(registrar.tasks).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("configureTasks - centralScheduler가 활성화되면 로컬 스케줄을 등록하지 않는다")
+    void configureTasksSkipsWhenCentralEnabled() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "centralSchedulerEnabled", true);
+
+        RecordingRegistrar registrar = new RecordingRegistrar();
+        job.configureTasks(registrar);
+
+        org.assertj.core.api.Assertions.assertThat(registrar.tasks).isEmpty();
+    }
+
+    @Test
+    @DisplayName("currentCron - settings가 null이면 기본 cron 반환")
+    void currentCronWhenSettingsNull() {
+        PolicySettingsProvider provider = () -> null;
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "cron", "0 0 6 * * 0");
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 6 * * 0");
+    }
+
+    @Test
+    @DisplayName("currentCron - settings가 있지만 policyCron이 null이면 기본 cron 반환")
+    void currentCronWhenPolicyCronNull() {
+        // PolicyToggleSettings는 null/blank cron을 기본값으로 변환하므로 Mock 사용
+        PolicyToggleSettings settings = Mockito.mock(PolicyToggleSettings.class);
+        Mockito.when(settings.auditColdArchiveCron()).thenReturn(null);
+        PolicySettingsProvider provider = () -> settings;
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "cron", "0 0 7 * * 0");
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 7 * * 0");
+    }
+
+    @Test
+    @DisplayName("currentCron - settings가 있고 policyCron이 blank면 기본 cron 반환")
+    void currentCronWhenPolicyCronBlank() {
+        // PolicyToggleSettings는 null/blank cron을 기본값으로 변환하므로 Mock 사용
+        PolicyToggleSettings settings = Mockito.mock(PolicyToggleSettings.class);
+        Mockito.when(settings.auditColdArchiveCron()).thenReturn("   ");
+        PolicySettingsProvider provider = () -> settings;
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "cron", "0 0 8 * * 0");
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 8 * * 0");
+    }
+
+    @Test
+    @DisplayName("currentCron - cron 필드 자체가 null이면 하드코딩된 기본값 반환")
+    void currentCronWhenFieldCronNull() {
+        PolicySettingsProvider provider = () -> null;
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "cron", null);
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 5 * * 0");
+    }
+
+    @Test
+    @DisplayName("currentCron - cron 필드가 blank이면 하드코딩된 기본값 반환")
+    void currentCronWhenFieldCronBlank() {
+        PolicySettingsProvider provider = () -> null;
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "cron", "   ");
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 5 * * 0");
+    }
+
+    @Test
+    @DisplayName("isEnabled - settings가 null이면 true로 간주하고 tablespace 확인")
+    void isEnabledWhenSettingsNull() {
+        PolicySettingsProvider provider = () -> null;
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "coldTablespace", "ts_cold");
+
+        org.assertj.core.api.Assertions.assertThat(job.isEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("isEnabled - coldTablespace가 null이면 false")
+    void isEnabledWhenTablespaceNull() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        AuditColdMaintenanceJob job = new AuditColdMaintenanceJob(mock(DataSource.class), Clock.systemUTC(), provider);
+        ReflectionTestUtils.setField(job, "coldTablespace", null);
+
+        org.assertj.core.api.Assertions.assertThat(job.isEnabled()).isFalse();
+    }
+
+    private static class RecordingRegistrar extends org.springframework.scheduling.config.ScheduledTaskRegistrar {
+        java.util.List<Runnable> tasks = new java.util.ArrayList<>();
+
+        @Override
+        public void addTriggerTask(Runnable task, org.springframework.scheduling.Trigger trigger) {
+            tasks.add(task);
+        }
     }
 }

@@ -35,4 +35,18 @@ class AuditDlqReprocessorTest {
         // should not throw
         reprocessor.handleDlq("{\"event\":\"x\"}", "k1");
     }
+
+    @Test
+    @DisplayName("key가 null이면 빈 문자열로 대체된다")
+    void nullKeyReplacedWithEmpty() {
+        KafkaTemplate<String, String> template = Mockito.mock(KafkaTemplate.class);
+        AuditKafkaProperties props = new AuditKafkaProperties();
+        props.setTopic("audit.events.v1");
+        AuditDlqReprocessor reprocessor = new AuditDlqReprocessor(template, props);
+
+        reprocessor.handleDlq("{\"event\":\"x\"}", null);
+
+        // null key는 빈 문자열로 변환됨
+        verify(template).send("audit.events.v1", "", "{\"event\":\"x\"}");
+    }
 }

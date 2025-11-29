@@ -168,6 +168,166 @@ class AuditArchiveJobTest {
         org.assertj.core.api.Assertions.assertThat(registrar.tasks).isEmpty();
     }
 
+    @Test
+    @DisplayName("central scheduler가 비활성화되면 로컬 스케줄을 등록한다")
+    void registersLocalSchedulingWhenCentralDisabled() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), new SimpleMeterRegistry(), provider);
+        ReflectionTestUtils.setField(job, "centralSchedulerEnabled", false);
+        ReflectionTestUtils.setField(job, "cron", "0 0 1 * * *");
+
+        RecordingRegistrar registrar = new RecordingRegistrar();
+        job.configureTasks(registrar);
+
+        org.assertj.core.api.Assertions.assertThat(registrar.tasks).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("runOnce 호출 시 archiveColdPartitions를 실행한다")
+    void runOnceExecutesArchive() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), registry, provider);
+        ReflectionTestUtils.setField(job, "archiveCommand", "echo");
+        job.setInvoker((cmd, target) -> 0);
+
+        job.runOnce(java.time.Instant.now());
+
+        assertThat(registry.find("audit_archive_success_total").counter().count()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("batchJobSchedule이 null이면 currentCron을 사용한 trigger를 반환한다")
+    void triggerUsesFallbackWhenPolicyNull() {
+        PolicySettingsProvider provider = org.mockito.Mockito.mock(PolicySettingsProvider.class);
+        org.mockito.Mockito.when(provider.batchJobSchedule(com.example.common.schedule.BatchJobCode.AUDIT_ARCHIVE))
+                .thenReturn(null);
+        org.mockito.Mockito.when(provider.currentSettings()).thenReturn(toggles(true));
+
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), new SimpleMeterRegistry(), provider);
+        ReflectionTestUtils.setField(job, "cron", "0 0 2 * * *");
+
+        // toggles(true)에서 auditColdArchiveCron = "0 30 2 2 * *" 이므로 해당 값 반환
+        org.assertj.core.api.Assertions.assertThat(job.trigger().expression()).isEqualTo("0 30 2 2 * *");
+    }
+
+    @Test
+    @DisplayName("currentCron - settings가 null이면 필드 cron 반환")
+    void currentCronWhenSettingsNull() {
+        PolicySettingsProvider provider = () -> null;
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), new SimpleMeterRegistry(), provider);
+        ReflectionTestUtils.setField(job, "cron", "0 0 3 * * *");
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 3 * * *");
+    }
+
+    @Test
+    @DisplayName("currentCron - settings가 있지만 policyCron이 blank이면 필드 cron 반환")
+    void currentCronWhenPolicyCronBlank() {
+        // PolicyToggleSettings는 blank cron을 기본값으로 변환하므로 Mock 사용
+        PolicyToggleSettings settings = org.mockito.Mockito.mock(PolicyToggleSettings.class);
+        org.mockito.Mockito.when(settings.auditColdArchiveCron()).thenReturn("   ");
+        PolicySettingsProvider provider = () -> settings;
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), new SimpleMeterRegistry(), provider);
+        ReflectionTestUtils.setField(job, "cron", "0 0 4 * * *");
+
+        org.assertj.core.api.Assertions.assertThat(job.currentCron()).isEqualTo("0 0 4 * * *");
+    }
+
+    @Test
+    @DisplayName("isEnabled - settings가 null이면 필드 enabled 값 사용")
+    void isEnabledWhenSettingsNull() {
+        PolicySettingsProvider provider = () -> null;
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), new SimpleMeterRegistry(), provider);
+        ReflectionTestUtils.setField(job, "enabled", true);
+
+        org.assertj.core.api.Assertions.assertThat(job.isEnabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("알림 비활성화 시 슬랙 전송하지 않는다")
+    void noSlackWhenAlertDisabled() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), registry, provider);
+        ReflectionTestUtils.setField(job, "archiveCommand", "echo");
+        ReflectionTestUtils.setField(job, "retry", 1);
+        ReflectionTestUtils.setField(job, "slackWebhook", "http://localhost");
+        ReflectionTestUtils.setField(job, "alertEnabled", false);
+        org.springframework.web.client.RestTemplate restTemplate = org.mockito.Mockito.mock(org.springframework.web.client.RestTemplate.class);
+        job.setRestTemplate(restTemplate);
+        job.setInvoker((cmd, target) -> 2);
+
+        job.archiveColdPartitions();
+
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.never()).postForEntity(
+                org.mockito.Mockito.anyString(), org.mockito.Mockito.any(), org.mockito.Mockito.eq(String.class));
+    }
+
+    @Test
+    @DisplayName("슬랙 웹훅이 비어있으면 전송하지 않는다")
+    void noSlackWhenWebhookEmpty() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), registry, provider);
+        ReflectionTestUtils.setField(job, "archiveCommand", "echo");
+        ReflectionTestUtils.setField(job, "retry", 1);
+        ReflectionTestUtils.setField(job, "slackWebhook", "");
+        ReflectionTestUtils.setField(job, "alertEnabled", true);
+        org.springframework.web.client.RestTemplate restTemplate = org.mockito.Mockito.mock(org.springframework.web.client.RestTemplate.class);
+        job.setRestTemplate(restTemplate);
+        job.setInvoker((cmd, target) -> 2);
+
+        job.archiveColdPartitions();
+
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.never()).postForEntity(
+                org.mockito.Mockito.anyString(), org.mockito.Mockito.any(), org.mockito.Mockito.eq(String.class));
+    }
+
+    @Test
+    @DisplayName("alertMention이 설정되면 메시지에 포함된다")
+    void includesMentionWhenSet() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), registry, provider);
+        ReflectionTestUtils.setField(job, "archiveCommand", "echo");
+        ReflectionTestUtils.setField(job, "retry", 1);
+        ReflectionTestUtils.setField(job, "slackWebhook", "http://localhost");
+        ReflectionTestUtils.setField(job, "alertEnabled", true);
+        ReflectionTestUtils.setField(job, "alertMention", "@team");
+        org.springframework.web.client.RestTemplate restTemplate = org.mockito.Mockito.mock(org.springframework.web.client.RestTemplate.class);
+        job.setRestTemplate(restTemplate);
+        job.setInvoker((cmd, target) -> 2);
+
+        job.archiveColdPartitions();
+
+        org.mockito.Mockito.verify(restTemplate).postForEntity(
+                org.mockito.Mockito.eq("http://localhost"),
+                org.mockito.Mockito.argThat(s -> s.toString().contains("@team")),
+                org.mockito.Mockito.eq(String.class));
+    }
+
+    @Test
+    @DisplayName("지연 경고 조건 미충족 시 슬랙 전송하지 않는다")
+    void noDelayAlertWhenBelowThreshold() {
+        PolicySettingsProvider provider = () -> toggles(true);
+        SimpleMeterRegistry registry = new SimpleMeterRegistry();
+        AuditArchiveJob job = new AuditArchiveJob(Clock.systemUTC(), registry, provider);
+        ReflectionTestUtils.setField(job, "archiveCommand", "echo");
+        ReflectionTestUtils.setField(job, "retry", 1);
+        ReflectionTestUtils.setField(job, "slackWebhook", "http://localhost");
+        ReflectionTestUtils.setField(job, "alertEnabled", true);
+        ReflectionTestUtils.setField(job, "delayThresholdMs", 999999999L); // 매우 높은 값
+        org.springframework.web.client.RestTemplate restTemplate = org.mockito.Mockito.mock(org.springframework.web.client.RestTemplate.class);
+        job.setRestTemplate(restTemplate);
+        job.setInvoker((cmd, target) -> 0);
+
+        job.archiveColdPartitions();
+
+        org.mockito.Mockito.verify(restTemplate, org.mockito.Mockito.never()).postForEntity(
+                org.mockito.Mockito.anyString(), org.mockito.Mockito.any(), org.mockito.Mockito.eq(String.class));
+    }
+
     private static class RecordingRegistrar extends ScheduledTaskRegistrar {
         java.util.List<Runnable> tasks = new java.util.ArrayList<>();
 

@@ -171,6 +171,14 @@ class SiemPropertiesTest {
         assertThat(base).isNotEqualTo(diff);
     }
 
+    @Test
+    @DisplayName("setWhitelist(null)은 빈 리스트로 변환된다")
+    void setWhitelistNullToEmptyList() {
+        SiemProperties props = new SiemProperties();
+        props.setWhitelist(null);
+        assertThat(props.getWhitelist()).isEmpty();
+    }
+
     private SiemProperties fullProps() {
         SiemProperties p = new SiemProperties();
         p.setEnabled(true);

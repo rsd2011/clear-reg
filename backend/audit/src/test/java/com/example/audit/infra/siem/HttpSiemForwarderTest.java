@@ -123,4 +123,61 @@ class HttpSiemForwarderTest {
 
         Mockito.verify(rest).postForEntity(Mockito.eq(props.getEndpoint()), any(HttpEntity.class), eq(Void.class));
     }
+
+    @Test
+    @DisplayName("retry가 0이면 최소 1회 전송을 시도한다")
+    void retryZeroMeansAtLeastOne() {
+        SiemProperties props = new SiemProperties();
+        props.setEnabled(true);
+        props.setEndpoint("http://localhost/siem");
+        props.setRetry(0); // Math.max(1, 0) = 1
+
+        HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
+        RestTemplate rest = Mockito.mock(RestTemplate.class);
+        forwarder.setRestTemplate(rest);
+
+        forwarder.forward(AuditEvent.builder().eventType("TEST").eventTime(Instant.now()).build());
+
+        Mockito.verify(rest, Mockito.times(1)).postForEntity(Mockito.anyString(), any(HttpEntity.class), eq(Void.class));
+    }
+
+    @Test
+    @DisplayName("apiKey가 빈 문자열이면 Authorization 헤더가 설정되지 않는다")
+    void blankApiKeyNoAuthHeader() {
+        SiemProperties props = new SiemProperties();
+        props.setEnabled(true);
+        props.setEndpoint("http://localhost/siem");
+        props.setApiKey("   "); // blank
+
+        HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
+        RestTemplate rest = Mockito.mock(RestTemplate.class);
+        forwarder.setRestTemplate(rest);
+        var entityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
+
+        forwarder.forward(AuditEvent.builder().eventType("TEST").eventTime(Instant.now()).build());
+
+        verify(rest).postForEntity(Mockito.anyString(), entityCaptor.capture(), eq(Void.class));
+        HttpHeaders headers = entityCaptor.getValue().getHeaders();
+        assertThat(headers.getFirst(HttpHeaders.AUTHORIZATION)).isNull();
+    }
+
+    @Test
+    @DisplayName("hmacSecret이 빈 문자열이면 X-SIEM-SIGNATURE 헤더가 설정되지 않는다")
+    void blankHmacSecretNoSignatureHeader() {
+        SiemProperties props = new SiemProperties();
+        props.setEnabled(true);
+        props.setEndpoint("http://localhost/siem");
+        props.setHmacSecret("   "); // blank
+
+        HttpSiemForwarder forwarder = new HttpSiemForwarder(props, new ObjectMapper().findAndRegisterModules());
+        RestTemplate rest = Mockito.mock(RestTemplate.class);
+        forwarder.setRestTemplate(rest);
+        var entityCaptor = org.mockito.ArgumentCaptor.forClass(HttpEntity.class);
+
+        forwarder.forward(AuditEvent.builder().eventType("TEST").eventTime(Instant.now()).build());
+
+        verify(rest).postForEntity(Mockito.anyString(), entityCaptor.capture(), eq(Void.class));
+        HttpHeaders headers = entityCaptor.getValue().getHeaders();
+        assertThat(headers.getFirst("X-SIEM-SIGNATURE")).isNull();
+    }
 }

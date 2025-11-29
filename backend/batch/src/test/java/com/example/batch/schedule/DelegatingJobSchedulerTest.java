@@ -64,6 +64,17 @@ class DelegatingJobSchedulerTest {
     }
 
     @Test
+    @DisplayName("포트 목록이 null이면 등록을 건너뛴다")
+    void skipsWhenPortsNull() {
+        RecordingRegistrar registrar = new RecordingRegistrar();
+        DelegatingJobScheduler scheduler = new DelegatingJobScheduler(null, Clock.systemUTC());
+
+        scheduler.configureTasks(registrar);
+
+        assertThat(registrar.tasks).isEmpty();
+    }
+
+    @Test
     @DisplayName("비활성화된 포트는 등록하지 않는다")
     void skipsDisabledPort() {
         ScheduledJobPort port = new ScheduledJobPort() {
@@ -128,6 +139,32 @@ class DelegatingJobSchedulerTest {
         assertThat(registrar.triggers).hasSize(1);
         Trigger trigger = registrar.triggers.getFirst();
         // 런타임에 disable 되면 nextExecution이 null을 반환한다
+        assertThat(trigger.nextExecution(new org.springframework.scheduling.support.SimpleTriggerContext())).isNull();
+    }
+
+    @Test
+    @DisplayName("런타임에 trigger가 null이 되면 실행을 건너뛴다")
+    void skipsWhenTriggerBecomesNullAtRuntime() {
+        AtomicInteger triggerCalls = new AtomicInteger();
+        ScheduledJobPort port = new ScheduledJobPort() {
+            @Override public String jobId() { return "null-runtime-trigger"; }
+            @Override public TriggerDescriptor trigger() {
+                // 처음에는 enabled, 두 번째 호출부터 null 반환
+                if (triggerCalls.getAndIncrement() == 0) {
+                    return new TriggerDescriptor(true, TriggerType.FIXED_DELAY, null, 1000, 0, null);
+                }
+                return null;
+            }
+            @Override public void runOnce(Instant now) { }
+        };
+        RecordingRegistrar registrar = new RecordingRegistrar();
+        DelegatingJobScheduler scheduler = new DelegatingJobScheduler(List.of(port), Clock.systemUTC());
+
+        scheduler.configureTasks(registrar);
+
+        assertThat(registrar.triggers).hasSize(1);
+        Trigger trigger = registrar.triggers.getFirst();
+        // 런타임에 trigger가 null이 되면 nextExecution도 null
         assertThat(trigger.nextExecution(new org.springframework.scheduling.support.SimpleTriggerContext())).isNull();
     }
 }
