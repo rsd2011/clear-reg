@@ -34,8 +34,8 @@ class ExportWriterServiceAuditEventTest {
         List<Map<String, Object>> rows = List.of(Map.of("orgCode", "001", "orgName", "HQ"), Map.of("orgCode", "002", "orgName", "BR"));
         MaskingTarget target = MaskingTarget.builder().defaultMask(true).build();
 
-        writer.exportExcel(excelCmd, rows, target, "PARTIAL", "{}", (i, r) -> {});
-        writer.exportPdf(pdfCmd, rows, target, "PARTIAL", "{}", p -> {});
+        writer.exportExcel(excelCmd, rows, target, true, (i, r) -> {});
+        writer.exportPdf(pdfCmd, rows, target, true, p -> {});
 
         verify(audit).auditExport("excel", 2, "R", null, null, "OK", true, AuditMode.ASYNC_FALLBACK, Map.of("fileName", "orgs.xlsx"));
         verify(audit).auditExport("pdf", 2, "R", null, null, "OK", true, AuditMode.ASYNC_FALLBACK, Map.of("fileName", "orgs.pdf"));

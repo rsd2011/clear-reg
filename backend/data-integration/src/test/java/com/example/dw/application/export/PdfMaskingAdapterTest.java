@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 
 class PdfMaskingAdapterTest {
@@ -18,14 +19,13 @@ class PdfMaskingAdapterTest {
         AtomicReference<String> captured = new AtomicReference<>();
 
         MaskingTarget target = MaskingTarget.builder()
-                .dataKind("accountNumber")
+                .dataKind(DataKind.ACCOUNT_NO)
                 .build();
 
         PdfMaskingAdapter.writeMaskedParagraph(
                 Map.of("accountNumber", "1234-5678-9012"),
                 target,
-                "PARTIAL",
-                "{\"keepEnd\":4}",
+                true,
                 captured::set);
 
         assertThat(captured.get()).doesNotContain("1234-5678-9012");

@@ -149,32 +149,32 @@ class ExportMaskingE2ETest {
 
         @Override
         public byte[] exportExcel(ExportCommand command, List<Map<String, Object>> rows,
-                                  MaskingTarget target, String maskRule, String maskParams,
+                                  MaskingTarget target, boolean maskingEnabled,
                                   java.util.function.BiConsumer<Integer, Map<String, Object>> writer) {
-            Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(0), target, maskRule, maskParams);
+            Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(0), target, maskingEnabled);
             lastMasked.set(masked);
             return new byte[0];
         }
 
         @Override
         public byte[] exportPdf(ExportCommand command, List<Map<String, Object>> rows,
-                                MaskingTarget target, String maskRule, String maskParams,
+                                MaskingTarget target, boolean maskingEnabled,
                                 java.util.function.Consumer<String> writer) {
-            Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(0), target, maskRule, maskParams);
+            Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(0), target, maskingEnabled);
             lastMasked.set(masked);
             return new byte[0];
         }
 
         @Override
         public byte[] exportCsv(ExportCommand command, List<Map<String, Object>> rows,
-                                MaskingTarget target, String maskRule, String maskParams) {
-            return delegateHelper.exportCsv(command, rows, target, maskRule, maskParams);
+                                MaskingTarget target, boolean maskingEnabled) {
+            return delegateHelper.exportCsv(command, rows, target, maskingEnabled);
         }
 
         @Override
         public byte[] exportJson(ExportCommand command, List<Map<String, Object>> rows,
-                                 MaskingTarget target, String maskRule, String maskParams) {
-            return delegateHelper.exportJson(command, rows, target, maskRule, maskParams);
+                                 MaskingTarget target, boolean maskingEnabled) {
+            return delegateHelper.exportJson(command, rows, target, maskingEnabled);
         }
 
         AtomicReference<Map<String, Object>> lastMasked() {

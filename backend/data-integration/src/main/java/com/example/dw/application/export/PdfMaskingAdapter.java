@@ -21,16 +21,4 @@ public final class PdfMaskingAdapter {
         paragraphWriter.accept(masked.toString());
     }
 
-    /**
-     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
-     */
-    @Deprecated
-    public static void writeMaskedParagraph(Map<String, Object> row,
-                                            MaskingTarget target,
-                                            String maskRule,
-                                            String maskParams,
-                                            Consumer<String> paragraphWriter) {
-        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
-        writeMaskedParagraph(row, target, maskingEnabled, paragraphWriter);
-    }
 }

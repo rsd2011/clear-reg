@@ -20,8 +20,7 @@ class MaskingContextHolderTest {
     void setAndGet() {
         MaskingMatch match = MaskingMatch.builder()
                 .policyId(UUID.randomUUID())
-                .maskRule("PARTIAL")
-                .maskParams("{}")
+                .maskingEnabled(true)
                 .auditEnabled(true)
                 .priority(1)
                 .build();
@@ -35,7 +34,7 @@ class MaskingContextHolderTest {
     @DisplayName("Given: MaskingMatch 설정 후 clear / When: get() 호출 / Then: null 반환")
     void clearRemovesMatch() {
         MaskingMatch match = MaskingMatch.builder()
-                .maskRule("FULL")
+                .maskingEnabled(true)
                 .build();
 
         MaskingContextHolder.set(match);

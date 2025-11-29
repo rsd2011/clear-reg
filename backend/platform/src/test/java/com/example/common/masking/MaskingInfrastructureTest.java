@@ -23,7 +23,7 @@ class MaskingInfrastructureTest {
     void maskingContextHolderLifecycle() {
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .build();
         MaskingContextHolder.set(target);

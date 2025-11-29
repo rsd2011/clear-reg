@@ -73,7 +73,7 @@ class MaskingFunctionsTest {
         void extractsDataKindFromMatch() {
             MaskingMatch match = MaskingMatch.builder()
                     .maskingEnabled(true)
-                    .dataKind("SSN")
+                    .dataKind(DataKind.SSN)
                     .build();
             UnaryOperator<String> masker = MaskingFunctions.masker(match);
             String result = masker.apply("900101-1234567");
@@ -85,7 +85,7 @@ class MaskingFunctionsTest {
         void maskingDisabledReturnsOriginal() {
             MaskingMatch match = MaskingMatch.builder()
                     .maskingEnabled(false)
-                    .dataKind("SSN")
+                    .dataKind(DataKind.SSN)
                     .build();
             UnaryOperator<String> masker = MaskingFunctions.masker(match);
             assertThat(masker.apply("900101-1234567")).isEqualTo("900101-1234567");

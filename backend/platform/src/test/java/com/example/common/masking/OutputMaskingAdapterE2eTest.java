@@ -14,7 +14,7 @@ class OutputMaskingAdapterE2eTest {
     void maskAppliesDataKindBasedRule() {
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("ACCOUNT_NO")
+                .dataKind(DataKind.ACCOUNT_NO)
                 .build();
 
         // ACCOUNT_NO의 기본 규칙은 PARTIAL이므로 마스킹 적용
@@ -32,7 +32,7 @@ class OutputMaskingAdapterE2eTest {
     void forceUnmaskFieldWins() {
         MaskingTarget target = MaskingTarget.builder()
                 .forceUnmaskFields(Set.of("accountNumber"))
-                .dataKind("ACCOUNT_NO")
+                .dataKind(DataKind.ACCOUNT_NO)
                 .build();
 
         String masked = OutputMaskingAdapter.mask("accountNumber", "123-45-67890",
@@ -45,7 +45,7 @@ class OutputMaskingAdapterE2eTest {
     @DisplayName("Maskable 값객체도 DataKind 기반 마스킹이 적용된다")
     void maskableRespectsDataKindRule() {
         MaskingTarget target = MaskingTarget.builder()
-                .dataKind("SSN")
+                .dataKind(DataKind.SSN)
                 .build();
 
         Maskable<String> rrn = new Maskable<String>() {
@@ -76,7 +76,7 @@ class OutputMaskingAdapterE2eTest {
     @DisplayName("maskingEnabled가 false면 원본이 반환된다 (화이트리스트)")
     void whitelistReturnsRaw() {
         MaskingTarget target = MaskingTarget.builder()
-                .dataKind("SSN")
+                .dataKind(DataKind.SSN)
                 .build();
 
         Maskable<String> rrn = new Maskable<String>() {

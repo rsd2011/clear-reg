@@ -38,8 +38,8 @@ class ExportWriterServicePerfTest {
         ExportCommand cmd = new ExportCommand("csv", "mass.csv", rows.size(),
                 Map.of("source", "perf"), "R", null, null, com.example.audit.AuditMode.ASYNC_FALLBACK);
 
-        byte[] csv = helper.exportCsv(cmd, rows, MaskingTarget.builder().defaultMask(true).build(), "PARTIAL", "{\"keepEnd\":4}");
-        byte[] json = helper.exportJson(cmd, rows, MaskingTarget.builder().defaultMask(true).build(), "PARTIAL", "{\"keepEnd\":4}");
+        byte[] csv = helper.exportCsv(cmd, rows, MaskingTarget.builder().defaultMask(true).build(), true);
+        byte[] json = helper.exportJson(cmd, rows, MaskingTarget.builder().defaultMask(true).build(), true);
 
         assertThat(csv.length).isGreaterThan(0);
         assertThat(json.length).isGreaterThan(0);

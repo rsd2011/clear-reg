@@ -316,20 +316,6 @@ class CoverageSweeperTest {
         assertThat(maskNull.hashCode()).isNotEqualTo(mask1.hashCode());
         assertThat(rowNull.hashCode()).isNotEqualTo(row1.hashCode());
 
-        // 레거시 Builder 커버리지
-        MaskingMatch legacyMask = MaskingMatch.builder()
-                .maskRule("PARTIAL")
-                .maskParams("{\"keep\":4}")
-                .build();
-        assertThat(legacyMask.isMaskingEnabled()).isTrue();
-        assertThat(legacyMask.getMaskRule()).isEqualTo("PARTIAL");
-        assertThat(legacyMask.getMaskParams()).isNull();
-
-        MaskingMatch noneRuleMask = MaskingMatch.builder()
-                .maskRule("NONE")
-                .build();
-        assertThat(noneRuleMask.isMaskingEnabled()).isFalse();
-        assertThat(noneRuleMask.getMaskRule()).isEqualTo("NONE");
     }
 
     @Test
@@ -374,7 +360,7 @@ class CoverageSweeperTest {
         // maskingEnabled=true인 경우 (블랙리스트) - 마스킹 적용
         MaskingMatch blacklist = MaskingMatch.builder()
                 .maskingEnabled(true)
-                .dataKind("PHONE")
+                .dataKind(DataKind.PHONE)
                 .build();
         var maskerBlacklist = com.example.common.masking.MaskingFunctions.masker(blacklist, DataKind.PHONE);
         assertThat(maskerBlacklist.apply("01012345678")).isNotEqualTo("01012345678");
@@ -386,7 +372,7 @@ class CoverageSweeperTest {
         // MaskingMatch에서 dataKind 사용
         MaskingMatch withDataKind = MaskingMatch.builder()
                 .maskingEnabled(true)
-                .dataKind("SSN")
+                .dataKind(DataKind.SSN)
                 .build();
         var maskerWithDataKind = com.example.common.masking.MaskingFunctions.masker(withDataKind);
         assertThat(maskerWithDataKind.apply("900101-1234567")).isNotNull();
@@ -402,7 +388,7 @@ class CoverageSweeperTest {
         // PARTIAL 규칙 테스트 (PHONE은 PARTIAL) - 블랙리스트 정책 필요
         MaskingMatch partialMatch = MaskingMatch.builder()
                 .maskingEnabled(true)
-                .dataKind("PHONE")
+                .dataKind(DataKind.PHONE)
                 .build();
         var partialMasker = com.example.common.masking.MaskingFunctions.masker(partialMatch, DataKind.PHONE);
         assertThat(partialMasker.apply("01012345678")).contains("*");
@@ -410,7 +396,7 @@ class CoverageSweeperTest {
         // FULL 규칙 테스트 (SSN은 FULL) - 블랙리스트 정책 필요
         MaskingMatch fullMatch = MaskingMatch.builder()
                 .maskingEnabled(true)
-                .dataKind("SSN")
+                .dataKind(DataKind.SSN)
                 .build();
         var fullMasker = com.example.common.masking.MaskingFunctions.masker(fullMatch, DataKind.SSN);
         String fullMasked = fullMasker.apply("900101-1234567");

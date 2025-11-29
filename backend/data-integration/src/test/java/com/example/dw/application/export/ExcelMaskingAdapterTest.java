@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 
 class ExcelMaskingAdapterTest {
@@ -19,15 +20,14 @@ class ExcelMaskingAdapterTest {
         AtomicReference<Map<String, Object>> captured = new AtomicReference<>();
 
         MaskingTarget target = MaskingTarget.builder()
-                .dataKind("rrn")
+                .dataKind(DataKind.SSN)
                 .build();
 
         ExcelMaskingAdapter.writeMaskedRow(
                 0,
                 Map.of("rrn", "900101-1234567", "name", "Kim"),
                 target,
-                "PARTIAL",
-                "{\"keepEnd\":4}",
+                true,
                 (idx, row) -> captured.set(new HashMap<>(row)));
 
         assertThat(captured.get().get("rrn")).isNotEqualTo("900101-1234567");

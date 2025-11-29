@@ -21,8 +21,7 @@ class ExportMaskingHelperOriginalTest {
         Map<String, Object> masked = ExportMaskingHelper.maskRow(
                 row,
                 MaskingTarget.builder().defaultMask(true).build(),
-                "PARTIAL",
-                null);
+                true);
 
         String concatenated = masked.values().toString();
         assertThat(concatenated).doesNotContain(rrn).doesNotContain(card);

@@ -7,6 +7,7 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 
 class ExportMaskingHelperTest {
@@ -16,14 +17,13 @@ class ExportMaskingHelperTest {
     void masksRow() {
         MaskingTarget target = MaskingTarget.builder()
                 .forceUnmask(false)
-                .dataKind("accountNumber")
+                .dataKind(DataKind.ACCOUNT_NO)
                 .build();
 
         Map<String, Object> masked = ExportMaskingHelper.maskRow(
                 Map.of("accountNumber", "1234-5678-9012", "name", "Kim"),
                 target,
-                "PARTIAL",
-                "{\"keepEnd\":4}");
+                true);
 
         assertThat(masked.get("accountNumber")).isNotEqualTo("1234-5678-9012");
         assertThat(masked.get("name")).isNotNull();

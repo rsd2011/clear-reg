@@ -22,17 +22,4 @@ public final class ExcelMaskingAdapter {
         rowWriter.accept(rowIndex, masked);
     }
 
-    /**
-     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
-     */
-    @Deprecated
-    public static void writeMaskedRow(int rowIndex,
-                                      Map<String, Object> row,
-                                      MaskingTarget target,
-                                      String maskRule,
-                                      String maskParams,
-                                      BiConsumer<Integer, Map<String, Object>> rowWriter) {
-        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
-        writeMaskedRow(rowIndex, row, target, maskingEnabled, rowWriter);
-    }
 }

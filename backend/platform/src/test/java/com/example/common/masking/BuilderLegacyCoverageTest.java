@@ -11,72 +11,28 @@ import org.junit.jupiter.api.Test;
 import com.example.common.policy.MaskingMatch;
 
 @DisplayName("Builder 레거시 메서드 커버리지")
-@SuppressWarnings("deprecation")
 class BuilderLegacyCoverageTest {
 
     @Nested
-    @DisplayName("MaskingTarget.MaskingTargetBuilder 레거시 메서드")
-    class MaskingTargetBuilderLegacy {
+    @DisplayName("MaskingTarget 빌더 테스트")
+    class MaskingTargetBuilderTests {
 
         @Test
-        @DisplayName("dataKind(String) - 문자열로 DataKind 설정")
-        void dataKindFromString() {
+        @DisplayName("dataKind(DataKind) - enum으로 DataKind 설정")
+        void dataKindFromEnum() {
             MaskingTarget target = MaskingTarget.builder()
-                    .dataKind("SSN")
+                    .dataKind(DataKind.SSN)
                     .build();
             assertThat(target.getDataKind()).isEqualTo(DataKind.SSN);
         }
 
         @Test
-        @DisplayName("dataKind(String) - null 처리")
-        void dataKindFromStringNull() {
+        @DisplayName("forceUnmaskKinds - Set<DataKind> 설정")
+        void forceUnmaskKinds() {
             MaskingTarget target = MaskingTarget.builder()
-                    .dataKind((String) null)
-                    .build();
-            assertThat(target.getDataKind()).isEqualTo(DataKind.DEFAULT);
-        }
-
-        @Test
-        @DisplayName("forceUnmaskKindsFromStrings - Set<String> → Set<DataKind>")
-        void forceUnmaskKindsFromStrings() {
-            MaskingTarget target = MaskingTarget.builder()
-                    .forceUnmaskKindsFromStrings(Set.of("SSN", "PHONE"))
+                    .forceUnmaskKinds(Set.of(DataKind.SSN, DataKind.PHONE))
                     .build();
             assertThat(target.getForceUnmaskKinds()).containsExactlyInAnyOrder(DataKind.SSN, DataKind.PHONE);
-        }
-
-        @Test
-        @DisplayName("forceUnmaskKindsFromStrings - null 처리")
-        void forceUnmaskKindsFromStringsNull() {
-            MaskingTarget target = MaskingTarget.builder()
-                    .forceUnmaskKindsFromStrings(null)
-                    .build();
-            assertThat(target.getForceUnmaskKinds()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("forceUnmaskKindsFromStrings - 빈 Set 처리")
-        void forceUnmaskKindsFromStringsEmpty() {
-            MaskingTarget target = MaskingTarget.builder()
-                    .forceUnmaskKindsFromStrings(Set.of())
-                    .build();
-            assertThat(target.getForceUnmaskKinds()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("getDataKindString() - DataKind를 String으로 반환")
-        void getDataKindString() {
-            MaskingTarget target = MaskingTarget.builder()
-                    .dataKind(DataKind.SSN)
-                    .build();
-            assertThat(target.getDataKindString()).isEqualTo("SSN");
-        }
-
-        @Test
-        @DisplayName("getDataKindString() - null DataKind 처리")
-        void getDataKindStringNull() {
-            MaskingTarget target = MaskingTarget.builder().build();
-            assertThat(target.getDataKindString()).isNull();
         }
 
         @Test
@@ -107,135 +63,35 @@ class BuilderLegacyCoverageTest {
     }
 
     @Nested
-    @DisplayName("MaskingMatch.MaskingMatchBuilder 레거시 메서드")
-    class MaskingMatchBuilderLegacy {
+    @DisplayName("MaskingMatch 빌더 테스트")
+    class MaskingMatchBuilderTests {
 
         @Test
-        @DisplayName("dataKind(String) - 문자열로 DataKind 설정")
-        void dataKindFromString() {
+        @DisplayName("dataKinds(Set<DataKind>) - Set으로 DataKind 설정")
+        void dataKindsFromSet() {
             MaskingMatch match = MaskingMatch.builder()
-                    .dataKind("SSN")
+                    .dataKinds(Set.of(DataKind.SSN, DataKind.PHONE))
                     .maskingEnabled(true)
                     .build();
-            assertThat(match.getDataKinds()).containsExactly(DataKind.SSN);
+            assertThat(match.getDataKinds()).containsExactlyInAnyOrder(DataKind.SSN, DataKind.PHONE);
         }
 
         @Test
-        @DisplayName("dataKind(String) - null 처리")
-        void dataKindFromStringNull() {
+        @DisplayName("maskingEnabled=true 설정")
+        void maskingEnabledTrue() {
             MaskingMatch match = MaskingMatch.builder()
-                    .dataKind((String) null)
                     .maskingEnabled(true)
-                    .build();
-            assertThat(match.getDataKinds()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("dataKind(String) - 빈 문자열 처리")
-        void dataKindFromStringBlank() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .dataKind("   ")
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match.getDataKinds()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("maskRule(String) - NONE → maskingEnabled=false")
-        void maskRuleNone() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .maskRule("NONE")
-                    .build();
-            assertThat(match.isMaskingEnabled()).isFalse();
-        }
-
-        @Test
-        @DisplayName("maskRule(String) - PARTIAL → maskingEnabled=true")
-        void maskRulePartial() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .maskRule("PARTIAL")
                     .build();
             assertThat(match.isMaskingEnabled()).isTrue();
         }
 
         @Test
-        @DisplayName("maskParams(String) - 무시됨")
-        void maskParamsIgnored() {
+        @DisplayName("maskingEnabled=false 설정")
+        void maskingEnabledFalse() {
             MaskingMatch match = MaskingMatch.builder()
-                    .maskParams("{\"param\": 1}")
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match.getMaskParams()).isNull(); // 항상 null 반환
-        }
-
-        @Test
-        @DisplayName("dataKindsFromStrings - Set<String> → Set<DataKind>")
-        void dataKindsFromStrings() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .dataKindsFromStrings(Set.of("SSN", "PHONE", "EMAIL"))
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match.getDataKinds()).containsExactlyInAnyOrder(DataKind.SSN, DataKind.PHONE, DataKind.EMAIL);
-        }
-
-        @Test
-        @DisplayName("dataKindsFromStrings - null 처리")
-        void dataKindsFromStringsNull() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .dataKindsFromStrings(null)
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match.getDataKinds()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("dataKindsFromStrings - 빈 Set 처리")
-        void dataKindsFromStringsEmpty() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .dataKindsFromStrings(Set.of())
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match.getDataKinds()).isEmpty();
-        }
-
-        @Test
-        @DisplayName("getDataKind() - 첫 번째 DataKind 반환")
-        void getDataKindLegacy() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .dataKinds(Set.of(DataKind.SSN))
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match.getDataKind()).isEqualTo("SSN");
-        }
-
-        @Test
-        @DisplayName("getDataKind() - null/빈 Set인 경우 null 반환")
-        void getDataKindLegacyNull() {
-            MaskingMatch match1 = MaskingMatch.builder()
-                    .dataKinds(null)
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match1.getDataKind()).isNull();
-
-            MaskingMatch match2 = MaskingMatch.builder()
-                    .dataKinds(Set.of())
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(match2.getDataKind()).isNull();
-        }
-
-        @Test
-        @DisplayName("getMaskRule() - maskingEnabled에 따른 반환")
-        void getMaskRuleLegacy() {
-            MaskingMatch enabled = MaskingMatch.builder()
-                    .maskingEnabled(true)
-                    .build();
-            assertThat(enabled.getMaskRule()).isEqualTo("PARTIAL");
-
-            MaskingMatch disabled = MaskingMatch.builder()
                     .maskingEnabled(false)
                     .build();
-            assertThat(disabled.getMaskRule()).isEqualTo("NONE");
+            assertThat(match.isMaskingEnabled()).isFalse();
         }
 
         @Test

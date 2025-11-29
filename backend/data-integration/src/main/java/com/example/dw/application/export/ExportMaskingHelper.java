@@ -41,16 +41,4 @@ public final class ExportMaskingHelper {
         return maskRow(row, target, true);
     }
 
-    /**
-     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
-     *             maskRow(row, target, maskingEnabled)를 사용하세요.
-     */
-    @Deprecated
-    public static Map<String, Object> maskRow(Map<String, Object> row,
-                                              MaskingTarget target,
-                                              String maskRule,
-                                              String maskParams) {
-        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
-        return maskRow(row, target, maskingEnabled);
-    }
 }

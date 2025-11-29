@@ -18,7 +18,7 @@ class MaskingStrategyPlatformBranchesTest {
         MaskingStrategy strategy = new PolicyMaskingStrategy(settings, Map.of(), java.util.Set.of());
         MaskingTarget target = MaskingTarget.builder()
                 .defaultMask(false)
-                .dataKind("GEN")
+                .dataKind(DataKind.DEFAULT)
                 .build();
         assertThat(strategy.shouldMask(target)).isFalse();
     }
