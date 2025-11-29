@@ -26,23 +26,24 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 승인선 템플릿 버전 엔티티 (SCD Type 2).
+ * 승인선 템플릿 엔티티 (SCD Type 2 버전 관리).
  * <p>
  * 템플릿의 각 버전을 저장하여 시점 조회와 감사 추적을 지원합니다.
+ * 비즈니스 데이터(name, description, active, steps)를 포함합니다.
  * </p>
  */
 @Entity
-@Table(name = "approval_line_template_versions", indexes = {
-        @Index(name = "idx_altv_template_version", columnList = "template_id, version"),
-        @Index(name = "idx_altv_valid_range", columnList = "template_id, valid_from, valid_to")
+@Table(name = "approval_templates", indexes = {
+        @Index(name = "idx_at_root_version", columnList = "root_id, version"),
+        @Index(name = "idx_at_valid_range", columnList = "root_id, valid_from, valid_to")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
+public class ApprovalTemplate extends PrimaryKeyEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "template_id", nullable = false)
-    private ApprovalLineTemplate template;
+    @JoinColumn(name = "root_id", nullable = false)
+    private ApprovalTemplateRoot root;
 
     @Column(name = "version", nullable = false)
     private Integer version;
@@ -92,10 +93,6 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
     @Column(name = "changed_at", nullable = false)
     private OffsetDateTime changedAt;
 
-    /** COPY 시 원본 템플릿 ID */
-    @Column(name = "source_template_id")
-    private UUID sourceTemplateId;
-
     /** ROLLBACK 시 롤백 대상 버전 번호 */
     @Column(name = "rollback_from_version")
     private Integer rollbackFromVersion;
@@ -104,13 +101,13 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
     @Column(name = "version_tag", length = 100)
     private String versionTag;
 
-    // === Step 버전들 ===
+    // === Steps ===
 
-    @OneToMany(mappedBy = "templateVersion", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("stepOrder ASC")
-    private final List<ApprovalTemplateStepVersion> steps = new ArrayList<>();
+    private final List<ApprovalTemplateStep> steps = new ArrayList<>();
 
-    private ApprovalLineTemplateVersion(ApprovalLineTemplate template,
+    private ApprovalTemplate(ApprovalTemplateRoot root,
                                         Integer version,
                                         String name,
                                         Integer displayOrder,
@@ -122,9 +119,8 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
                                         String changedBy,
                                         String changedByName,
                                         OffsetDateTime now,
-                                        UUID sourceTemplateId,
                                         Integer rollbackFromVersion) {
-        this.template = template;
+        this.root = root;
         this.version = version;
         this.validFrom = now;
         this.validTo = null;
@@ -138,14 +134,13 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
         this.changedBy = changedBy;
         this.changedByName = changedByName;
         this.changedAt = now;
-        this.sourceTemplateId = sourceTemplateId;
         this.rollbackFromVersion = rollbackFromVersion;
     }
 
     /**
      * 새 버전 생성 (일반적인 생성/수정/삭제 등).
      */
-    public static ApprovalLineTemplateVersion create(ApprovalLineTemplate template,
+    public static ApprovalTemplate create(ApprovalTemplateRoot root,
                                                      Integer version,
                                                      String name,
                                                      Integer displayOrder,
@@ -156,16 +151,16 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
                                                      String changedBy,
                                                      String changedByName,
                                                      OffsetDateTime now) {
-        return new ApprovalLineTemplateVersion(
-                template, version, name, displayOrder, description, active,
+        return new ApprovalTemplate(
+                root, version, name, displayOrder, description, active,
                 VersionStatus.PUBLISHED, changeAction, changeReason,
-                changedBy, changedByName, now, null, null);
+                changedBy, changedByName, now, null);
     }
 
     /**
      * 초안(Draft) 버전 생성.
      */
-    public static ApprovalLineTemplateVersion createDraft(ApprovalLineTemplate template,
+    public static ApprovalTemplate createDraft(ApprovalTemplateRoot root,
                                                           Integer version,
                                                           String name,
                                                           Integer displayOrder,
@@ -175,35 +170,16 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
                                                           String changedBy,
                                                           String changedByName,
                                                           OffsetDateTime now) {
-        return new ApprovalLineTemplateVersion(
-                template, version, name, displayOrder, description, active,
+        return new ApprovalTemplate(
+                root, version, name, displayOrder, description, active,
                 VersionStatus.DRAFT, ChangeAction.DRAFT, changeReason,
-                changedBy, changedByName, now, null, null);
-    }
-
-    /**
-     * 복사 시 버전 생성.
-     */
-    public static ApprovalLineTemplateVersion createFromCopy(ApprovalLineTemplate template,
-                                                             Integer version,
-                                                             String name,
-                                                             Integer displayOrder,
-                                                             String description,
-                                                             boolean active,
-                                                             String changedBy,
-                                                             String changedByName,
-                                                             OffsetDateTime now,
-                                                             UUID sourceTemplateId) {
-        return new ApprovalLineTemplateVersion(
-                template, version, name, displayOrder, description, active,
-                VersionStatus.PUBLISHED, ChangeAction.COPY, null,
-                changedBy, changedByName, now, sourceTemplateId, null);
+                changedBy, changedByName, now, null);
     }
 
     /**
      * 롤백 시 버전 생성.
      */
-    public static ApprovalLineTemplateVersion createFromRollback(ApprovalLineTemplate template,
+    public static ApprovalTemplate createFromRollback(ApprovalTemplateRoot root,
                                                                  Integer version,
                                                                  String name,
                                                                  Integer displayOrder,
@@ -214,10 +190,10 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
                                                                  String changedByName,
                                                                  OffsetDateTime now,
                                                                  Integer rollbackFromVersion) {
-        return new ApprovalLineTemplateVersion(
-                template, version, name, displayOrder, description, active,
+        return new ApprovalTemplate(
+                root, version, name, displayOrder, description, active,
                 VersionStatus.PUBLISHED, ChangeAction.ROLLBACK, changeReason,
-                changedBy, changedByName, now, null, rollbackFromVersion);
+                changedBy, changedByName, now, rollbackFromVersion);
     }
 
     /**
@@ -280,14 +256,14 @@ public class ApprovalLineTemplateVersion extends PrimaryKeyEntity {
     /**
      * Step 추가.
      */
-    public void addStep(ApprovalTemplateStepVersion step) {
+    public void addStep(ApprovalTemplateStep step) {
         this.steps.add(step);
     }
 
     /**
      * Steps 교체.
      */
-    public void replaceSteps(List<ApprovalTemplateStepVersion> newSteps) {
+    public void replaceSteps(List<ApprovalTemplateStep> newSteps) {
         this.steps.clear();
         this.steps.addAll(newSteps);
     }

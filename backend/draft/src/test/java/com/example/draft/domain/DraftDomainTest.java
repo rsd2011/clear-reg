@@ -7,9 +7,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import com.example.admin.approval.domain.ApprovalGroup;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
+import com.example.common.version.ChangeAction;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.domain.ApprovalLineTemplate;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftWorkflowException;
 
@@ -96,17 +99,21 @@ class DraftDomainTest {
     }
 
     private Draft createDraft() {
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿", 0, null, NOW);
+        ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
+        ApprovalTemplate version = ApprovalTemplate.create(
+                root, 1, "템플릿", 0, null, true,
+                ChangeAction.CREATE, null, "system", "System", NOW);
 
         ApprovalGroup groupA = ApprovalGroup.create("GROUP-A", "첫 번째", "설명", 1, NOW);
         ApprovalGroup groupB = ApprovalGroup.create("GROUP-B", "두 번째", "설명", 2, NOW);
 
-        template.addStep(1, groupA);
-        template.addStep(2, groupB);
+        version.addStep(ApprovalTemplateStep.create(version, 1, groupA, false));
+        version.addStep(ApprovalTemplateStep.create(version, 2, groupB, false));
+        root.activateNewVersion(version, NOW);
 
         Draft draft = Draft.create("제목", "내용", "NOTICE", "ORG-001",
-                template.getTemplateCode(), "writer", NOW);
-        template.getSteps().stream()
+                root.getTemplateCode(), "writer", NOW);
+        root.getCurrentVersion().getSteps().stream()
                 .map(DraftApprovalStep::fromTemplate)
                 .forEach(draft::addApprovalStep);
         draft.initializeWorkflow(NOW);

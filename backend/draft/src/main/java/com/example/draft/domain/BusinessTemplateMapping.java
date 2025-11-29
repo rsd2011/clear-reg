@@ -11,7 +11,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,7 +34,7 @@ public class BusinessTemplateMapping extends PrimaryKeyEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "approval_template_id", nullable = false)
-    private ApprovalLineTemplate approvalLineTemplate;
+    private ApprovalTemplateRoot approvalTemplateRoot;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "form_template_id", nullable = false)
@@ -51,12 +51,12 @@ public class BusinessTemplateMapping extends PrimaryKeyEntity {
 
     private BusinessTemplateMapping(String businessFeatureCode,
                                     String organizationCode,
-                                    ApprovalLineTemplate approvalLineTemplate,
+                                    ApprovalTemplateRoot approvalTemplateRoot,
                                     DraftFormTemplate draftFormTemplate,
                                     OffsetDateTime now) {
         this.businessFeatureCode = businessFeatureCode;
         this.organizationCode = organizationCode;
-        this.approvalLineTemplate = approvalLineTemplate;
+        this.approvalTemplateRoot = approvalTemplateRoot;
         this.draftFormTemplate = draftFormTemplate;
         this.createdAt = now;
         this.updatedAt = now;
@@ -64,17 +64,17 @@ public class BusinessTemplateMapping extends PrimaryKeyEntity {
 
     public static BusinessTemplateMapping create(String businessFeatureCode,
                                                  String organizationCode,
-                                                 ApprovalLineTemplate approvalLineTemplate,
+                                                 ApprovalTemplateRoot approvalTemplateRoot,
                                                  DraftFormTemplate draftFormTemplate,
                                                  OffsetDateTime now) {
-        return new BusinessTemplateMapping(businessFeatureCode, organizationCode, approvalLineTemplate, draftFormTemplate, now);
+        return new BusinessTemplateMapping(businessFeatureCode, organizationCode, approvalTemplateRoot, draftFormTemplate, now);
     }
 
-    public void updateTemplates(ApprovalLineTemplate approvalTemplate,
+    public void updateTemplates(ApprovalTemplateRoot approvalTemplate,
                                 DraftFormTemplate formTemplate,
                                 boolean active,
                                 OffsetDateTime now) {
-        this.approvalLineTemplate = approvalTemplate;
+        this.approvalTemplateRoot = approvalTemplate;
         this.draftFormTemplate = formTemplate;
         this.active = active;
         this.updatedAt = now;

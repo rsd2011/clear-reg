@@ -15,10 +15,10 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.draft.application.TemplateAdminService;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.draft.domain.TemplateScope;
 import java.time.OffsetDateTime;
@@ -31,22 +31,22 @@ class DraftTemplateAdminControllerCreateUpdateTest {
 
     @Test
     @DisplayName("승인선 템플릿 업데이트 시 AuthContext와 감사 플래그를 전달한다")
-    void updateApprovalLineTemplateUsesContext() {
+    void updateApprovalTemplateRootUsesContext() {
         AuthContextHolder.set(context);
         ApprovalTemplateStepRequest step = new ApprovalTemplateStepRequest(1, "ROLE");
-        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
+        ApprovalTemplateRootRequest request = new ApprovalTemplateRootRequest(
                 "이름",
                 0,
                 null,
                 true, java.util.List.of(step));
-        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(UUID.randomUUID(), "CODE", "이름", 0, null, true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
+        ApprovalTemplateRootResponse response = new ApprovalTemplateRootResponse(UUID.randomUUID(), "CODE", "이름", 0, null, true, OffsetDateTime.now(), OffsetDateTime.now(), java.util.List.of());
         UUID id = UUID.randomUUID();
-        given(service.updateApprovalLineTemplate(eq(id), eq(request), eq(context), eq(true))).willReturn(response);
+        given(service.updateApprovalTemplateRoot(eq(id), eq(request), eq(context), eq(true))).willReturn(response);
 
-        ApprovalLineTemplateResponse result = controller.updateApprovalLineTemplate(id, request);
+        ApprovalTemplateRootResponse result = controller.updateApprovalTemplateRoot(id, request);
 
         assertThat(result).isEqualTo(response);
-        verify(service).updateApprovalLineTemplate(eq(id), eq(request), eq(context), eq(true));
+        verify(service).updateApprovalTemplateRoot(eq(id), eq(request), eq(context), eq(true));
     }
 
     @Test

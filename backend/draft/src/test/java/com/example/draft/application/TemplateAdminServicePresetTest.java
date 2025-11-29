@@ -13,16 +13,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.example.admin.approval.domain.ApprovalLineTemplate;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
+import com.example.common.version.ChangeAction;
 import com.example.draft.application.dto.DraftTemplatePresetRequest;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.draft.application.dto.DraftTemplatePresetResponse;
@@ -37,7 +39,7 @@ class TemplateAdminServicePresetTest {
     private TemplateAdminService service;
     private DraftTemplatePresetRepository presetRepository;
     private DraftFormTemplateRepository formTemplateRepository;
-    private ApprovalLineTemplateRepository approvalTemplateRepository;
+    private ApprovalTemplateRootRepository approvalTemplateRepository;
     private AuthContext context;
     private final OffsetDateTime now = OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
 
@@ -45,23 +47,32 @@ class TemplateAdminServicePresetTest {
     void setUp() {
         presetRepository = mock(DraftTemplatePresetRepository.class);
         formTemplateRepository = mock(DraftFormTemplateRepository.class);
-        approvalTemplateRepository = mock(ApprovalLineTemplateRepository.class);
+        approvalTemplateRepository = mock(ApprovalTemplateRootRepository.class);
         service = new TemplateAdminService(
+                mock(ApprovalTemplateRootService.class),
                 approvalTemplateRepository,
-                mock(ApprovalGroupRepository.class),
                 formTemplateRepository,
                 presetRepository,
                 new ObjectMapper());
         context = AuthContext.of("user", "ORG1", null, null, null, RowScope.ORG);
     }
 
+    private ApprovalTemplateRoot createApprovalTemplateRoot(String name) {
+        ApprovalTemplateRoot root = ApprovalTemplateRoot.create(now);
+        ApprovalTemplate version = ApprovalTemplate.create(
+                root, 1, name, 0, null, true,
+                ChangeAction.CREATE, null, "system", "System", now);
+        root.activateNewVersion(version, now);
+        return root;
+    }
+
     @Test
     @DisplayName("프리셋 생성 시 저장소에 persist하고 응답을 반환한다")
     void createPreset() {
         DraftFormTemplate form = DraftFormTemplate.create("폼", "NOTICE", "ORG1", "{}", now);
-        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", 0, null, now);
+        ApprovalTemplateRoot approval = createApprovalTemplateRoot("결재");
         given(formTemplateRepository.findByIdAndActiveTrue(form.getId())).willReturn(Optional.of(form));
-        given(approvalTemplateRepository.findByIdAndActiveTrue(approval.getId())).willReturn(Optional.of(approval));
+        given(approvalTemplateRepository.findByIdAndActiveVersion(approval.getId())).willReturn(Optional.of(approval));
         ArgumentCaptor<DraftTemplatePreset> saved = ArgumentCaptor.forClass(DraftTemplatePreset.class);
         given(presetRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 

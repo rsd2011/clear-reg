@@ -3,7 +3,7 @@ package com.example.draft.domain;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 
@@ -58,7 +58,7 @@ public class DraftTemplatePreset extends PrimaryKeyEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "default_approval_template_id")
-    private ApprovalLineTemplate defaultApprovalTemplate;
+    private ApprovalTemplateRoot defaultApprovalTemplate;
 
     @Column(name = "default_form_payload", nullable = false, columnDefinition = "text")
     private String defaultFormPayload;
@@ -85,7 +85,7 @@ public class DraftTemplatePreset extends PrimaryKeyEntity {
                                 String titleTemplate,
                                 String contentTemplate,
                                 DraftFormTemplate formTemplate,
-                                ApprovalLineTemplate defaultApprovalTemplate,
+                                ApprovalTemplateRoot defaultApprovalTemplate,
                                 String defaultFormPayload,
                                 String variablesJson,
                                 OffsetDateTime now) {
@@ -110,7 +110,7 @@ public class DraftTemplatePreset extends PrimaryKeyEntity {
                                              String titleTemplate,
                                              String contentTemplate,
                                              DraftFormTemplate formTemplate,
-                                             ApprovalLineTemplate defaultApprovalTemplate,
+                                             ApprovalTemplateRoot defaultApprovalTemplate,
                                              String defaultFormPayload,
                                              String variablesJson,
                                              boolean active,
@@ -126,7 +126,7 @@ public class DraftTemplatePreset extends PrimaryKeyEntity {
                        String titleTemplate,
                        String contentTemplate,
                        DraftFormTemplate formTemplate,
-                       ApprovalLineTemplate defaultApprovalTemplate,
+                       ApprovalTemplateRoot defaultApprovalTemplate,
                        String defaultFormPayload,
                        String variablesJson,
                        boolean active,

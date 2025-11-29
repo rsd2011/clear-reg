@@ -21,8 +21,8 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 import com.example.draft.application.TemplateAdminService;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
 
 class DraftTemplateAdminControllerExtraTest {
@@ -40,22 +40,22 @@ class DraftTemplateAdminControllerExtraTest {
     void throwsWhenContextMissing() {
         AuthContextHolder.clear();
 
-        assertThatThrownBy(() -> controller.listApprovalLineTemplates(true))
+        assertThatThrownBy(() -> controller.listApprovalTemplateRoots(true))
                 .isInstanceOf(PermissionDeniedException.class);
     }
 
     @Test
     @DisplayName("승인선 템플릿 생성 시 현재 컨텍스트를 전달한다")
-    void createApprovalLineTemplateUsesContext() {
+    void createApprovalTemplateRootUsesContext() {
         AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
-        ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
+        ApprovalTemplateRootRequest request = new ApprovalTemplateRootRequest(
                 "이름",
                 0,
                 null,
                 true, List.of());
-        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(
+        ApprovalTemplateRootResponse response = new ApprovalTemplateRootResponse(
                 UUID.randomUUID(),
                 "CODE",
                 "이름",
@@ -65,12 +65,12 @@ class DraftTemplateAdminControllerExtraTest {
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
                 List.of());
-        when(service.createApprovalLineTemplate(eq(request), eq(ctx), eq(true))).thenReturn(response);
+        when(service.createApprovalTemplateRoot(eq(request), eq(ctx), eq(true))).thenReturn(response);
 
-        ApprovalLineTemplateResponse result = controller.createApprovalLineTemplate(request);
+        ApprovalTemplateRootResponse result = controller.createApprovalTemplateRoot(request);
 
         assertThat(result).isEqualTo(response);
-        verify(service).createApprovalLineTemplate(eq(request), eq(ctx), eq(true));
+        verify(service).createApprovalTemplateRoot(eq(request), eq(ctx), eq(true));
     }
 
     @Test
@@ -89,11 +89,11 @@ class DraftTemplateAdminControllerExtraTest {
 
     @Test
     @DisplayName("승인선 템플릿 목록 조회도 컨텍스트와 파라미터를 그대로 전달한다")
-    void listApprovalLineTemplatesPassesArguments() {
+    void listApprovalTemplateRootsPassesArguments() {
         AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
-        ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(
+        ApprovalTemplateRootResponse response = new ApprovalTemplateRootResponse(
                 UUID.randomUUID(),
                 "CODE",
                 "이름",
@@ -103,10 +103,10 @@ class DraftTemplateAdminControllerExtraTest {
                 OffsetDateTime.now(),
                 OffsetDateTime.now(),
                 List.of());
-        when(service.listApprovalLineTemplates(isNull(), isNull(), eq(false), eq(ctx), eq(true)))
+        when(service.listApprovalTemplateRoots(isNull(), isNull(), eq(false), eq(ctx), eq(true)))
                 .thenReturn(List.of(response));
 
-        List<ApprovalLineTemplateResponse> result = controller.listApprovalLineTemplates(false);
+        List<ApprovalTemplateRootResponse> result = controller.listApprovalTemplateRoots(false);
 
         assertThat(result).containsExactly(response);
     }

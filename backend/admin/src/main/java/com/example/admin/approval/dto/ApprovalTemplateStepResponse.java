@@ -8,14 +8,16 @@ public record ApprovalTemplateStepResponse(
         UUID id,
         int stepOrder,
         String approvalGroupCode,
-        String approvalGroupName
+        String approvalGroupName,
+        boolean skippable
 ) {
     public static ApprovalTemplateStepResponse from(ApprovalTemplateStep step) {
         return new ApprovalTemplateStepResponse(
                 step.getId(),
                 step.getStepOrder(),
                 step.getApprovalGroup().getGroupCode(),
-                step.getApprovalGroup().getName()
+                step.getApprovalGroup().getName(),
+                step.isSkippable()
         );
     }
 }

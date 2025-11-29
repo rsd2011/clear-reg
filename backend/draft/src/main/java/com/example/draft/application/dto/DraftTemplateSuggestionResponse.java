@@ -14,8 +14,8 @@ public record DraftTemplateSuggestionResponse(
 
     public static DraftTemplateSuggestionResponse from(BusinessTemplateMapping mapping) {
         return new DraftTemplateSuggestionResponse(
-                mapping.getApprovalLineTemplate().getId(),
-                mapping.getApprovalLineTemplate().getTemplateCode(),
+                mapping.getApprovalTemplateRoot().getId(),
+                mapping.getApprovalTemplateRoot().getTemplateCode(),
                 mapping.getDraftFormTemplate().getId(),
                 mapping.getDraftFormTemplate().getTemplateCode(),
                 mapping.getOrganizationCode() != null

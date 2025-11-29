@@ -11,15 +11,15 @@ import org.junit.jupiter.api.Test;
 
 import com.example.common.version.ChangeAction;
 
-@DisplayName("ApprovalTemplateStepVersion 엔티티")
-class ApprovalTemplateStepVersionTest {
+@DisplayName("ApprovalTemplateStep 엔티티")
+class ApprovalTemplateStepTest {
 
-    private ApprovalLineTemplate createTestTemplate() {
-        return ApprovalLineTemplate.create("테스트 템플릿", 1, "설명", OffsetDateTime.now());
+    private ApprovalTemplateRoot createTestRoot() {
+        return ApprovalTemplateRoot.create(OffsetDateTime.now());
     }
 
-    private ApprovalLineTemplateVersion createTestVersion(ApprovalLineTemplate template) {
-        return ApprovalLineTemplateVersion.create(
+    private ApprovalTemplate createTestVersion(ApprovalTemplateRoot template) {
+        return ApprovalTemplate.create(
                 template, 1, "템플릿명", 0, "설명", true,
                 ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
         );
@@ -36,29 +36,30 @@ class ApprovalTemplateStepVersionTest {
         @Test
         @DisplayName("Given: 유효한 파라미터 / When: create 호출 / Then: Step 버전 생성")
         void createsStepVersionWithValidParams() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = createTestVersion(template);
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = createTestVersion(template);
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
 
-            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(version, 1, group);
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(version, 1, group, false);
 
-            assertThat(step.getTemplateVersion()).isEqualTo(version);
+            assertThat(step.getTemplate()).isEqualTo(version);
             assertThat(step.getStepOrder()).isEqualTo(1);
             assertThat(step.getApprovalGroup()).isEqualTo(group);
             assertThat(step.getApprovalGroupCode()).isEqualTo("TEAM_LEADER");
             assertThat(step.getApprovalGroupName()).isEqualTo("팀장");
+            assertThat(step.isSkippable()).isFalse();
         }
 
         @Test
         @DisplayName("Given: 여러 순서의 Step / When: create 호출 / Then: 각각 순서대로 생성")
         void createsMultipleStepsInOrder() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = createTestVersion(template);
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = createTestVersion(template);
             ApprovalGroup group1 = createTestGroup("TEAM_LEADER", "팀장");
             ApprovalGroup group2 = createTestGroup("DEPT_HEAD", "부서장");
 
-            ApprovalTemplateStepVersion step1 = ApprovalTemplateStepVersion.create(version, 1, group1);
-            ApprovalTemplateStepVersion step2 = ApprovalTemplateStepVersion.create(version, 2, group2);
+            ApprovalTemplateStep step1 = ApprovalTemplateStep.create(version, 1, group1, false);
+            ApprovalTemplateStep step2 = ApprovalTemplateStep.create(version, 2, group2, true);
 
             assertThat(step1.getStepOrder()).isEqualTo(1);
             assertThat(step2.getStepOrder()).isEqualTo(2);
@@ -72,42 +73,44 @@ class ApprovalTemplateStepVersionTest {
         @Test
         @DisplayName("Given: 원본 Step 버전 / When: copyFrom 호출 / Then: 새 버전에 복사")
         void copiesStepToNewVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version1 = createTestVersion(template);
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version1 = createTestVersion(template);
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
-            ApprovalTemplateStepVersion sourceStep = ApprovalTemplateStepVersion.create(version1, 1, group);
+            ApprovalTemplateStep sourceStep = ApprovalTemplateStep.create(version1, 1, group, true);
 
-            ApprovalLineTemplateVersion version2 = ApprovalLineTemplateVersion.create(
+            ApprovalTemplate version2 = ApprovalTemplate.create(
                     template, 2, "템플릿명", 0, "설명", true,
                     ChangeAction.UPDATE, null, "user", "사용자", OffsetDateTime.now()
             );
 
-            ApprovalTemplateStepVersion copiedStep = ApprovalTemplateStepVersion.copyFrom(version2, sourceStep);
+            ApprovalTemplateStep copiedStep = ApprovalTemplateStep.copyFrom(version2, sourceStep);
 
-            assertThat(copiedStep.getTemplateVersion()).isEqualTo(version2);
+            assertThat(copiedStep.getTemplate()).isEqualTo(version2);
             assertThat(copiedStep.getStepOrder()).isEqualTo(sourceStep.getStepOrder());
             assertThat(copiedStep.getApprovalGroupCode()).isEqualTo(sourceStep.getApprovalGroupCode());
             assertThat(copiedStep.getApprovalGroupName()).isEqualTo(sourceStep.getApprovalGroupName());
+            assertThat(copiedStep.isSkippable()).isEqualTo(sourceStep.isSkippable());
         }
 
         @Test
         @DisplayName("Given: 비정규화된 필드 / When: copyFrom 호출 / Then: 비정규화 데이터 유지")
         void preservesDenormalizedFields() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version1 = createTestVersion(template);
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version1 = createTestVersion(template);
             ApprovalGroup group = createTestGroup("EXEC", "임원");
-            ApprovalTemplateStepVersion sourceStep = ApprovalTemplateStepVersion.create(version1, 3, group);
+            ApprovalTemplateStep sourceStep = ApprovalTemplateStep.create(version1, 3, group, false);
 
-            ApprovalLineTemplateVersion version2 = ApprovalLineTemplateVersion.create(
+            ApprovalTemplate version2 = ApprovalTemplate.create(
                     template, 2, "템플릿명", 0, "설명", true,
                     ChangeAction.UPDATE, null, "user", "사용자", OffsetDateTime.now()
             );
 
-            ApprovalTemplateStepVersion copiedStep = ApprovalTemplateStepVersion.copyFrom(version2, sourceStep);
+            ApprovalTemplateStep copiedStep = ApprovalTemplateStep.copyFrom(version2, sourceStep);
 
             // 비정규화 필드가 유지되어야 함
             assertThat(copiedStep.getApprovalGroupCode()).isEqualTo("EXEC");
             assertThat(copiedStep.getApprovalGroupName()).isEqualTo("임원");
+            assertThat(copiedStep.isSkippable()).isFalse();
         }
     }
 
@@ -118,10 +121,10 @@ class ApprovalTemplateStepVersionTest {
         @Test
         @DisplayName("Given: Step 버전 / When: getApprovalGroupId 호출 / Then: 그룹 ID 반환")
         void returnsGroupId() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = createTestVersion(template);
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = createTestVersion(template);
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
-            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(version, 1, group);
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(version, 1, group, false);
 
             UUID groupId = step.getApprovalGroupId();
 

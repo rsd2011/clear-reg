@@ -22,12 +22,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
 import com.example.admin.approval.service.ApprovalGroupService;
-import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
+import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
-import com.example.admin.approval.dto.GroupCodeExistsResponse;
+
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
@@ -111,14 +111,14 @@ public class ApprovalGroupController {
     @GetMapping("/exists")
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인그룹 코드 중복 검사")
-    public GroupCodeExistsResponse checkGroupCodeExists(@RequestParam String groupCode) {
-        return new GroupCodeExistsResponse(approvalGroupService.existsGroupCode(groupCode));
+    public boolean checkGroupCodeExists(@RequestParam String groupCode) {
+        return approvalGroupService.existsGroupCode(groupCode);
     }
 
     @PatchMapping("/display-orders")
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인그룹 표시순서 일괄 업데이트")
-    public List<ApprovalGroupResponse> updateGroupDisplayOrders(@Valid @RequestBody ApprovalGroupPriorityRequest request) {
+    public List<ApprovalGroupResponse> updateGroupDisplayOrders(@Valid @RequestBody DisplayOrderUpdateRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
         return approvalGroupService.updateApprovalGroupDisplayOrders(request, context, true).stream()

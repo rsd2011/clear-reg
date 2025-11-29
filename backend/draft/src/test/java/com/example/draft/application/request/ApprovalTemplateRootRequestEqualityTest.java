@@ -7,20 +7,20 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 
-class ApprovalLineTemplateRequestEqualityTest {
+class ApprovalTemplateRootRequestEqualityTest {
 
     @Test
-    @DisplayName("ApprovalLineTemplateRequest equals/hashCode 동일/상이 케이스를 모두 커버한다")
+    @DisplayName("ApprovalTemplateRootRequest equals/hashCode 동일/상이 케이스를 모두 커버한다")
     void equalsAndHashCode() {
         ApprovalTemplateStepRequest step1 = new ApprovalTemplateStepRequest(1, "GRP");
         ApprovalTemplateStepRequest step2 = new ApprovalTemplateStepRequest(1, "GRP");
 
-        ApprovalLineTemplateRequest req1 = new ApprovalLineTemplateRequest("name", 0, null, true, List.of(step1));
-        ApprovalLineTemplateRequest req2 = new ApprovalLineTemplateRequest("name", 0, null, true, List.of(step2));
-        ApprovalLineTemplateRequest reqDifferent = new ApprovalLineTemplateRequest("name2", 0, null, true, List.of(step2));
+        ApprovalTemplateRootRequest req1 = new ApprovalTemplateRootRequest("name", 0, null, true, List.of(step1));
+        ApprovalTemplateRootRequest req2 = new ApprovalTemplateRootRequest("name", 0, null, true, List.of(step2));
+        ApprovalTemplateRootRequest reqDifferent = new ApprovalTemplateRootRequest("name2", 0, null, true, List.of(step2));
 
         assertThat(req1).isEqualTo(req2).hasSameHashCodeAs(req2);
         assertThat(req1).isNotEqualTo(reqDifferent);

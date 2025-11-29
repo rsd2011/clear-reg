@@ -18,12 +18,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.service.ApprovalGroupService;
-import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
+import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
 import com.example.admin.approval.dto.ApprovalGroupUpdateRequest;
-import com.example.admin.approval.dto.GroupCodeExistsResponse;
+
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
@@ -187,9 +187,9 @@ class ApprovalGroupControllerTest {
 
         when(service.existsGroupCode("GC")).thenReturn(true);
 
-        GroupCodeExistsResponse result = controller.checkGroupCodeExists("GC");
+        boolean result = controller.checkGroupCodeExists("GC");
 
-        assertThat(result.exists()).isTrue();
+        assertThat(result).isTrue();
         verify(service).existsGroupCode("GC");
     }
 
@@ -200,8 +200,8 @@ class ApprovalGroupControllerTest {
         AuthContextHolder.set(ctx);
 
         UUID id = UUID.randomUUID();
-        ApprovalGroupPriorityRequest request = new ApprovalGroupPriorityRequest(
-                List.of(new ApprovalGroupPriorityRequest.DisplayOrderItem(id, 5)));
+        DisplayOrderUpdateRequest request = new DisplayOrderUpdateRequest(
+                List.of(new DisplayOrderUpdateRequest.DisplayOrderItem(id, 5)));
         ApprovalGroupResponse response = new ApprovalGroupResponse(
                 id,
                 "GC",

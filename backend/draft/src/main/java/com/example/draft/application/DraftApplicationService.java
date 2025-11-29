@@ -34,7 +34,7 @@ import com.example.approval.api.ApprovalAction;
 import com.example.approval.api.dto.ApprovalActionCommand;
 import com.example.approval.api.ApprovalStatusSnapshot;
 import com.example.approval.api.event.DraftSubmittedEvent;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftAttachment;
@@ -43,7 +43,7 @@ import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.draft.domain.DraftAction;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
@@ -67,7 +67,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class DraftApplicationService {
 
     private final DraftRepository draftRepository;
-    private final ApprovalLineTemplateRepository templateRepository;
+    private final ApprovalTemplateRootRepository templateRepository;
     private final DraftFormTemplateRepository formTemplateRepository;
     private final BusinessTemplateMappingRepository mappingRepository;
     private final DraftHistoryRepository draftHistoryRepository;
@@ -82,7 +82,7 @@ public class DraftApplicationService {
     private final Clock clock;
 
     public DraftApplicationService(DraftRepository draftRepository,
-                                   ApprovalLineTemplateRepository templateRepository,
+                                   ApprovalTemplateRootRepository templateRepository,
                                    DraftFormTemplateRepository formTemplateRepository,
                                    BusinessTemplateMappingRepository mappingRepository,
                                    DraftHistoryRepository draftHistoryRepository,
@@ -117,7 +117,7 @@ public class DraftApplicationService {
         businessPolicy.assertCreatable(request.businessFeatureCode(), organizationCode, actor);
         DraftTemplatePreset preset = resolvePreset(request, organizationCode);
         TemplateSelection selection = selectTemplates(request, organizationCode, preset);
-        ApprovalLineTemplate template = selection.approvalTemplate();
+        ApprovalTemplateRoot template = selection.approvalTemplate();
         DraftFormTemplate formTemplate = selection.formTemplate();
         Set<String> allowedVariables = allowedVariables(preset);
         String title = resolveTemplateValue(request.title(), preset == null ? null : preset.getTitleTemplate(),
@@ -139,10 +139,13 @@ public class DraftApplicationService {
             draft.useTemplatePreset(preset.getId());
         }
         draft.attachFormTemplate(formTemplate, formPayload);
-        template.getSteps().stream()
-                .sorted(java.util.Comparator.comparingInt(ApprovalTemplateStep::getStepOrder))
-                .map(com.example.draft.domain.DraftApprovalStep::fromTemplate)
-                .forEach(draft::addApprovalStep);
+        // 현재 활성 버전의 Steps 사용 (SCD Type 2)
+        if (template.getCurrentVersion() != null) {
+            template.getCurrentVersion().getSteps().stream()
+                    .sorted(java.util.Comparator.comparingInt(ApprovalTemplateStep::getStepOrder))
+                    .map(com.example.draft.domain.DraftApprovalStep::fromTemplate)
+                    .forEach(draft::addApprovalStep);
+        }
         attachFiles(request.attachments(), draft, actor, now);
         draft.initializeWorkflow(now);
         Draft saved = draftRepository.save(draft);
@@ -531,7 +534,7 @@ public class DraftApplicationService {
 
     private TemplateSelection selectTemplates(DraftCreateRequest request, String organizationCode, DraftTemplatePreset preset) {
         if (request.templateId() != null && request.formTemplateId() != null) {
-            ApprovalLineTemplate template = templateRepository.findByIdAndActiveTrue(request.templateId())
+            ApprovalTemplateRoot template = templateRepository.findByIdAndActiveVersion(request.templateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
             DraftFormTemplate formTemplate = formTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
@@ -540,7 +543,7 @@ public class DraftApplicationService {
             return new TemplateSelection(template, formTemplate);
         }
 
-        ApprovalLineTemplate approvalTemplate = null;
+        ApprovalTemplateRoot approvalTemplate = null;
         DraftFormTemplate formTemplate = null;
 
         if (preset != null) {
@@ -558,7 +561,7 @@ public class DraftApplicationService {
         }
 
         if (approvalTemplate == null && mapping != null) {
-            approvalTemplate = mapping.getApprovalLineTemplate();
+            approvalTemplate = mapping.getApprovalTemplateRoot();
         }
         if (formTemplate == null && mapping != null) {
             mapping.getDraftFormTemplate().assertOrganization(organizationCode);
@@ -572,7 +575,7 @@ public class DraftApplicationService {
         return new TemplateSelection(approvalTemplate, formTemplate);
     }
 
-    private record TemplateSelection(ApprovalLineTemplate approvalTemplate, DraftFormTemplate formTemplate) {
+    private record TemplateSelection(ApprovalTemplateRoot approvalTemplate, DraftFormTemplate formTemplate) {
     }
 
     private DraftTemplatePreset resolvePreset(DraftCreateRequest request, String organizationCode) {

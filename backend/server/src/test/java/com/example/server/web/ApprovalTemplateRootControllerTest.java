@@ -18,18 +18,15 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.service.ApprovalLineTemplateService;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.DraftRequest;
-import com.example.admin.approval.dto.RollbackRequest;
-import com.example.admin.approval.dto.TemplateCopyRequest;
-import com.example.admin.approval.dto.TemplateCopyResponse;
 import com.example.admin.approval.dto.VersionComparisonResponse;
 import com.example.admin.approval.dto.VersionHistoryResponse;
-import com.example.admin.approval.service.ApprovalLineTemplateVersionService;
+import com.example.admin.approval.service.ApprovalTemplateService;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 import com.example.admin.permission.exception.PermissionDeniedException;
@@ -37,11 +34,11 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
 
-class ApprovalLineTemplateControllerTest {
+class ApprovalTemplateRootControllerTest {
 
-    ApprovalLineTemplateService service = mock(ApprovalLineTemplateService.class);
-    ApprovalLineTemplateVersionService versionService = mock(ApprovalLineTemplateVersionService.class);
-    ApprovalLineTemplateController controller = new ApprovalLineTemplateController(service, versionService);
+    ApprovalTemplateRootService service = mock(ApprovalTemplateRootService.class);
+    ApprovalTemplateService versionService = mock(ApprovalTemplateService.class);
+    ApprovalTemplateRootController controller = new ApprovalTemplateRootController(service, versionService);
 
     @AfterEach
     void tearDown() {
@@ -54,10 +51,23 @@ class ApprovalLineTemplateControllerTest {
         return ctx;
     }
 
-    private ApprovalLineTemplateResponse createResponse(UUID id, String name) {
-        return new ApprovalLineTemplateResponse(
+    private ApprovalTemplateRootResponse createResponse(UUID id, String name) {
+        return new ApprovalTemplateRootResponse(
                 id, "tpl-" + id.toString().substring(0, 8), name, 0, "설명",
                 true, OffsetDateTime.now(), OffsetDateTime.now(), List.of());
+    }
+
+    private VersionHistoryResponse createVersionResponse(UUID id, UUID templateId, int version,
+                                                          VersionStatus status, ChangeAction action,
+                                                          String name, Integer rollbackFromVersion) {
+        return new VersionHistoryResponse(
+                id, templateId, version,
+                OffsetDateTime.now().minusDays(version), status == VersionStatus.PUBLISHED ? null : OffsetDateTime.now(),
+                name, 0, "설명", true,
+                status, action,
+                action == ChangeAction.CREATE ? null : "변경 사유",
+                "user", "사용자", OffsetDateTime.now(),
+                rollbackFromVersion, null, List.of());
     }
 
     @Test
@@ -66,7 +76,7 @@ class ApprovalLineTemplateControllerTest {
         AuthContextHolder.clear();
 
         assertThatThrownBy(() -> controller.createTemplate(
-                new ApprovalLineTemplateRequest("name", 0, "desc", true,
+                new ApprovalTemplateRootRequest("name", 0, "desc", true,
                         List.of(new ApprovalTemplateStepRequest(1, "G1")))))
                 .isInstanceOf(PermissionDeniedException.class);
     }
@@ -83,7 +93,7 @@ class ApprovalLineTemplateControllerTest {
             UUID id = UUID.randomUUID();
             when(service.list(any(), anyBoolean())).thenReturn(List.of(createResponse(id, "템플릿")));
 
-            List<ApprovalLineTemplateResponse> result = controller.listTemplates("키워드", true);
+            List<ApprovalTemplateRootResponse> result = controller.listTemplates("키워드", true);
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).name()).isEqualTo("템플릿");
@@ -103,7 +113,7 @@ class ApprovalLineTemplateControllerTest {
             UUID id = UUID.randomUUID();
             when(service.getById(id)).thenReturn(createResponse(id, "조회 템플릿"));
 
-            ApprovalLineTemplateResponse result = controller.getTemplate(id);
+            ApprovalTemplateRootResponse result = controller.getTemplate(id);
 
             assertThat(result.id()).isEqualTo(id);
             assertThat(result.name()).isEqualTo("조회 템플릿");
@@ -121,13 +131,13 @@ class ApprovalLineTemplateControllerTest {
             AuthContext ctx = setupContext();
 
             UUID id = UUID.randomUUID();
-            ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
+            ApprovalTemplateRootRequest request = new ApprovalTemplateRootRequest(
                     "새 템플릿", 1, "설명", true,
                     List.of(new ApprovalTemplateStepRequest(1, "TEAM_LEADER")));
 
             when(service.create(eq(request), eq(ctx))).thenReturn(createResponse(id, "새 템플릿"));
 
-            ApprovalLineTemplateResponse result = controller.createTemplate(request);
+            ApprovalTemplateRootResponse result = controller.createTemplate(request);
 
             assertThat(result.name()).isEqualTo("새 템플릿");
             verify(service).create(eq(request), eq(ctx));
@@ -144,13 +154,13 @@ class ApprovalLineTemplateControllerTest {
             AuthContext ctx = setupContext();
 
             UUID id = UUID.randomUUID();
-            ApprovalLineTemplateRequest request = new ApprovalLineTemplateRequest(
+            ApprovalTemplateRootRequest request = new ApprovalTemplateRootRequest(
                     "수정 템플릿", 5, "수정 설명", true,
                     List.of(new ApprovalTemplateStepRequest(1, "DEPT_HEAD")));
 
             when(service.update(eq(id), eq(request), eq(ctx))).thenReturn(createResponse(id, "수정 템플릿"));
 
-            ApprovalLineTemplateResponse result = controller.updateTemplate(id, request);
+            ApprovalTemplateRootResponse result = controller.updateTemplate(id, request);
 
             assertThat(result.name()).isEqualTo("수정 템플릿");
             verify(service).update(eq(id), eq(request), eq(ctx));
@@ -183,42 +193,15 @@ class ApprovalLineTemplateControllerTest {
             AuthContext ctx = setupContext();
 
             UUID id = UUID.randomUUID();
-            ApprovalLineTemplateResponse response = new ApprovalLineTemplateResponse(
+            ApprovalTemplateRootResponse response = new ApprovalTemplateRootResponse(
                     id, "tpl-123", "템플릿", 0, "설명",
                     true, OffsetDateTime.now(), OffsetDateTime.now(), List.of());
             when(service.activate(eq(id), eq(ctx))).thenReturn(response);
 
-            ApprovalLineTemplateResponse result = controller.activateTemplate(id);
+            ApprovalTemplateRootResponse result = controller.activateTemplate(id);
 
             assertThat(result.active()).isTrue();
             verify(service).activate(eq(id), eq(ctx));
-        }
-    }
-
-    @Nested
-    @DisplayName("copyTemplate")
-    class CopyTemplate {
-
-        @Test
-        @DisplayName("Given: 존재하는 템플릿 / When: copyTemplate 호출 / Then: 201 Created 및 복사된 템플릿 반환")
-        void copyTemplateReturns201() {
-            AuthContext ctx = setupContext();
-
-            UUID sourceId = UUID.randomUUID();
-            UUID copiedId = UUID.randomUUID();
-            TemplateCopyRequest request = new TemplateCopyRequest("복사 템플릿", "복사 설명");
-
-            TemplateCopyResponse response = new TemplateCopyResponse(
-                    copiedId, "tpl-copy", "복사 템플릿", 0, "복사 설명",
-                    true, OffsetDateTime.now(), OffsetDateTime.now(), List.of(),
-                    new TemplateCopyResponse.CopiedFromInfo(sourceId, "tpl-original"));
-            when(service.copy(eq(sourceId), eq(request), eq(ctx))).thenReturn(response);
-
-            TemplateCopyResponse result = controller.copyTemplate(sourceId, request);
-
-            assertThat(result.name()).isEqualTo("복사 템플릿");
-            assertThat(result.copiedFrom().id()).isEqualTo(sourceId);
-            verify(service).copy(eq(sourceId), eq(request), eq(ctx));
         }
     }
 
@@ -232,20 +215,12 @@ class ApprovalLineTemplateControllerTest {
             setupContext();
 
             UUID templateId = UUID.randomUUID();
-            VersionHistoryResponse v1 = new VersionHistoryResponse(
+            VersionHistoryResponse v1 = createVersionResponse(
                     UUID.randomUUID(), templateId, 1,
-                    OffsetDateTime.now().minusDays(1), OffsetDateTime.now(),
-                    "템플릿", 0, "설명", true,
-                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
-                    null, "user", "사용자", OffsetDateTime.now().minusDays(1),
-                    null, null, null, List.of());
-            VersionHistoryResponse v2 = new VersionHistoryResponse(
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE, "템플릿", null);
+            VersionHistoryResponse v2 = createVersionResponse(
                     UUID.randomUUID(), templateId, 2,
-                    OffsetDateTime.now(), null,
-                    "수정된 템플릿", 0, "수정 설명", true,
-                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
-                    "변경 사유", "user", "사용자", OffsetDateTime.now(),
-                    null, null, null, List.of());
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE, "수정된 템플릿", null);
 
             when(service.getHistory(templateId)).thenReturn(List.of(v2, v1));
 
@@ -272,15 +247,15 @@ class ApprovalLineTemplateControllerTest {
                     new DisplayOrderUpdateRequest.DisplayOrderItem(id1, 10),
                     new DisplayOrderUpdateRequest.DisplayOrderItem(id2, 20)));
 
-            ApprovalLineTemplateResponse r1 = new ApprovalLineTemplateResponse(
+            ApprovalTemplateRootResponse r1 = new ApprovalTemplateRootResponse(
                     id1, "tpl-1", "템플릿1", 10, "설명",
                     true, OffsetDateTime.now(), OffsetDateTime.now(), List.of());
-            ApprovalLineTemplateResponse r2 = new ApprovalLineTemplateResponse(
+            ApprovalTemplateRootResponse r2 = new ApprovalTemplateRootResponse(
                     id2, "tpl-2", "템플릿2", 20, "설명",
                     true, OffsetDateTime.now(), OffsetDateTime.now(), List.of());
             when(service.updateDisplayOrders(eq(request), eq(ctx))).thenReturn(List.of(r1, r2));
 
-            List<ApprovalLineTemplateResponse> result = controller.updateDisplayOrders(request);
+            List<ApprovalTemplateRootResponse> result = controller.updateDisplayOrders(request);
 
             assertThat(result).hasSize(2);
             assertThat(result).anyMatch(r -> r.displayOrder() == 10);
@@ -303,20 +278,12 @@ class ApprovalLineTemplateControllerTest {
             setupContext();
 
             UUID templateId = UUID.randomUUID();
-            VersionHistoryResponse v1 = new VersionHistoryResponse(
+            VersionHistoryResponse v1 = createVersionResponse(
                     UUID.randomUUID(), templateId, 1,
-                    OffsetDateTime.now().minusDays(2), OffsetDateTime.now().minusDays(1),
-                    "템플릿", 0, "설명", true,
-                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
-                    null, "user1", "사용자1", OffsetDateTime.now().minusDays(2),
-                    null, null, null, List.of());
-            VersionHistoryResponse v2 = new VersionHistoryResponse(
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE, "템플릿", null);
+            VersionHistoryResponse v2 = createVersionResponse(
                     UUID.randomUUID(), templateId, 2,
-                    OffsetDateTime.now().minusDays(1), null,
-                    "수정 템플릿", 0, "수정 설명", true,
-                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
-                    "변경 사유", "user2", "사용자2", OffsetDateTime.now().minusDays(1),
-                    null, null, null, List.of());
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE, "수정 템플릿", null);
 
             when(versionService.getVersionHistory(templateId)).thenReturn(List.of(v2, v1));
 
@@ -338,13 +305,9 @@ class ApprovalLineTemplateControllerTest {
             setupContext();
 
             UUID templateId = UUID.randomUUID();
-            VersionHistoryResponse response = new VersionHistoryResponse(
+            VersionHistoryResponse response = createVersionResponse(
                     UUID.randomUUID(), templateId, 2,
-                    OffsetDateTime.now().minusDays(1), null,
-                    "수정 템플릿", 0, "수정 설명", true,
-                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
-                    "변경 사유", "user", "사용자", OffsetDateTime.now().minusDays(1),
-                    null, null, null, List.of());
+                    VersionStatus.PUBLISHED, ChangeAction.UPDATE, "수정 템플릿", null);
 
             when(versionService.getVersion(templateId, 2)).thenReturn(response);
 
@@ -367,13 +330,9 @@ class ApprovalLineTemplateControllerTest {
 
             UUID templateId = UUID.randomUUID();
             OffsetDateTime asOf = OffsetDateTime.now().minusDays(5);
-            VersionHistoryResponse response = new VersionHistoryResponse(
+            VersionHistoryResponse response = createVersionResponse(
                     UUID.randomUUID(), templateId, 1,
-                    OffsetDateTime.now().minusDays(10), OffsetDateTime.now().minusDays(3),
-                    "템플릿", 0, "설명", true,
-                    VersionStatus.HISTORICAL, ChangeAction.CREATE,
-                    null, "user", "사용자", OffsetDateTime.now().minusDays(10),
-                    null, null, null, List.of());
+                    VersionStatus.HISTORICAL, ChangeAction.CREATE, "템플릿", null);
 
             when(versionService.getVersionAsOf(templateId, asOf)).thenReturn(response);
 
@@ -425,23 +384,21 @@ class ApprovalLineTemplateControllerTest {
             AuthContext ctx = setupContext();
 
             UUID templateId = UUID.randomUUID();
-            RollbackRequest request = new RollbackRequest(1, "롤백 사유");
-            VersionHistoryResponse response = new VersionHistoryResponse(
+            Integer targetVersion = 1;
+            String changeReason = "롤백 사유";
+            VersionHistoryResponse response = createVersionResponse(
                     UUID.randomUUID(), templateId, 3,
-                    OffsetDateTime.now(), null,
-                    "템플릿", 0, "설명", true,
-                    VersionStatus.PUBLISHED, ChangeAction.ROLLBACK,
-                    "롤백 사유", "user", "사용자", OffsetDateTime.now(),
-                    null, 1, null, List.of());
+                    VersionStatus.PUBLISHED, ChangeAction.ROLLBACK, "템플릿", 1);
 
-            when(versionService.rollbackToVersion(eq(templateId), eq(request), eq(ctx))).thenReturn(response);
+            when(versionService.rollbackToVersion(eq(templateId), eq(targetVersion), eq(changeReason), eq(ctx)))
+                    .thenReturn(response);
 
-            VersionHistoryResponse result = controller.rollbackToVersion(templateId, request);
+            VersionHistoryResponse result = controller.rollbackToVersion(templateId, targetVersion, changeReason);
 
             assertThat(result.version()).isEqualTo(3);
             assertThat(result.changeAction()).isEqualTo(ChangeAction.ROLLBACK);
             assertThat(result.rollbackFromVersion()).isEqualTo(1);
-            verify(versionService).rollbackToVersion(eq(templateId), eq(request), eq(ctx));
+            verify(versionService).rollbackToVersion(eq(templateId), eq(targetVersion), eq(changeReason), eq(ctx));
         }
     }
 
@@ -459,13 +416,9 @@ class ApprovalLineTemplateControllerTest {
             setupContext();
 
             UUID templateId = UUID.randomUUID();
-            VersionHistoryResponse draft = new VersionHistoryResponse(
+            VersionHistoryResponse draft = createVersionResponse(
                     UUID.randomUUID(), templateId, 2,
-                    OffsetDateTime.now(), null,
-                    "초안 템플릿", 0, "초안 설명", true,
-                    VersionStatus.DRAFT, ChangeAction.UPDATE,
-                    "수정 중", "user", "사용자", OffsetDateTime.now(),
-                    null, null, null, List.of());
+                    VersionStatus.DRAFT, ChangeAction.DRAFT, "초안 템플릿", null);
 
             when(versionService.getDraft(templateId)).thenReturn(draft);
 
@@ -521,13 +474,9 @@ class ApprovalLineTemplateControllerTest {
             UUID templateId = UUID.randomUUID();
             DraftRequest request = new DraftRequest("초안 이름", 10, "초안 설명", true, "수정 중",
                     List.of(new ApprovalTemplateStepRequest(1, "TEAM_LEADER")));
-            VersionHistoryResponse response = new VersionHistoryResponse(
+            VersionHistoryResponse response = createVersionResponse(
                     UUID.randomUUID(), templateId, 2,
-                    OffsetDateTime.now(), null,
-                    "초안 이름", 10, "초안 설명", true,
-                    VersionStatus.DRAFT, ChangeAction.UPDATE,
-                    "수정 중", "user", "사용자", OffsetDateTime.now(),
-                    null, null, null, List.of());
+                    VersionStatus.DRAFT, ChangeAction.DRAFT, "초안 이름", null);
 
             when(versionService.saveDraft(eq(templateId), eq(request), eq(ctx))).thenReturn(response);
 
@@ -549,13 +498,9 @@ class ApprovalLineTemplateControllerTest {
             AuthContext ctx = setupContext();
 
             UUID templateId = UUID.randomUUID();
-            VersionHistoryResponse response = new VersionHistoryResponse(
+            VersionHistoryResponse response = createVersionResponse(
                     UUID.randomUUID(), templateId, 2,
-                    OffsetDateTime.now(), null,
-                    "게시된 템플릿", 10, "설명", true,
-                    VersionStatus.PUBLISHED, ChangeAction.UPDATE,
-                    "수정 완료", "user", "사용자", OffsetDateTime.now(),
-                    null, null, null, List.of());
+                    VersionStatus.PUBLISHED, ChangeAction.PUBLISH, "게시된 템플릿", null);
 
             when(versionService.publishDraft(eq(templateId), eq(ctx))).thenReturn(response);
 

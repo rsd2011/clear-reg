@@ -3,9 +3,9 @@ package com.example.admin.approval.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 import com.example.admin.approval.exception.ApprovalAccessDeniedException;
+import com.example.common.version.ChangeAction;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -67,65 +67,85 @@ class ApprovalGroupTest {
     }
 
     @Nested
-    @DisplayName("ApprovalLineTemplate 테스트")
-    class ApprovalLineTemplateTests {
+    @DisplayName("ApprovalTemplateRoot 테스트")
+    class ApprovalTemplateRootTests {
 
         @Test
-        @DisplayName("Given 유효한 파라미터 When create 호출 Then ApprovalLineTemplate이 생성된다")
-        void createApprovalLineTemplate() {
-            ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿1", 0, "설명", NOW);
+        @DisplayName("Given 유효한 파라미터 When create 호출 Then ApprovalTemplateRoot이 생성된다")
+        void createApprovalTemplateRoot() {
+            ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
 
-            assertThat(template.getName()).isEqualTo("템플릿1");
-            assertThat(template.getDisplayOrder()).isEqualTo(0);
-            assertThat(template.getDescription()).isEqualTo("설명");
-            assertThat(template.isActive()).isTrue();
-            assertThat(template.getTemplateCode()).isNotNull();
+            assertThat(root.getTemplateCode()).isNotNull();
+            assertThat(root.getCreatedAt()).isEqualTo(NOW);
+            assertThat(root.getUpdatedAt()).isEqualTo(NOW);
+            assertThat(root.getCurrentVersion()).isNull();
         }
 
         @Test
-        @DisplayName("Given 기존 템플릿 When rename 호출 Then 필드가 갱신된다")
-        void renameApprovalLineTemplate() {
-            ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿1", 0, null, NOW);
-            OffsetDateTime later = NOW.plusHours(1);
+        @DisplayName("Given Root와 버전 When activateNewVersion 호출 Then 현재 버전이 설정된다")
+        void activateNewVersionSetsCurrentVersion() {
+            ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
+            ApprovalTemplate version = ApprovalTemplate.create(
+                    root, 1, "템플릿1", 0, "설명", true,
+                    ChangeAction.CREATE, null, "user", "사용자", NOW);
 
-            template.rename("변경된이름", 5, "변경된설명", false, later);
+            root.activateNewVersion(version, NOW);
 
-            assertThat(template.getName()).isEqualTo("변경된이름");
-            assertThat(template.getDisplayOrder()).isEqualTo(5);
-            assertThat(template.getDescription()).isEqualTo("변경된설명");
-            assertThat(template.isActive()).isFalse();
-            assertThat(template.getUpdatedAt()).isEqualTo(later);
+            assertThat(root.getCurrentVersion()).isEqualTo(version);
+            assertThat(root.getName()).isEqualTo("템플릿1");
+            assertThat(root.getDescription()).isEqualTo("설명");
+            assertThat(root.getDisplayOrder()).isEqualTo(0);
+            assertThat(root.isActive()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Given 버전이 없을 때 When 편의 메서드 호출 Then null 또는 기본값 반환")
+        void convenienceMethodsReturnDefaultWhenNoVersion() {
+            ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
+
+            assertThat(root.getName()).isNull();
+            assertThat(root.getDescription()).isNull();
+            assertThat(root.getDisplayOrder()).isEqualTo(0);
+            assertThat(root.isActive()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("ApprovalTemplate 테스트")
+    class ApprovalTemplateTests {
+
+        @Test
+        @DisplayName("Given 유효한 파라미터 When create 호출 Then ApprovalTemplate이 생성된다")
+        void createApprovalTemplate() {
+            ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
+            ApprovalTemplate template = ApprovalTemplate.create(
+                    root, 1, "템플릿1", 10, "설명", true,
+                    ChangeAction.CREATE, "생성 사유", "user", "사용자", NOW);
+
+            assertThat(template.getRoot()).isEqualTo(root);
+            assertThat(template.getVersion()).isEqualTo(1);
+            assertThat(template.getName()).isEqualTo("템플릿1");
+            assertThat(template.getDisplayOrder()).isEqualTo(10);
+            assertThat(template.getDescription()).isEqualTo("설명");
+            assertThat(template.isActive()).isTrue();
+            assertThat(template.getChangeAction()).isEqualTo(ChangeAction.CREATE);
         }
 
         @Test
         @DisplayName("Given 템플릿 When addStep 호출 Then 단계가 추가된다")
         void addStepToTemplate() {
-            ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿1", 0, null, NOW);
+            ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
+            ApprovalTemplate template = ApprovalTemplate.create(
+                    root, 1, "템플릿1", 0, "설명", true,
+                    ChangeAction.CREATE, null, "user", "사용자", NOW);
             ApprovalGroup group = ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(template, 1, group, false);
 
-            template.addStep(1, group);
+            template.addStep(step);
 
             assertThat(template.getSteps()).hasSize(1);
             assertThat(template.getSteps().get(0).getStepOrder()).isEqualTo(1);
             assertThat(template.getSteps().get(0).getApprovalGroup()).isEqualTo(group);
-        }
-
-        @Test
-        @DisplayName("Given 템플릿에 단계 추가 후 When replaceSteps 호출 Then 단계가 교체된다")
-        void replaceSteps() {
-            ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿1", 0, null, NOW);
-            ApprovalGroup group1 = ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
-            ApprovalGroup group2 = ApprovalGroup.create("GRP2", "그룹2", "설명", 2, NOW);
-            ApprovalGroup group3 = ApprovalGroup.create("GRP3", "그룹3", "설명", 3, NOW);
-
-            template.addStep(1, group1);
-            template.addStep(2, group2);
-
-            ApprovalTemplateStep newStep = new ApprovalTemplateStep(template, 1, group3);
-            template.replaceSteps(List.of(newStep));
-
-            assertThat(template.getSteps()).hasSize(1);
-            assertThat(template.getSteps().get(0).getApprovalGroup()).isEqualTo(group3);
         }
     }
 
@@ -134,15 +154,21 @@ class ApprovalGroupTest {
     class ApprovalTemplateStepTests {
 
         @Test
-        @DisplayName("Given 유효한 파라미터 When 생성자 호출 Then ApprovalTemplateStep이 생성된다")
+        @DisplayName("Given 유효한 파라미터 When create 호출 Then ApprovalTemplateStep이 생성된다")
         void createApprovalTemplateStep() {
-            ApprovalLineTemplate template = ApprovalLineTemplate.create("템플릿1", 0, null, NOW);
+            ApprovalTemplateRoot root = ApprovalTemplateRoot.create(NOW);
+            ApprovalTemplate template = ApprovalTemplate.create(
+                    root, 1, "템플릿1", 0, "설명", true,
+                    ChangeAction.CREATE, null, "user", "사용자", NOW);
             ApprovalGroup group = ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
-            ApprovalTemplateStep step = new ApprovalTemplateStep(template, 1, group);
+
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(template, 1, group, false);
 
             assertThat(step.getStepOrder()).isEqualTo(1);
             assertThat(step.getApprovalGroup()).isEqualTo(group);
             assertThat(step.getTemplate()).isEqualTo(template);
+            assertThat(step.getApprovalGroupCode()).isEqualTo("GRP1");
+            assertThat(step.getApprovalGroupName()).isEqualTo("그룹1");
         }
     }
 

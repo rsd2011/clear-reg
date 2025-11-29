@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
-import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -13,8 +12,11 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftTemplatePresetRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class TemplateAdminServiceCreateFormTemplateInactiveTest {
 
@@ -23,9 +25,11 @@ class TemplateAdminServiceCreateFormTemplateInactiveTest {
     void createFormTemplateInactive() {
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
-                mock(ApprovalLineTemplateRepository.class),
-                mock(ApprovalGroupRepository.class),
-                formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
+                mock(ApprovalTemplateRootService.class),
+                mock(ApprovalTemplateRootRepository.class),
+                formRepo,
+                mock(DraftTemplatePresetRepository.class),
+                new ObjectMapper());
 
         given(formRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 

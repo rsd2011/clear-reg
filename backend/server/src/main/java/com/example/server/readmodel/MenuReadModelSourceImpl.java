@@ -1,8 +1,8 @@
 package com.example.server.readmodel;
 
-import com.example.admin.menu.domain.MenuDefinition;
-import com.example.admin.menu.service.MenuDefinitionLoader;
-import com.example.admin.menu.domain.MenuDefinitions;
+import com.example.admin.menu.domain.Menu;
+import com.example.admin.menu.domain.MenuCapability;
+import com.example.admin.menu.service.MenuService;
 import com.example.dw.application.readmodel.MenuItem;
 import com.example.dw.application.readmodel.MenuItem.MenuCapabilityRef;
 import com.example.dw.application.readmodel.MenuReadModel;
@@ -16,30 +16,31 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
- * YAML 기반 메뉴 Read Model 생성기.
+ * 메뉴 Read Model 생성기.
  *
- * <p>menu-definitions.yml 파일에서 메뉴 정의를 로드하여 MenuItem 목록을 생성한다.
+ * <p>데이터베이스에서 메뉴 정의를 로드하여 MenuItem 목록을 생성한다.
  * 메뉴는 하나 이상의 Capability(Feature + Action)를 참조할 수 있으며,
  * 이 정보는 사용자 권한 기반 메뉴 필터링에 사용된다.</p>
  */
 @Component
 public class MenuReadModelSourceImpl implements MenuReadModelSource {
 
-    private final MenuDefinitionLoader menuDefinitionLoader;
+    private final MenuService menuService;
     private final Clock clock;
 
-    public MenuReadModelSourceImpl(MenuDefinitionLoader menuDefinitionLoader, Clock clock) {
-        this.menuDefinitionLoader = menuDefinitionLoader;
+    public MenuReadModelSourceImpl(MenuService menuService, Clock clock) {
+        this.menuService = menuService;
         this.clock = clock;
     }
 
     @Override
     public MenuReadModel snapshot() {
-        MenuDefinitions definitions = menuDefinitionLoader.load();
+        List<Menu> menus = menuService.findAllActive();
         List<MenuItem> items = new ArrayList<>();
 
-        for (MenuDefinition menu : definitions.getMenus()) {
-            flattenMenu(menu, null, items);
+        for (Menu menu : menus) {
+            MenuItem item = toMenuItem(menu);
+            items.add(item);
         }
 
         // sortOrder 기준 정렬
@@ -53,18 +54,18 @@ public class MenuReadModelSourceImpl implements MenuReadModelSource {
     }
 
     /**
-     * 메뉴 정의를 평탄화하여 MenuItem 목록에 추가한다.
+     * Menu 엔티티를 MenuItem으로 변환한다.
      */
-    private void flattenMenu(MenuDefinition menu, String parentCode, List<MenuItem> items) {
+    private MenuItem toMenuItem(Menu menu) {
         List<MenuCapabilityRef> capabilities = menu.getRequiredCapabilities().stream()
-                .map(cap -> new MenuCapabilityRef(cap.getFeature(), cap.getAction()))
+                .map(this::toCapabilityRef)
                 .toList();
 
         // 첫 번째 capability를 기본 featureCode/actionCode로 사용 (하위 호환성)
         String featureCode = capabilities.isEmpty() ? null : capabilities.get(0).feature();
         String actionCode = capabilities.isEmpty() ? null : capabilities.get(0).action();
 
-        MenuItem item = new MenuItem(
+        return new MenuItem(
                 menu.getCode(),
                 menu.getName(),
                 featureCode,
@@ -72,15 +73,12 @@ public class MenuReadModelSourceImpl implements MenuReadModelSource {
                 menu.getPath(),
                 menu.getIcon(),
                 menu.getSortOrder(),
-                parentCode,
+                null,  // parentCode - Menu 엔티티에 parent 관계 없음
                 menu.getDescription(),
                 capabilities);
+    }
 
-        items.add(item);
-
-        // 자식 메뉴 재귀 처리
-        for (MenuDefinition child : menu.getChildren()) {
-            flattenMenu(child, menu.getCode(), items);
-        }
+    private MenuCapabilityRef toCapabilityRef(MenuCapability cap) {
+        return new MenuCapabilityRef(cap.getFeature().name(), cap.getAction().name());
     }
 }

@@ -23,18 +23,18 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
-import com.example.admin.approval.service.ApprovalLineTemplateService;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.DraftRequest;
-import com.example.admin.approval.dto.RollbackRequest;
-import com.example.admin.approval.dto.TemplateCopyRequest;
-import com.example.admin.approval.dto.TemplateCopyResponse;
 import com.example.admin.approval.dto.VersionComparisonResponse;
 import com.example.admin.approval.dto.VersionHistoryResponse;
-import com.example.admin.approval.service.ApprovalLineTemplateVersionService;
+import com.example.admin.approval.service.ApprovalTemplateService;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
@@ -51,13 +51,13 @@ import com.example.common.policy.DataPolicyContextHolder;
 @Validated
 @RequestMapping("/api/approval-line-templates")
 @Tag(name = "Approval Line Template Admin", description = "승인선 템플릿 관리 API")
-public class ApprovalLineTemplateController {
+public class ApprovalTemplateRootController {
 
-    private final ApprovalLineTemplateService templateService;
-    private final ApprovalLineTemplateVersionService versionService;
+    private final ApprovalTemplateRootService templateService;
+    private final ApprovalTemplateService versionService;
 
-    public ApprovalLineTemplateController(ApprovalLineTemplateService templateService,
-                                          ApprovalLineTemplateVersionService versionService) {
+    public ApprovalTemplateRootController(ApprovalTemplateRootService templateService,
+                                          ApprovalTemplateService versionService) {
         this.templateService = templateService;
         this.versionService = versionService;
     }
@@ -65,41 +65,41 @@ public class ApprovalLineTemplateController {
     @GetMapping
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 목록 조회")
-    public List<ApprovalLineTemplateResponse> listTemplates(
+    public List<ApprovalTemplateRootResponse> listTemplates(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
         return templateService.list(keyword, activeOnly).stream()
-                .map(r -> ApprovalLineTemplateResponse.apply(r, masker))
+                .map(r -> ApprovalTemplateRootResponse.apply(r, masker))
                 .toList();
     }
 
     @GetMapping("/{id}")
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 단일 조회")
-    public ApprovalLineTemplateResponse getTemplate(@PathVariable UUID id) {
+    public ApprovalTemplateRootResponse getTemplate(@PathVariable UUID id) {
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return ApprovalLineTemplateResponse.apply(templateService.getById(id), masker);
+        return ApprovalTemplateRootResponse.apply(templateService.getById(id), masker);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.CREATE)
     @Operation(summary = "승인선 템플릿 생성")
-    public ApprovalLineTemplateResponse createTemplate(@Valid @RequestBody ApprovalLineTemplateRequest request) {
+    public ApprovalTemplateRootResponse createTemplate(@Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return ApprovalLineTemplateResponse.apply(templateService.create(request, context), masker);
+        return ApprovalTemplateRootResponse.apply(templateService.create(request, context), masker);
     }
 
     @PutMapping("/{id}")
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인선 템플릿 수정")
-    public ApprovalLineTemplateResponse updateTemplate(@PathVariable UUID id,
-                                                       @Valid @RequestBody ApprovalLineTemplateRequest request) {
+    public ApprovalTemplateRootResponse updateTemplate(@PathVariable UUID id,
+                                                       @Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return ApprovalLineTemplateResponse.apply(templateService.update(id, request, context), masker);
+        return ApprovalTemplateRootResponse.apply(templateService.update(id, request, context), masker);
     }
 
     @DeleteMapping("/{id}")
@@ -114,21 +114,10 @@ public class ApprovalLineTemplateController {
     @PostMapping("/{id}/activate")
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인선 템플릿 활성화 (복원)")
-    public ApprovalLineTemplateResponse activateTemplate(@PathVariable UUID id) {
+    public ApprovalTemplateRootResponse activateTemplate(@PathVariable UUID id) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return ApprovalLineTemplateResponse.apply(templateService.activate(id, context), masker);
-    }
-
-    @PostMapping("/{id}/copy")
-    @ResponseStatus(HttpStatus.CREATED)
-    @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.CREATE)
-    @Operation(summary = "승인선 템플릿 복사")
-    public TemplateCopyResponse copyTemplate(@PathVariable UUID id,
-                                             @Valid @RequestBody TemplateCopyRequest request) {
-        AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return TemplateCopyResponse.apply(templateService.copy(id, request, context), masker);
+        return ApprovalTemplateRootResponse.apply(templateService.activate(id, context), masker);
     }
 
     @GetMapping("/{id}/history")
@@ -144,11 +133,11 @@ public class ApprovalLineTemplateController {
     @PatchMapping("/display-orders")
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.UPDATE)
     @Operation(summary = "승인선 템플릿 표시순서 일괄 변경")
-    public List<ApprovalLineTemplateResponse> updateDisplayOrders(@Valid @RequestBody DisplayOrderUpdateRequest request) {
+    public List<ApprovalTemplateRootResponse> updateDisplayOrders(@Valid @RequestBody DisplayOrderUpdateRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
         return templateService.updateDisplayOrders(request, context).stream()
-                .map(r -> ApprovalLineTemplateResponse.apply(r, masker))
+                .map(r -> ApprovalTemplateRootResponse.apply(r, masker))
                 .toList();
     }
 
@@ -204,10 +193,14 @@ public class ApprovalLineTemplateController {
     @Operation(summary = "버전 롤백", description = "이력화면에서 특정 버전을 선택하여 해당 시점의 상태로 복원합니다.")
     public VersionHistoryResponse rollbackToVersion(
             @PathVariable UUID id,
-            @Valid @RequestBody RollbackRequest request) {
+            @RequestParam @NotNull(message = "롤백할 버전 번호는 필수입니다")
+            @Min(value = 1, message = "버전 번호는 1 이상이어야 합니다") Integer targetVersion,
+            @RequestParam(required = false)
+            @Size(max = 500, message = "변경 사유는 500자 이하여야 합니다") String changeReason) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return VersionHistoryResponse.apply(versionService.rollbackToVersion(id, request, context), masker);
+        return VersionHistoryResponse.apply(
+                versionService.rollbackToVersion(id, targetVersion, changeReason, context), masker);
     }
 
     // ==========================================================================

@@ -1,17 +1,13 @@
 package com.example.draft.application;
 
-import com.example.admin.approval.domain.ApprovalGroup;
-import com.example.admin.approval.repository.ApprovalGroupRepository;
-import com.example.draft.TestApprovalHelper;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
@@ -19,40 +15,34 @@ import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.dto.ApprovalTemplateStepResponse;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftTemplatePresetRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class TemplateAdminServiceUpdateLineTemplateTest {
 
     @Test
     @DisplayName("라인 템플릿 업데이트 시 이름/active/steps가 교체된다")
     void updateLineTemplateReplacesSteps() {
-        ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
-        ApprovalGroupRepository groupRepo = mock(ApprovalGroupRepository.class);
+        ApprovalTemplateRootService rootService = mock(ApprovalTemplateRootService.class);
+        ApprovalTemplateRootRepository rootRepo = mock(ApprovalTemplateRootRepository.class);
         TemplateAdminService service = new TemplateAdminService(
-                lineRepo,
-                groupRepo,
-                mock(DraftFormTemplateRepository.class), mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
+                rootService,
+                rootRepo,
+                mock(DraftFormTemplateRepository.class),
+                mock(DraftTemplatePresetRepository.class),
+                new ObjectMapper());
 
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("old", 0, null, now);
-        template.replaceSteps(List.of(TestApprovalHelper.createTemplateStep(template, 1, "GRP1", "")));
-
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000031");
-        given(lineRepo.findById(id)).willReturn(Optional.of(template));
-        given(lineRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
-        // ApprovalGroup mock 설정
-        ApprovalGroup grp2 = ApprovalGroup.create("GRP2", "그룹2", "설명", 1, now);
-        ApprovalGroup grp3 = ApprovalGroup.create("GRP3", "그룹3", "설명", 2, now);
-        given(groupRepo.findByGroupCode("GRP2")).willReturn(Optional.of(grp2));
-        given(groupRepo.findByGroupCode("GRP3")).willReturn(Optional.of(grp3));
-
-        ApprovalLineTemplateRequest req = new ApprovalLineTemplateRequest(
+        ApprovalTemplateRootRequest req = new ApprovalTemplateRootRequest(
                 "newName",
                 1,
                 "설명",
@@ -64,7 +54,26 @@ class TemplateAdminServiceUpdateLineTemplateTest {
         );
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
-        ApprovalLineTemplateResponse res = service.updateApprovalLineTemplate(id, req, ctx, false);
+        // Service mock 설정: update 호출 시 예상 응답 반환
+        // ApprovalTemplateRootResponse(id, templateCode, name, displayOrder, description, active, createdAt, updatedAt, steps)
+        ApprovalTemplateRootResponse expectedResponse = new ApprovalTemplateRootResponse(
+                id,
+                "TMPL-001",
+                "newName",
+                1,
+                "설명",
+                true,
+                now,
+                now,
+                List.of(
+                        new ApprovalTemplateStepResponse(UUID.randomUUID(), 1, "GRP2", "그룹2", false),
+                        new ApprovalTemplateStepResponse(UUID.randomUUID(), 2, "GRP3", "그룹3", false)
+                )
+        );
+        given(rootService.update(eq(id), any(ApprovalTemplateRootRequest.class), eq(ctx)))
+                .willReturn(expectedResponse);
+
+        ApprovalTemplateRootResponse res = service.updateApprovalTemplateRoot(id, req, ctx, false);
 
         assertThat(res.name()).isEqualTo("newName");
         assertThat(res.steps()).hasSize(2);

@@ -23,8 +23,8 @@ import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.common.masking.MaskingFunctions;
 import com.example.common.policy.DataPolicyContextHolder;
 import com.example.draft.application.TemplateAdminService;
@@ -49,30 +49,30 @@ public class DraftTemplateAdminController {
     @PostMapping("/approval-line-templates")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     @Operation(summary = "승인선 템플릿 등록")
-    public ApprovalLineTemplateResponse createApprovalLineTemplate(@Valid @RequestBody ApprovalLineTemplateRequest request) {
+    public ApprovalTemplateRootResponse createApprovalTemplateRoot(@Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return ApprovalLineTemplateResponse.apply(templateAdminService.createApprovalLineTemplate(request, context, true), masker);
+        return ApprovalTemplateRootResponse.apply(templateAdminService.createApprovalTemplateRoot(request, context, true), masker);
     }
 
     @PutMapping("/approval-line-templates/{id}")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     @Operation(summary = "승인선 템플릿 수정")
-    public ApprovalLineTemplateResponse updateApprovalLineTemplate(@PathVariable UUID id,
-                                                                    @Valid @RequestBody ApprovalLineTemplateRequest request) {
+    public ApprovalTemplateRootResponse updateApprovalTemplateRoot(@PathVariable UUID id,
+                                                                    @Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return ApprovalLineTemplateResponse.apply(templateAdminService.updateApprovalLineTemplate(id, request, context, true), masker);
+        return ApprovalTemplateRootResponse.apply(templateAdminService.updateApprovalTemplateRoot(id, request, context, true), masker);
     }
 
     @GetMapping("/approval-line-templates")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     @Operation(summary = "승인선 템플릿 목록 조회")
-    public List<ApprovalLineTemplateResponse> listApprovalLineTemplates(@RequestParam(defaultValue = "true") boolean activeOnly) {
+    public List<ApprovalTemplateRootResponse> listApprovalTemplateRoots(@RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
-        return templateAdminService.listApprovalLineTemplates(null, null, activeOnly, context, true).stream()
-                .map(t -> ApprovalLineTemplateResponse.apply(t, masker))
+        return templateAdminService.listApprovalTemplateRoots(null, null, activeOnly, context, true).stream()
+                .map(t -> ApprovalTemplateRootResponse.apply(t, masker))
                 .toList();
     }
 

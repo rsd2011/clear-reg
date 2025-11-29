@@ -20,7 +20,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
+import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
@@ -229,9 +229,9 @@ class ApprovalGroupServiceTest {
             given(groupRepo.findById(id1)).willReturn(Optional.of(group1));
             given(groupRepo.findById(id2)).willReturn(Optional.of(group2));
 
-            ApprovalGroupPriorityRequest req = new ApprovalGroupPriorityRequest(List.of(
-                    new ApprovalGroupPriorityRequest.DisplayOrderItem(id1, 5),
-                    new ApprovalGroupPriorityRequest.DisplayOrderItem(id2, 15)));
+            DisplayOrderUpdateRequest req = new DisplayOrderUpdateRequest(List.of(
+                    new DisplayOrderUpdateRequest.DisplayOrderItem(id1, 5),
+                    new DisplayOrderUpdateRequest.DisplayOrderItem(id2, 15)));
             AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
             List<ApprovalGroupResponse> result = service.updateApprovalGroupDisplayOrders(req, ctx, false);

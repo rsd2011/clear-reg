@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
 
-public record ApprovalLineTemplateResponse(
+public record ApprovalTemplateRootResponse(
         UUID id,
         String templateCode,
         String name,
@@ -18,16 +19,22 @@ public record ApprovalLineTemplateResponse(
         OffsetDateTime updatedAt,
         List<ApprovalTemplateStepResponse> steps
 ) {
-    public static ApprovalLineTemplateResponse from(ApprovalLineTemplate template) {
+    public static ApprovalTemplateRootResponse from(ApprovalTemplateRoot template) {
         return from(template, UnaryOperator.identity());
     }
 
-    public static ApprovalLineTemplateResponse from(ApprovalLineTemplate template, UnaryOperator<String> masker) {
+    public static ApprovalTemplateRootResponse from(ApprovalTemplateRoot template, UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
-        List<ApprovalTemplateStepResponse> stepResponses = template.getSteps().stream()
-                .map(ApprovalTemplateStepResponse::from)
-                .toList();
-        return new ApprovalLineTemplateResponse(
+
+        // currentVersion에서 steps를 가져옴
+        ApprovalTemplate currentVersion = template.getCurrentVersion();
+        List<ApprovalTemplateStepResponse> stepResponses = currentVersion != null
+                ? currentVersion.getSteps().stream()
+                        .map(ApprovalTemplateStepResponse::from)
+                        .toList()
+                : List.of();
+
+        return new ApprovalTemplateRootResponse(
                 template.getId(),
                 fn.apply(template.getTemplateCode()),
                 fn.apply(template.getName()),
@@ -40,9 +47,9 @@ public record ApprovalLineTemplateResponse(
         );
     }
 
-    public static ApprovalLineTemplateResponse apply(ApprovalLineTemplateResponse response, UnaryOperator<String> masker) {
+    public static ApprovalTemplateRootResponse apply(ApprovalTemplateRootResponse response, UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
-        return new ApprovalLineTemplateResponse(
+        return new ApprovalTemplateRootResponse(
                 response.id(),
                 fn.apply(response.templateCode()),
                 fn.apply(response.name()),

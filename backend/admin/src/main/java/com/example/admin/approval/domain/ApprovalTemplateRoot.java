@@ -1,46 +1,34 @@
 package com.example.admin.approval.domain;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 
 import com.example.common.jpa.PrimaryKeyEntity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 승인선 템플릿 루트 엔티티.
+ * <p>
+ * 버전 컨테이너 역할을 하며, 실제 비즈니스 데이터는 {@link ApprovalTemplate}에 저장됩니다.
+ * </p>
+ */
 @Entity
-@Table(name = "approval_line_templates")
+@Table(name = "approval_template_roots")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ApprovalLineTemplate extends PrimaryKeyEntity {
+public class ApprovalTemplateRoot extends PrimaryKeyEntity {
 
     @Column(name = "template_code", nullable = false, length = 100, unique = true)
     private String templateCode;
-
-    @Column(name = "name", nullable = false, length = 255)
-    private String name;
-
-    @Column(name = "display_order", nullable = false)
-    private Integer displayOrder = 0;
-
-    @Column(name = "description", length = 500)
-    private String description;
-
-    @Column(name = "active", nullable = false)
-    private boolean active = true;
 
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
@@ -53,59 +41,37 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
     /** 현재 활성 버전 */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_version_id")
-    private ApprovalLineTemplateVersion currentVersion;
+    private ApprovalTemplate currentVersion;
 
     /** 이전 활성 버전 (롤백 참조용) */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "previous_version_id")
-    private ApprovalLineTemplateVersion previousVersion;
+    private ApprovalTemplate previousVersion;
 
     /** 다음 예약 버전 (Draft 또는 결재 대기용) */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_version_id")
-    private ApprovalLineTemplateVersion nextVersion;
+    private ApprovalTemplate nextVersion;
 
-    // === 기존 Steps (하위 호환성 유지, 추후 제거 예정) ===
-
-    @OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @OrderBy("stepOrder ASC")
-    private final List<ApprovalTemplateStep> steps = new ArrayList<>();
-
-    private ApprovalLineTemplate(String templateCode,
-                                 String name,
-                                 Integer displayOrder,
-                                 String description,
-                                 OffsetDateTime now) {
+    private ApprovalTemplateRoot(String templateCode, OffsetDateTime now) {
         this.templateCode = templateCode;
-        this.name = name;
-        this.displayOrder = displayOrder != null ? displayOrder : 0;
-        this.description = description;
         this.createdAt = now;
         this.updatedAt = now;
     }
 
-    public static ApprovalLineTemplate create(String name, Integer displayOrder, String description, OffsetDateTime now) {
-        return new ApprovalLineTemplate(UUID.randomUUID().toString(), name, displayOrder, description, now);
+    public static ApprovalTemplateRoot create(OffsetDateTime now) {
+        return new ApprovalTemplateRoot(UUID.randomUUID().toString(), now);
     }
 
-    public void rename(String name, Integer displayOrder, String description, boolean active, OffsetDateTime now) {
-        this.name = name;
-        this.displayOrder = displayOrder != null ? displayOrder : this.displayOrder;
-        this.description = description;
-        this.active = active;
+    public static ApprovalTemplateRoot createWithCode(String templateCode, OffsetDateTime now) {
+        return new ApprovalTemplateRoot(templateCode, now);
+    }
+
+    /**
+     * 업데이트 시간을 갱신합니다.
+     */
+    public void touch(OffsetDateTime now) {
         this.updatedAt = now;
-    }
-
-    public void replaceSteps(List<ApprovalTemplateStep> newSteps) {
-        this.steps.clear();
-        this.steps.addAll(newSteps);
-        this.steps.sort(Comparator.comparingInt(ApprovalTemplateStep::getStepOrder));
-    }
-
-    public void addStep(int stepOrder, ApprovalGroup approvalGroup) {
-        ApprovalTemplateStep step = new ApprovalTemplateStep(this, stepOrder, approvalGroup);
-        this.steps.add(step);
-        this.steps.sort(Comparator.comparingInt(ApprovalTemplateStep::getStepOrder));
     }
 
     // === 버전 관리 메서드 ===
@@ -117,11 +83,11 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
      * @param newVersion 새로 활성화할 버전
      * @param now        활성화 시점
      */
-    public void activateNewVersion(ApprovalLineTemplateVersion newVersion, OffsetDateTime now) {
+    public void activateNewVersion(ApprovalTemplate newVersion, OffsetDateTime now) {
         this.previousVersion = this.currentVersion;
         this.currentVersion = newVersion;
         this.nextVersion = null;
-        syncFromVersion(newVersion, now);
+        this.updatedAt = now;
     }
 
     /**
@@ -129,7 +95,7 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
      *
      * @param draftVersion 초안 버전
      */
-    public void setDraftVersion(ApprovalLineTemplateVersion draftVersion) {
+    public void setDraftVersion(ApprovalTemplate draftVersion) {
         this.nextVersion = draftVersion;
     }
 
@@ -156,8 +122,7 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
         this.previousVersion = this.currentVersion;
         this.currentVersion = this.nextVersion;
         this.nextVersion = null;
-
-        syncFromVersion(this.currentVersion, now);
+        this.updatedAt = now;
     }
 
     /**
@@ -175,17 +140,6 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
     }
 
     /**
-     * 버전에서 메인 테이블 필드를 동기화합니다.
-     */
-    private void syncFromVersion(ApprovalLineTemplateVersion version, OffsetDateTime now) {
-        this.name = version.getName();
-        this.displayOrder = version.getDisplayOrder();
-        this.description = version.getDescription();
-        this.active = version.isActive();
-        this.updatedAt = now;
-    }
-
-    /**
      * 현재 버전 번호를 반환합니다.
      */
     public Integer getCurrentVersionNumber() {
@@ -197,5 +151,35 @@ public class ApprovalLineTemplate extends PrimaryKeyEntity {
      */
     public boolean hasDraft() {
         return nextVersion != null && nextVersion.isDraft();
+    }
+
+    // === 편의 메서드 (현재 버전에서 조회) ===
+
+    /**
+     * 현재 버전의 이름을 반환합니다.
+     */
+    public String getName() {
+        return currentVersion != null ? currentVersion.getName() : null;
+    }
+
+    /**
+     * 현재 버전의 표시 순서를 반환합니다.
+     */
+    public Integer getDisplayOrder() {
+        return currentVersion != null ? currentVersion.getDisplayOrder() : 0;
+    }
+
+    /**
+     * 현재 버전의 설명을 반환합니다.
+     */
+    public String getDescription() {
+        return currentVersion != null ? currentVersion.getDescription() : null;
+    }
+
+    /**
+     * 현재 버전의 활성 상태를 반환합니다.
+     */
+    public boolean isActive() {
+        return currentVersion != null && currentVersion.isActive();
     }
 }

@@ -75,10 +75,10 @@ import com.example.file.StoredFileVersionRepository;
 import com.example.file.audit.FileAuditOutboxRelay;
 import com.example.admin.menu.service.MenuService;
 import com.example.admin.menu.repository.MenuRepository;
-import com.example.admin.menu.repository.MenuViewConfigRepository;
+import com.example.admin.permission.repository.PermissionMenuRepository;
 import com.example.admin.approval.repository.ApprovalGroupRepository;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
-import com.example.admin.approval.repository.ApprovalLineTemplateVersionRepository;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.repository.ApprovalTemplateRepository;
 import com.example.admin.codegroup.locale.LocaleCodeProvider;
 import com.example.admin.codegroup.service.CodeGroupService;
 import com.example.admin.codegroup.service.CodeGroupQueryService;
@@ -270,16 +270,16 @@ class AuditPartitionSchedulerPolicyEventTest {
     MenuRepository menuRepository;
 
     @MockBean
-    MenuViewConfigRepository menuViewConfigRepository;
+    PermissionMenuRepository permissionMenuRepository;
 
     @MockBean
     ApprovalGroupRepository approvalGroupRepository;
 
     @MockBean
-    ApprovalLineTemplateRepository approvalLineTemplateRepository;
+    ApprovalTemplateRootRepository approvalLineTemplateRepository;
 
     @MockBean
-    ApprovalLineTemplateVersionRepository approvalLineTemplateHistoryRepository;
+    ApprovalTemplateRepository approvalLineTemplateHistoryRepository;
 
     @MockBean
     CodeGroupService codeGroupService;

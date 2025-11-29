@@ -10,7 +10,7 @@ import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.admin.approval.dto.ApprovalGroupPriorityRequest;
+import com.example.admin.approval.dto.DisplayOrderUpdateRequest;
 import com.example.admin.approval.dto.ApprovalGroupRequest;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalGroupSummaryResponse;
@@ -91,9 +91,9 @@ public class ApprovalGroupService {
         return approvalGroupRepository.existsByGroupCode(groupCode);
     }
 
-    public List<ApprovalGroupResponse> updateApprovalGroupDisplayOrders(ApprovalGroupPriorityRequest request, AuthContext context, boolean audit) {
+    public List<ApprovalGroupResponse> updateApprovalGroupDisplayOrders(DisplayOrderUpdateRequest request, AuthContext context, boolean audit) {
         OffsetDateTime now = OffsetDateTime.now();
-        return request.displayOrders().stream()
+        return request.items().stream()
                 .map(item -> {
                     ApprovalGroup group = approvalGroupRepository.findById(item.id())
                             .orElseThrow(() -> new ApprovalGroupNotFoundException("결재 그룹을 찾을 수 없습니다: " + item.id()));

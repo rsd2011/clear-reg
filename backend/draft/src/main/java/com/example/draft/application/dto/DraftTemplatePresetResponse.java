@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.draft.domain.DraftTemplatePreset;
 import com.example.draft.domain.TemplateScope;
 
@@ -34,7 +34,7 @@ public record DraftTemplatePresetResponse(
                                                    List<String> variables,
                                                    UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
-        ApprovalLineTemplate approvalTemplate = preset.getDefaultApprovalTemplate();
+        ApprovalTemplateRoot approvalTemplate = preset.getDefaultApprovalTemplate();
         return new DraftTemplatePresetResponse(
                 preset.getId(),
                 fn.apply(preset.getPresetCode()),

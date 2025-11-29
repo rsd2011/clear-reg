@@ -9,14 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.admin.approval.domain.ApprovalGroup;
-import com.example.admin.approval.repository.ApprovalGroupRepository;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
-import com.example.admin.approval.domain.ApprovalTemplateStep;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
-import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.draft.application.dto.DraftTemplatePresetRequest;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
@@ -34,62 +31,44 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Transactional
 public class TemplateAdminService {
 
-    private final ApprovalLineTemplateRepository approvalLineTemplateRepository;
-    private final ApprovalGroupRepository approvalGroupRepository;
+    private final ApprovalTemplateRootService approvalTemplateRootService;
+    private final ApprovalTemplateRootRepository approvalTemplateRootRepository;
     private final DraftFormTemplateRepository draftFormTemplateRepository;
     private final DraftTemplatePresetRepository presetRepository;
     private final ObjectMapper objectMapper;
 
-    public TemplateAdminService(ApprovalLineTemplateRepository approvalLineTemplateRepository,
-                                ApprovalGroupRepository approvalGroupRepository,
+    public TemplateAdminService(ApprovalTemplateRootService approvalTemplateRootService,
+                                ApprovalTemplateRootRepository approvalTemplateRootRepository,
                                 DraftFormTemplateRepository draftFormTemplateRepository,
                                 DraftTemplatePresetRepository presetRepository,
                                 ObjectMapper objectMapper) {
-        this.approvalLineTemplateRepository = approvalLineTemplateRepository;
-        this.approvalGroupRepository = approvalGroupRepository;
+        this.approvalTemplateRootService = approvalTemplateRootService;
+        this.approvalTemplateRootRepository = approvalTemplateRootRepository;
         this.draftFormTemplateRepository = draftFormTemplateRepository;
         this.presetRepository = presetRepository;
         this.objectMapper = objectMapper;
     }
 
-    public ApprovalLineTemplateResponse createApprovalLineTemplate(ApprovalLineTemplateRequest request,
+    public ApprovalTemplateRootResponse createApprovalTemplateRoot(ApprovalTemplateRootRequest request,
                                                                     AuthContext context,
                                                                     boolean audit) {
-        OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate template = ApprovalLineTemplate.create(
-                request.name(),
-                request.displayOrder(),
-                request.description(),
-                now);
-        if (!request.active()) {
-            template.rename(request.name(), request.displayOrder(), request.description(), request.active(), now);
-        }
-        template.replaceSteps(toEntities(template, request.steps()));
-        return ApprovalLineTemplateResponse.from(approvalLineTemplateRepository.save(template));
+        return approvalTemplateRootService.create(request, context);
     }
 
-    public ApprovalLineTemplateResponse updateApprovalLineTemplate(UUID id,
-                                                                    ApprovalLineTemplateRequest request,
+    public ApprovalTemplateRootResponse updateApprovalTemplateRoot(UUID id,
+                                                                    ApprovalTemplateRootRequest request,
                                                                     AuthContext context,
                                                                     boolean audit) {
-        ApprovalLineTemplate template = approvalLineTemplateRepository.findById(id)
-                .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-        OffsetDateTime now = OffsetDateTime.now();
-        template.rename(request.name(), request.displayOrder(), request.description(), request.active(), now);
-        template.replaceSteps(toEntities(template, request.steps()));
-        return ApprovalLineTemplateResponse.from(template);
+        return approvalTemplateRootService.update(id, request, context);
     }
 
     @Transactional(readOnly = true)
-    public List<ApprovalLineTemplateResponse> listApprovalLineTemplates(String businessType,
+    public List<ApprovalTemplateRootResponse> listApprovalTemplateRoots(String businessType,
                                                                          String organizationCode,
                                                                          boolean activeOnly,
                                                                          AuthContext context,
                                                                          boolean audit) {
-        return approvalLineTemplateRepository.findAll().stream()
-                .filter(t -> !activeOnly || t.isActive())
-                .map(ApprovalLineTemplateResponse::from)
-                .toList();
+        return approvalTemplateRootService.list(null, activeOnly);
     }
 
     public DraftFormTemplateResponse createDraftFormTemplate(DraftFormTemplateRequest request,
@@ -149,9 +128,9 @@ public class TemplateAdminService {
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
         formTemplate.assertOrganization(org == null ? context.organizationCode() : org);
         ensureBusinessMatches(formTemplate, request.businessFeatureCode());
-        ApprovalLineTemplate approvalTemplate = null;
+        ApprovalTemplateRoot approvalTemplate = null;
         if (request.defaultApprovalTemplateId() != null) {
-            approvalTemplate = approvalLineTemplateRepository.findByIdAndActiveTrue(request.defaultApprovalTemplateId())
+            approvalTemplate = approvalTemplateRootRepository.findByIdAndActiveVersion(request.defaultApprovalTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
         }
         DraftTemplatePreset preset = DraftTemplatePreset.create(
@@ -185,9 +164,9 @@ public class TemplateAdminService {
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
         formTemplate.assertOrganization(preset.getOrganizationCode() == null ? context.organizationCode() : preset.getOrganizationCode());
         ensureBusinessMatches(formTemplate, preset.getBusinessFeatureCode());
-        ApprovalLineTemplate approvalTemplate = null;
+        ApprovalTemplateRoot approvalTemplate = null;
         if (request.defaultApprovalTemplateId() != null) {
-            approvalTemplate = approvalLineTemplateRepository.findByIdAndActiveTrue(request.defaultApprovalTemplateId())
+            approvalTemplate = approvalTemplateRootRepository.findByIdAndActiveVersion(request.defaultApprovalTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
         }
         preset.update(request.name(),
@@ -217,16 +196,6 @@ public class TemplateAdminService {
                 .filter(p -> orgFilter == null || p.isGlobal() || orgFilter.equals(p.getOrganizationCode()))
                 .filter(p -> !activeOnly || p.isActive())
                 .map(this::toResponse)
-                .toList();
-    }
-
-    private List<ApprovalTemplateStep> toEntities(ApprovalLineTemplate template, List<ApprovalTemplateStepRequest> steps) {
-        return steps.stream()
-                .map(req -> {
-                    ApprovalGroup group = approvalGroupRepository.findByGroupCode(req.approvalGroupCode())
-                            .orElseThrow(() -> new IllegalArgumentException("승인 그룹을 찾을 수 없습니다: " + req.approvalGroupCode()));
-                    return new ApprovalTemplateStep(template, req.stepOrder(), group);
-                })
                 .toList();
     }
 

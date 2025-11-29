@@ -195,8 +195,8 @@ class DeclarativePermissionGroupLoaderTest {
     return mapper;
   }
 
-  @SpringBootApplication(scanBasePackages = "com.example")
-  @EntityScan(basePackages = "com.example")
-  @EnableJpaRepositories(basePackages = "com.example")
+  @SpringBootApplication(scanBasePackages = {"com.example.admin.permission", "com.example.admin.menu"})
+  @EntityScan(basePackages = {"com.example.admin.permission", "com.example.admin.menu", "com.example.common"})
+  @EnableJpaRepositories(basePackages = {"com.example.admin.permission.repository", "com.example.admin.menu.repository"})
   static class TestApplication {}
 }

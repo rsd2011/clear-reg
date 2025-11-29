@@ -14,11 +14,11 @@ import org.junit.jupiter.api.Test;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 
-@DisplayName("ApprovalLineTemplateVersion 엔티티")
-class ApprovalLineTemplateVersionTest {
+@DisplayName("ApprovalTemplate 엔티티")
+class ApprovalTemplateTest {
 
-    private ApprovalLineTemplate createTestTemplate() {
-        return ApprovalLineTemplate.create("테스트 템플릿", 1, "설명", OffsetDateTime.now());
+    private ApprovalTemplateRoot createTestRoot() {
+        return ApprovalTemplateRoot.create(OffsetDateTime.now());
     }
 
     private ApprovalGroup createTestGroup(String code, String name) {
@@ -32,15 +32,15 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: 유효한 파라미터 / When: create 호출 / Then: PUBLISHED 상태의 버전 생성")
         void createsPublishedVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
+            ApprovalTemplateRoot template = createTestRoot();
             OffsetDateTime now = OffsetDateTime.now();
 
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 10, "설명", true,
                     ChangeAction.CREATE, "생성 사유", "user1", "사용자1", now
             );
 
-            assertThat(version.getTemplate()).isEqualTo(template);
+            assertThat(version.getRoot()).isEqualTo(template);
             assertThat(version.getVersion()).isEqualTo(1);
             assertThat(version.getName()).isEqualTo("이름");
             assertThat(version.getDisplayOrder()).isEqualTo(10);
@@ -58,10 +58,10 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: displayOrder가 null인 경우 / When: create 호출 / Then: 기본값 0으로 설정")
         void setsDefaultDisplayOrderWhenNull() {
-            ApprovalLineTemplate template = createTestTemplate();
+            ApprovalTemplateRoot template = createTestRoot();
             OffsetDateTime now = OffsetDateTime.now();
 
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", null, "설명", true,
                     ChangeAction.CREATE, null, "user1", "사용자1", now
             );
@@ -77,10 +77,10 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: 유효한 파라미터 / When: createDraft 호출 / Then: DRAFT 상태의 버전 생성")
         void createsDraftVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
+            ApprovalTemplateRoot template = createTestRoot();
             OffsetDateTime now = OffsetDateTime.now();
 
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "초안 이름", 5, "초안 설명", true,
                     "변경 사유", "user2", "사용자2", now
             );
@@ -92,38 +92,16 @@ class ApprovalLineTemplateVersionTest {
     }
 
     @Nested
-    @DisplayName("createFromCopy 팩토리 메서드")
-    class CreateFromCopy {
-
-        @Test
-        @DisplayName("Given: 원본 정보 / When: createFromCopy 호출 / Then: COPY 액션의 버전 생성")
-        void createsCopyVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
-            UUID sourceTemplateId = UUID.randomUUID();
-            OffsetDateTime now = OffsetDateTime.now();
-
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.createFromCopy(
-                    template, 1, "복사본", 10, "복사 설명", true,
-                    "user3", "사용자3", now, sourceTemplateId
-            );
-
-            assertThat(version.getChangeAction()).isEqualTo(ChangeAction.COPY);
-            assertThat(version.getSourceTemplateId()).isEqualTo(sourceTemplateId);
-            assertThat(version.getChangeReason()).isNull();
-        }
-    }
-
-    @Nested
     @DisplayName("createFromRollback 팩토리 메서드")
     class CreateFromRollback {
 
         @Test
         @DisplayName("Given: 롤백 대상 버전 / When: createFromRollback 호출 / Then: ROLLBACK 액션의 버전 생성")
         void createsRollbackVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
+            ApprovalTemplateRoot template = createTestRoot();
             OffsetDateTime now = OffsetDateTime.now();
 
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.createFromRollback(
+            ApprovalTemplate version = ApprovalTemplate.createFromRollback(
                     template, 3, "롤백된 이름", 5, "설명", true,
                     "롤백 사유", "user4", "사용자4", now, 1
             );
@@ -141,8 +119,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: validTo가 null이고 PUBLISHED 상태 / When: isCurrent 호출 / Then: true 반환")
         void returnsTrueForCurrentVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
@@ -153,8 +131,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: validTo가 설정됨 / When: isCurrent 호출 / Then: false 반환")
         void returnsFalseWhenValidToIsSet() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
@@ -166,8 +144,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: DRAFT 상태 / When: isCurrent 호출 / Then: false 반환")
         void returnsFalseForDraftStatus() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "이름", 0, "설명", true,
                     null, "user", "사용자", OffsetDateTime.now()
             );
@@ -183,8 +161,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: DRAFT 상태 / When: isDraft 호출 / Then: true 반환")
         void returnsTrueForDraftStatus() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "이름", 0, "설명", true,
                     null, "user", "사용자", OffsetDateTime.now()
             );
@@ -195,8 +173,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: PUBLISHED 상태 / When: isDraft 호출 / Then: false 반환")
         void returnsFalseForPublishedStatus() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
@@ -212,8 +190,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: PUBLISHED 상태 / When: close 호출 / Then: HISTORICAL로 변경 및 validTo 설정")
         void closesPublishedVersion() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
@@ -228,8 +206,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: DRAFT 상태 / When: close 호출 / Then: DRAFT 상태 유지 및 validTo만 설정")
         void doesNotChangeStatusForDraft() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "이름", 0, "설명", true,
                     null, "user", "사용자", OffsetDateTime.now()
             );
@@ -249,8 +227,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: DRAFT 상태 / When: publish 호출 / Then: PUBLISHED로 변경")
         void publishesDraft() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "이름", 0, "설명", true,
                     null, "user", "사용자", OffsetDateTime.now()
             );
@@ -267,8 +245,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: PUBLISHED 상태 / When: publish 호출 / Then: IllegalStateException 발생")
         void throwsExceptionForNonDraft() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
@@ -286,8 +264,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: DRAFT 상태 / When: updateDraft 호출 / Then: 필드 업데이트")
         void updatesDraftFields() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "원본 이름", 5, "원본 설명", true,
                     null, "user", "사용자", OffsetDateTime.now()
             );
@@ -306,8 +284,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: displayOrder가 null / When: updateDraft 호출 / Then: 기존 값 유지")
         void keepsExistingDisplayOrderWhenNull() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion draft = ApprovalLineTemplateVersion.createDraft(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate draft = ApprovalTemplate.createDraft(
                     template, 2, "이름", 15, "설명", true,
                     null, "user", "사용자", OffsetDateTime.now()
             );
@@ -320,8 +298,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: PUBLISHED 상태 / When: updateDraft 호출 / Then: IllegalStateException 발생")
         void throwsExceptionForNonDraft() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
@@ -339,13 +317,13 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: 버전 / When: addStep 호출 / Then: Step이 추가됨")
         void addsStep() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
             ApprovalGroup group = createTestGroup("TEAM_LEADER", "팀장");
-            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(version, 1, group);
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(version, 1, group, false);
 
             version.addStep(step);
 
@@ -356,17 +334,17 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: 기존 Step이 있는 버전 / When: replaceSteps 호출 / Then: Step이 교체됨")
         void replacesSteps() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );
             ApprovalGroup group1 = createTestGroup("TEAM_LEADER", "팀장");
             ApprovalGroup group2 = createTestGroup("DEPT_HEAD", "부서장");
-            ApprovalTemplateStepVersion oldStep = ApprovalTemplateStepVersion.create(version, 1, group1);
+            ApprovalTemplateStep oldStep = ApprovalTemplateStep.create(version, 1, group1, false);
             version.addStep(oldStep);
 
-            ApprovalTemplateStepVersion newStep = ApprovalTemplateStepVersion.create(version, 1, group2);
+            ApprovalTemplateStep newStep = ApprovalTemplateStep.create(version, 1, group2, false);
             version.replaceSteps(List.of(newStep));
 
             assertThat(version.getSteps()).hasSize(1);
@@ -381,8 +359,8 @@ class ApprovalLineTemplateVersionTest {
         @Test
         @DisplayName("Given: 버전 / When: setVersionTag 호출 / Then: 태그 설정됨")
         void setsVersionTag() {
-            ApprovalLineTemplate template = createTestTemplate();
-            ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+            ApprovalTemplateRoot template = createTestRoot();
+            ApprovalTemplate version = ApprovalTemplate.create(
                     template, 1, "이름", 0, "설명", true,
                     ChangeAction.CREATE, null, "user", "사용자", OffsetDateTime.now()
             );

@@ -67,10 +67,13 @@ public class DraftApprovalStep extends PrimaryKeyEntity {
         this.description = description;
     }
 
+    /**
+     * ApprovalTemplateStep에서 DraftApprovalStep을 생성합니다.
+     */
     public static DraftApprovalStep fromTemplate(ApprovalTemplateStep templateStep) {
         return new DraftApprovalStep(templateStep.getStepOrder(),
-                templateStep.getApprovalGroup().getGroupCode(),
-                templateStep.getApprovalGroup().getName());
+                templateStep.getApprovalGroupCode(),
+                templateStep.getApprovalGroupName());
     }
 
     void attachTo(Draft draft) {

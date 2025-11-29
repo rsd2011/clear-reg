@@ -11,9 +11,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.domain.ApprovalGroup;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
+import com.example.common.version.ChangeAction;
 import com.example.draft.domain.DraftFormTemplate;
 
 class DraftResponsesTest {
@@ -30,13 +32,17 @@ class DraftResponsesTest {
     }
 
     @Test
-    @DisplayName("ApprovalLineTemplateResponse apply/from에 마스킹 함수가 적용된다")
+    @DisplayName("ApprovalTemplateRootResponse apply/from에 마스킹 함수가 적용된다")
     void approvalLineTemplateResponseApplyMasks() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate template = ApprovalLineTemplate.create("Name", 0, null, now);
-        ApprovalLineTemplateResponse resp = ApprovalLineTemplateResponse.from(template, mask());
+        ApprovalTemplateRoot root = ApprovalTemplateRoot.create(now);
+        ApprovalTemplate version = ApprovalTemplate.create(
+                root, 1, "Name", 0, null, true,
+                ChangeAction.CREATE, null, "system", "System", now);
+        root.activateNewVersion(version, now);
+        ApprovalTemplateRootResponse resp = ApprovalTemplateRootResponse.from(root, mask());
         assertThat(resp.name()).isEqualTo("x");
-        ApprovalLineTemplateResponse again = ApprovalLineTemplateResponse.apply(resp, mask());
+        ApprovalTemplateRootResponse again = ApprovalTemplateRootResponse.apply(resp, mask());
         assertThat(again.templateCode()).isEqualTo("x");
     }
 

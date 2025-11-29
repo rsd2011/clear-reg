@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record ApprovalLineTemplateRequest(
+public record ApprovalTemplateRootRequest(
         @NotBlank @Size(max = 255) String name,
         @Min(0) Integer displayOrder,
         @Size(max = 500) String description,

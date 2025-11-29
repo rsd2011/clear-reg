@@ -7,22 +7,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.example.admin.approval.domain.ApprovalLineTemplateVersion;
-import com.example.admin.approval.domain.ApprovalTemplateStepVersion;
-import com.example.admin.approval.repository.ApprovalLineTemplateVersionRepository;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
+import com.example.admin.approval.repository.ApprovalTemplateRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.approval.domain.ApprovalGroup;
 import com.example.admin.approval.exception.ApprovalGroupNotFoundException;
 import com.example.admin.approval.repository.ApprovalGroupRepository;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
-import com.example.admin.approval.exception.ApprovalLineTemplateNotFoundException;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
-import com.example.admin.approval.dto.ApprovalLineTemplateRequest;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
+import com.example.admin.approval.exception.ApprovalTemplateRootNotFoundException;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.DraftRequest;
-import com.example.admin.approval.dto.RollbackRequest;
 import com.example.admin.approval.dto.VersionComparisonResponse;
 import com.example.admin.approval.dto.VersionComparisonResponse.StepDiff;
 import com.example.admin.approval.dto.VersionComparisonResponse.VersionSummary;
@@ -37,7 +36,7 @@ import com.example.common.version.ObjectDiffUtils;
  */
 @Service
 @Transactional
-public class ApprovalLineTemplateVersionService {
+public class ApprovalTemplateService {
 
     private static final Map<String, String> FIELD_LABELS = Map.of(
             "name", "이름",
@@ -46,12 +45,12 @@ public class ApprovalLineTemplateVersionService {
             "active", "활성화"
     );
 
-    private final ApprovalLineTemplateRepository templateRepository;
-    private final ApprovalLineTemplateVersionRepository versionRepository;
+    private final ApprovalTemplateRootRepository templateRepository;
+    private final ApprovalTemplateRepository versionRepository;
     private final ApprovalGroupRepository groupRepository;
 
-    public ApprovalLineTemplateVersionService(ApprovalLineTemplateRepository templateRepository,
-                                              ApprovalLineTemplateVersionRepository versionRepository,
+    public ApprovalTemplateService(ApprovalTemplateRootRepository templateRepository,
+                                              ApprovalTemplateRepository versionRepository,
                                               ApprovalGroupRepository groupRepository) {
         this.templateRepository = templateRepository;
         this.versionRepository = versionRepository;
@@ -69,7 +68,7 @@ public class ApprovalLineTemplateVersionService {
     public List<VersionHistoryResponse> getVersionHistory(UUID templateId) {
         findTemplateOrThrow(templateId);
 
-        return versionRepository.findHistoryByTemplateId(templateId).stream()
+        return versionRepository.findHistoryByRootId(templateId).stream()
                 .map(VersionHistoryResponse::from)
                 .toList();
     }
@@ -79,9 +78,9 @@ public class ApprovalLineTemplateVersionService {
      */
     @Transactional(readOnly = true)
     public VersionHistoryResponse getVersion(UUID templateId, Integer versionNumber) {
-        ApprovalLineTemplateVersion version = versionRepository
-                .findByTemplateIdAndVersion(templateId, versionNumber)
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException(
+        ApprovalTemplate version = versionRepository
+                .findByRootIdAndVersion(templateId, versionNumber)
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException(
                         "버전을 찾을 수 없습니다: " + versionNumber));
 
         return VersionHistoryResponse.from(version);
@@ -92,9 +91,9 @@ public class ApprovalLineTemplateVersionService {
      */
     @Transactional(readOnly = true)
     public VersionHistoryResponse getVersionAsOf(UUID templateId, OffsetDateTime asOf) {
-        ApprovalLineTemplateVersion version = versionRepository
-                .findByTemplateIdAsOf(templateId, asOf)
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException(
+        ApprovalTemplate version = versionRepository
+                .findByRootIdAsOf(templateId, asOf)
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException(
                         "해당 시점에 유효한 버전이 없습니다: " + asOf));
 
         return VersionHistoryResponse.from(version);
@@ -109,22 +108,22 @@ public class ApprovalLineTemplateVersionService {
      */
     @Transactional(readOnly = true)
     public VersionComparisonResponse compareVersions(UUID templateId, Integer version1, Integer version2) {
-        ApprovalLineTemplate template = findTemplateOrThrow(templateId);
+        ApprovalTemplateRoot template = findTemplateOrThrow(templateId);
 
-        List<ApprovalLineTemplateVersion> versions = versionRepository
+        List<ApprovalTemplate> versions = versionRepository
                 .findVersionsForComparison(templateId, version1, version2);
 
         if (versions.size() != 2) {
-            throw new ApprovalLineTemplateNotFoundException(
+            throw new ApprovalTemplateRootNotFoundException(
                     "비교할 버전을 찾을 수 없습니다: " + version1 + ", " + version2);
         }
 
-        ApprovalLineTemplateVersion v1 = versions.get(0);
-        ApprovalLineTemplateVersion v2 = versions.get(1);
+        ApprovalTemplate v1 = versions.get(0);
+        ApprovalTemplate v2 = versions.get(1);
 
         // 버전 순서 정렬 (낮은 버전이 먼저)
         if (v1.getVersion() > v2.getVersion()) {
-            ApprovalLineTemplateVersion temp = v1;
+            ApprovalTemplate temp = v1;
             v1 = v2;
             v2 = temp;
         }
@@ -132,9 +131,9 @@ public class ApprovalLineTemplateVersionService {
         return buildComparisonResponse(template, v1, v2);
     }
 
-    private VersionComparisonResponse buildComparisonResponse(ApprovalLineTemplate template,
-                                                              ApprovalLineTemplateVersion v1,
-                                                              ApprovalLineTemplateVersion v2) {
+    private VersionComparisonResponse buildComparisonResponse(ApprovalTemplateRoot template,
+                                                              ApprovalTemplate v1,
+                                                              ApprovalTemplate v2) {
         VersionSummary summary1 = new VersionSummary(
                 v1.getVersion(),
                 v1.getChangedBy(),
@@ -177,7 +176,7 @@ public class ApprovalLineTemplateVersionService {
         );
     }
 
-    private List<FieldDiff> compareFields(ApprovalLineTemplateVersion v1, ApprovalLineTemplateVersion v2) {
+    private List<FieldDiff> compareFields(ApprovalTemplate v1, ApprovalTemplate v2) {
         // ObjectDiffUtils를 사용한 필드 비교
         return ObjectDiffUtils.compareFields(
                 new VersionSnapshot(v1.getName(), v1.getDisplayOrder(), v1.getDescription(), v1.isActive()),
@@ -191,17 +190,17 @@ public class ApprovalLineTemplateVersionService {
      */
     private record VersionSnapshot(String name, Integer displayOrder, String description, boolean active) {}
 
-    private List<StepDiff> compareSteps(ApprovalLineTemplateVersion v1, ApprovalLineTemplateVersion v2) {
+    private List<StepDiff> compareSteps(ApprovalTemplate v1, ApprovalTemplate v2) {
         List<StepDiff> diffs = new ArrayList<>();
 
-        List<ApprovalTemplateStepVersion> steps1 = v1.getSteps();
-        List<ApprovalTemplateStepVersion> steps2 = v2.getSteps();
+        List<ApprovalTemplateStep> steps1 = v1.getSteps();
+        List<ApprovalTemplateStep> steps2 = v2.getSteps();
 
         int maxSteps = Math.max(steps1.size(), steps2.size());
 
         for (int i = 0; i < maxSteps; i++) {
-            ApprovalTemplateStepVersion step1 = i < steps1.size() ? steps1.get(i) : null;
-            ApprovalTemplateStepVersion step2 = i < steps2.size() ? steps2.get(i) : null;
+            ApprovalTemplateStep step1 = i < steps1.size() ? steps1.get(i) : null;
+            ApprovalTemplateStep step2 = i < steps2.size() ? steps2.get(i) : null;
 
             if (step1 == null && step2 != null) {
                 // 추가됨
@@ -245,42 +244,50 @@ public class ApprovalLineTemplateVersionService {
     /**
      * 특정 버전으로 롤백.
      * 이력화면에서 특정 버전을 선택하여 해당 시점의 상태로 복원합니다.
+     *
+     * @param templateId    템플릿 ID
+     * @param targetVersion 롤백할 버전 번호
+     * @param changeReason  변경 사유
+     * @param context       인증 컨텍스트
      */
-    public VersionHistoryResponse rollbackToVersion(UUID templateId, RollbackRequest request, AuthContext context) {
-        ApprovalLineTemplate template = findTemplateOrThrow(templateId);
+    public VersionHistoryResponse rollbackToVersion(UUID templateId,
+                                                    Integer targetVersion,
+                                                    String changeReason,
+                                                    AuthContext context) {
+        ApprovalTemplateRoot template = findTemplateOrThrow(templateId);
         OffsetDateTime now = OffsetDateTime.now();
 
         // 롤백 대상 버전 조회
-        ApprovalLineTemplateVersion targetVersion = versionRepository
-                .findByTemplateIdAndVersion(templateId, request.targetVersion())
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException(
-                        "롤백할 버전을 찾을 수 없습니다: " + request.targetVersion()));
+        ApprovalTemplate targetVersionEntity = versionRepository
+                .findByRootIdAndVersion(templateId, targetVersion)
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException(
+                        "롤백할 버전을 찾을 수 없습니다: " + targetVersion));
 
         // 현재 버전 종료
-        ApprovalLineTemplateVersion currentVersion = template.getCurrentVersion();
+        ApprovalTemplate currentVersion = template.getCurrentVersion();
         if (currentVersion != null) {
             currentVersion.close(now);
         }
 
         // 새 버전 생성 (롤백)
-        int nextVersionNumber = versionRepository.findMaxVersionByTemplateId(templateId) + 1;
-        ApprovalLineTemplateVersion rollbackVersion = ApprovalLineTemplateVersion.createFromRollback(
+        int nextVersionNumber = versionRepository.findMaxVersionByRootId(templateId) + 1;
+        ApprovalTemplate rollbackVersion = ApprovalTemplate.createFromRollback(
                 template,
                 nextVersionNumber,
-                targetVersion.getName(),
-                targetVersion.getDisplayOrder(),
-                targetVersion.getDescription(),
-                targetVersion.isActive(),
-                request.changeReason(),
+                targetVersionEntity.getName(),
+                targetVersionEntity.getDisplayOrder(),
+                targetVersionEntity.getDescription(),
+                targetVersionEntity.isActive(),
+                changeReason,
                 context.username(),
                 context.username(),
                 now,
-                request.targetVersion()
+                targetVersion
         );
 
         // Steps 복사
-        for (ApprovalTemplateStepVersion sourceStep : targetVersion.getSteps()) {
-            ApprovalTemplateStepVersion newStep = ApprovalTemplateStepVersion.copyFrom(rollbackVersion, sourceStep);
+        for (ApprovalTemplateStep sourceStep : targetVersionEntity.getSteps()) {
+            ApprovalTemplateStep newStep = ApprovalTemplateStep.copyFrom(rollbackVersion, sourceStep);
             rollbackVersion.addStep(newStep);
         }
 
@@ -301,11 +308,11 @@ public class ApprovalLineTemplateVersionService {
      * 목록화면에서 템플릿을 수정할 때 바로 적용하지 않고 초안으로 저장합니다.
      */
     public VersionHistoryResponse saveDraft(UUID templateId, DraftRequest request, AuthContext context) {
-        ApprovalLineTemplate template = findTemplateOrThrow(templateId);
+        ApprovalTemplateRoot template = findTemplateOrThrow(templateId);
         OffsetDateTime now = OffsetDateTime.now();
 
         // 기존 초안이 있는지 확인
-        ApprovalLineTemplateVersion draft = versionRepository.findDraftByTemplateId(templateId)
+        ApprovalTemplate draft = versionRepository.findDraftByRootId(templateId)
                 .orElse(null);
 
         if (draft != null) {
@@ -325,8 +332,8 @@ public class ApprovalLineTemplateVersionService {
 
         } else {
             // 새 초안 생성
-            int nextVersionNumber = versionRepository.findMaxVersionByTemplateId(templateId) + 1;
-            draft = ApprovalLineTemplateVersion.createDraft(
+            int nextVersionNumber = versionRepository.findMaxVersionByRootId(templateId) + 1;
+            draft = ApprovalTemplate.createDraft(
                     template,
                     nextVersionNumber,
                     request.name(),
@@ -354,8 +361,8 @@ public class ApprovalLineTemplateVersionService {
      */
     @Transactional(readOnly = true)
     public VersionHistoryResponse getDraft(UUID templateId) {
-        ApprovalLineTemplateVersion draft = versionRepository.findDraftByTemplateId(templateId)
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException("초안이 없습니다."));
+        ApprovalTemplate draft = versionRepository.findDraftByRootId(templateId)
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException("초안이 없습니다."));
 
         return VersionHistoryResponse.from(draft);
     }
@@ -365,7 +372,7 @@ public class ApprovalLineTemplateVersionService {
      */
     @Transactional(readOnly = true)
     public boolean hasDraft(UUID templateId) {
-        return versionRepository.existsDraftByTemplateId(templateId);
+        return versionRepository.existsDraftByRootId(templateId);
     }
 
     /**
@@ -373,15 +380,15 @@ public class ApprovalLineTemplateVersionService {
      * 초안을 현재 활성 버전으로 전환합니다.
      */
     public VersionHistoryResponse publishDraft(UUID templateId, AuthContext context) {
-        ApprovalLineTemplate template = findTemplateOrThrow(templateId);
+        ApprovalTemplateRoot template = findTemplateOrThrow(templateId);
         OffsetDateTime now = OffsetDateTime.now();
 
         // 초안 확인
-        ApprovalLineTemplateVersion draft = versionRepository.findDraftByTemplateId(templateId)
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException("게시할 초안이 없습니다."));
+        ApprovalTemplate draft = versionRepository.findDraftByRootId(templateId)
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException("게시할 초안이 없습니다."));
 
         // 현재 버전 종료
-        ApprovalLineTemplateVersion currentVersion = template.getCurrentVersion();
+        ApprovalTemplate currentVersion = template.getCurrentVersion();
         if (currentVersion != null) {
             currentVersion.close(now);
         }
@@ -399,10 +406,10 @@ public class ApprovalLineTemplateVersionService {
      * 초안 삭제 (취소).
      */
     public void discardDraft(UUID templateId) {
-        ApprovalLineTemplate template = findTemplateOrThrow(templateId);
+        ApprovalTemplateRoot template = findTemplateOrThrow(templateId);
 
-        ApprovalLineTemplateVersion draft = versionRepository.findDraftByTemplateId(templateId)
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException("삭제할 초안이 없습니다."));
+        ApprovalTemplate draft = versionRepository.findDraftByRootId(templateId)
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException("삭제할 초안이 없습니다."));
 
         // 메인 테이블에서 초안 링크 제거
         template.discardDraft();
@@ -418,11 +425,11 @@ public class ApprovalLineTemplateVersionService {
     /**
      * 새 템플릿 생성 시 첫 번째 버전 생성.
      */
-    public ApprovalLineTemplateVersion createInitialVersion(ApprovalLineTemplate template,
-                                                            ApprovalLineTemplateRequest request,
+    public ApprovalTemplate createInitialVersion(ApprovalTemplateRoot template,
+                                                            ApprovalTemplateRootRequest request,
                                                             AuthContext context,
                                                             OffsetDateTime now) {
-        ApprovalLineTemplateVersion version = ApprovalLineTemplateVersion.create(
+        ApprovalTemplate version = ApprovalTemplate.create(
                 template,
                 1,
                 request.name(),
@@ -447,19 +454,19 @@ public class ApprovalLineTemplateVersionService {
     /**
      * 템플릿 수정 시 새 버전 생성.
      */
-    public ApprovalLineTemplateVersion createUpdateVersion(ApprovalLineTemplate template,
-                                                           ApprovalLineTemplateRequest request,
+    public ApprovalTemplate createUpdateVersion(ApprovalTemplateRoot template,
+                                                           ApprovalTemplateRootRequest request,
                                                            AuthContext context,
                                                            OffsetDateTime now) {
         // 현재 버전 종료
-        ApprovalLineTemplateVersion currentVersion = template.getCurrentVersion();
+        ApprovalTemplate currentVersion = template.getCurrentVersion();
         if (currentVersion != null) {
             currentVersion.close(now);
         }
 
         // 새 버전 생성
-        int nextVersionNumber = versionRepository.findMaxVersionByTemplateId(template.getId()) + 1;
-        ApprovalLineTemplateVersion newVersion = ApprovalLineTemplateVersion.create(
+        int nextVersionNumber = versionRepository.findMaxVersionByRootId(template.getId()) + 1;
+        ApprovalTemplate newVersion = ApprovalTemplate.create(
                 template,
                 nextVersionNumber,
                 request.name(),
@@ -484,16 +491,16 @@ public class ApprovalLineTemplateVersionService {
     /**
      * 템플릿 삭제(비활성화) 시 새 버전 생성.
      */
-    public ApprovalLineTemplateVersion createDeleteVersion(ApprovalLineTemplate template,
+    public ApprovalTemplate createDeleteVersion(ApprovalTemplateRoot template,
                                                            AuthContext context,
                                                            OffsetDateTime now) {
-        ApprovalLineTemplateVersion currentVersion = template.getCurrentVersion();
+        ApprovalTemplate currentVersion = template.getCurrentVersion();
         if (currentVersion != null) {
             currentVersion.close(now);
         }
 
-        int nextVersionNumber = versionRepository.findMaxVersionByTemplateId(template.getId()) + 1;
-        ApprovalLineTemplateVersion deleteVersion = ApprovalLineTemplateVersion.create(
+        int nextVersionNumber = versionRepository.findMaxVersionByRootId(template.getId()) + 1;
+        ApprovalTemplate deleteVersion = ApprovalTemplate.create(
                 template,
                 nextVersionNumber,
                 template.getName(),
@@ -509,8 +516,8 @@ public class ApprovalLineTemplateVersionService {
 
         // 기존 Steps 복사
         if (currentVersion != null) {
-            for (ApprovalTemplateStepVersion sourceStep : currentVersion.getSteps()) {
-                ApprovalTemplateStepVersion newStep = ApprovalTemplateStepVersion.copyFrom(deleteVersion, sourceStep);
+            for (ApprovalTemplateStep sourceStep : currentVersion.getSteps()) {
+                ApprovalTemplateStep newStep = ApprovalTemplateStep.copyFrom(deleteVersion, sourceStep);
                 deleteVersion.addStep(newStep);
             }
         }
@@ -524,16 +531,16 @@ public class ApprovalLineTemplateVersionService {
     /**
      * 템플릿 활성화(복원) 시 새 버전 생성.
      */
-    public ApprovalLineTemplateVersion createRestoreVersion(ApprovalLineTemplate template,
+    public ApprovalTemplate createRestoreVersion(ApprovalTemplateRoot template,
                                                             AuthContext context,
                                                             OffsetDateTime now) {
-        ApprovalLineTemplateVersion currentVersion = template.getCurrentVersion();
+        ApprovalTemplate currentVersion = template.getCurrentVersion();
         if (currentVersion != null) {
             currentVersion.close(now);
         }
 
-        int nextVersionNumber = versionRepository.findMaxVersionByTemplateId(template.getId()) + 1;
-        ApprovalLineTemplateVersion restoreVersion = ApprovalLineTemplateVersion.create(
+        int nextVersionNumber = versionRepository.findMaxVersionByRootId(template.getId()) + 1;
+        ApprovalTemplate restoreVersion = ApprovalTemplate.create(
                 template,
                 nextVersionNumber,
                 template.getName(),
@@ -549,8 +556,8 @@ public class ApprovalLineTemplateVersionService {
 
         // 기존 Steps 복사
         if (currentVersion != null) {
-            for (ApprovalTemplateStepVersion sourceStep : currentVersion.getSteps()) {
-                ApprovalTemplateStepVersion newStep = ApprovalTemplateStepVersion.copyFrom(restoreVersion, sourceStep);
+            for (ApprovalTemplateStep sourceStep : currentVersion.getSteps()) {
+                ApprovalTemplateStep newStep = ApprovalTemplateStep.copyFrom(restoreVersion, sourceStep);
                 restoreVersion.addStep(newStep);
             }
         }
@@ -561,53 +568,16 @@ public class ApprovalLineTemplateVersionService {
         return restoreVersion;
     }
 
-    /**
-     * 템플릿 복사 시 새 버전 생성.
-     */
-    public ApprovalLineTemplateVersion createCopyVersion(ApprovalLineTemplate newTemplate,
-                                                         ApprovalLineTemplate sourceTemplate,
-                                                         String newName,
-                                                         String newDescription,
-                                                         AuthContext context,
-                                                         OffsetDateTime now) {
-        ApprovalLineTemplateVersion copyVersion = ApprovalLineTemplateVersion.createFromCopy(
-                newTemplate,
-                1,
-                newName,
-                sourceTemplate.getDisplayOrder(),
-                newDescription != null ? newDescription : sourceTemplate.getDescription(),
-                true,
-                context.username(),
-                context.username(),
-                now,
-                sourceTemplate.getId()
-        );
-
-        // 원본의 현재 버전에서 Steps 복사
-        ApprovalLineTemplateVersion sourceVersion = sourceTemplate.getCurrentVersion();
-        if (sourceVersion != null) {
-            for (ApprovalTemplateStepVersion sourceStep : sourceVersion.getSteps()) {
-                ApprovalTemplateStepVersion newStep = ApprovalTemplateStepVersion.copyFrom(copyVersion, sourceStep);
-                copyVersion.addStep(newStep);
-            }
-        }
-
-        copyVersion = versionRepository.save(copyVersion);
-        newTemplate.activateNewVersion(copyVersion, now);
-
-        return copyVersion;
-    }
-
     // ==========================================================================
     // 헬퍼 메서드
     // ==========================================================================
 
-    private ApprovalLineTemplate findTemplateOrThrow(UUID id) {
+    private ApprovalTemplateRoot findTemplateOrThrow(UUID id) {
         return templateRepository.findById(id)
-                .orElseThrow(() -> new ApprovalLineTemplateNotFoundException("승인선 템플릿을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ApprovalTemplateRootNotFoundException("승인선 템플릿을 찾을 수 없습니다."));
     }
 
-    private void addStepsToVersion(ApprovalLineTemplateVersion version, List<ApprovalTemplateStepRequest> stepRequests) {
+    private void addStepsToVersion(ApprovalTemplate version, List<ApprovalTemplateStepRequest> stepRequests) {
         if (stepRequests == null) {
             return;
         }
@@ -616,13 +586,13 @@ public class ApprovalLineTemplateVersionService {
                     .orElseThrow(() -> new ApprovalGroupNotFoundException(
                             "유효하지 않은 승인 그룹입니다: " + stepRequest.approvalGroupCode()));
 
-            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(
-                    version, stepRequest.stepOrder(), group);
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(
+                    version, stepRequest.stepOrder(), group, stepRequest.skippable());
             version.addStep(step);
         }
     }
 
-    private void addStepsToDraft(ApprovalLineTemplateVersion draft, List<ApprovalTemplateStepRequest> stepRequests) {
+    private void addStepsToDraft(ApprovalTemplate draft, List<ApprovalTemplateStepRequest> stepRequests) {
         if (stepRequests == null) {
             return;
         }
@@ -631,8 +601,8 @@ public class ApprovalLineTemplateVersionService {
                     .orElseThrow(() -> new ApprovalGroupNotFoundException(
                             "유효하지 않은 승인 그룹입니다: " + stepRequest.approvalGroupCode()));
 
-            ApprovalTemplateStepVersion step = ApprovalTemplateStepVersion.create(
-                    draft, stepRequest.stepOrder(), group);
+            ApprovalTemplateStep step = ApprovalTemplateStep.create(
+                    draft, stepRequest.stepOrder(), group, stepRequest.skippable());
             draft.addStep(step);
         }
     }

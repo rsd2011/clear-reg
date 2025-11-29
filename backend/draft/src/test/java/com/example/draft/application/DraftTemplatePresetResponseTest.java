@@ -9,7 +9,9 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.approval.domain.ApprovalLineTemplate;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateRoot;
+import com.example.common.version.ChangeAction;
 import com.example.draft.application.dto.DraftTemplatePresetResponse;
 import com.example.draft.domain.DraftFormTemplate;
 import com.example.draft.domain.DraftTemplatePreset;
@@ -21,7 +23,11 @@ class DraftTemplatePresetResponseTest {
     void responseFromAndApply() {
         OffsetDateTime now = OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
         DraftFormTemplate form = DraftFormTemplate.create("폼", "NOTICE", "ORG1", "{}", now);
-        ApprovalLineTemplate approval = ApprovalLineTemplate.create("결재", 0, null, now);
+        ApprovalTemplateRoot approval = ApprovalTemplateRoot.create(now);
+        ApprovalTemplate version = ApprovalTemplate.create(
+                approval, 1, "결재", 0, null, true,
+                ChangeAction.CREATE, null, "system", "System", now);
+        approval.activateNewVersion(version, now);
         DraftTemplatePreset preset = DraftTemplatePreset.create(
                 "사전기안",
                 "NOTICE",

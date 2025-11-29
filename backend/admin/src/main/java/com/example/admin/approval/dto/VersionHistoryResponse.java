@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.admin.approval.domain.ApprovalLineTemplateVersion;
-import com.example.admin.approval.domain.ApprovalTemplateStepVersion;
+import com.example.admin.approval.domain.ApprovalTemplate;
+import com.example.admin.approval.domain.ApprovalTemplateStep;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 
@@ -29,16 +29,15 @@ public record VersionHistoryResponse(
         String changedBy,
         String changedByName,
         OffsetDateTime changedAt,
-        UUID sourceTemplateId,
         Integer rollbackFromVersion,
         String versionTag,
         List<VersionStepResponse> steps
 ) {
-    public static VersionHistoryResponse from(ApprovalLineTemplateVersion version) {
+    public static VersionHistoryResponse from(ApprovalTemplate version) {
         return from(version, UnaryOperator.identity());
     }
 
-    public static VersionHistoryResponse from(ApprovalLineTemplateVersion version, UnaryOperator<String> masker) {
+    public static VersionHistoryResponse from(ApprovalTemplate version, UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
 
         List<VersionStepResponse> stepResponses = version.getSteps().stream()
@@ -47,7 +46,7 @@ public record VersionHistoryResponse(
 
         return new VersionHistoryResponse(
                 version.getId(),
-                version.getTemplate().getId(),
+                version.getRoot().getId(),
                 version.getVersion(),
                 version.getValidFrom(),
                 version.getValidTo(),
@@ -61,7 +60,6 @@ public record VersionHistoryResponse(
                 fn.apply(version.getChangedBy()),
                 fn.apply(version.getChangedByName()),
                 version.getChangedAt(),
-                version.getSourceTemplateId(),
                 version.getRollbackFromVersion(),
                 version.getVersionTag(),
                 stepResponses
@@ -86,7 +84,6 @@ public record VersionHistoryResponse(
                 fn.apply(response.changedBy()),
                 fn.apply(response.changedByName()),
                 response.changedAt(),
-                response.sourceTemplateId(),
                 response.rollbackFromVersion(),
                 response.versionTag(),
                 response.steps()
@@ -103,7 +100,7 @@ public record VersionHistoryResponse(
             String approvalGroupCode,
             String approvalGroupName
     ) {
-        public static VersionStepResponse from(ApprovalTemplateStepVersion step) {
+        public static VersionStepResponse from(ApprovalTemplateStep step) {
             return new VersionStepResponse(
                     step.getId(),
                     step.getStepOrder(),

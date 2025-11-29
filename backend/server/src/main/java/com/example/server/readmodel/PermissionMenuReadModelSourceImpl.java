@@ -1,12 +1,12 @@
 package com.example.server.readmodel;
 
-import com.example.admin.menu.domain.MenuDefinition;
-import com.example.admin.menu.service.MenuDefinitionLoader;
-import com.example.admin.menu.domain.MenuDefinitions;
+import com.example.admin.menu.domain.MenuCapability;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.service.PermissionGroupService;
+import com.example.admin.permission.service.PermissionMenuService;
+import com.example.admin.permission.service.PermissionMenuService.MenuTreeNode;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
 import com.example.dw.application.readmodel.MenuItem.MenuCapabilityRef;
@@ -18,13 +18,14 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 /**
  * 사용자 권한 기반 메뉴 Read Model 생성기.
  *
- * <p>YAML에서 정의된 메뉴 목록을 사용자의 권한으로 필터링하여 반환한다.
+ * <p>권한 그룹별 메뉴 트리에서 사용자의 권한으로 필터링하여 반환한다.
  * 메뉴의 requiredCapabilities 중 하나라도 사용자가 보유하면 메뉴가 포함된다.</p>
  */
 @Component
@@ -34,16 +35,16 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
 
     private final UserAccountService userAccountService;
     private final PermissionGroupService permissionGroupService;
-    private final MenuDefinitionLoader menuDefinitionLoader;
+    private final PermissionMenuService permissionMenuService;
     private final Clock clock;
 
     public PermissionMenuReadModelSourceImpl(UserAccountService userAccountService,
                                              PermissionGroupService permissionGroupService,
-                                             MenuDefinitionLoader menuDefinitionLoader,
+                                             PermissionMenuService permissionMenuService,
                                              Clock clock) {
         this.userAccountService = userAccountService;
         this.permissionGroupService = permissionGroupService;
-        this.menuDefinitionLoader = menuDefinitionLoader;
+        this.permissionMenuService = permissionMenuService;
         this.clock = clock;
     }
 
@@ -56,10 +57,10 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
         }
         PermissionGroup group = permissionGroupService.getByCodeOrThrow(groupCode);
 
-        MenuDefinitions definitions = menuDefinitionLoader.load();
+        List<MenuTreeNode> menuTree = permissionMenuService.getMenuTree(groupCode);
         List<PermissionMenuItem> items = new ArrayList<>();
 
-        for (MenuDefinition menu : definitions.getMenus()) {
+        for (MenuTreeNode menu : menuTree) {
             filterAndAddMenu(menu, null, group, items);
         }
 
@@ -76,10 +77,18 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
     /**
      * 메뉴를 사용자 권한으로 필터링하여 추가한다.
      */
-    private void filterAndAddMenu(MenuDefinition menu, String parentCode, PermissionGroup group,
+    private void filterAndAddMenu(MenuTreeNode menu, String parentCode, PermissionGroup group,
                                    List<PermissionMenuItem> items) {
+        // 카테고리인 경우 자식 메뉴만 처리
+        if (menu.isCategory()) {
+            for (MenuTreeNode child : menu.children()) {
+                filterAndAddMenu(child, menu.code(), group, items);
+            }
+            return;
+        }
+
         // 사용자가 보유한 capability 중 메뉴에서 요구하는 capability와 일치하는 것 찾기
-        List<MenuCapabilityRef> grantedCapabilities = findGrantedCapabilities(menu, group);
+        List<MenuCapabilityRef> grantedCapabilities = findGrantedCapabilities(menu.requiredCapabilities(), group);
 
         // 하나라도 일치하면 메뉴 표시
         if (!grantedCapabilities.isEmpty()) {
@@ -88,22 +97,22 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
             String actionCode = grantedCapabilities.get(0).action();
 
             PermissionMenuItem item = new PermissionMenuItem(
-                    menu.getCode(),
-                    menu.getName(),
+                    menu.code(),
+                    menu.name(),
                     featureCode,
                     actionCode,
-                    menu.getPath(),
-                    menu.getIcon(),
-                    menu.getSortOrder(),
+                    menu.path(),
+                    menu.icon(),
+                    menu.displayOrder(),
                     parentCode,
-                    menu.getDescription(),
+                    null,  // description은 MenuTreeNode에 없음
                     grantedCapabilities);
 
             items.add(item);
 
             // 자식 메뉴 재귀 처리 (부모가 표시되는 경우에만)
-            for (MenuDefinition child : menu.getChildren()) {
-                filterAndAddMenu(child, menu.getCode(), group, items);
+            for (MenuTreeNode child : menu.children()) {
+                filterAndAddMenu(child, menu.code(), group, items);
             }
         }
     }
@@ -111,16 +120,17 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
     /**
      * 사용자가 보유한 capability 중 메뉴에서 요구하는 것과 일치하는 capability 목록을 반환한다.
      */
-    private List<MenuCapabilityRef> findGrantedCapabilities(MenuDefinition menu, PermissionGroup group) {
+    private List<MenuCapabilityRef> findGrantedCapabilities(Set<MenuCapability> requiredCapabilities,
+                                                             PermissionGroup group) {
         List<MenuCapabilityRef> granted = new ArrayList<>();
 
-        for (MenuDefinition.CapabilityRef required : menu.getRequiredCapabilities()) {
+        for (MenuCapability required : requiredCapabilities) {
             try {
-                FeatureCode feature = FeatureCode.valueOf(required.getFeature());
-                ActionCode action = ActionCode.valueOf(required.getAction());
+                FeatureCode feature = required.getFeature();
+                ActionCode action = required.getAction();
 
                 if (group.assignmentFor(feature, action).isPresent()) {
-                    granted.add(new MenuCapabilityRef(required.getFeature(), required.getAction()));
+                    granted.add(new MenuCapabilityRef(feature.name(), action.name()));
                 }
             } catch (IllegalArgumentException e) {
                 // 잘못된 FeatureCode/ActionCode는 무시

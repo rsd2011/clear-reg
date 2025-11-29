@@ -1,46 +1,55 @@
 package com.example.draft.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.UUID;
 
-import com.example.admin.approval.repository.ApprovalGroupRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
-import com.example.admin.approval.dto.ApprovalLineTemplateResponse;
+import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.admin.approval.domain.ApprovalLineTemplate;
 import com.example.draft.domain.DraftFormTemplate;
-import com.example.admin.approval.repository.ApprovalLineTemplateRepository;
+import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftTemplatePresetRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 class TemplateAdminServiceFilterTest {
 
-    ApprovalLineTemplateRepository lineRepo = mock(ApprovalLineTemplateRepository.class);
+    ApprovalTemplateRootService rootService = mock(ApprovalTemplateRootService.class);
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-    TemplateAdminService service = new TemplateAdminService(lineRepo, mock(ApprovalGroupRepository.class), formRepo, mock(com.example.draft.domain.repository.DraftTemplatePresetRepository.class), new com.fasterxml.jackson.databind.ObjectMapper());
+    TemplateAdminService service = new TemplateAdminService(
+            rootService,
+            mock(ApprovalTemplateRootRepository.class),
+            formRepo,
+            mock(DraftTemplatePresetRepository.class),
+            new ObjectMapper());
     AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
     @Test
     @DisplayName("라인 템플릿은 businessType, org, activeOnly 필터를 모두 적용한다")
-    void filtersApprovalLineTemplates() {
+    void filtersApprovalTemplateRoots() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate global = ApprovalLineTemplate.create("g", 0, null, now);
-        ApprovalLineTemplate org1 = ApprovalLineTemplate.create("o1", 1, null, now);
-        org1.rename("o1", 1, null, true, now);
-        ApprovalLineTemplate org2Inactive = ApprovalLineTemplate.create("o2", 2, null, now);
-        org2Inactive.rename("o2", 2, null, false, now); // inactive
-        given(lineRepo.findAll()).willReturn(List.of(global, org1, org2Inactive));
+        List<ApprovalTemplateRootResponse> expectedList = List.of(
+                new ApprovalTemplateRootResponse(UUID.randomUUID(), "TMPL-001", "g", 0, null, true, now, now, List.of()),
+                new ApprovalTemplateRootResponse(UUID.randomUUID(), "TMPL-002", "o1", 1, null, true, now, now, List.of())
+        );
+        given(rootService.list(isNull(), anyBoolean()))
+                .willReturn(expectedList);
 
-        List<ApprovalLineTemplateResponse> filtered = service.listApprovalLineTemplates("HR", null, true, ctx, false);
+        List<ApprovalTemplateRootResponse> filtered = service.listApprovalTemplateRoots("HR", null, true, ctx, false);
 
-        assertThat(filtered).extracting(ApprovalLineTemplateResponse::name).containsExactlyInAnyOrder("g", "o1");
+        assertThat(filtered).extracting(ApprovalTemplateRootResponse::name).containsExactlyInAnyOrder("g", "o1");
     }
 
     @Test
@@ -62,14 +71,14 @@ class TemplateAdminServiceFilterTest {
     @DisplayName("라인 템플릿은 activeOnly 필터를 적용한다 (audit=true)")
     void filtersActiveOnlyWhenAuditTrue() {
         OffsetDateTime now = OffsetDateTime.now();
-        ApprovalLineTemplate active = ApprovalLineTemplate.create("o1", 0, null, now);
-        active.rename("active", 0, null, true, now);
-        ApprovalLineTemplate inactive = ApprovalLineTemplate.create("o2", 1, null, now);
-        inactive.rename("inactive", 1, null, false, now);
-        given(lineRepo.findAll()).willReturn(List.of(active, inactive));
+        List<ApprovalTemplateRootResponse> expectedList = List.of(
+                new ApprovalTemplateRootResponse(UUID.randomUUID(), "TMPL-001", "active", 0, null, true, now, now, List.of())
+        );
+        given(rootService.list(isNull(), anyBoolean()))
+                .willReturn(expectedList);
 
-        List<ApprovalLineTemplateResponse> filtered = service.listApprovalLineTemplates(null, null, true, ctx, true);
+        List<ApprovalTemplateRootResponse> filtered = service.listApprovalTemplateRoots(null, null, true, ctx, true);
 
-        assertThat(filtered).extracting(ApprovalLineTemplateResponse::name).containsExactly("active");
+        assertThat(filtered).extracting(ApprovalTemplateRootResponse::name).containsExactly("active");
     }
 }
