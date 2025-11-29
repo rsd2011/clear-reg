@@ -9,20 +9,25 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.admin.maskingpolicy.domain.MaskingPolicy;
-import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
+import com.example.admin.maskingpolicy.domain.MaskingPolicyVersion;
+import com.example.admin.maskingpolicy.repository.MaskingPolicyVersionRepository;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.common.masking.DataKind;
 import com.example.common.policy.MaskingMatch;
 
+/**
+ * 마스킹 정책 평가 서비스.
+ * <p>
+ * 새로운 버전 기반 구조(MaskingPolicyVersion)를 사용하여 마스킹 정책을 평가합니다.
+ */
 @Service
 public class MaskingPolicyService {
 
-    private final MaskingPolicyRepository repository;
+    private final MaskingPolicyVersionRepository versionRepository;
 
-    public MaskingPolicyService(MaskingPolicyRepository repository) {
-        this.repository = repository;
+    public MaskingPolicyService(MaskingPolicyVersionRepository versionRepository) {
+        this.versionRepository = versionRepository;
     }
 
     /**
@@ -48,7 +53,8 @@ public class MaskingPolicyService {
                                            List<String> orgGroupCodes,
                                            DataKind dataKind,
                                            Instant now) {
-        List<MaskingPolicy> candidates = repository.findByActiveTrueOrderByPriorityAsc();
+        // 활성화된 현재 버전들 조회 (우선순위 순)
+        List<MaskingPolicyVersion> candidates = versionRepository.findAllCurrentActiveVersions();
         Instant ts = now != null ? now : Instant.now();
 
         FeatureCode feature = parseFeatureCode(featureCode);
@@ -59,13 +65,13 @@ public class MaskingPolicyService {
         }
 
         return candidates.stream()
-                .filter(p -> isEffective(p, ts))
-                .filter(p -> p.getFeatureCode() == feature)
-                .filter(p -> matchAction(action, p.getActionCode()))
-                .filter(p -> matchNullable(permGroupCode, p.getPermGroupCode()))
-                .filter(p -> matchGroup(orgGroupCodes, p.getOrgGroupCode()))
-                .filter(p -> matchDataKinds(dataKind, p.getDataKinds()))
-                .min(Comparator.comparing(MaskingPolicy::getPriority))
+                .filter(v -> isEffective(v, ts))
+                .filter(v -> v.getFeatureCode() == feature)
+                .filter(v -> matchAction(action, v.getActionCode()))
+                .filter(v -> matchNullable(permGroupCode, v.getPermGroupCode()))
+                .filter(v -> matchGroup(orgGroupCodes, v.getOrgGroupCode()))
+                .filter(v -> matchDataKinds(dataKind, v.getDataKinds()))
+                .min(Comparator.comparing(MaskingPolicyVersion::getPriority))
                 .map(this::toMatch);
     }
 
@@ -92,9 +98,9 @@ public class MaskingPolicyService {
         return value != null && value == target;
     }
 
-    private boolean isEffective(MaskingPolicy p, Instant ts) {
-        return (p.getEffectiveFrom() == null || !ts.isBefore(p.getEffectiveFrom()))
-                && (p.getEffectiveTo() == null || ts.isBefore(p.getEffectiveTo()));
+    private boolean isEffective(MaskingPolicyVersion v, Instant ts) {
+        return (v.getEffectiveFrom() == null || !ts.isBefore(v.getEffectiveFrom()))
+                && (v.getEffectiveTo() == null || ts.isBefore(v.getEffectiveTo()));
     }
 
     private boolean matchNullable(String value, String target) {
@@ -119,13 +125,13 @@ public class MaskingPolicyService {
         return queryKind != null && policyKinds.contains(queryKind);
     }
 
-    private MaskingMatch toMatch(MaskingPolicy p) {
+    private MaskingMatch toMatch(MaskingPolicyVersion v) {
         return MaskingMatch.builder()
-                .policyId(p.getId())
-                .dataKinds(p.getDataKinds())
-                .maskingEnabled(Boolean.TRUE.equals(p.getMaskingEnabled()))
-                .auditEnabled(Boolean.TRUE.equals(p.getAuditEnabled()))
-                .priority(p.getPriority())
+                .policyId(v.getRoot().getId())
+                .dataKinds(v.getDataKinds())
+                .maskingEnabled(Boolean.TRUE.equals(v.getMaskingEnabled()))
+                .auditEnabled(Boolean.TRUE.equals(v.getAuditEnabled()))
+                .priority(v.getPriority())
                 .build();
     }
 }
