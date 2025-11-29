@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.example.admin.permission.domain.ActionCode;
+import com.example.common.masking.DataKind;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.annotation.RequirePermission;
 import com.example.common.policy.MaskingPolicyProvider;
@@ -44,7 +45,7 @@ public class PolicyDebugController {
                                          @RequestParam(required = false) String actionCode,
                                          @RequestParam(required = false) String permGroupCode,
                                          @RequestParam(required = false) List<String> orgGroupCodes,
-                                         @RequestParam(required = false) String dataKind) {
+                                         @RequestParam(required = false) DataKind dataKind) {
         var toggles = policySettingsProvider.currentSettings();
         Instant now = Instant.now();
 
