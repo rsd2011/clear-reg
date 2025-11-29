@@ -82,6 +82,32 @@ class ApprovalTemplateRootServiceTest {
         return ApprovalGroup.create(code, name, "설명", 0, OffsetDateTime.now());
     }
 
+    /**
+     * 테스트용 템플릿 생성 (커스텀 설명 포함).
+     */
+    private ApprovalTemplateRoot createTestTemplateWithVersionAndDescription(String name, String description) {
+        OffsetDateTime now = OffsetDateTime.now();
+        ApprovalTemplateRoot root = ApprovalTemplateRoot.create(now);
+        ApprovalTemplate version = ApprovalTemplate.create(
+                root, 1, name, 0, description, true,
+                ChangeAction.CREATE, null, "user", "사용자", now);
+        root.activateNewVersion(version, now);
+        return root;
+    }
+
+    /**
+     * 테스트용 템플릿 생성 (커스텀 displayOrder 포함).
+     */
+    private ApprovalTemplateRoot createTestTemplateWithVersionAndOrder(String name, int displayOrder) {
+        OffsetDateTime now = OffsetDateTime.now();
+        ApprovalTemplateRoot root = ApprovalTemplateRoot.create(now);
+        ApprovalTemplate version = ApprovalTemplate.create(
+                root, 1, name, displayOrder, "설명", true,
+                ChangeAction.CREATE, null, "user", "사용자", now);
+        root.activateNewVersion(version, now);
+        return root;
+    }
+
     @Nested
     @DisplayName("list")
     class ListTemplates {
@@ -111,6 +137,71 @@ class ApprovalTemplateRootServiceTest {
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).name()).isEqualTo("기본 승인선");
+        }
+
+        @Test
+        @DisplayName("Given: description에 키워드 포함 / When: list 호출 / Then: 해당 템플릿 반환")
+        void listWithKeywordInDescription() {
+            ApprovalTemplateRoot t1 = createTestTemplateWithVersionAndDescription("템플릿1", "특별한 설명입니다");
+            ApprovalTemplateRoot t2 = createTestTemplateWithVersion("템플릿2");
+            given(templateRepo.findAll()).willReturn(List.of(t1, t2));
+
+            List<ApprovalTemplateRootResponse> result = service.list("특별한", false);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).name()).isEqualTo("템플릿1");
+        }
+
+        @Test
+        @DisplayName("Given: 빈 키워드 / When: list 호출 / Then: 모든 템플릿 반환")
+        void listWithBlankKeyword() {
+            ApprovalTemplateRoot t1 = createTestTemplateWithVersion("템플릿1");
+            ApprovalTemplateRoot t2 = createTestTemplateWithVersion("템플릿2");
+            given(templateRepo.findAll()).willReturn(List.of(t1, t2));
+
+            List<ApprovalTemplateRootResponse> result = service.list("   ", false);
+
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Given: 동일 displayOrder / When: list 호출 / Then: 이름순 정렬")
+        void listSortsByNameWhenSameDisplayOrder() {
+            ApprovalTemplateRoot t1 = createTestTemplateWithVersionAndOrder("Zebra", 0);
+            ApprovalTemplateRoot t2 = createTestTemplateWithVersionAndOrder("Alpha", 0);
+            given(templateRepo.findAll()).willReturn(List.of(t1, t2));
+
+            List<ApprovalTemplateRootResponse> result = service.list(null, false);
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).name()).isEqualTo("Alpha");
+            assertThat(result.get(1).name()).isEqualTo("Zebra");
+        }
+
+        @Test
+        @DisplayName("Given: null name 템플릿 / When: list 정렬 / Then: null이 뒤로 정렬됨")
+        void listSortsNullNameToEnd() {
+            ApprovalTemplateRoot t1 = createTestTemplateWithVersionAndOrder(null, 0);
+            ApprovalTemplateRoot t2 = createTestTemplateWithVersionAndOrder("Alpha", 0);
+            given(templateRepo.findAll()).willReturn(List.of(t1, t2));
+
+            List<ApprovalTemplateRootResponse> result = service.list(null, false);
+
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).name()).isEqualTo("Alpha");
+            assertThat(result.get(1).name()).isNull();
+        }
+
+        @Test
+        @DisplayName("Given: 두 템플릿 모두 null name / When: list 정렬 / Then: 둘 다 포함됨")
+        void listSortsBothNullNames() {
+            ApprovalTemplateRoot t1 = createTestTemplateWithVersionAndOrder(null, 0);
+            ApprovalTemplateRoot t2 = createTestTemplateWithVersionAndOrder(null, 0);
+            given(templateRepo.findAll()).willReturn(List.of(t1, t2));
+
+            List<ApprovalTemplateRootResponse> result = service.list(null, false);
+
+            assertThat(result).hasSize(2);
         }
 
         @Test

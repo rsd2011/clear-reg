@@ -57,6 +57,19 @@ class ApprovalGroupServiceTest {
             assertThat(res.name()).isEqualTo("name");
             assertThat(res.displayOrder()).isEqualTo(10);
         }
+
+        @Test
+        @DisplayName("Given: displayOrder가 null / When: 생성 / Then: 0으로 기본값 설정")
+        void createWithNullDisplayOrder() {
+            given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
+
+            ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "name", "desc", null);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            ApprovalGroupResponse res = service.createApprovalGroup(req, ctx, false);
+
+            assertThat(res.displayOrder()).isEqualTo(0);
+        }
     }
 
     @Nested
@@ -91,6 +104,22 @@ class ApprovalGroupServiceTest {
 
             assertThatThrownBy(() -> service.updateApprovalGroup(id, req, ctx, false))
                     .isInstanceOf(ApprovalGroupNotFoundException.class);
+        }
+
+        @Test
+        @DisplayName("Given: displayOrder가 null / When: 업데이트 / Then: 순서 변경하지 않음")
+        void updateWithNullDisplayOrder() {
+            ApprovalGroup group = ApprovalGroup.create("G1", "old", "desc", 5, OffsetDateTime.now());
+            UUID id = UUID.randomUUID();
+            given(groupRepo.findById(id)).willReturn(Optional.of(group));
+
+            ApprovalGroupUpdateRequest req = new ApprovalGroupUpdateRequest("newName", "newDesc", null);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);
+
+            assertThat(res.name()).isEqualTo("newName");
+            assertThat(res.displayOrder()).isEqualTo(5); // 기존 값 유지
         }
     }
 
@@ -139,6 +168,76 @@ class ApprovalGroupServiceTest {
             List<ApprovalGroupResponse> result = service.listApprovalGroups("test", false, ctx, false);
             assertThat(result).hasSize(1);
             assertThat(result.get(0).groupCode()).isEqualTo("G1");
+        }
+
+        @Test
+        @DisplayName("Given: groupCode에 키워드 포함 / When: 검색 / Then: 해당 그룹 반환")
+        void listWithKeywordInGroupCode() {
+            ApprovalGroup group1 = ApprovalGroup.create("TEST_CODE", "name1", "desc1", 0, OffsetDateTime.now());
+            ApprovalGroup group2 = ApprovalGroup.create("OTHER", "name2", "desc2", 10, OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(group1, group2));
+
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            List<ApprovalGroupResponse> result = service.listApprovalGroups("test", false, ctx, false);
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).groupCode()).isEqualTo("TEST_CODE");
+        }
+
+        @Test
+        @DisplayName("Given: description에 키워드 포함 / When: 검색 / Then: 해당 그룹 반환")
+        void listWithKeywordInDescription() {
+            ApprovalGroup group1 = ApprovalGroup.create("G1", "name1", "테스트 설명", 0, OffsetDateTime.now());
+            ApprovalGroup group2 = ApprovalGroup.create("G2", "name2", "other desc", 10, OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(group1, group2));
+
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            List<ApprovalGroupResponse> result = service.listApprovalGroups("테스트", false, ctx, false);
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).groupCode()).isEqualTo("G1");
+        }
+
+        @Test
+        @DisplayName("Given: description이 null / When: 키워드 검색 / Then: description 매칭 무시")
+        void listWithNullDescription() {
+            ApprovalGroup group1 = ApprovalGroup.create("G1", "name1", null, 0, OffsetDateTime.now());
+            ApprovalGroup group2 = ApprovalGroup.create("KEYWORD_CODE", "name2", null, 10, OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(group1, group2));
+
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            List<ApprovalGroupResponse> result = service.listApprovalGroups("KEYWORD", false, ctx, false);
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).groupCode()).isEqualTo("KEYWORD_CODE");
+        }
+
+        @Test
+        @DisplayName("Given: 빈 키워드 / When: 검색 / Then: 모든 그룹 반환")
+        void listWithBlankKeyword() {
+            ApprovalGroup group1 = ApprovalGroup.create("G1", "name1", null, 0, OffsetDateTime.now());
+            ApprovalGroup group2 = ApprovalGroup.create("G2", "name2", null, 10, OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(group1, group2));
+
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            List<ApprovalGroupResponse> result = service.listApprovalGroups("   ", false, ctx, false);
+            assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("Given: 동일 순서 그룹들 / When: 목록 조회 / Then: 이름순 정렬")
+        void listSortsByNameWhenSameOrder() {
+            ApprovalGroup groupA = ApprovalGroup.create("GA", "Zebra", null, 0, OffsetDateTime.now());
+            ApprovalGroup groupB = ApprovalGroup.create("GB", "Alpha", null, 0, OffsetDateTime.now());
+            given(groupRepo.findAll()).willReturn(List.of(groupA, groupB));
+
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+
+            List<ApprovalGroupResponse> result = service.listApprovalGroups(null, false, ctx, false);
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).name()).isEqualTo("Alpha");
+            assertThat(result.get(1).name()).isEqualTo("Zebra");
         }
     }
 
