@@ -60,18 +60,18 @@ class MaskingAndPolicyBranchCoverageTest {
         MaskingTarget force = MaskingTarget.builder().forceUnmask(true).dataKind(DataKind.DEFAULT).forceUnmaskFields(Set.of("ref"))
                 .build();
         // null value
-        assertThat(OutputMaskingAdapter.mask("ref", null, force, "FULL", null)).isNull();
+        assertThat(OutputMaskingAdapter.mask("ref", null, force, true)).isNull();
 
         // force unmask returns raw
-        assertThat(OutputMaskingAdapter.mask("ref", "SECRET", force, "FULL", null)).isEqualTo("SECRET");
+        assertThat(OutputMaskingAdapter.mask("ref", "SECRET", force, true)).isEqualTo("SECRET");
 
         // forceUnmaskKinds
         MaskingTarget forceKind = MaskingTarget.builder().forceUnmaskKinds(Set.of(DataKind.DEFAULT)).dataKind(DataKind.DEFAULT).build();
-        assertThat(OutputMaskingAdapter.mask("ref", "SECRET", forceKind, "FULL", null)).isEqualTo("SECRET");
+        assertThat(OutputMaskingAdapter.mask("ref", "SECRET", forceKind, true)).isEqualTo("SECRET");
 
         // forceUnmaskFields
         MaskingTarget forceField = MaskingTarget.builder().forceUnmaskFields(Set.of("ref")).dataKind(DataKind.DEFAULT).build();
-        assertThat(OutputMaskingAdapter.mask("ref", "SECRET", forceField, "FULL", null)).isEqualTo("SECRET");
+        assertThat(OutputMaskingAdapter.mask("ref", "SECRET", forceField, true)).isEqualTo("SECRET");
 
         // Maskable path
         Maskable maskable = new Maskable() {
@@ -79,7 +79,7 @@ class MaskingAndPolicyBranchCoverageTest {
             @Override public String masked() { return "MASKED"; }
         };
         MaskingTarget normal = MaskingTarget.builder().dataKind(DataKind.DEFAULT).forceUnmask(false).build();
-        String masked = OutputMaskingAdapter.mask("field", maskable, normal, "PARTIAL", null);
+        String masked = OutputMaskingAdapter.mask("field", maskable, normal, true);
         assertThat(masked).isNotBlank();
 
         // MaskingService with audit sink

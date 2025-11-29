@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 
 class ExcelPdfMaskingAdapterTest {
@@ -22,9 +23,8 @@ class ExcelPdfMaskingAdapterTest {
         AtomicReference<Map<String, Object>> captured = new AtomicReference<>();
 
         ExcelMaskingAdapter.writeMaskedRow(0, row,
-                MaskingTarget.builder().dataKind("accountNumber").build(),
-                "PARTIAL",
-                "{\"keepEnd\":4}",
+                MaskingTarget.builder().dataKind(DataKind.ACCOUNT_NO).build(),
+                true,
                 (idx, masked) -> captured.set(masked));
 
         assertThat(captured.get()).isNotNull();
@@ -39,9 +39,8 @@ class ExcelPdfMaskingAdapterTest {
         AtomicReference<String> captured = new AtomicReference<>();
 
         PdfMaskingAdapter.writeMaskedParagraph(row,
-                MaskingTarget.builder().dataKind("rrn").build(),
-                "PARTIAL",
-                null,
+                MaskingTarget.builder().dataKind(DataKind.SSN).build(),
+                true,
                 captured::set);
 
         assertThat(captured.get()).isNotNull();

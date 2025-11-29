@@ -17,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
 
 import com.example.common.masking.MaskingContextHolder;
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 import com.example.dw.application.dto.ExportCommand;
 import com.example.dw.application.export.ExportExecutionHelper;
@@ -42,7 +43,7 @@ class ExportControllerTest {
         ExportController controller = new ExportController(helper);
 
         MaskingContextHolder.set(MaskingTarget.builder()
-                .dataKind("accountNumber")
+                .dataKind(DataKind.ACCOUNT_NO)
                 .forceUnmask(false)
                 .build());
 
@@ -77,7 +78,7 @@ class ExportControllerTest {
             ExportController controller = new ExportController(helper);
 
             MaskingContextHolder.set(MaskingTarget.builder()
-                    .dataKind("accountNumber")
+                    .dataKind(DataKind.ACCOUNT_NO)
                     .forceUnmask(false)
                     .build());
 
@@ -158,7 +159,7 @@ class ExportControllerTest {
             ExportController controller = new ExportController(helper);
 
             MaskingContextHolder.set(MaskingTarget.builder()
-                    .dataKind("accountNumber")
+                    .dataKind(DataKind.ACCOUNT_NO)
                     .forceUnmask(false)
                     .build());
 
@@ -183,7 +184,7 @@ class ExportControllerTest {
             ExportController controller = new ExportController(helper);
 
             MaskingContextHolder.set(MaskingTarget.builder()
-                    .dataKind("accountNumber")
+                    .dataKind(DataKind.ACCOUNT_NO)
                     .forceUnmask(false)
                     .build());
 

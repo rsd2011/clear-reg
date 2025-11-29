@@ -34,7 +34,7 @@ class ExportExecutionHelperEmptyTest {
     @DisplayName("CSV export는 빈 rows면 빈 byte 배열을 반환하고 ExportService를 호출한다")
     void csvExportEmptyRows() {
         byte[] result = helper.exportCsv(new ExportCommand("csv", "empty.csv", 0, Map.of(), null, null, null, null),
-                List.of(), MaskingTarget.builder().build(), "PARTIAL", null);
+                List.of(), MaskingTarget.builder().build(), true);
 
         verify(exportService).export(any(), any());
         assertThat(result).isEmpty();
@@ -44,7 +44,7 @@ class ExportExecutionHelperEmptyTest {
     @DisplayName("JSON export는 빈 rows면 빈 배열 JSON을 반환한다")
     void jsonExportEmptyRows() {
         byte[] result = helper.exportJson(new ExportCommand("json", "empty.json", 0, Map.of(), null, null, null, null),
-                List.of(), MaskingTarget.builder().build(), "PARTIAL", null);
+                List.of(), MaskingTarget.builder().build(), true);
 
         assertThat(new String(result).replaceAll("\\s", "")).isEqualTo("[]");
     }

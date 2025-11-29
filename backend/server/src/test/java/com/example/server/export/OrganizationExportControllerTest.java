@@ -1,8 +1,8 @@
 package com.example.server.export;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -59,7 +59,7 @@ class OrganizationExportControllerTest {
         HrOrganizationEntity org = HrOrganizationEntity.snapshot("ORG1", 1, "본점", null, "ACTIVE",
                 null, null, java.time.LocalDate.now(), null, java.util.UUID.randomUUID(), java.time.OffsetDateTime.now());
         given(repository.findAll()).willReturn(List.of(org));
-        given(exportWriterService.exportExcel(any(), anyList(), any(), anyString(), anyString(), any())).willReturn(new byte[0]);
+        given(exportWriterService.exportExcel(any(), anyList(), any(), anyBoolean(), any())).willReturn(new byte[0]);
 
         mockMvc.perform(get("/api/exports/orgs/excel")
                         .param("reasonCode", "RSN01"))
@@ -73,7 +73,7 @@ class OrganizationExportControllerTest {
         HrOrganizationEntity org = HrOrganizationEntity.snapshot("ORG1", 1, "본점", null, "ACTIVE",
                 null, null, java.time.LocalDate.now(), null, java.util.UUID.randomUUID(), java.time.OffsetDateTime.now());
         given(repository.findAll()).willReturn(List.of(org));
-        given(exportWriterService.exportPdf(any(), anyList(), any(), anyString(), anyString(), any())).willReturn(new byte[0]);
+        given(exportWriterService.exportPdf(any(), anyList(), any(), anyBoolean(), any())).willReturn(new byte[0]);
 
         mockMvc.perform(get("/api/exports/orgs/pdf")
                         .param("reasonCode", "RSN01"))

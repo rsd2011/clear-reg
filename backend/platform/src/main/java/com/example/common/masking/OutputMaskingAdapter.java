@@ -89,20 +89,4 @@ public class OutputMaskingAdapter {
     public static String mask(String fieldName, Object value, MaskingTarget target) {
         return mask(fieldName, value, target, true);
     }
-
-    /**
-     * 레거시 API 호환용 메서드.
-     * maskRule과 maskParams 파라미터는 무시되고, 기본 마스킹이 적용됩니다.
-     *
-     * @deprecated 새로운 {@link #mask(String, Object, MaskingTarget, boolean)} 사용을 권장합니다.
-     */
-    @Deprecated
-    public static String mask(String fieldName, Object value,
-                              MaskingTarget target,
-                              String maskRule,
-                              String maskParams) {
-        // maskRule이 "NONE"이면 마스킹 해제로 처리
-        boolean maskingEnabled = !"NONE".equalsIgnoreCase(maskRule);
-        return mask(fieldName, value, target, maskingEnabled);
-    }
 }

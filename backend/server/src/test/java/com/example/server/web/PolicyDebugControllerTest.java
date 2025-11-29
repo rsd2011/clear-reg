@@ -76,7 +76,7 @@ class PolicyDebugControllerTest {
 
         MaskingMatch maskMatch = MaskingMatch.builder()
                 .policyId(java.util.UUID.randomUUID())
-                .maskRule("PARTIAL")
+                .maskingEnabled(true)
                 .auditEnabled(false)
                 .build();
         given(maskingPolicyProvider.evaluate(any(MaskingQuery.class))).willReturn(java.util.Optional.of(maskMatch));
@@ -88,7 +88,7 @@ class PolicyDebugControllerTest {
                 .andReturn().getResponse().getContentAsString();
 
         assertThat(json).contains("policyToggles");
-        assertThat(json).contains("maskRule");
+        assertThat(json).contains("maskingEnabled");
         assertThat(json).contains("rowScope");
     }
 }

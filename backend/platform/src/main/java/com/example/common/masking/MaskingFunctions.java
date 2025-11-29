@@ -52,7 +52,9 @@ public final class MaskingFunctions {
             return UnaryOperator.identity();
         }
 
-        DataKind kind = DataKind.fromString(match.getDataKind());
+        DataKind kind = match.getDataKinds() != null && !match.getDataKinds().isEmpty()
+                ? match.getDataKinds().iterator().next()
+                : DataKind.DEFAULT;
         return masker(match, kind);
     }
 

@@ -1,6 +1,6 @@
 package com.example.server.export;
 
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -52,7 +52,7 @@ class HrEmployeeExportControllerTest {
 
         given(repository.findAll()).willReturn(List.of(emp));
         given(helper.exportCsv(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyList(),
-                org.mockito.ArgumentMatchers.any(), anyString(), anyString())).willReturn("id\nE001".getBytes());
+                org.mockito.ArgumentMatchers.any(), anyBoolean())).willReturn("id\nE001".getBytes());
 
         MaskingContextHolder.set(MaskingTarget.builder().defaultMask(true).build());
 

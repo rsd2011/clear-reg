@@ -28,11 +28,11 @@ class AdditionalBranchCoverageTest {
         assertThat(MaskingFunctions.masker(whitelistMatch).apply("VALUE")).isEqualTo("VALUE");
 
         // SSN DataKind는 FULL 마스킹 (블랙리스트)
-        MaskingMatch fullMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("SSN").build();
+        MaskingMatch fullMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.SSN).build();
         assertThat(MaskingFunctions.masker(fullMatch).apply("123456")).isEqualTo("[MASKED]");
 
         // PHONE DataKind는 PARTIAL 마스킹 (블랙리스트)
-        MaskingMatch partial = MaskingMatch.builder().maskingEnabled(true).dataKind("PHONE").build();
+        MaskingMatch partial = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.PHONE).build();
         assertThat(MaskingFunctions.masker(partial).apply("12345678")).startsWith("12");
         assertThat(MaskingFunctions.masker(partial).apply("123")).isEqualTo("***");
 
@@ -52,15 +52,15 @@ class AdditionalBranchCoverageTest {
         assertThat(MaskingFunctions.masker(whitelistMatch).apply("VALUE")).isEqualTo("VALUE");
 
         // SSN DataKind는 FULL 마스킹 (블랙리스트)
-        MaskingMatch fullMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("SSN").build();
+        MaskingMatch fullMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.SSN).build();
         assertThat(MaskingFunctions.masker(fullMatch).apply("123456")).isEqualTo("[MASKED]");
 
         // PHONE DataKind는 PARTIAL 마스킹 (블랙리스트)
-        MaskingMatch partial = MaskingMatch.builder().maskingEnabled(true).dataKind("PHONE").build();
+        MaskingMatch partial = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.PHONE).build();
         assertThat(MaskingFunctions.masker(partial).apply("12345678")).startsWith("12");
 
         // ACCOUNT_NO DataKind도 PARTIAL 마스킹 (블랙리스트)
-        MaskingMatch accountMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("ACCOUNT_NO").build();
+        MaskingMatch accountMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.ACCOUNT_NO).build();
         assertThat(MaskingFunctions.masker(accountMatch).apply("1234567890")).startsWith("12");
         assertThat(MaskingFunctions.masker(accountMatch).apply("1234567890")).endsWith("90");
     }
@@ -69,21 +69,21 @@ class AdditionalBranchCoverageTest {
     @DisplayName("MaskingFunctions의 모든 DataKind 기본 규칙 분기")
     void maskingFunctionsAllDataKindRules() {
         // FULL 마스킹 테스트 (SSN DataKind)
-        MaskingMatch fullMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("SSN").build();
+        MaskingMatch fullMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.SSN).build();
         assertThat(MaskingFunctions.masker(fullMatch).apply("900101-1234567")).isEqualTo("[MASKED]");
 
         // PARTIAL 마스킹 테스트 (CARD_NO DataKind)
-        MaskingMatch partialMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("CARD_NO").build();
+        MaskingMatch partialMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.CARD_NO).build();
         String partial = MaskingFunctions.masker(partialMatch).apply("4111111111111111");
         assertThat(partial).isNotEqualTo("4111111111111111");
         assertThat(partial).startsWith("41").endsWith("11");
 
         // DEFAULT DataKind는 FULL 규칙을 가짐
-        MaskingMatch defaultMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("DEFAULT").build();
+        MaskingMatch defaultMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.DEFAULT).build();
         assertThat(MaskingFunctions.masker(defaultMatch).apply("SomeData")).isEqualTo("[MASKED]");
 
         // 알 수 없는 DataKind는 DEFAULT(FULL)로 폴백
-        MaskingMatch unknownMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("UNKNOWN").build();
+        MaskingMatch unknownMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.DEFAULT).build();
         assertThat(MaskingFunctions.masker(unknownMatch).apply("Secret")).isEqualTo("[MASKED]");
 
         // dataKind가 null인 경우 DEFAULT로 폴백 (FULL)
@@ -91,11 +91,11 @@ class AdditionalBranchCoverageTest {
         assertThat(MaskingFunctions.masker(nullKindMatch, null).apply("TEST")).isEqualTo("[MASKED]");
 
         // null value 처리
-        MaskingMatch anyMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("SSN").build();
+        MaskingMatch anyMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.SSN).build();
         assertThat(MaskingFunctions.masker(anyMatch).apply(null)).isNull();
 
         // masker(match, dataKind) 2파라미터 - dataKind 파라미터가 우선
-        MaskingMatch ssnMatch = MaskingMatch.builder().maskingEnabled(true).dataKind("SSN").build();
+        MaskingMatch ssnMatch = MaskingMatch.builder().maskingEnabled(true).dataKind(DataKind.SSN).build();
         // dataKind 파라미터로 PHONE을 전달하면 PARTIAL 규칙 적용
         String withPhoneKind = MaskingFunctions.masker(ssnMatch, DataKind.PHONE).apply("01012345678");
         assertThat(withPhoneKind).startsWith("01").endsWith("78");
@@ -115,7 +115,7 @@ class AdditionalBranchCoverageTest {
         // forceUnmaskKinds 포함
         MaskingTarget kindUnmask = MaskingTarget.builder()
                 .forceUnmaskKinds(java.util.Set.of(DataKind.SSN))
-                .dataKind("SSN")
+                .dataKind(DataKind.SSN)
                 .build();
         assertThat(OutputMaskingAdapter.mask("rrn", "900101-1234567", kindUnmask, true))
                 .isEqualTo("900101-1234567");
@@ -126,13 +126,13 @@ class AdditionalBranchCoverageTest {
         // 기본 2파라미터 mask 메서드
         assertThat(OutputMaskingAdapter.mask("field", "value", null)).isNotNull();
 
-        // deprecated 5파라미터 메서드 (maskRule=NONE)
+        // maskingEnabled=false (마스킹 해제)
         MaskingTarget target = MaskingTarget.builder().dataKind(DataKind.SSN).build();
-        assertThat(OutputMaskingAdapter.mask("rrn", "900101-1234567", target, "NONE", null))
+        assertThat(OutputMaskingAdapter.mask("rrn", "900101-1234567", target, false))
                 .isEqualTo("900101-1234567");
 
-        // deprecated 5파라미터 메서드 (maskRule=FULL)
-        assertThat(OutputMaskingAdapter.mask("rrn", "900101-1234567", target, "FULL", null))
+        // maskingEnabled=true (마스킹 적용)
+        assertThat(OutputMaskingAdapter.mask("rrn", "900101-1234567", target, true))
                 .isEqualTo("[MASKED]");
 
         // Maskable value with maskingEnabled=false (raw가 null인 경우)
@@ -143,7 +143,7 @@ class AdditionalBranchCoverageTest {
         assertThat(OutputMaskingAdapter.mask("field", nullRawMaskable, target, false)).isNull();
 
         // DataKind가 잘못된 문자열인 경우 DEFAULT로 폴백
-        MaskingTarget invalidKind = MaskingTarget.builder().dataKind("INVALID_KIND").build();
+        MaskingTarget invalidKind = MaskingTarget.builder().dataKind(DataKind.DEFAULT).build();
         assertThat(OutputMaskingAdapter.mask("field", "value", invalidKind, true)).isNotNull();
     }
 

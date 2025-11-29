@@ -40,32 +40,6 @@ public class ExportExecutionHelper {
         return exportService.export(command, () -> buildJson(rows, target, maskingEnabled));
     }
 
-    /**
-     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
-     */
-    @Deprecated
-    public byte[] exportCsv(ExportCommand command,
-                            List<Map<String, Object>> rows,
-                            MaskingTarget target,
-                            String maskRule,
-                            String maskParams) {
-        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
-        return exportCsv(command, rows, target, maskingEnabled);
-    }
-
-    /**
-     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
-     */
-    @Deprecated
-    public byte[] exportJson(ExportCommand command,
-                             List<Map<String, Object>> rows,
-                             MaskingTarget target,
-                             String maskRule,
-                             String maskParams) {
-        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
-        return exportJson(command, rows, target, maskingEnabled);
-    }
-
     private byte[] buildCsv(List<Map<String, Object>> rows,
                             MaskingTarget target,
                             boolean maskingEnabled) {

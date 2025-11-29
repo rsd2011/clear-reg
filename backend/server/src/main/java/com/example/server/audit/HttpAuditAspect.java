@@ -21,6 +21,7 @@ import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
 import com.example.audit.Subject;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
 
@@ -104,7 +105,7 @@ public class HttpAuditAspect {
             maskingTarget = MaskingTarget.builder()
                     .subjectType(ctxOpt.map(c -> c.permissionGroupCode() != null
                             ? SubjectType.EMPLOYEE : SubjectType.UNKNOWN).orElse(SubjectType.UNKNOWN))
-                    .dataKind("HTTP")
+                    .dataKind(DataKind.DEFAULT)
                     .defaultMask(true)
                     .build();
         }

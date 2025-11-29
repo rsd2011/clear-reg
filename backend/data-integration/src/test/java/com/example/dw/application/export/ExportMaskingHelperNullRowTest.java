@@ -13,7 +13,7 @@ class ExportMaskingHelperNullRowTest {
     @DisplayName("row가 null이면 빈 Map을 반환한다")
     void returnsEmptyMapWhenRowNull() {
         var target = MaskingTarget.builder().defaultMask(true).build();
-        var result = ExportMaskingHelper.maskRow(null, target, null, null);
+        var result = ExportMaskingHelper.maskRow(null, target, false);
         assertThat(result).isEmpty();
     }
 }

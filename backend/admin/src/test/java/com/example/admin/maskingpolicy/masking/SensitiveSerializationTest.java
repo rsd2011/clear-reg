@@ -49,10 +49,10 @@ class SensitiveSerializationTest {
         "auditor", "ORG", "AUDIT",
         FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL));
 
-    // MaskingPolicy가 NONE 규칙 반환 (마스킹 없음)
+    // MaskingPolicy가 마스킹 비활성화 반환
     MaskingMatch match = MaskingMatch.builder()
         .policyId(UUID.randomUUID())
-        .maskRule("NONE")
+        .maskingEnabled(false)
         .auditEnabled(false)
         .build();
     given(maskingPolicyProvider.evaluate(any())).willReturn(Optional.of(match));
@@ -74,10 +74,10 @@ class SensitiveSerializationTest {
         "auditor", "ORG", "AUDIT",
         FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL));
 
-    // MaskingPolicy가 FULL 마스킹 규칙 반환
+    // MaskingPolicy가 마스킹 활성화 반환
     MaskingMatch match = MaskingMatch.builder()
         .policyId(UUID.randomUUID())
-        .maskRule("FULL")
+        .maskingEnabled(true)
         .auditEnabled(false)
         .build();
     given(maskingPolicyProvider.evaluate(any())).willReturn(Optional.of(match));

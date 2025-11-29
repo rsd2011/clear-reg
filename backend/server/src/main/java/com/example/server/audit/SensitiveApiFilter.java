@@ -17,6 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.example.audit.AuditPolicySnapshot;
 import com.example.audit.AuditPort;
 import com.example.server.config.SensitiveApiProperties;
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
 
@@ -74,7 +75,7 @@ public class SensitiveApiFilter extends OncePerRequestFilter {
             // 마스킹/해제 컨텍스트를 다음 인터셉터에서 사용하도록 전달
             MaskingTarget target = MaskingTarget.builder()
                     .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                    .dataKind("SENSITIVE_API")
+                    .dataKind(DataKind.DEFAULT)
                     .defaultMask(true)
                     .build();
             request.setAttribute("AUDIT_MASKING_TARGET", target);

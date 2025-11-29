@@ -191,13 +191,4 @@ public interface RowAccessPolicyRepository extends JpaRepository<RowAccessPolicy
             @Param("version1") Integer version1,
             @Param("version2") Integer version2);
 
-    // === 레거시 호환 메서드 (마이그레이션 기간 동안 사용) ===
-
-    /**
-     * @deprecated findAllCurrentActiveVersions() 사용 권장
-     */
-    @Deprecated
-    default List<RowAccessPolicy> findByActiveTrueOrderByPriorityAsc() {
-        return findAllCurrentActiveVersions();
-    }
 }

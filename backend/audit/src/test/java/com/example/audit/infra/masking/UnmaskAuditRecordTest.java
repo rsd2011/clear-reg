@@ -15,7 +15,7 @@ class UnmaskAuditRecordTest {
         UnmaskAuditRecord record = UnmaskAuditRecord.builder()
                 .eventTime(Instant.EPOCH)
                 .subjectType(com.example.common.masking.SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind("SSN")
                 .fieldName("residentNo")
                 .rowId("row1")
                 .requesterRoles("AUDITOR")

@@ -150,47 +150,4 @@ class MaskingMatchTest {
         }
     }
 
-    @Nested
-    @DisplayName("레거시 호환 메서드")
-    class LegacyCompatibility {
-
-        @Test
-        @DisplayName("getDataKind()는 첫 번째 dataKind를 반환한다")
-        void getDataKindReturnsFirst() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .policyId(UUID.randomUUID())
-                    .dataKinds(Set.of(DataKind.SSN))
-                    .maskingEnabled(true)
-                    .priority(1)
-                    .build();
-
-            assertThat(match.getDataKind()).isEqualTo("SSN");
-        }
-
-        @Test
-        @DisplayName("getDataKind()는 빈 Set일 때 null을 반환한다")
-        void getDataKindReturnsNullWhenEmpty() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .policyId(UUID.randomUUID())
-                    .dataKinds(Set.of())
-                    .maskingEnabled(true)
-                    .priority(1)
-                    .build();
-
-            assertThat(match.getDataKind()).isNull();
-        }
-
-        @Test
-        @DisplayName("dataKind(String) 빌더는 레거시 호환성을 제공한다")
-        void legacyBuilderWorks() {
-            MaskingMatch match = MaskingMatch.builder()
-                    .policyId(UUID.randomUUID())
-                    .dataKind("SSN")
-                    .maskingEnabled(true)
-                    .priority(1)
-                    .build();
-
-            assertThat(match.getDataKinds()).containsExactly(DataKind.SSN);
-        }
-    }
 }

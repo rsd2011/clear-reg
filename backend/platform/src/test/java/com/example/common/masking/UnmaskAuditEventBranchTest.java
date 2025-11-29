@@ -15,7 +15,7 @@ class UnmaskAuditEventBranchTest {
         UnmaskAuditEvent evt = UnmaskAuditEvent.builder()
                 .eventTime(Instant.EPOCH)
                 .subjectType(SubjectType.UNKNOWN)
-                .dataKind("HTTP")
+                .dataKind("DEFAULT")
                 .fieldName("field")
                 .rowId("row")
                 .build();
