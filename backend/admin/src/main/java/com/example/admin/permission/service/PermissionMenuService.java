@@ -2,6 +2,7 @@ package com.example.admin.permission.service;
 
 import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCapability;
+import com.example.admin.menu.domain.MenuCode;
 import com.example.admin.menu.repository.MenuRepository;
 import com.example.admin.permission.domain.PermissionMenu;
 import com.example.admin.permission.repository.PermissionMenuRepository;
@@ -123,7 +124,12 @@ public class PermissionMenuService {
         Objects.requireNonNull(permGroupCode, "permGroupCode must not be null");
         Objects.requireNonNull(menuCode, "menuCode must not be null");
 
-        Menu menu = menuRepository.findByCode(menuCode)
+        MenuCode code = MenuCode.fromString(menuCode);
+        if (code == null) {
+            throw new IllegalArgumentException("Invalid menu code: " + menuCode);
+        }
+
+        Menu menu = menuRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException("Menu not found: " + menuCode));
 
         PermissionMenu parent = parentId != null

@@ -5,6 +5,8 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
@@ -19,8 +21,8 @@ import java.util.Set;
 /**
  * 메뉴 엔티티.
  *
- * <p>메뉴는 UI 네비게이션의 개별 항목을 표현하며, 하나 이상의 Capability를 참조한다.
- * 사용자가 해당 Capability 중 하나라도 보유하면 메뉴에 접근 가능하다.</p>
+ * <p>MenuCode enum을 기준으로 메뉴를 정의하며,
+ * 이름/아이콘/정렬순서 등은 DB에서 오버라이드 가능하다.</p>
  *
  * <p>메뉴의 계층 구조와 권한 그룹별 가시성은
  * {@link com.example.admin.permission.domain.PermissionMenu}에서 관리한다.</p>
@@ -33,14 +35,12 @@ import java.util.Set;
 @Getter
 public class Menu extends PrimaryKeyEntity {
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true, length = 100)
-    private String code;
+    private MenuCode code;
 
     @Column(nullable = false, length = 200)
     private String name;
-
-    @Column(length = 500)
-    private String path;
 
     @Column(length = 50)
     private String icon;
@@ -64,17 +64,39 @@ public class Menu extends PrimaryKeyEntity {
 
     protected Menu() {}
 
-    public Menu(String code, String name) {
+    public Menu(MenuCode code, String name) {
         this.code = Objects.requireNonNull(code, "code must not be null");
         this.name = Objects.requireNonNull(name, "name must not be null");
     }
 
-    // Setters / Mutators
+    // ========== Query Methods ==========
 
-    public void updateDetails(String name, String path, String icon,
+    /**
+     * 경로 반환 (Enum에서 제공).
+     */
+    public String getPath() {
+        return code.getPath();
+    }
+
+    /**
+     * 표시 아이콘 반환 (DB 오버라이드 또는 Enum 기본값).
+     */
+    public String getDisplayIcon() {
+        return icon != null ? icon : code.getDefaultIcon();
+    }
+
+    /**
+     * 코드 문자열 반환.
+     */
+    public String getCodeValue() {
+        return code.name();
+    }
+
+    // ========== Mutators ==========
+
+    public void updateDetails(String name, String icon,
                                Integer sortOrder, String description) {
         this.name = Objects.requireNonNull(name, "name must not be null");
-        this.path = path;
         this.icon = icon;
         this.sortOrder = sortOrder;
         this.description = description;
@@ -109,9 +131,8 @@ public class Menu extends PrimaryKeyEntity {
     @Override
     public String toString() {
         return "Menu{" +
-               "code='" + code + '\'' +
+               "code=" + code +
                ", name='" + name + '\'' +
-               ", path='" + path + '\'' +
                ", active=" + active +
                '}';
     }

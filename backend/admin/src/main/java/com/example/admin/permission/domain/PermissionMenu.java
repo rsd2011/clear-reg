@@ -199,7 +199,7 @@ public class PermissionMenu extends PrimaryKeyEntity {
      * 코드를 반환한다. 메뉴면 menu.code, 카테고리면 categoryCode.
      */
     public String getCode() {
-        return isCategory() ? categoryCode : menu.getCode();
+        return isCategory() ? categoryCode : menu.getCodeValue();
     }
 
     /**
@@ -210,10 +210,10 @@ public class PermissionMenu extends PrimaryKeyEntity {
     }
 
     /**
-     * 아이콘을 반환한다. 메뉴면 menu.icon, 카테고리면 categoryIcon.
+     * 아이콘을 반환한다. 메뉴면 menu의 표시 아이콘 (DB 오버라이드 또는 enum 기본값), 카테고리면 categoryIcon.
      */
     public String getIcon() {
-        return isCategory() ? categoryIcon : menu.getIcon();
+        return isCategory() ? categoryIcon : menu.getDisplayIcon();
     }
 
     /**

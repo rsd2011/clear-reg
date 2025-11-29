@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.example.admin.menu.domain.Menu;
+import com.example.admin.menu.domain.MenuCode;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,12 +20,12 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     /**
      * 메뉴 코드로 조회한다.
      */
-    Optional<Menu> findByCode(String code);
+    Optional<Menu> findByCode(MenuCode code);
 
     /**
      * 활성화된 메뉴 코드로 조회한다.
      */
-    Optional<Menu> findByCodeAndActiveTrue(String code);
+    Optional<Menu> findByCodeAndActiveTrue(MenuCode code);
 
     /**
      * 모든 활성화된 메뉴를 정렬 순서대로 조회한다.
@@ -34,7 +35,7 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     /**
      * 메뉴 코드 목록으로 메뉴를 조회한다.
      */
-    List<Menu> findByCodeInAndActiveTrue(List<String> codes);
+    List<Menu> findByCodeInAndActiveTrue(List<MenuCode> codes);
 
     /**
      * 특정 Capability를 요구하는 메뉴 목록을 조회한다.
@@ -49,5 +50,5 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     /**
      * 메뉴 코드 존재 여부를 확인한다.
      */
-    boolean existsByCode(String code);
+    boolean existsByCode(MenuCode code);
 }

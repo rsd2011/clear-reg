@@ -66,7 +66,7 @@ public class MenuReadModelSourceImpl implements MenuReadModelSource {
         String actionCode = capabilities.isEmpty() ? null : capabilities.get(0).action();
 
         return new MenuItem(
-                menu.getCode(),
+                menu.getCodeValue(),
                 menu.getName(),
                 featureCode,
                 actionCode,

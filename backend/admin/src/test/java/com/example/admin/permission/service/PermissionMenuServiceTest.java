@@ -3,7 +3,6 @@ package com.example.admin.permission.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -14,6 +13,7 @@ import java.util.UUID;
 
 import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCapability;
+import com.example.admin.menu.domain.MenuCode;
 import com.example.admin.menu.repository.MenuRepository;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.domain.ActionCode;
@@ -61,8 +61,8 @@ class PermissionMenuServiceTest {
         @Test
         @DisplayName("Given 단일 루트 메뉴 When getMenuTree 호출하면 Then 단일 노드 반환")
         void returnsSingleRootNode() {
-            Menu menu = new Menu("DASHBOARD", "대시보드");
-            menu.updateDetails("대시보드", "/dashboard", "home", 1, null);
+            Menu menu = new Menu(MenuCode.DASHBOARD, "대시보드");
+            menu.updateDetails("대시보드", "home", 1, null);
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
@@ -82,8 +82,8 @@ class PermissionMenuServiceTest {
             PermissionMenu category = PermissionMenu.forCategory(
                     "ADMIN", "ADMIN_CAT", "관리", "folder", null, 1);
 
-            Menu childMenu = new Menu("USER_MGMT", "사용자관리");
-            childMenu.updateDetails("사용자관리", "/users", "people", 1, null);
+            Menu childMenu = new Menu(MenuCode.USER_MGMT, "사용자관리");
+            childMenu.updateDetails("사용자관리", "people", 1, null);
             PermissionMenu child = PermissionMenu.forMenu("ADMIN", childMenu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
@@ -109,14 +109,14 @@ class PermissionMenuServiceTest {
             PermissionMenu category = PermissionMenu.forCategory(
                     "ADMIN", "CAT", "카테고리", "icon", null, 1);
 
-            Menu menu = new Menu("MENU", "메뉴");
+            Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
             menu.addCapability(new MenuCapability(FeatureCode.DRAFT, ActionCode.READ));
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(category, pm));
 
-            List<PermissionMenuService.MenuTreeNode> result = 
+            List<PermissionMenuService.MenuTreeNode> result =
                     service.getAccessibleMenuTree("ADMIN", Set.of());
 
             // 카테고리의 자식이 모두 접근 불가하면 카테고리도 안 보임
@@ -131,39 +131,39 @@ class PermissionMenuServiceTest {
             PermissionMenu category = PermissionMenu.forCategory(
                     "ADMIN", "CAT", "카테고리", "icon", null, 1);
 
-            Menu menu = new Menu("MENU", "메뉴");
-            menu.updateDetails("메뉴", "/menu", "icon", 1, null);
+            Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
+            menu.updateDetails("메뉴", "icon", 1, null);
             menu.addCapability(cap);
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(category, pm));
 
-            List<PermissionMenuService.MenuTreeNode> result = 
+            List<PermissionMenuService.MenuTreeNode> result =
                     service.getAccessibleMenuTree("ADMIN", Set.of(cap));
 
             assertThat(result).hasSize(1);
             assertThat(result.get(0).code()).isEqualTo("CAT");
             assertThat(result.get(0).children()).hasSize(1);
-            assertThat(result.get(0).children().get(0).code()).isEqualTo("MENU");
+            assertThat(result.get(0).children().get(0).code()).isEqualTo("DRAFT");
         }
 
         @Test
         @DisplayName("Given 요구 Capability 없는 메뉴 When 호출하면 Then 모두 접근 가능")
         void noCapabilityMenusAccessibleToAll() {
-            Menu menu = new Menu("PUBLIC", "공개메뉴");
-            menu.updateDetails("공개메뉴", "/public", "icon", 1, null);
+            Menu menu = new Menu(MenuCode.NOTICE, "공개메뉴");
+            menu.updateDetails("공개메뉴", "icon", 1, null);
             // 요구 Capability 없음
             PermissionMenu pm = PermissionMenu.forMenu("USER", menu, null, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("USER"))
                     .willReturn(List.of(pm));
 
-            List<PermissionMenuService.MenuTreeNode> result = 
+            List<PermissionMenuService.MenuTreeNode> result =
                     service.getAccessibleMenuTree("USER", Set.of());
 
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).code()).isEqualTo("PUBLIC");
+            assertThat(result.get(0).code()).isEqualTo("NOTICE");
         }
     }
 
@@ -174,12 +174,12 @@ class PermissionMenuServiceTest {
         @Test
         @DisplayName("Given 유효한 파라미터 When addMenu 호출하면 Then 메뉴 추가")
         void addsMenu() {
-            Menu menu = new Menu("NEW_MENU", "새메뉴");
-            given(menuRepository.findByCode("NEW_MENU")).willReturn(Optional.of(menu));
+            Menu menu = new Menu(MenuCode.MENU_MGMT, "새메뉴");
+            given(menuRepository.findByCode(MenuCode.MENU_MGMT)).willReturn(Optional.of(menu));
             given(permissionMenuRepository.save(any(PermissionMenu.class)))
                     .willAnswer(inv -> inv.getArgument(0));
 
-            PermissionMenu result = service.addMenu("ADMIN", "NEW_MENU", null, 1);
+            PermissionMenu result = service.addMenu("ADMIN", "MENU_MGMT", null, 1);
 
             assertThat(result.getMenu()).isEqualTo(menu);
             assertThat(result.getPermissionGroupCode()).isEqualTo("ADMIN");
@@ -189,11 +189,10 @@ class PermissionMenuServiceTest {
         @Test
         @DisplayName("Given 존재하지 않는 메뉴 When addMenu 호출하면 Then 예외 발생")
         void throwsOnNonExistentMenu() {
-            given(menuRepository.findByCode("INVALID")).willReturn(Optional.empty());
-
+            // INVALID는 MenuCode enum에 없으므로 fromString이 null 반환
             assertThatThrownBy(() -> service.addMenu("ADMIN", "INVALID", null, 1))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("Menu not found");
+                    .hasMessageContaining("Invalid menu code");
         }
     }
 
@@ -240,7 +239,7 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 존재하는 PermissionMenu When updateDisplayOrder 호출하면 Then 순서 변경됨")
         void updatesDisplayOrder() {
             UUID id = UUID.randomUUID();
-            Menu menu = new Menu("MENU", "메뉴");
+            Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
             given(permissionMenuRepository.findById(id)).willReturn(Optional.of(pm));
 
@@ -270,7 +269,7 @@ class PermissionMenuServiceTest {
         void updatesParent() {
             UUID childId = UUID.randomUUID();
             UUID parentId = UUID.randomUUID();
-            Menu menu = new Menu("CHILD", "자식");
+            Menu menu = new Menu(MenuCode.DRAFT_CREATE, "자식");
             PermissionMenu child = PermissionMenu.forMenu("ADMIN", menu, null, 1);
             PermissionMenu newParent = PermissionMenu.forCategory(
                     "ADMIN", "PARENT", "부모", "icon", null, 1);
@@ -287,7 +286,7 @@ class PermissionMenuServiceTest {
         @DisplayName("Given null parentId When updateParent 호출하면 Then 부모가 null로 설정됨")
         void setsParentToNull() {
             UUID childId = UUID.randomUUID();
-            Menu menu = new Menu("CHILD", "자식");
+            Menu menu = new Menu(MenuCode.DRAFT_CREATE, "자식");
             PermissionMenu parent = PermissionMenu.forCategory(
                     "ADMIN", "OLD_PARENT", "기존부모", "icon", null, 1);
             PermissionMenu child = PermissionMenu.forMenu("ADMIN", menu, parent, 1);
@@ -331,7 +330,7 @@ class PermissionMenuServiceTest {
         @Test
         @DisplayName("Given 존재하는 메뉴코드 When findByMenuCode 호출하면 Then PermissionMenu 반환")
         void findsPermissionMenu() {
-            Menu menu = new Menu("DASHBOARD", "대시보드");
+            Menu menu = new Menu(MenuCode.DASHBOARD, "대시보드");
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
             given(permissionMenuRepository.findByPermissionGroupCodeAndMenuCode("ADMIN", "DASHBOARD"))
                     .willReturn(Optional.of(pm));
@@ -339,7 +338,7 @@ class PermissionMenuServiceTest {
             Optional<PermissionMenu> result = service.findByMenuCode("ADMIN", "DASHBOARD");
 
             assertThat(result).isPresent();
-            assertThat(result.get().getMenu().getCode()).isEqualTo("DASHBOARD");
+            assertThat(result.get().getMenu().getCode()).isEqualTo(MenuCode.DASHBOARD);
         }
     }
 
@@ -370,16 +369,16 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 부모 ID When addMenu 호출하면 Then 부모가 설정됨")
         void addsMenuWithParent() {
             UUID parentId = UUID.randomUUID();
-            Menu menu = new Menu("CHILD_MENU", "자식메뉴");
+            Menu menu = new Menu(MenuCode.APPROVAL_INBOX, "자식메뉴");
             PermissionMenu parent = PermissionMenu.forCategory(
                     "ADMIN", "PARENT_CAT", "부모", "icon", null, 1);
 
-            given(menuRepository.findByCode("CHILD_MENU")).willReturn(Optional.of(menu));
+            given(menuRepository.findByCode(MenuCode.APPROVAL_INBOX)).willReturn(Optional.of(menu));
             given(permissionMenuRepository.findById(parentId)).willReturn(Optional.of(parent));
             given(permissionMenuRepository.save(any(PermissionMenu.class)))
                     .willAnswer(inv -> inv.getArgument(0));
 
-            PermissionMenu result = service.addMenu("ADMIN", "CHILD_MENU", parentId, 1);
+            PermissionMenu result = service.addMenu("ADMIN", "APPROVAL_INBOX", parentId, 1);
 
             assertThat(result.getParent()).isEqualTo(parent);
         }
@@ -417,7 +416,7 @@ class PermissionMenuServiceTest {
             PermissionMenu category = PermissionMenu.forCategory(
                     "ADMIN", "CAT", "카테고리", "icon", null, 1);
 
-            Menu menu = new Menu("MENU", "메뉴");
+            Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
             menu.addCapability(new MenuCapability(FeatureCode.DRAFT, ActionCode.READ));
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, category, 1);
 
@@ -436,8 +435,8 @@ class PermissionMenuServiceTest {
             MenuCapability cap1 = new MenuCapability(FeatureCode.DRAFT, ActionCode.READ);
             MenuCapability cap2 = new MenuCapability(FeatureCode.AUDIT_LOG, ActionCode.READ);
 
-            Menu menu = new Menu("MULTI", "다중권한메뉴");
-            menu.updateDetails("다중권한메뉴", "/multi", "icon", 1, null);
+            Menu menu = new Menu(MenuCode.AUDIT_LOG, "다중권한메뉴");
+            menu.updateDetails("다중권한메뉴", "icon", 1, null);
             menu.addCapability(cap1);
             menu.addCapability(cap2);
             PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
@@ -450,7 +449,7 @@ class PermissionMenuServiceTest {
                     service.getAccessibleMenuTree("ADMIN", Set.of(cap1));
 
             assertThat(result).hasSize(1);
-            assertThat(result.get(0).code()).isEqualTo("MULTI");
+            assertThat(result.get(0).code()).isEqualTo("AUDIT_LOG");
         }
     }
 
@@ -461,12 +460,12 @@ class PermissionMenuServiceTest {
         @Test
         @DisplayName("Given displayOrder가 null인 항목 When 트리 빌드하면 Then 마지막으로 정렬")
         void sortsNullDisplayOrderLast() {
-            Menu menu1 = new Menu("MENU1", "메뉴1");
-            menu1.updateDetails("메뉴1", "/menu1", "icon1", 1, null);
-            Menu menu2 = new Menu("MENU2", "메뉴2");
-            menu2.updateDetails("메뉴2", "/menu2", "icon2", 1, null);
-            Menu menu3 = new Menu("MENU3", "메뉴3");
-            menu3.updateDetails("메뉴3", "/menu3", "icon3", 1, null);
+            Menu menu1 = new Menu(MenuCode.DRAFT, "메뉴1");
+            menu1.updateDetails("메뉴1", "icon1", 1, null);
+            Menu menu2 = new Menu(MenuCode.APPROVAL, "메뉴2");
+            menu2.updateDetails("메뉴2", "icon2", 1, null);
+            Menu menu3 = new Menu(MenuCode.DASHBOARD, "메뉴3");
+            menu3.updateDetails("메뉴3", "icon3", 1, null);
 
             PermissionMenu pm1 = PermissionMenu.forMenu("ADMIN", menu1, null, 2);
             PermissionMenu pm2 = PermissionMenu.forMenu("ADMIN", menu2, null, null);
@@ -478,18 +477,18 @@ class PermissionMenuServiceTest {
             List<PermissionMenuService.MenuTreeNode> result = service.getMenuTree("ADMIN");
 
             assertThat(result).hasSize(3);
-            assertThat(result.get(0).code()).isEqualTo("MENU3"); // displayOrder=1
-            assertThat(result.get(1).code()).isEqualTo("MENU1"); // displayOrder=2
-            assertThat(result.get(2).code()).isEqualTo("MENU2"); // displayOrder=null (마지막)
+            assertThat(result.get(0).code()).isEqualTo("DASHBOARD"); // displayOrder=1
+            assertThat(result.get(1).code()).isEqualTo("DRAFT"); // displayOrder=2
+            assertThat(result.get(2).code()).isEqualTo("APPROVAL"); // displayOrder=null (마지막)
         }
 
         @Test
         @DisplayName("Given 모두 null displayOrder When 트리 빌드하면 Then 순서 유지")
         void handlesAllNullDisplayOrder() {
-            Menu menu1 = new Menu("MENU1", "메뉴1");
-            menu1.updateDetails("메뉴1", "/menu1", "icon1", 1, null);
-            Menu menu2 = new Menu("MENU2", "메뉴2");
-            menu2.updateDetails("메뉴2", "/menu2", "icon2", 1, null);
+            Menu menu1 = new Menu(MenuCode.DRAFT, "메뉴1");
+            menu1.updateDetails("메뉴1", "icon1", 1, null);
+            Menu menu2 = new Menu(MenuCode.APPROVAL, "메뉴2");
+            menu2.updateDetails("메뉴2", "icon2", 1, null);
 
             PermissionMenu pm1 = PermissionMenu.forMenu("ADMIN", menu1, null, null);
             PermissionMenu pm2 = PermissionMenu.forMenu("ADMIN", menu2, null, null);

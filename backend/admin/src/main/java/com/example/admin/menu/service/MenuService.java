@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCapability;
+import com.example.admin.menu.domain.MenuCode;
 import com.example.admin.menu.repository.MenuRepository;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
@@ -52,7 +53,7 @@ public class MenuService {
      * 메뉴 코드로 조회한다.
      */
     @Transactional(readOnly = true)
-    public Optional<Menu> findByCode(String code) {
+    public Optional<Menu> findByCode(MenuCode code) {
         return menuRepository.findByCode(code);
     }
 
@@ -60,7 +61,7 @@ public class MenuService {
      * 활성화된 메뉴 코드로 조회한다.
      */
     @Transactional(readOnly = true)
-    public Optional<Menu> findActiveByCode(String code) {
+    public Optional<Menu> findActiveByCode(MenuCode code) {
         return menuRepository.findByCodeAndActiveTrue(code);
     }
 
@@ -124,38 +125,26 @@ public class MenuService {
     // ========================================
 
     /**
-     * 새 메뉴를 생성한다.
+     * 메뉴 생성 (또는 기존 메뉴 업데이트).
+     *
+     * <p>MenuCode enum에 정의된 메뉴만 생성 가능하다.</p>
+     *
+     * @param code 메뉴 코드 (enum)
+     * @param name 메뉴 이름
+     * @param icon 아이콘 (null이면 enum 기본값 사용)
+     * @param sortOrder 정렬 순서
+     * @param description 설명
+     * @param capabilities 접근 권한 목록
+     * @return 생성 또는 수정된 메뉴
      */
     @Transactional
-    public Menu createMenu(String code, String name, String path, String icon,
-                           Integer sortOrder, String description,
-                           Collection<MenuCapability> capabilities) {
-        if (menuRepository.existsByCode(code)) {
-            throw new IllegalArgumentException("이미 존재하는 메뉴 코드입니다: " + code);
-        }
-
-        Menu menu = new Menu(code, name);
-        menu.updateDetails(name, path, icon, sortOrder, description);
-
-        if (capabilities != null) {
-            menu.replaceCapabilities(capabilities);
-        }
-
-        return menuRepository.save(menu);
-    }
-
-    /**
-     * 메뉴 정보를 수정한다.
-     */
-    @Transactional
-    public Menu updateMenu(String code, String name, String path, String icon,
-                           Integer sortOrder, String description,
-                           Collection<MenuCapability> capabilities) {
+    public Menu createOrUpdateMenu(MenuCode code, String name, String icon,
+                                    Integer sortOrder, String description,
+                                    Collection<MenuCapability> capabilities) {
         Menu menu = menuRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "메뉴를 찾을 수 없습니다: " + code));
+                .orElseGet(() -> new Menu(code, name));
 
-        menu.updateDetails(name, path, icon, sortOrder, description);
+        menu.updateDetails(name, icon, sortOrder, description);
 
         if (capabilities != null) {
             menu.replaceCapabilities(capabilities);
@@ -168,7 +157,7 @@ public class MenuService {
      * 메뉴를 비활성화한다 (소프트 삭제).
      */
     @Transactional
-    public void deactivateMenu(String code) {
+    public void deactivateMenu(MenuCode code) {
         Menu menu = menuRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "메뉴를 찾을 수 없습니다: " + code));
@@ -181,12 +170,41 @@ public class MenuService {
      * 메뉴를 활성화한다.
      */
     @Transactional
-    public void activateMenu(String code) {
+    public void activateMenu(MenuCode code) {
         Menu menu = menuRepository.findByCode(code)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "메뉴를 찾을 수 없습니다: " + code));
         menu.setActive(true);
         menuRepository.save(menu);
         log.info("메뉴 활성화: {}", code);
+    }
+
+    // ========================================
+    // 초기화
+    // ========================================
+
+    /**
+     * MenuCode enum에 정의된 모든 메뉴를 DB에 동기화.
+     *
+     * <p>애플리케이션 시작 시 또는 관리자 요청 시 실행한다.</p>
+     * <p>이미 존재하는 메뉴는 건너뛴다.</p>
+     *
+     * @return 새로 생성된 메뉴 수
+     */
+    @Transactional
+    public int syncMenusFromEnum() {
+        int created = 0;
+        for (MenuCode code : MenuCode.values()) {
+            if (!menuRepository.existsByCode(code)) {
+                Menu menu = new Menu(code, code.name());
+                menuRepository.save(menu);
+                log.info("메뉴 자동 생성: {}", code);
+                created++;
+            }
+        }
+        if (created > 0) {
+            log.info("총 {}개 메뉴 동기화 완료", created);
+        }
+        return created;
     }
 }
