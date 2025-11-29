@@ -30,22 +30,6 @@ public class MaskingPolicyService {
         this.versionRepository = versionRepository;
     }
 
-    /**
-     * 마스킹 정책을 평가합니다.
-     * @deprecated evaluate(String, String, String, List, DataKind, Instant) 사용을 권장합니다.
-     */
-    @Deprecated
-    @Transactional(readOnly = true)
-    public Optional<MaskingMatch> evaluate(String featureCode,
-                                           String actionCode,
-                                           String permGroupCode,
-                                           List<String> orgGroupCodes,
-                                           String dataKindStr,
-                                           Instant now) {
-        return evaluate(featureCode, actionCode, permGroupCode, orgGroupCodes,
-                DataKind.fromString(dataKindStr), now);
-    }
-
     @Transactional(readOnly = true)
     public Optional<MaskingMatch> evaluate(String featureCode,
                                            String actionCode,

@@ -6,7 +6,6 @@ import java.time.Instant;
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.example.common.masking.DataKind;
@@ -95,56 +94,5 @@ class MaskingQueryTest {
         );
 
         assertThat(query.dataKind()).isNull();
-    }
-
-    @Nested
-    @DisplayName("레거시 호환성")
-    class LegacyCompatibility {
-
-        @Test
-        @DisplayName("String dataKind를 받는 생성자가 동작한다")
-        void legacyConstructorWorks() {
-            Instant now = Instant.now();
-            MaskingQuery query = new MaskingQuery(
-                    "ORGANIZATION",
-                    "READ",
-                    "PG",
-                    List.of("ORG"),
-                    "SSN",
-                    now
-            );
-
-            assertThat(query.dataKind()).isEqualTo(DataKind.SSN);
-        }
-
-        @Test
-        @DisplayName("dataKindString()은 dataKind의 name을 반환한다")
-        void dataKindStringReturnsName() {
-            MaskingQuery query = new MaskingQuery(
-                    "ORGANIZATION",
-                    null,
-                    null,
-                    null,
-                    DataKind.PHONE,
-                    Instant.now()
-            );
-
-            assertThat(query.dataKindString()).isEqualTo("PHONE");
-        }
-
-        @Test
-        @DisplayName("dataKindString()은 dataKind가 null이면 null을 반환한다")
-        void dataKindStringReturnsNullWhenNull() {
-            MaskingQuery query = new MaskingQuery(
-                    "ORGANIZATION",
-                    null,
-                    null,
-                    null,
-                    (DataKind) null,
-                    Instant.now()
-            );
-
-            assertThat(query.dataKindString()).isNull();
-        }
     }
 }

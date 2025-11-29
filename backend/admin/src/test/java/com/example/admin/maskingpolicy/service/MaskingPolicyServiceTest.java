@@ -308,27 +308,4 @@ class MaskingPolicyServiceTest {
             assertThat(service.evaluate("ORGANIZATION", null, null, null, DataKind.CARD_NO, now)).isEmpty();
         }
     }
-
-    @Nested
-    @DisplayName("레거시 호환성")
-    class LegacyCompatibility {
-
-        @Test
-        @DisplayName("String dataKind를 받는 deprecated 메서드가 동작한다")
-        void legacyEvaluateWorks() {
-            Instant now = Instant.now();
-            MaskingPolicyRoot root = createRoot();
-            MaskingPolicy policy = createVersion(
-                    root, FeatureCode.ORGANIZATION, null, null, null,
-                    Set.of(DataKind.SSN), true, false, 1, null, null
-            );
-            given(versionRepository.findAllCurrentActiveVersions()).willReturn(List.of(policy));
-
-            @SuppressWarnings("deprecation")
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, "SSN", now);
-
-            assertThat(match).isPresent();
-            assertThat(match.get().getDataKinds()).contains(DataKind.SSN);
-        }
-    }
 }
