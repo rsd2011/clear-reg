@@ -8,7 +8,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import com.example.common.masking.DataKind;
-import com.example.admin.maskingpolicy.domain.MaskingPolicyVersion;
+import com.example.admin.maskingpolicy.domain.MaskingPolicy;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.common.version.ChangeAction;
@@ -17,7 +17,7 @@ import com.example.common.version.VersionStatus;
 /**
  * 마스킹 정책 버전 이력 응답 DTO (SCD Type 2).
  */
-public record MaskingPolicyVersionHistoryResponse(
+public record MaskingPolicyHistoryResponse(
         UUID id,
         UUID policyId,
         Integer version,
@@ -45,11 +45,11 @@ public record MaskingPolicyVersionHistoryResponse(
         Integer rollbackFromVersion,
         String versionTag
 ) {
-    public static MaskingPolicyVersionHistoryResponse from(MaskingPolicyVersion version) {
+    public static MaskingPolicyHistoryResponse from(MaskingPolicy version) {
         return from(version, UnaryOperator.identity());
     }
 
-    public static MaskingPolicyVersionHistoryResponse from(MaskingPolicyVersion version, UnaryOperator<String> masker) {
+    public static MaskingPolicyHistoryResponse from(MaskingPolicy version, UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
 
         Set<String> dataKindStrings = version.getDataKinds() != null
@@ -58,7 +58,7 @@ public record MaskingPolicyVersionHistoryResponse(
                         .collect(Collectors.toSet())
                 : Set.of();
 
-        return new MaskingPolicyVersionHistoryResponse(
+        return new MaskingPolicyHistoryResponse(
                 version.getId(),
                 version.getRoot().getId(),
                 version.getVersion(),

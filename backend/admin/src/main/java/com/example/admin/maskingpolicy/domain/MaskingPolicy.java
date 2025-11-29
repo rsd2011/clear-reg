@@ -43,7 +43,7 @@ import lombok.NoArgsConstructor;
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MaskingPolicyVersion extends PrimaryKeyEntity {
+public class MaskingPolicy extends PrimaryKeyEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "root_id", nullable = false)
@@ -150,7 +150,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
 
     // === 생성자 ===
 
-    private MaskingPolicyVersion(MaskingPolicyRoot root,
+    private MaskingPolicy(MaskingPolicyRoot root,
                                   Integer version,
                                   String name,
                                   String description,
@@ -201,7 +201,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
     /**
      * 새 버전 생성 (일반적인 생성/수정/삭제 등).
      */
-    public static MaskingPolicyVersion create(MaskingPolicyRoot root,
+    public static MaskingPolicy create(MaskingPolicyRoot root,
                                                Integer version,
                                                String name,
                                                String description,
@@ -221,7 +221,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
                                                String changedBy,
                                                String changedByName,
                                                OffsetDateTime now) {
-        return new MaskingPolicyVersion(
+        return new MaskingPolicy(
                 root, version, name, description,
                 featureCode, actionCode, permGroupCode, orgGroupCode,
                 dataKinds, maskingEnabled, auditEnabled, priority, active,
@@ -233,7 +233,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
     /**
      * 초안(Draft) 버전 생성.
      */
-    public static MaskingPolicyVersion createDraft(MaskingPolicyRoot root,
+    public static MaskingPolicy createDraft(MaskingPolicyRoot root,
                                                     Integer version,
                                                     String name,
                                                     String description,
@@ -252,7 +252,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
                                                     String changedBy,
                                                     String changedByName,
                                                     OffsetDateTime now) {
-        return new MaskingPolicyVersion(
+        return new MaskingPolicy(
                 root, version, name, description,
                 featureCode, actionCode, permGroupCode, orgGroupCode,
                 dataKinds, maskingEnabled, auditEnabled, priority, active,
@@ -264,7 +264,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
     /**
      * 롤백 시 버전 생성.
      */
-    public static MaskingPolicyVersion createFromRollback(MaskingPolicyRoot root,
+    public static MaskingPolicy createFromRollback(MaskingPolicyRoot root,
                                                            Integer version,
                                                            String name,
                                                            String description,
@@ -284,7 +284,7 @@ public class MaskingPolicyVersion extends PrimaryKeyEntity {
                                                            String changedByName,
                                                            OffsetDateTime now,
                                                            Integer rollbackFromVersion) {
-        return new MaskingPolicyVersion(
+        return new MaskingPolicy(
                 root, version, name, description,
                 featureCode, actionCode, permGroupCode, orgGroupCode,
                 dataKinds, maskingEnabled, auditEnabled, priority, active,

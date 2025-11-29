@@ -1,22 +1,20 @@
-package com.example.admin.maskingpolicy.dto;
+package com.example.admin.rowaccesspolicy.dto;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
-import com.example.common.masking.DataKind;
-import com.example.admin.maskingpolicy.domain.MaskingPolicyRoot;
-import com.example.admin.maskingpolicy.domain.MaskingPolicy;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
+import com.example.admin.rowaccesspolicy.domain.RowAccessPolicy;
+import com.example.admin.rowaccesspolicy.domain.RowAccessPolicyRoot;
+import com.example.common.security.RowScope;
 
 /**
- * 마스킹 정책 루트 응답 DTO.
+ * 행 접근 정책 루트 응답 DTO.
  */
-public record MaskingPolicyRootResponse(
+public record RowAccessPolicyRootResponse(
         UUID id,
         String policyCode,
         String name,
@@ -25,9 +23,7 @@ public record MaskingPolicyRootResponse(
         ActionCode actionCode,
         String permGroupCode,
         String orgGroupCode,
-        Set<String> dataKinds,
-        Boolean maskingEnabled,
-        Boolean auditEnabled,
+        RowScope rowScope,
         Integer priority,
         boolean active,
         Instant effectiveFrom,
@@ -37,22 +33,16 @@ public record MaskingPolicyRootResponse(
         Integer currentVersion,
         boolean hasDraft
 ) {
-    public static MaskingPolicyRootResponse from(MaskingPolicyRoot root) {
+    public static RowAccessPolicyRootResponse from(RowAccessPolicyRoot root) {
         return from(root, UnaryOperator.identity());
     }
 
-    public static MaskingPolicyRootResponse from(MaskingPolicyRoot root, UnaryOperator<String> masker) {
+    public static RowAccessPolicyRootResponse from(RowAccessPolicyRoot root, UnaryOperator<String> masker) {
         UnaryOperator<String> fn = masker == null ? UnaryOperator.identity() : masker;
 
-        MaskingPolicy currentVersion = root.getCurrentVersion();
+        RowAccessPolicy currentVersion = root.getCurrentVersion();
 
-        Set<String> dataKindStrings = currentVersion != null && currentVersion.getDataKinds() != null
-                ? currentVersion.getDataKinds().stream()
-                        .map(DataKind::name)
-                        .collect(Collectors.toSet())
-                : Set.of();
-
-        return new MaskingPolicyRootResponse(
+        return new RowAccessPolicyRootResponse(
                 root.getId(),
                 fn.apply(root.getPolicyCode()),
                 fn.apply(root.getName()),
@@ -61,9 +51,7 @@ public record MaskingPolicyRootResponse(
                 currentVersion != null ? currentVersion.getActionCode() : null,
                 currentVersion != null ? fn.apply(currentVersion.getPermGroupCode()) : null,
                 currentVersion != null ? fn.apply(currentVersion.getOrgGroupCode()) : null,
-                dataKindStrings,
-                currentVersion != null ? currentVersion.getMaskingEnabled() : null,
-                currentVersion != null ? currentVersion.getAuditEnabled() : null,
+                root.getRowScope(),
                 root.getPriority(),
                 root.isActive(),
                 currentVersion != null ? currentVersion.getEffectiveFrom() : null,
