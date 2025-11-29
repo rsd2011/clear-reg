@@ -1,11 +1,5 @@
 package com.example.admin.menu.service;
 
-import com.example.admin.menu.domain.Menu;
-import com.example.admin.menu.domain.MenuCapability;
-import com.example.admin.menu.domain.MenuDefinition;
-import com.example.admin.menu.repository.MenuRepository;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +7,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import com.example.admin.menu.domain.Menu;
+import com.example.admin.menu.domain.MenuCapability;
+import com.example.admin.menu.repository.MenuRepository;
+import com.example.admin.permission.domain.ActionCode;
+import com.example.admin.permission.domain.FeatureCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
  * 메뉴 관리 서비스.
  *
  * <p>메뉴의 CRUD 및 Capability 기반 메뉴 조회를 제공한다.</p>
+ *
+ * <p>메뉴의 계층 구조와 가시성은 {@link MenuVisibilityService}에서 담당한다.</p>
  */
 @Service
 public class MenuService {
@@ -29,11 +31,9 @@ public class MenuService {
     private static final Logger log = LoggerFactory.getLogger(MenuService.class);
 
     private final MenuRepository menuRepository;
-    private final MenuDefinitionLoader menuDefinitionLoader;
 
-    public MenuService(MenuRepository menuRepository, MenuDefinitionLoader menuDefinitionLoader) {
+    public MenuService(MenuRepository menuRepository) {
         this.menuRepository = menuRepository;
-        this.menuDefinitionLoader = menuDefinitionLoader;
     }
 
     // ========================================
@@ -70,22 +70,6 @@ public class MenuService {
     @Transactional(readOnly = true)
     public List<Menu> findAllActive() {
         return menuRepository.findByActiveTrueOrderBySortOrderAsc();
-    }
-
-    /**
-     * 최상위 메뉴 목록을 조회한다 (부모가 없는 메뉴).
-     */
-    @Transactional(readOnly = true)
-    public List<Menu> findRootMenus() {
-        return menuRepository.findByParentIsNullAndActiveTrueOrderBySortOrderAsc();
-    }
-
-    /**
-     * 특정 부모의 자식 메뉴 목록을 조회한다.
-     */
-    @Transactional(readOnly = true)
-    public List<Menu> findChildrenByParentCode(String parentCode) {
-        return menuRepository.findByParent_CodeAndActiveTrueOrderBySortOrderAsc(parentCode);
     }
 
     /**
@@ -136,109 +120,6 @@ public class MenuService {
     }
 
     // ========================================
-    // 메뉴 트리 구성
-    // ========================================
-
-    /**
-     * 접근 가능한 메뉴를 트리 구조로 반환한다.
-     *
-     * @param userCapabilities 사용자가 보유한 Capability 목록
-     * @return 루트 메뉴 목록 (자식 메뉴 포함)
-     */
-    @Transactional(readOnly = true)
-    public List<Menu> buildAccessibleMenuTree(Collection<MenuCapability> userCapabilities) {
-        List<Menu> accessibleMenus = findAccessibleMenus(userCapabilities);
-        Set<String> accessibleCodes = accessibleMenus.stream()
-                .map(Menu::getCode)
-                .collect(Collectors.toSet());
-
-        // 접근 가능한 자식이 있는 부모 메뉴도 포함
-        Set<String> codesWithAccessibleChildren = new HashSet<>(accessibleCodes);
-        for (Menu menu : accessibleMenus) {
-            Menu parent = menu.getParent();
-            while (parent != null) {
-                codesWithAccessibleChildren.add(parent.getCode());
-                parent = parent.getParent();
-            }
-        }
-
-        // 루트 메뉴 중 접근 가능한 것만 필터링
-        return findRootMenus().stream()
-                .filter(menu -> codesWithAccessibleChildren.contains(menu.getCode()))
-                .collect(Collectors.toList());
-    }
-
-    // ========================================
-    // YAML 동기화
-    // ========================================
-
-    /**
-     * YAML 정의 파일로부터 메뉴를 동기화한다.
-     *
-     * <p>YAML에 정의된 메뉴가 DB에 없으면 생성하고, 있으면 업데이트한다.</p>
-     */
-    @Transactional
-    public void syncFromYaml() {
-        List<MenuDefinition> definitions = menuDefinitionLoader.loadFlattened();
-        log.info("YAML에서 {} 개의 메뉴 정의를 로드했습니다.", definitions.size());
-
-        for (MenuDefinition def : definitions) {
-            syncMenu(def, null);
-        }
-
-        log.info("메뉴 동기화 완료");
-    }
-
-    private void syncMenu(MenuDefinition def, Menu parent) {
-        Optional<Menu> existing = menuRepository.findByCode(def.getCode());
-        Menu menu;
-
-        if (existing.isPresent()) {
-            menu = existing.get();
-            log.debug("기존 메뉴 업데이트: {}", def.getCode());
-        } else {
-            menu = new Menu(def.getCode(), def.getName());
-            log.debug("새 메뉴 생성: {}", def.getCode());
-        }
-
-        // 상세 정보 업데이트
-        menu.updateDetails(
-                def.getName(),
-                def.getPath(),
-                def.getIcon(),
-                def.getSortOrder(),
-                def.getDescription()
-        );
-        menu.setParent(parent);
-        menu.setActive(true);
-
-        // Capability 업데이트
-        Set<MenuCapability> capabilities = new HashSet<>();
-        if (def.getRequiredCapabilities() != null) {
-            for (MenuDefinition.CapabilityRef capRef : def.getRequiredCapabilities()) {
-                try {
-                    FeatureCode feature = FeatureCode.valueOf(capRef.getFeature());
-                    ActionCode action = ActionCode.valueOf(capRef.getAction());
-                    capabilities.add(new MenuCapability(feature, action));
-                } catch (IllegalArgumentException e) {
-                    log.warn("유효하지 않은 Capability: {}/{} - 메뉴: {}",
-                            capRef.getFeature(), capRef.getAction(), def.getCode());
-                }
-            }
-        }
-        menu.replaceCapabilities(capabilities);
-
-        menuRepository.save(menu);
-
-        // 자식 메뉴 동기화
-        if (def.getChildren() != null) {
-            for (MenuDefinition child : def.getChildren()) {
-                syncMenu(child, menu);
-            }
-        }
-    }
-
-    // ========================================
     // 생성/수정/삭제
     // ========================================
 
@@ -247,7 +128,7 @@ public class MenuService {
      */
     @Transactional
     public Menu createMenu(String code, String name, String path, String icon,
-                           Integer sortOrder, String description, String parentCode,
+                           Integer sortOrder, String description,
                            Collection<MenuCapability> capabilities) {
         if (menuRepository.existsByCode(code)) {
             throw new IllegalArgumentException("이미 존재하는 메뉴 코드입니다: " + code);
@@ -255,13 +136,6 @@ public class MenuService {
 
         Menu menu = new Menu(code, name);
         menu.updateDetails(name, path, icon, sortOrder, description);
-
-        if (parentCode != null) {
-            Menu parent = menuRepository.findByCode(parentCode)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "부모 메뉴를 찾을 수 없습니다: " + parentCode));
-            menu.setParent(parent);
-        }
 
         if (capabilities != null) {
             menu.replaceCapabilities(capabilities);
@@ -314,50 +188,5 @@ public class MenuService {
         menu.setActive(true);
         menuRepository.save(menu);
         log.info("메뉴 활성화: {}", code);
-    }
-
-    /**
-     * 메뉴의 부모를 변경한다.
-     */
-    @Transactional
-    public void moveMenu(String code, String newParentCode) {
-        Menu menu = menuRepository.findByCode(code)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "메뉴를 찾을 수 없습니다: " + code));
-
-        if (newParentCode == null) {
-            menu.setParent(null);
-        } else {
-            if (newParentCode.equals(code)) {
-                throw new IllegalArgumentException("메뉴를 자기 자신의 하위로 이동할 수 없습니다.");
-            }
-            Menu newParent = menuRepository.findByCode(newParentCode)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "부모 메뉴를 찾을 수 없습니다: " + newParentCode));
-
-            // 순환 참조 체크
-            if (isDescendant(newParent, menu)) {
-                throw new IllegalArgumentException("순환 참조가 발생합니다: " + code + " -> " + newParentCode);
-            }
-
-            menu.setParent(newParent);
-        }
-
-        menuRepository.save(menu);
-        log.info("메뉴 이동: {} -> {}", code, newParentCode);
-    }
-
-    /**
-     * target이 ancestor의 하위인지 확인한다.
-     */
-    private boolean isDescendant(Menu target, Menu ancestor) {
-        Menu current = target.getParent();
-        while (current != null) {
-            if (current.getCode().equals(ancestor.getCode())) {
-                return true;
-            }
-            current = current.getParent();
-        }
-        return false;
     }
 }

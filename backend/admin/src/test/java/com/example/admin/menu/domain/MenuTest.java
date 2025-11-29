@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,8 +29,6 @@ class MenuTest {
         assertThat(menu.getCode()).isEqualTo(code);
         assertThat(menu.getName()).isEqualTo(name);
         assertThat(menu.isActive()).isTrue();
-        assertThat(menu.getParent()).isNull();
-        assertThat(menu.getChildren()).isEmpty();
         assertThat(menu.getRequiredCapabilities()).isEmpty();
     }
 
@@ -145,54 +142,6 @@ class MenuTest {
 
             // When & Then
             assertThat(menu.requiresCapability(cap)).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("부모-자식 관계")
-    class ParentChildRelationshipTest {
-
-        @Test
-        @DisplayName("Given 부모 설정 - When getParentCode - Then 부모 코드 반환")
-        void setParent_validParent_returnsParentCode() {
-            // Given
-            Menu parent = new Menu("ADMIN", "관리");
-            Menu child = new Menu("ADMIN_POLICY", "정책 관리");
-
-            // When
-            child.setParent(parent);
-
-            // Then
-            assertThat(child.getParent()).isEqualTo(parent);
-            assertThat(child.getParentCode()).isEqualTo("ADMIN");
-        }
-
-        @Test
-        @DisplayName("Given 부모 없음 - When getParentCode - Then null 반환")
-        void getParentCode_noParent_returnsNull() {
-            // Given
-            Menu menu = new Menu("ROOT", "루트");
-
-            // When & Then
-            assertThat(menu.getParentCode()).isNull();
-        }
-
-        @Test
-        @DisplayName("Given 3단계 계층 - When getFullPath - Then 전체 경로 반환")
-        void getFullPath_threeLevel_returnsFullPath() {
-            // Given
-            Menu root = new Menu("ADMIN", "관리");
-            Menu middle = new Menu("ADMIN_SECURITY", "보안");
-            Menu leaf = new Menu("ADMIN_SECURITY_POLICY", "보안 정책");
-
-            middle.setParent(root);
-            leaf.setParent(middle);
-
-            // When
-            List<String> fullPath = leaf.getFullPath();
-
-            // Then
-            assertThat(fullPath).containsExactly("ADMIN", "ADMIN_SECURITY", "ADMIN_SECURITY_POLICY");
         }
     }
 

@@ -14,7 +14,6 @@ import java.util.UUID;
 
 import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCapability;
-import com.example.admin.menu.domain.MenuDefinition;
 import com.example.admin.menu.repository.MenuRepository;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
@@ -31,15 +30,12 @@ class MenuServiceTest {
     @Mock
     private MenuRepository menuRepository;
 
-    @Mock
-    private MenuDefinitionLoader menuDefinitionLoader;
-
     private MenuService menuService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        menuService = new MenuService(menuRepository, menuDefinitionLoader);
+        menuService = new MenuService(menuRepository);
     }
 
     @Nested
@@ -92,29 +88,6 @@ class MenuServiceTest {
             List<Menu> result = menuService.findAllActive();
 
             assertThat(result).hasSize(2);
-        }
-
-        @Test
-        @DisplayName("Given 루트 메뉴 When findRootMenus 호출하면 Then 루트 메뉴 반환")
-        void findRootMenus_returnsRootMenus() {
-            Menu root = new Menu("ROOT", "루트");
-            given(menuRepository.findByParentIsNullAndActiveTrueOrderBySortOrderAsc()).willReturn(List.of(root));
-
-            List<Menu> result = menuService.findRootMenus();
-
-            assertThat(result).hasSize(1);
-            assertThat(result.get(0).getCode()).isEqualTo("ROOT");
-        }
-
-        @Test
-        @DisplayName("Given 부모코드 When findChildrenByParentCode 호출하면 Then 자식 메뉴 반환")
-        void findChildrenByParentCode_returnsChildren() {
-            Menu child = new Menu("CHILD", "자식");
-            given(menuRepository.findByParent_CodeAndActiveTrueOrderBySortOrderAsc("PARENT")).willReturn(List.of(child));
-
-            List<Menu> result = menuService.findChildrenByParentCode("PARENT");
-
-            assertThat(result).hasSize(1);
         }
 
         @Test
@@ -192,29 +165,6 @@ class MenuServiceTest {
     }
 
     @Nested
-    @DisplayName("buildAccessibleMenuTree 메서드")
-    class BuildAccessibleMenuTree {
-
-        @Test
-        @DisplayName("Given 계층구조 메뉴 When 호출하면 Then 부모 포함 트리 반환")
-        void buildsTreeWithParents() {
-            MenuCapability cap = new MenuCapability(FeatureCode.DRAFT, ActionCode.READ);
-            Menu root = new Menu("ROOT", "루트");
-            Menu child = new Menu("CHILD", "자식");
-            child.setParent(root);
-            child.addCapability(cap);
-
-            given(menuRepository.findByActiveTrueOrderBySortOrderAsc()).willReturn(List.of(root, child));
-            given(menuRepository.findByParentIsNullAndActiveTrueOrderBySortOrderAsc()).willReturn(List.of(root));
-
-            List<Menu> result = menuService.buildAccessibleMenuTree(List.of(cap));
-
-            assertThat(result).hasSize(1);
-            assertThat(result.get(0).getCode()).isEqualTo("ROOT");
-        }
-    }
-
-    @Nested
     @DisplayName("createMenu 메서드")
     class CreateMenu {
 
@@ -224,7 +174,7 @@ class MenuServiceTest {
             given(menuRepository.existsByCode("NEW")).willReturn(false);
             given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
 
-            Menu result = menuService.createMenu("NEW", "새메뉴", "/new", "icon", 1, "설명", null, null);
+            Menu result = menuService.createMenu("NEW", "새메뉴", "/new", "icon", 1, "설명", null);
 
             assertThat(result.getCode()).isEqualTo("NEW");
             assertThat(result.getName()).isEqualTo("새메뉴");
@@ -236,33 +186,9 @@ class MenuServiceTest {
         void throwsOnDuplicateCode() {
             given(menuRepository.existsByCode("EXISTING")).willReturn(true);
 
-            assertThatThrownBy(() -> menuService.createMenu("EXISTING", "이름", null, null, null, null, null, null))
+            assertThatThrownBy(() -> menuService.createMenu("EXISTING", "이름", null, null, null, null, null))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("이미 존재하는 메뉴 코드입니다");
-        }
-
-        @Test
-        @DisplayName("Given 부모코드 When 생성하면 Then 부모 연결됨")
-        void createsWithParent() {
-            Menu parent = new Menu("PARENT", "부모");
-            given(menuRepository.existsByCode("CHILD")).willReturn(false);
-            given(menuRepository.findByCode("PARENT")).willReturn(Optional.of(parent));
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
-
-            Menu result = menuService.createMenu("CHILD", "자식", null, null, null, null, "PARENT", null);
-
-            assertThat(result.getParent()).isEqualTo(parent);
-        }
-
-        @Test
-        @DisplayName("Given 없는 부모코드 When 생성하면 Then 예외 발생")
-        void throwsOnMissingParent() {
-            given(menuRepository.existsByCode("CHILD")).willReturn(false);
-            given(menuRepository.findByCode("MISSING")).willReturn(Optional.empty());
-
-            assertThatThrownBy(() -> menuService.createMenu("CHILD", "자식", null, null, null, null, "MISSING", null))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("부모 메뉴를 찾을 수 없습니다");
         }
 
         @Test
@@ -272,7 +198,7 @@ class MenuServiceTest {
             given(menuRepository.existsByCode("CAP")).willReturn(false);
             given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
 
-            Menu result = menuService.createMenu("CAP", "권한메뉴", null, null, null, null, null, Set.of(cap));
+            Menu result = menuService.createMenu("CAP", "권한메뉴", null, null, null, null, Set.of(cap));
 
             assertThat(result.getRequiredCapabilities()).contains(cap);
         }
@@ -344,189 +270,6 @@ class MenuServiceTest {
 
             assertThatThrownBy(() -> menuService.deactivateMenu("MISSING"))
                     .isInstanceOf(IllegalArgumentException.class);
-        }
-    }
-
-    @Nested
-    @DisplayName("moveMenu 메서드")
-    class MoveMenu {
-
-        @Test
-        @DisplayName("Given null 부모 When 이동하면 Then 루트로 이동")
-        void movesToRoot() {
-            Menu parent = new Menu("PARENT", "부모");
-            Menu menu = new Menu("MENU", "메뉴");
-            menu.setParent(parent);
-            given(menuRepository.findByCode("MENU")).willReturn(Optional.of(menu));
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
-
-            menuService.moveMenu("MENU", null);
-
-            assertThat(menu.getParent()).isNull();
-        }
-
-        @Test
-        @DisplayName("Given 자기 자신 When 이동하면 Then 예외 발생")
-        void throwsOnSelfParent() {
-            Menu menu = new Menu("SELF", "자기자신");
-            given(menuRepository.findByCode("SELF")).willReturn(Optional.of(menu));
-
-            assertThatThrownBy(() -> menuService.moveMenu("SELF", "SELF"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("자기 자신의 하위로 이동할 수 없습니다");
-        }
-
-        @Test
-        @DisplayName("Given 없는 부모 When 이동하면 Then 예외 발생")
-        void throwsOnMissingParent() {
-            Menu menu = new Menu("MENU", "메뉴");
-            given(menuRepository.findByCode("MENU")).willReturn(Optional.of(menu));
-            given(menuRepository.findByCode("MISSING")).willReturn(Optional.empty());
-
-            assertThatThrownBy(() -> menuService.moveMenu("MENU", "MISSING"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("부모 메뉴를 찾을 수 없습니다");
-        }
-
-        @Test
-        @DisplayName("Given 순환 참조 When 이동하면 Then 예외 발생")
-        void throwsOnCircularReference() {
-            Menu grandparent = new Menu("GRANDPARENT", "조부모");
-            Menu parent = new Menu("PARENT", "부모");
-            Menu child = new Menu("CHILD", "자식");
-            parent.setParent(grandparent);
-            child.setParent(parent);
-
-            given(menuRepository.findByCode("GRANDPARENT")).willReturn(Optional.of(grandparent));
-            given(menuRepository.findByCode("CHILD")).willReturn(Optional.of(child));
-
-            assertThatThrownBy(() -> menuService.moveMenu("GRANDPARENT", "CHILD"))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessageContaining("순환 참조");
-        }
-
-        @Test
-        @DisplayName("Given 유효한 부모 When 이동하면 Then 부모 변경됨")
-        void movesToValidParent() {
-            Menu menu = new Menu("MENU", "메뉴");
-            Menu newParent = new Menu("NEW_PARENT", "새부모");
-            given(menuRepository.findByCode("MENU")).willReturn(Optional.of(menu));
-            given(menuRepository.findByCode("NEW_PARENT")).willReturn(Optional.of(newParent));
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
-
-            menuService.moveMenu("MENU", "NEW_PARENT");
-
-            assertThat(menu.getParent()).isEqualTo(newParent);
-        }
-    }
-
-    @Nested
-    @DisplayName("syncFromYaml 메서드")
-    class SyncFromYaml {
-
-        @Test
-        @DisplayName("Given YAML 정의 When sync 호출하면 Then 메뉴 동기화됨")
-        void syncsFromYaml() {
-            MenuDefinition def = new MenuDefinition();
-            def.setCode("YAML_MENU");
-            def.setName("YAML메뉴");
-            def.setPath("/yaml");
-            def.setSortOrder(1);
-
-            given(menuDefinitionLoader.loadFlattened()).willReturn(List.of(def));
-            given(menuRepository.findByCode("YAML_MENU")).willReturn(Optional.empty());
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
-
-            menuService.syncFromYaml();
-
-            verify(menuRepository).save(any(Menu.class));
-        }
-
-        @Test
-        @DisplayName("Given 기존 메뉴 When sync 호출하면 Then 업데이트됨")
-        void updatesExistingOnSync() {
-            MenuDefinition def = new MenuDefinition();
-            def.setCode("EXISTING");
-            def.setName("업데이트됨");
-            def.setPath("/updated");
-
-            Menu existing = new Menu("EXISTING", "기존");
-            given(menuDefinitionLoader.loadFlattened()).willReturn(List.of(def));
-            given(menuRepository.findByCode("EXISTING")).willReturn(Optional.of(existing));
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
-
-            menuService.syncFromYaml();
-
-            assertThat(existing.getName()).isEqualTo("업데이트됨");
-        }
-
-        @Test
-        @DisplayName("Given 유효한 Capability When sync 호출하면 Then Capability 설정됨")
-        void syncsWithCapabilities() {
-            MenuDefinition.CapabilityRef capRef = new MenuDefinition.CapabilityRef();
-            capRef.setFeature("DRAFT");
-            capRef.setAction("READ");
-
-            MenuDefinition def = new MenuDefinition();
-            def.setCode("WITH_CAP");
-            def.setName("권한있는메뉴");
-            def.setRequiredCapabilities(List.of(capRef));
-
-            given(menuDefinitionLoader.loadFlattened()).willReturn(List.of(def));
-            given(menuRepository.findByCode("WITH_CAP")).willReturn(Optional.empty());
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> {
-                Menu m = inv.getArgument(0);
-                assertThat(m.getRequiredCapabilities()).isNotEmpty();
-                return m;
-            });
-
-            menuService.syncFromYaml();
-        }
-
-        @Test
-        @DisplayName("Given 유효하지 않은 Capability When sync 호출하면 Then 경고 로그 후 스킵")
-        void skipsInvalidCapability() {
-            MenuDefinition.CapabilityRef invalidCap = new MenuDefinition.CapabilityRef();
-            invalidCap.setFeature("INVALID_FEATURE");
-            invalidCap.setAction("INVALID_ACTION");
-
-            MenuDefinition def = new MenuDefinition();
-            def.setCode("INVALID_CAP");
-            def.setName("유효하지않은권한");
-            def.setRequiredCapabilities(List.of(invalidCap));
-
-            given(menuDefinitionLoader.loadFlattened()).willReturn(List.of(def));
-            given(menuRepository.findByCode("INVALID_CAP")).willReturn(Optional.empty());
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> {
-                Menu m = inv.getArgument(0);
-                assertThat(m.getRequiredCapabilities()).isEmpty();
-                return m;
-            });
-
-            menuService.syncFromYaml();
-        }
-
-        @Test
-        @DisplayName("Given 자식 메뉴 정의 When sync 호출하면 Then 자식도 동기화됨")
-        void syncsChildrenMenus() {
-            MenuDefinition child = new MenuDefinition();
-            child.setCode("CHILD");
-            child.setName("자식");
-
-            MenuDefinition parent = new MenuDefinition();
-            parent.setCode("PARENT");
-            parent.setName("부모");
-            parent.setChildren(List.of(child));
-
-            given(menuDefinitionLoader.loadFlattened()).willReturn(List.of(parent));
-            given(menuRepository.findByCode("PARENT")).willReturn(Optional.empty());
-            given(menuRepository.findByCode("CHILD")).willReturn(Optional.empty());
-            given(menuRepository.save(any(Menu.class))).willAnswer(inv -> inv.getArgument(0));
-
-            menuService.syncFromYaml();
-
-            // parent와 child 두 번 save 호출
-            verify(menuRepository, org.mockito.Mockito.times(2)).save(any(Menu.class));
         }
     }
 }
