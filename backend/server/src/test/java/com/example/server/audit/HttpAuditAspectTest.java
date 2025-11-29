@@ -25,6 +25,7 @@ import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.SubjectType;
+import com.example.common.masking.DataKind;
 
 @DisplayName("HttpAuditAspect")
 class HttpAuditAspectTest {
@@ -123,7 +124,7 @@ class HttpAuditAspectTest {
         MockHttpServletResponse res = new MockHttpServletResponse();
         com.example.common.masking.MaskingTarget target = com.example.common.masking.MaskingTarget.builder()
                 .subjectType(com.example.common.masking.SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("HTTP")
+                .dataKind(DataKind.DEFAULT)
                 .defaultMask(false)
                 .build();
         req.setAttribute("AUDIT_MASKING_TARGET", target);

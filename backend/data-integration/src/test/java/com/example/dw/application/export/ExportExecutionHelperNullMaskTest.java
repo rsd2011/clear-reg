@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -26,12 +27,12 @@ class ExportExecutionHelperNullMaskTest {
     ExportExecutionHelper helper = new ExportExecutionHelper(exportService, objectMapper);
 
     @Test
-    @DisplayName("maskRule가 null이고 maskParams도 없으면 기본 PARTIAL 마스킹을 적용한다 (CSV)")
-    void csvMaskRuleNull() {
+    @DisplayName("maskingEnabled=true면 DataKind 기반 마스킹을 적용한다 (CSV)")
+    void csvMaskingEnabled() {
         ExportCommand cmd = new ExportCommand("csv", "masked.csv", 1, Map.of(), null, null, null, null);
         List<Map<String, Object>> rows = List.of(Map.of("rrn", "900101-1234567"));
 
-        helper.exportCsv(cmd, rows, MaskingTarget.builder().dataKind("rrn").build(), null, "");
+        helper.exportCsv(cmd, rows, MaskingTarget.builder().dataKind(DataKind.SSN).build(), true);
 
         ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
         verify(exportService).export(any(), captor.capture());
@@ -40,12 +41,12 @@ class ExportExecutionHelperNullMaskTest {
     }
 
     @Test
-    @DisplayName("maskRule가 null이면 JSON도 기본 PARTIAL 마스킹을 적용한다")
-    void jsonMaskRuleNull() {
+    @DisplayName("maskingEnabled=true면 JSON도 DataKind 기반 마스킹을 적용한다")
+    void jsonMaskingEnabled() {
         ExportCommand cmd = new ExportCommand("json", "masked.json", 1, Map.of(), null, null, null, null);
         List<Map<String, Object>> rows = List.of(Map.of("account", "1234-5678-9012"));
 
-        helper.exportJson(cmd, rows, MaskingTarget.builder().dataKind("account").build(), null, null);
+        helper.exportJson(cmd, rows, MaskingTarget.builder().dataKind(DataKind.ACCOUNT_NO).build(), true);
 
         ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
         verify(exportService).export(any(), captor.capture());

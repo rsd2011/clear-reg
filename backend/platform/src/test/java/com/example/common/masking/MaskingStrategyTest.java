@@ -61,8 +61,8 @@ class MaskingStrategyTest {
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
                 .defaultMask(true)
-                .forceUnmaskKinds(java.util.Set.of("RRN"))
-                .dataKind("RRN")
+                .forceUnmaskKinds(java.util.Set.of(DataKind.SSN))
+                .dataKind(DataKind.SSN)
                 .requesterRoles(java.util.Set.of("AUDIT_ADMIN"))
                 .build();
 

@@ -1,12 +1,14 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * 조직/법인/부서 식별자.
  */
-public final class OrganizationId extends AbstractIdentifier {
+public final class OrganizationId extends AbstractIdentifier implements Maskable<String> {
 
     private final String raw;
 
@@ -20,10 +22,12 @@ public final class OrganizationId extends AbstractIdentifier {
         return new OrganizationId(normalized);
     }
 
+    @Override
     public String raw() {
         return raw;
     }
 
+    @Override
     public String masked() {
         if (raw.length() <= 3) {
             return raw;
@@ -57,5 +61,10 @@ public final class OrganizationId extends AbstractIdentifier {
     @Override
     public int hashCode() {
         return raw.hashCode();
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.ORGANIZATION_ID;
     }
 }

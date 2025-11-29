@@ -26,13 +26,12 @@ public class ExportWriterService {
     public byte[] exportExcel(ExportCommand command,
                               List<Map<String, Object>> rows,
                               MaskingTarget target,
-                              String maskRule,
-                              String maskParams,
+                              boolean maskingEnabled,
                               BiConsumer<Integer, Map<String, Object>> writer) {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         return exportService.export(command, () -> {
             for (int i = 0; i < rows.size(); i++) {
-                Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(i), target, maskRule, maskParams);
+                Map<String, Object> masked = ExportMaskingHelper.maskRow(rows.get(i), target, maskingEnabled);
                 writer.accept(i, masked);
                 baos.writeBytes(masked.values().stream().map(Object::toString).reduce((a, b) -> a + "," + b).orElse("").getBytes());
                 baos.writeBytes(System.lineSeparator().getBytes());
@@ -44,13 +43,12 @@ public class ExportWriterService {
     public byte[] exportPdf(ExportCommand command,
                             List<Map<String, Object>> rows,
                             MaskingTarget target,
-                            String maskRule,
-                            String maskParams,
+                            boolean maskingEnabled,
                             java.util.function.Consumer<String> writer) {
         java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
         return exportService.export(command, () -> {
             for (Map<String, Object> row : rows) {
-                PdfMaskingAdapter.writeMaskedParagraph(row, target, maskRule, maskParams, text -> {
+                PdfMaskingAdapter.writeMaskedParagraph(row, target, maskingEnabled, text -> {
                     writer.accept(text);
                     baos.writeBytes((text + System.lineSeparator()).getBytes());
                 });
@@ -62,16 +60,68 @@ public class ExportWriterService {
     public byte[] exportCsv(ExportCommand command,
                             List<Map<String, Object>> rows,
                             MaskingTarget target,
-                            String maskRule,
-                            String maskParams) {
-        return executionHelper.exportCsv(command, rows, target, maskRule, maskParams);
+                            boolean maskingEnabled) {
+        return executionHelper.exportCsv(command, rows, target, maskingEnabled);
     }
 
     public byte[] exportJson(ExportCommand command,
                              List<Map<String, Object>> rows,
                              MaskingTarget target,
+                             boolean maskingEnabled) {
+        return executionHelper.exportJson(command, rows, target, maskingEnabled);
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public byte[] exportCsv(ExportCommand command,
+                            List<Map<String, Object>> rows,
+                            MaskingTarget target,
+                            String maskRule,
+                            String maskParams) {
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        return exportCsv(command, rows, target, maskingEnabled);
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public byte[] exportJson(ExportCommand command,
+                             List<Map<String, Object>> rows,
+                             MaskingTarget target,
                              String maskRule,
                              String maskParams) {
-        return executionHelper.exportJson(command, rows, target, maskRule, maskParams);
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        return exportJson(command, rows, target, maskingEnabled);
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public byte[] exportExcel(ExportCommand command,
+                              List<Map<String, Object>> rows,
+                              MaskingTarget target,
+                              String maskRule,
+                              String maskParams,
+                              BiConsumer<Integer, Map<String, Object>> writer) {
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        return exportExcel(command, rows, target, maskingEnabled, writer);
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public byte[] exportPdf(ExportCommand command,
+                            List<Map<String, Object>> rows,
+                            MaskingTarget target,
+                            String maskRule,
+                            String maskParams,
+                            java.util.function.Consumer<String> writer) {
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        return exportPdf(command, rows, target, maskingEnabled, writer);
     }
 }

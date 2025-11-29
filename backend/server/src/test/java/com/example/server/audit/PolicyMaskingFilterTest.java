@@ -25,6 +25,7 @@ import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingContextHolder;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
@@ -161,10 +162,10 @@ class PolicyMaskingFilterTest {
 
         MaskingTarget base = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("HTTP")
+                .dataKind(DataKind.DEFAULT)
                 .defaultMask(false)
                 .forceUnmask(true)
-                .forceUnmaskKinds(new java.util.HashSet<>(List.of("HTTP")))
+                .forceUnmaskKinds(new java.util.HashSet<>(java.util.Set.of(DataKind.DEFAULT)))
                 .forceUnmaskFields(new java.util.HashSet<>(List.of("name")))
                 .requesterRoles(new java.util.HashSet<>(List.of("AUDIT_VIEWER")))
                 .rowId("ROW-1")

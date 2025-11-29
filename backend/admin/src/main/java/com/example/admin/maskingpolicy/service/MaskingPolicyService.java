@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,6 +13,7 @@ import com.example.admin.maskingpolicy.domain.MaskingPolicy;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.masking.DataKind;
 import com.example.common.policy.MaskingMatch;
 
 @Service
@@ -23,12 +25,28 @@ public class MaskingPolicyService {
         this.repository = repository;
     }
 
+    /**
+     * 마스킹 정책을 평가합니다.
+     * @deprecated evaluate(String, String, String, List, DataKind, Instant) 사용을 권장합니다.
+     */
+    @Deprecated
     @Transactional(readOnly = true)
     public Optional<MaskingMatch> evaluate(String featureCode,
                                            String actionCode,
                                            String permGroupCode,
                                            List<String> orgGroupCodes,
-                                           String dataKind,
+                                           String dataKindStr,
+                                           Instant now) {
+        return evaluate(featureCode, actionCode, permGroupCode, orgGroupCodes,
+                DataKind.fromString(dataKindStr), now);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<MaskingMatch> evaluate(String featureCode,
+                                           String actionCode,
+                                           String permGroupCode,
+                                           List<String> orgGroupCodes,
+                                           DataKind dataKind,
                                            Instant now) {
         List<MaskingPolicy> candidates = repository.findByActiveTrueOrderByPriorityAsc();
         Instant ts = now != null ? now : Instant.now();
@@ -46,7 +64,7 @@ public class MaskingPolicyService {
                 .filter(p -> matchAction(action, p.getActionCode()))
                 .filter(p -> matchNullable(permGroupCode, p.getPermGroupCode()))
                 .filter(p -> matchGroup(orgGroupCodes, p.getOrgGroupCode()))
-                .filter(p -> matchDataKind(dataKind, p.getDataKind()))
+                .filter(p -> matchDataKinds(dataKind, p.getDataKinds()))
                 .min(Comparator.comparing(MaskingPolicy::getPriority))
                 .map(this::toMatch);
     }
@@ -89,18 +107,23 @@ public class MaskingPolicyService {
         return groupCodes != null && groupCodes.stream().anyMatch(target::equalsIgnoreCase);
     }
 
-    private boolean matchDataKind(String value, String target) {
-        // 정책의 dataKind가 null이면 모든 종류에 적용
-        if (target == null || target.isBlank()) return true;
-        return value != null && value.equalsIgnoreCase(target);
+    /**
+     * DataKind 매칭 로직.
+     * 정책의 dataKinds가 비어있으면 모든 종류에 적용됨.
+     */
+    private boolean matchDataKinds(DataKind queryKind, Set<DataKind> policyKinds) {
+        // 정책의 dataKinds가 비어있으면 모든 종류에 적용
+        if (policyKinds == null || policyKinds.isEmpty()) {
+            return true;
+        }
+        return queryKind != null && policyKinds.contains(queryKind);
     }
 
     private MaskingMatch toMatch(MaskingPolicy p) {
         return MaskingMatch.builder()
                 .policyId(p.getId())
-                .dataKind(p.getDataKind())
-                .maskRule(p.getMaskRule())
-                .maskParams(p.getMaskParams())
+                .dataKinds(p.getDataKinds())
+                .maskingEnabled(Boolean.TRUE.equals(p.getMaskingEnabled()))
                 .auditEnabled(Boolean.TRUE.equals(p.getAuditEnabled()))
                 .priority(p.getPriority())
                 .build();

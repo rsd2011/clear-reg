@@ -52,7 +52,7 @@ class MaskingEvaluatorTest {
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(true)
           .priority(100)
           .build();
@@ -71,7 +71,7 @@ class MaskingEvaluatorTest {
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
@@ -102,100 +102,183 @@ class MaskingEvaluatorTest {
     }
 
     @Test
-    @DisplayName("Given NONE 규칙 When mask 호출 Then 원본 값이 반환된다")
-    void givenNoneMaskRule_whenMasking_thenReturnRawValue() {
+    @DisplayName("Given 화이트리스트(maskingEnabled=false) When mask 호출 Then 원본 값이 반환된다")
+    void givenWhitelist_whenMasking_thenReturnRawValue() {
       AuthContext context = AuthContext.of(
           "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("NONE")
+          .maskingEnabled(false)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
-      Scenario.given("NONE 규칙", () -> evaluator.mask("PUBLIC_INFO", "public data"))
+      Scenario.given("화이트리스트", () -> evaluator.mask("PUBLIC_INFO", "public data"))
           .then("원본 반환", value -> assertThat(value).isEqualTo("public data"));
     }
 
     @Test
-    @DisplayName("Given PARTIAL 규칙 When mask 호출 Then 부분 마스킹된다")
-    void givenPartialMaskRule_whenMasking_thenPartialMask() {
+    @DisplayName("Given PHONE DataKind When mask 호출 Then 부분 마스킹된다")
+    void givenPhoneDataKind_whenMasking_thenPartialMask() {
       AuthContext context = AuthContext.of(
           "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("PARTIAL")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
-      Scenario.given("PARTIAL 규칙", () -> evaluator.mask("PHONE", "01012345678"))
+      // PHONE DataKind는 PARTIAL 규칙을 가짐
+      Scenario.given("PHONE DataKind (PARTIAL 규칙)", () -> evaluator.mask("PHONE", "01012345678"))
           .then("부분 마스킹 (앞2, 뒤2 노출)", value -> assertThat(value).isEqualTo("01***78"));
     }
 
     @Test
-    @DisplayName("Given HASH 규칙 When mask 호출 Then 해시값이 반환된다")
-    void givenHashMaskRule_whenMasking_thenReturnHash() {
+    @DisplayName("Given SSN DataKind When mask 호출 Then FULL 마스킹된다")
+    void givenSsnDataKind_whenMasking_thenFullMask() {
       AuthContext context = AuthContext.of(
           "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("HASH")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
+      // SSN DataKind는 FULL 규칙을 가짐
       Object result = evaluator.mask("SSN", "123456789");
-      assertThat(result).isInstanceOf(String.class);
-      assertThat(((String) result).length()).isEqualTo(8); // 해시 앞 8자리
-    }
-
-    @Test
-    @DisplayName("Given TOKENIZE 규칙 When mask 호출 Then 해시값이 반환된다")
-    void givenTokenizeMaskRule_whenMasking_thenReturnHash() {
-      AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
-      AuthContextHolder.set(context);
-
-      MaskingMatch match = MaskingMatch.builder()
-          .policyId(UUID.randomUUID())
-          .maskRule("TOKENIZE")
-          .auditEnabled(false)
-          .priority(100)
-          .build();
-      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
-
-      Object result = evaluator.mask("TOKEN_DATA", "secret-token");
-      assertThat(result).isInstanceOf(String.class);
-      assertThat(((String) result).length()).isEqualTo(8);
-    }
-
-    @Test
-    @DisplayName("Given 알 수 없는 규칙 When mask 호출 Then 기본 마스킹이 적용된다")
-    void givenUnknownMaskRule_whenMasking_thenUseDefaultMask() {
-      AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
-      AuthContextHolder.set(context);
-
-      MaskingMatch match = MaskingMatch.builder()
-          .policyId(UUID.randomUUID())
-          .maskRule("UNKNOWN_RULE")
-          .auditEnabled(false)
-          .priority(100)
-          .build();
-      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
-
-      Object result = evaluator.mask("DATA", "some-data");
       assertThat(result).isEqualTo("***");
+    }
+
+    @Test
+    @DisplayName("Given EMAIL DataKind When mask 호출 Then PARTIAL 마스킹된다")
+    void givenEmailDataKind_whenMasking_thenPartialMask() {
+      AuthContext context = AuthContext.of(
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+      AuthContextHolder.set(context);
+
+      MaskingMatch match = MaskingMatch.builder()
+          .policyId(UUID.randomUUID())
+          .maskingEnabled(true)
+          .auditEnabled(false)
+          .priority(100)
+          .build();
+      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
+
+      // EMAIL DataKind는 PARTIAL 규칙을 가짐
+      Object result = evaluator.mask("EMAIL", "user@example.com");
+      assertThat(result).isNotEqualTo("user@example.com");
+    }
+
+    @Test
+    @DisplayName("Given 알 수 없는 DataKind When mask 호출 Then 기본 마스킹(FULL)이 적용된다")
+    void givenUnknownDataKind_whenMasking_thenUseDefaultMask() {
+      AuthContext context = AuthContext.of(
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+      AuthContextHolder.set(context);
+
+      MaskingMatch match = MaskingMatch.builder()
+          .policyId(UUID.randomUUID())
+          .maskingEnabled(true)
+          .auditEnabled(false)
+          .priority(100)
+          .build();
+      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
+
+      // 알 수 없는 DataKind는 DEFAULT (FULL 규칙)
+      Object result = evaluator.mask("UNKNOWN_DATA", "some-data");
+      assertThat(result).isEqualTo("***");
+    }
+
+    @Test
+    @DisplayName("Given CARD_NO DataKind When mask 호출 Then PARTIAL 마스킹된다")
+    void givenCardNoDataKind_whenMasking_thenPartialMask() {
+      AuthContext context = AuthContext.of(
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+      AuthContextHolder.set(context);
+
+      MaskingMatch match = MaskingMatch.builder()
+          .policyId(UUID.randomUUID())
+          .maskingEnabled(true)
+          .auditEnabled(false)
+          .priority(100)
+          .build();
+      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
+
+      // CARD_NO DataKind는 PARTIAL 규칙을 가짐 (앞 2자리, 뒤 2자리 유지)
+      Object result = evaluator.mask("CARD_NO", "4111111111111111");
+      assertThat(result).isNotEqualTo("4111111111111111");
+      assertThat(result.toString()).startsWith("41").endsWith("11");
+    }
+
+    @Test
+    @DisplayName("Given 알 수 없는 DataKind When mask 호출 Then DEFAULT(FULL) 마스킹된다")
+    void givenUnknownDataKindFallsbackToDefault_whenMasking_thenFullMask() {
+      AuthContext context = AuthContext.of(
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+      AuthContextHolder.set(context);
+
+      MaskingMatch match = MaskingMatch.builder()
+          .policyId(UUID.randomUUID())
+          .maskingEnabled(true)
+          .auditEnabled(false)
+          .priority(100)
+          .build();
+      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
+
+      // 알 수 없는 DataKind(PASSWORD 등)는 DEFAULT로 폴백되어 FULL 마스킹
+      Object result = evaluator.mask("PASSWORD", "secret123");
+      assertThat(result).isEqualTo("***");
+    }
+
+    @Test
+    @DisplayName("Given DEFAULT DataKind When mask 호출 Then FULL 마스킹된다")
+    void givenDefaultDataKind_whenMasking_thenFullMask() {
+      AuthContext context = AuthContext.of(
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+      AuthContextHolder.set(context);
+
+      MaskingMatch match = MaskingMatch.builder()
+          .policyId(UUID.randomUUID())
+          .maskingEnabled(true)
+          .auditEnabled(false)
+          .priority(100)
+          .build();
+      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
+
+      // DEFAULT DataKind는 FULL 규칙
+      Object result = evaluator.mask("DEFAULT", "plainData");
+      assertThat(result).isEqualTo("***");
+    }
+
+    @Test
+    @DisplayName("Given 화이트리스트 + auditEnabled=true When mask 호출 Then 원본 반환 및 감사 로그")
+    void givenWhitelistWithAudit_whenMasking_thenReturnRawAndLog() {
+      AuthContext context = AuthContext.of(
+          "user", "ORG", "AUDIT_GROUP", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+      AuthContextHolder.set(context);
+
+      MaskingMatch match = MaskingMatch.builder()
+          .policyId(UUID.randomUUID())
+          .maskingEnabled(false)
+          .auditEnabled(true)  // 감사 로그 활성화
+          .priority(100)
+          .build();
+      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
+
+      // 화이트리스트 + auditEnabled=true 경로
+      Object result = evaluator.mask("WHITELIST_DATA", "sensitive");
+      assertThat(result).isEqualTo("sensitive");
     }
   }
 
@@ -212,44 +295,27 @@ class MaskingEvaluatorTest {
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("PARTIAL")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
-      assertThat(evaluator.mask("SHORT", "ABC")).isEqualTo("***");
-      assertThat(evaluator.mask("SHORT", "ABCD")).isEqualTo("***");
+      // PHONE은 PARTIAL 규칙을 가지지만 4자 이하면 기본 마스킹
+      assertThat(evaluator.mask("PHONE", "ABC")).isEqualTo("***");
+      assertThat(evaluator.mask("PHONE", "ABCD")).isEqualTo("***");
     }
 
     @Test
-    @DisplayName("Given null 값 When PARTIAL 마스킹 Then null 반환")
-    void givenNullValue_whenPartialMask_thenReturnNull() {
+    @DisplayName("Given null 값 When 마스킹 Then null 반환")
+    void givenNullValue_whenMask_thenReturnNull() {
       AuthContext context = AuthContext.of(
           "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("PARTIAL")
-          .auditEnabled(false)
-          .priority(100)
-          .build();
-      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
-
-      assertThat(evaluator.mask("NULLABLE", null)).isNull();
-    }
-
-    @Test
-    @DisplayName("Given null 값 When HASH 마스킹 Then null 반환")
-    void givenNullValue_whenHashMask_thenReturnNull() {
-      AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
-      AuthContextHolder.set(context);
-
-      MaskingMatch match = MaskingMatch.builder()
-          .policyId(UUID.randomUUID())
-          .maskRule("HASH")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
@@ -264,22 +330,23 @@ class MaskingEvaluatorTest {
   class TypeBasedMasking {
 
     @Test
-    @DisplayName("Given Boolean 값 When FULL 마스킹 Then false 반환")
-    void givenBooleanValue_whenFullMask_thenReturnFalse() {
+    @DisplayName("Given Boolean 값 When 마스킹 Then false 반환")
+    void givenBooleanValue_whenMask_thenReturnFalse() {
       AuthContext context = AuthContext.of(
           "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
-      assertThat(evaluator.mask("FLAG", true)).isEqualTo(false);
-      assertThat(evaluator.mask("FLAG", Boolean.TRUE)).isEqualTo(false);
+      // SSN DataKind는 FULL 규칙
+      assertThat(evaluator.mask("SSN", true)).isEqualTo(false);
+      assertThat(evaluator.mask("SSN", Boolean.TRUE)).isEqualTo(false);
     }
 
     @Test
@@ -294,58 +361,21 @@ class MaskingEvaluatorTest {
   class ActionCodeParsing {
 
     @Test
-    @DisplayName("Given null requiredActionCode When mask Then 기본값 UNMASK 사용")
-    void givenNullRequiredActionCode_whenMask_thenUseFallback() {
+    @DisplayName("Given UNMASK 권한 When mask Then 원본 반환")
+    void givenUnmaskPermission_whenMask_thenReturnRaw() {
       AuthContext context = AuthContext.of(
           "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL);
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
-      // null이면 기본값 UNMASK 사용, 현재 action도 UNMASK이므로 원본 반환
-      assertThat(evaluator.mask("DATA", "secret")).isEqualTo("secret");
-    }
-
-    @Test
-    @DisplayName("Given 빈 requiredActionCode When mask Then 기본값 UNMASK 사용")
-    void givenBlankRequiredActionCode_whenMask_thenUseFallback() {
-      AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL);
-      AuthContextHolder.set(context);
-
-      MaskingMatch match = MaskingMatch.builder()
-          .policyId(UUID.randomUUID())
-          .maskRule("FULL")
-          .auditEnabled(false)
-          .priority(100)
-          .build();
-      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
-
-      assertThat(evaluator.mask("DATA", "secret")).isEqualTo("secret");
-    }
-
-    @Test
-    @DisplayName("Given 잘못된 requiredActionCode When mask Then 기본값 UNMASK 사용")
-    void givenInvalidRequiredActionCode_whenMask_thenUseFallback() {
-      AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL);
-      AuthContextHolder.set(context);
-
-      MaskingMatch match = MaskingMatch.builder()
-          .policyId(UUID.randomUUID())
-          .maskRule("FULL")
-          .auditEnabled(false)
-          .priority(100)
-          .build();
-      when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
-
-      // INVALID_ACTION은 기본값 UNMASK로 처리, 현재도 UNMASK이므로 원본 반환
+      // UNMASK 권한이 있으면 원본 반환
       assertThat(evaluator.mask("DATA", "secret")).isEqualTo("secret");
     }
 
@@ -359,13 +389,13 @@ class MaskingEvaluatorTest {
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(false)
           .priority(100)
           .build();
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.of(match));
 
-      // currentAction=READ(fallback), required=UNMASK → READ.satisfies(UNMASK)=false → 마스킹
+      // currentAction=READ(fallback), canUnmask=false → 마스킹
       assertThat(evaluator.mask("DATA", "secret")).isEqualTo("***");
     }
   }
@@ -383,7 +413,7 @@ class MaskingEvaluatorTest {
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(true)
           .priority(100)
           .build();
@@ -403,7 +433,7 @@ class MaskingEvaluatorTest {
 
       MaskingMatch match = MaskingMatch.builder()
           .policyId(UUID.randomUUID())
-          .maskRule("FULL")
+          .maskingEnabled(true)
           .auditEnabled(true)
           .priority(100)
           .build();

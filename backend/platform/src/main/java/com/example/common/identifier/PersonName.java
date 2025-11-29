@@ -1,5 +1,7 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -7,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 사람 이름 값 객체. 한국어 2~6자 또는 영문/공백 2~50자 허용.
  * toString()/Json 직렬화 시 앞 1~2자만 노출하고 나머지는 마스킹한다.
  */
-public final class PersonName {
+public final class PersonName implements Maskable<String> {
 
     private final String raw;
 
@@ -29,16 +31,23 @@ public final class PersonName {
         return new PersonName(trimmed);
     }
 
+    @Override
     public String raw() {
         return raw;
     }
 
+    @Override
     public String masked() {
         int len = raw.length();
         if (len == 1) return raw;
         if (len == 2) return raw.charAt(0) + "*";
         // len >=3 : 앞 1자 + 가운데 마스킹 + 끝 1자
         return raw.charAt(0) + "*".repeat(len - 2) + raw.charAt(len - 1);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.PERSON_NAME;
     }
 
     @Override

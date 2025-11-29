@@ -4,6 +4,8 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -13,7 +15,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 선택: stateOrProvince, line2, postalCode
  * toString/Json 직렬화 시 상세 주소는 마스킹하고 도시·국가만 노출한다.
  */
-public final class Address {
+public final class Address implements Maskable<String> {
 
     private final String countryCode;
     private final String stateOrProvince;
@@ -114,6 +116,16 @@ public final class Address {
         return postalCode;
     }
 
+    @Override
+    public String raw() {
+        return Stream.of(line1, line2, city, stateOrProvince, postalCode, countryCode)
+                .filter(Objects::nonNull)
+                .filter(s -> !s.isBlank())
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
+    }
+
+    @Override
     public String masked() {
         String maskedDetail = "[ADDR-REDACTED]";
         return Stream.of(maskedDetail, city, stateOrProvince, countryCode)
@@ -121,6 +133,11 @@ public final class Address {
                 .filter(s -> !s.isBlank())
                 .reduce((a, b) -> a + ", " + b)
                 .orElse(maskedDetail);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.ADDRESS;
     }
 
     @Override

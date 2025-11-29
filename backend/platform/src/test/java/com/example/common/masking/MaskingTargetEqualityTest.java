@@ -15,31 +15,28 @@ class MaskingTargetEqualityTest {
     void equalsBranches() {
         MaskingTarget base = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .forceUnmask(false)
-                .forceUnmaskKinds(Set.of("RRN"))
+                .forceUnmaskKinds(Set.of(DataKind.SSN))
                 .forceUnmaskFields(Set.of("name"))
                 .requesterRoles(Set.of("AUDIT_ADMIN"))
                 .rowId("row-1")
-                .maskRule("FULL")
-                .maskParams("{}").build();
+                .build();
 
         assertThat(base).isEqualTo(MaskingTarget.builder()
-                .subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind("RRN").defaultMask(true).forceUnmask(false)
-                .forceUnmaskKinds(Set.of("RRN")).forceUnmaskFields(Set.of("name")).requesterRoles(Set.of("AUDIT_ADMIN"))
-                .rowId("row-1").maskRule("FULL").maskParams("{}").build());
+                .subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind(DataKind.SSN).defaultMask(true).forceUnmask(false)
+                .forceUnmaskKinds(Set.of(DataKind.SSN)).forceUnmaskFields(Set.of("name")).requesterRoles(Set.of("AUDIT_ADMIN"))
+                .rowId("row-1").build());
 
         assertThat(base).isNotEqualTo(builderFromBase().subjectType(SubjectType.EMPLOYEE).build());
-        assertThat(base).isNotEqualTo(builderFromBase().dataKind("CARD").build());
+        assertThat(base).isNotEqualTo(builderFromBase().dataKind(DataKind.CARD_NO).build());
         assertThat(base).isNotEqualTo(builderFromBase().defaultMask(false).build());
         assertThat(base).isNotEqualTo(builderFromBase().forceUnmask(true).build());
-        assertThat(base).isNotEqualTo(builderFromBase().forceUnmaskKinds(Set.of("CARD")).build());
+        assertThat(base).isNotEqualTo(builderFromBase().forceUnmaskKinds(Set.of(DataKind.CARD_NO)).build());
         assertThat(base).isNotEqualTo(builderFromBase().forceUnmaskFields(Set.of("addr")).build());
         assertThat(base).isNotEqualTo(builderFromBase().requesterRoles(Set.of("USER")).build());
         assertThat(base).isNotEqualTo(builderFromBase().rowId("row-2").build());
-        assertThat(base).isNotEqualTo(builderFromBase().maskRule("HASH").build());
-        assertThat(base).isNotEqualTo(builderFromBase().maskParams("{p}").build());
 
         MaskingTarget nullFields = MaskingTarget.builder().build();
         assertThat(nullFields.hashCode()).isNotZero();
@@ -48,14 +45,12 @@ class MaskingTargetEqualityTest {
     private MaskingTarget.MaskingTargetBuilder builderFromBase() {
         return MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .forceUnmask(false)
-                .forceUnmaskKinds(Set.of("RRN"))
+                .forceUnmaskKinds(Set.of(DataKind.SSN))
                 .forceUnmaskFields(Set.of("name"))
                 .requesterRoles(Set.of("AUDIT_ADMIN"))
-                .rowId("row-1")
-                .maskRule("FULL")
-                .maskParams("{}");
+                .rowId("row-1");
     }
 }

@@ -59,8 +59,7 @@ public class ExportController {
                 command,
                 List.of(Map.of("accountNumber", accountNumber)),
                 target,
-                "PARTIAL",
-                "{\"keepEnd\":4}");
+                true);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sample.csv\"")
@@ -94,8 +93,7 @@ public class ExportController {
                 command,
                 List.of(Map.of("accountNumber", accountNumber)),
                 target,
-                "PARTIAL",
-                "{\"keepEnd\":4}");
+                true);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"sample.json\"")

@@ -2,6 +2,9 @@ package com.example.admin.maskingpolicy.masking;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import com.example.common.masking.DataKind;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
@@ -33,7 +36,7 @@ class SensitiveSerializerModifierTest {
   @DisplayName("마스킹 결과가 원본과 같으면 필드가 그대로 직렬화된다")
   void sameValueKeepsOriginal() throws Exception {
     MaskingEvaluator evaluator = mock(MaskingEvaluator.class);
-    given(evaluator.mask(any(), any())).willReturn("plain");
+    given(evaluator.mask(anyString(), any())).willReturn("plain");
     String json = mapperWith(evaluator).writeValueAsString(new MaskedBean());
     assertThat(json).contains("plain").contains("normal");
   }
@@ -42,7 +45,7 @@ class SensitiveSerializerModifierTest {
   @DisplayName("마스킹 결과가 null이면 필드가 null로 직렬화된다")
   void nullMaskOmitsField() throws Exception {
     MaskingEvaluator evaluator = mock(MaskingEvaluator.class);
-    given(evaluator.mask(any(), any())).willReturn(null);
+    given(evaluator.mask(anyString(), any())).willReturn(null);
     String json = mapperWith(evaluator).writeValueAsString(new MaskedBean());
     assertThat(json).contains("\"secret\":null");
   }
@@ -51,7 +54,7 @@ class SensitiveSerializerModifierTest {
   @DisplayName("마스킹 결과가 다르면 마스킹된 값이 직렬화된다")
   void maskedValueIsSerialized() throws Exception {
     MaskingEvaluator evaluator = mock(MaskingEvaluator.class);
-    given(evaluator.mask(any(), any())).willReturn("****");
+    given(evaluator.mask(anyString(), any())).willReturn("****");
     String json = mapperWith(evaluator).writeValueAsString(new MaskedBean());
     assertThat(json).contains("****");
   }
@@ -60,7 +63,7 @@ class SensitiveSerializerModifierTest {
   @DisplayName("마스킹 결과가 null이고 null serializer가 있으면 null serializer로 직렬화된다")
   void nullMaskUsesNullSerializer() throws Exception {
     MaskingEvaluator evaluator = mock(MaskingEvaluator.class);
-    given(evaluator.mask(any(), any())).willReturn(null);
+    given(evaluator.mask(anyString(), any())).willReturn(null);
     ObjectMapper mapper = mapperWith(evaluator);
     mapper
         .getSerializerProvider()
@@ -89,7 +92,7 @@ class SensitiveSerializerModifierTest {
   @DisplayName("마스킹 결과가 원본과 같으면 BeanPropertyWriter를 그대로 사용한다")
   void sameValueDelegatesToWriter() throws Exception {
     MaskingEvaluator evaluator = mock(MaskingEvaluator.class);
-    given(evaluator.mask(any(), any())).willAnswer(inv -> inv.getArgument(1)); // raw == masked
+    given(evaluator.mask(anyString(), any())).willAnswer(inv -> inv.getArgument(1)); // raw == masked
 
     String json = mapperWith(evaluator).writeValueAsString(new MaskedBean());
 
@@ -100,7 +103,7 @@ class SensitiveSerializerModifierTest {
   @DisplayName("마스킹 결과가 null이고 null serializer가 없으면 기본 null 직렬화로 필드가 null로 기록된다")
   void nullMaskDefaultsToNull() throws Exception {
     MaskingEvaluator evaluator = mock(MaskingEvaluator.class);
-    given(evaluator.mask(any(), any())).willReturn(null);
+    given(evaluator.mask(anyString(), any())).willReturn(null);
     ObjectMapper mapper = mapperWith(evaluator); // null serializer 설정 안 함
 
     String json = mapper.writeValueAsString(new MaskedBean());

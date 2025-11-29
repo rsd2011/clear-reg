@@ -17,19 +17,20 @@ public class MaskingService {
         this.auditSink = auditSink;
     }
 
-    public String render(Maskable maskable, MaskingTarget target) {
+    public String render(Maskable<?> maskable, MaskingTarget target) {
         if (maskable == null) return null;
         return render(maskable, target, null);
     }
 
-    public String render(Maskable maskable, MaskingTarget target, String fieldName) {
+    public String render(Maskable<?> maskable, MaskingTarget target, String fieldName) {
         if (maskable == null) return null;
-        String result = strategy.apply(maskable.raw(), target, maskable.masked(), fieldName);
+        String rawValue = maskable.raw() != null ? maskable.raw().toString() : null;
+        String result = strategy.apply(rawValue, target, maskable.masked(), fieldName);
         if (auditSink != null && target != null && !result.equals(maskable.masked())) {
             auditSink.handle(UnmaskAuditEvent.builder()
                     .eventTime(java.time.Instant.now())
                     .subjectType(target.getSubjectType())
-                    .dataKind(target.getDataKind())
+                    .dataKind(target.getDataKind() != null ? target.getDataKind().name() : null)
                     .fieldName(fieldName)
                     .rowId(target.getRowId())
                     .requesterRoles(target.getRequesterRoles())

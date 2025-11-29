@@ -3,10 +3,11 @@ package com.example.common.value;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-/** 이체 메모/적요/참조 번호. */
+import com.example.common.masking.DataKind;
 import com.example.common.masking.Maskable;
 
-public final class PaymentReference implements Maskable {
+/** 이체 메모/적요/참조 번호. */
+public final class PaymentReference implements Maskable<String> {
     private final String value;
 
     private PaymentReference(String value) {
@@ -67,5 +68,10 @@ public final class PaymentReference implements Maskable {
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.DEFAULT;
     }
 }

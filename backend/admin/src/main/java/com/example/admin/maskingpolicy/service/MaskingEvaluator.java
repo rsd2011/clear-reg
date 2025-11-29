@@ -9,6 +9,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import com.example.admin.permission.domain.ActionCode;
+import com.example.common.masking.DataKind;
+import com.example.common.masking.MaskRule;
 import com.example.common.policy.MaskingMatch;
 import com.example.common.policy.MaskingPolicyProvider;
 import com.example.common.policy.MaskingQuery;
@@ -45,11 +47,22 @@ public class MaskingEvaluator {
     /**
      * 지정된 dataKind의 값을 MaskingPolicy 기반으로 마스킹 평가합니다.
      *
-     * @param dataKind 민감 데이터 종류 (SSN, PHONE, EMAIL 등)
+     * @param dataKindStr 민감 데이터 종류 문자열 (SSN, PHONE, EMAIL 등)
      * @param rawValue 원본 값
      * @return 마스킹된 값 또는 원본 값
      */
-    public Object mask(String dataKind, Object rawValue) {
+    public Object mask(String dataKindStr, Object rawValue) {
+        return mask(DataKind.fromString(dataKindStr), rawValue);
+    }
+
+    /**
+     * 지정된 DataKind의 값을 MaskingPolicy 기반으로 마스킹 평가합니다.
+     *
+     * @param dataKind 민감 데이터 종류 (enum)
+     * @param rawValue 원본 값
+     * @return 마스킹된 값 또는 원본 값
+     */
+    public Object mask(DataKind dataKind, Object rawValue) {
         Optional<CurrentUser> maybeUser = currentUserProvider.current();
         if (maybeUser.isEmpty()) {
             log.warn(
@@ -81,8 +94,17 @@ public class MaskingEvaluator {
 
         MaskingMatch policy = maybePolicy.get();
 
-        // NONE 규칙이면 마스킹 없이 원본 반환
-        if ("NONE".equalsIgnoreCase(policy.getMaskRule())) {
+        // 화이트리스트: maskingEnabled=false이면 마스킹 해제
+        if (!policy.isMaskingEnabled()) {
+            if (policy.isAuditEnabled()) {
+                log.info(
+                    "UNMASK_GRANTED_BY_WHITELIST user={} dataKind={} feature={} action={} policyId={}",
+                    user.username(),
+                    dataKind,
+                    user.featureCode(),
+                    user.actionCode(),
+                    policy.getPolicyId());
+            }
             return rawValue;
         }
 
@@ -112,24 +134,25 @@ public class MaskingEvaluator {
                 policy.getPolicyId());
         }
 
-        return applyMaskRule(rawValue, policy);
+        return applyMaskRule(rawValue, dataKind);
     }
 
     /**
-     * 마스킹 규칙에 따라 값을 마스킹합니다.
+     * DataKind의 기본 마스킹 규칙에 따라 값을 마스킹합니다.
      */
-    private Object applyMaskRule(Object rawValue, MaskingMatch policy) {
-        String maskRule = policy.getMaskRule();
+    private Object applyMaskRule(Object rawValue, DataKind dataKind) {
+        MaskRule maskRule = (dataKind != null) ? dataKind.getDefaultMaskRule() : MaskRule.FULL;
 
-        switch (maskRule.toUpperCase()) {
-            case "FULL":
-                return maskValue(rawValue, DEFAULT_MASK);
-            case "PARTIAL":
+        switch (maskRule) {
+            case NONE:
+                return rawValue;
+            case PARTIAL:
                 return partialMask(rawValue);
-            case "HASH":
+            case HASH:
                 return hashMask(rawValue);
-            case "TOKENIZE":
+            case TOKENIZE:
                 return hashMask(rawValue); // 토큰화는 해시로 대체
+            case FULL:
             default:
                 return maskValue(rawValue, DEFAULT_MASK);
         }

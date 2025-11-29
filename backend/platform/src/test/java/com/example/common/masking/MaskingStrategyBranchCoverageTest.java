@@ -22,8 +22,8 @@ class MaskingStrategyBranchCoverageTest {
 
         MaskingTarget forceKind = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
-                .forceUnmaskKinds(Set.of("RRN"))
+                .dataKind(DataKind.SSN)
+                .forceUnmaskKinds(Set.of(DataKind.SSN))
                 .build();
 
         MaskingTarget forceField = MaskingTarget.builder()

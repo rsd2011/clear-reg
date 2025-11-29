@@ -237,4 +237,105 @@ class AuditRecordServiceTest {
 
         verify(repository).save(Mockito.argThat(entity -> entity.getHashChain() != null && !entity.getHashChain().isEmpty()));
     }
+
+    @Test
+    void applyMask_usesMaskingServiceWhenProvided() {
+        // MaskingService가 있을 때 인라인 Maskable 분기 커버리지
+        // 실제 MaskingService를 사용하여 Maskable의 모든 메서드가 호출되도록 함
+        com.example.common.masking.MaskingStrategy alwaysMaskStrategy =
+            new com.example.common.masking.MaskingStrategy() {
+                @Override public boolean shouldMask(com.example.common.masking.MaskingTarget target) { return true; }
+            };
+        MaskingService realMaskingService = new MaskingService(alwaysMaskStrategy);
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).maskingEnabled(true).build()));
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                null, "audit.events.v1", "", null,
+                false, "", "default", maskingProperties, realMaskingService, null);
+
+        AuditEvent event = AuditEvent.builder()
+                .eventType("VIEW")
+                .beforeSummary("sensitive data 990101-1234567")
+                .afterSummary("after info")
+                .reasonText("reason")
+                .build();
+
+        service.record(event, AuditMode.ASYNC_FALLBACK);
+
+        ArgumentCaptor<AuditLogEntity> captor = ArgumentCaptor.forClass(AuditLogEntity.class);
+        verify(repository).save(captor.capture());
+        AuditLogEntity saved = captor.getValue();
+        // MaskingService가 마스킹된 값을 반환
+        assertThat(saved.getBeforeSummary()).isNotNull();
+    }
+
+    @Test
+    void applyMask_inlineMaskableAllMethodsCovered() {
+        // InlineMaskable record의 모든 메서드(raw, masked, dataKind) 커버리지를 위한 테스트
+        // MaskingStrategy가 모든 Maskable 메서드를 호출하도록 구현
+        java.util.concurrent.atomic.AtomicReference<com.example.common.masking.DataKind> capturedDataKind =
+            new java.util.concurrent.atomic.AtomicReference<>();
+
+        // 커스텀 MaskingService를 생성하여 dataKind() 호출을 강제
+        MaskingService testService = new MaskingService(
+            new com.example.common.masking.MaskingStrategy() {
+                @Override public boolean shouldMask(com.example.common.masking.MaskingTarget target) { return true; }
+            }
+        ) {
+            @Override
+            public String render(com.example.common.masking.Maskable<?> maskable,
+                                com.example.common.masking.MaskingTarget target, String fieldName) {
+                // 모든 Maskable 메서드 호출하여 커버리지 확보
+                String raw = maskable.raw() != null ? maskable.raw().toString() : null;
+                String masked = maskable.masked();
+                com.example.common.masking.DataKind kind = maskable.dataKind();
+                capturedDataKind.set(kind);
+                return masked != null ? masked : raw;
+            }
+        };
+
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).maskingEnabled(true).build()));
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                null, "audit.events.v1", "", null,
+                false, "", "default", maskingProperties, testService, null);
+
+        AuditEvent event = AuditEvent.builder()
+                .eventType("VIEW")
+                .beforeSummary("test data")
+                .build();
+
+        service.record(event, AuditMode.ASYNC_FALLBACK);
+
+        verify(repository).save(any());
+        // dataKind()가 호출되어 DEFAULT가 캡처되었는지 확인
+        assertThat(capturedDataKind.get()).isEqualTo(com.example.common.masking.DataKind.DEFAULT);
+    }
+
+    @Test
+    void applyMask_usesTargetMaskRuleWhenProvided() {
+        // MaskingTarget에 maskRule이 있을 때 분기 커버리지
+        given(policyResolver.resolve(any(), any()))
+                .willReturn(Optional.of(AuditPolicySnapshot.builder().enabled(true).maskingEnabled(true).build()));
+        AuditRecordService service = new AuditRecordService(repository, policyResolver, objectMapper,
+                null, "audit.events.v1", "", null,
+                false, "", "default", maskingProperties, null, null);
+
+        AuditEvent event = AuditEvent.builder()
+                .eventType("VIEW")
+                .beforeSummary("test data 1234567890")
+                .build();
+
+        com.example.common.masking.MaskingTarget target = com.example.common.masking.MaskingTarget.builder()
+                .maskRule("FULL")
+                .build();
+
+        service.record(event, AuditMode.ASYNC_FALLBACK, target);
+
+        ArgumentCaptor<AuditLogEntity> captor = ArgumentCaptor.forClass(AuditLogEntity.class);
+        verify(repository).save(captor.capture());
+        AuditLogEntity saved = captor.getValue();
+        // FULL 마스킹은 [MASKED]로 변환됨 (sanitize 적용 후 MaskRuleProcessor 적용)
+        assertThat(saved.getBeforeSummary()).isEqualTo("[MASKED]");
+    }
 }

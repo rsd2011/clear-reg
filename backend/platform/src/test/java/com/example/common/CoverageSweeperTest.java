@@ -22,6 +22,7 @@ import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.identifier.*;
 import com.example.common.masking.*;
+import com.example.common.masking.DataKind;
 import com.example.common.policy.MaskingMatch;
 import com.example.common.policy.RowAccessContextHolder;
 import com.example.common.policy.RowAccessMatch;
@@ -143,7 +144,7 @@ class CoverageSweeperTest {
 
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .forceUnmaskFields(Set.of("name"))
                 .requesterRoles(Set.of("AUDITOR"))
@@ -162,11 +163,16 @@ class CoverageSweeperTest {
         };
 
         assertThat(service.render(maskable, target, "name")).isEqualTo("raw-value"); // force unmask field
-        String masked = OutputMaskingAdapter.mask("other", "123456", target, "PARTIAL", null);
+
+        // DataKind 기반 마스킹 테스트
+        MaskingTarget accountTarget = MaskingTarget.builder().dataKind(DataKind.ACCOUNT_NO).build();
+        String masked = OutputMaskingAdapter.mask("other", "123456", accountTarget, true);
         assertThat(masked).startsWith("12").endsWith("56");
 
-        String tokenized = MaskingFunctions.masker(MaskingMatch.builder().maskRule("TOKENIZE").build()).apply("abc");
-        assertThat(tokenized).hasSizeGreaterThan(5);
+        // maskingEnabled=true + TOKENIZE DataKind는 없으므로 DEFAULT(FULL) 적용
+        // 화이트리스트(maskingEnabled=false)면 원본 반환
+        String raw = OutputMaskingAdapter.mask("field", "abc", MaskingTarget.builder().build(), false);
+        assertThat(raw).isEqualTo("abc");
 
         // schedule/policy artifacts coverage
         com.example.common.schedule.TriggerDescriptor cron = new com.example.common.schedule.TriggerDescriptor(true, com.example.common.schedule.TriggerType.CRON, "0 0 * * * *", 0, 0, null);
@@ -213,30 +219,27 @@ class CoverageSweeperTest {
     void matchEqualsHashCodeCoverage() {
         UUID policyId = UUID.randomUUID();
 
-        // MaskingMatch - 모든 필드 설정
+        // MaskingMatch - 새로운 API로 모든 필드 설정
         MaskingMatch mask1 = MaskingMatch.builder()
                 .policyId(policyId)
-                .dataKind("RRN")
-                .maskRule("PARTIAL")
-                .maskParams("{\"keep\":4}")
+                .dataKinds(java.util.Set.of(com.example.common.masking.DataKind.SSN))
+                .maskingEnabled(true)
                 .auditEnabled(true)
                 .priority(1)
                 .build();
 
         MaskingMatch mask2 = MaskingMatch.builder()
                 .policyId(policyId)
-                .dataKind("RRN")
-                .maskRule("PARTIAL")
-                .maskParams("{\"keep\":4}")
+                .dataKinds(java.util.Set.of(com.example.common.masking.DataKind.SSN))
+                .maskingEnabled(true)
                 .auditEnabled(true)
                 .priority(1)
                 .build();
 
         MaskingMatch mask3 = MaskingMatch.builder()
                 .policyId(UUID.randomUUID())
-                .dataKind("PHONE")
-                .maskRule("FULL")
-                .maskParams(null)
+                .dataKinds(java.util.Set.of(com.example.common.masking.DataKind.PHONE))
+                .maskingEnabled(false)
                 .auditEnabled(false)
                 .priority(2)
                 .build();
@@ -254,13 +257,12 @@ class CoverageSweeperTest {
 
         // toString
         assertThat(mask1.toString()).contains("MaskingMatch");
-        assertThat(mask1.toString()).contains("RRN");
+        assertThat(mask1.toString()).contains("SSN");
 
         // getter
         assertThat(mask1.getPolicyId()).isEqualTo(policyId);
-        assertThat(mask1.getDataKind()).isEqualTo("RRN");
-        assertThat(mask1.getMaskRule()).isEqualTo("PARTIAL");
-        assertThat(mask1.getMaskParams()).isEqualTo("{\"keep\":4}");
+        assertThat(mask1.getDataKinds()).containsExactly(com.example.common.masking.DataKind.SSN);
+        assertThat(mask1.isMaskingEnabled()).isTrue();
         assertThat(mask1.isAuditEnabled()).isTrue();
         assertThat(mask1.getPriority()).isEqualTo(1);
 
@@ -313,5 +315,135 @@ class CoverageSweeperTest {
         assertThat(rowNull).isNotEqualTo(row1);
         assertThat(maskNull.hashCode()).isNotEqualTo(mask1.hashCode());
         assertThat(rowNull.hashCode()).isNotEqualTo(row1.hashCode());
+
+        // 레거시 Builder 커버리지
+        MaskingMatch legacyMask = MaskingMatch.builder()
+                .maskRule("PARTIAL")
+                .maskParams("{\"keep\":4}")
+                .build();
+        assertThat(legacyMask.isMaskingEnabled()).isTrue();
+        assertThat(legacyMask.getMaskRule()).isEqualTo("PARTIAL");
+        assertThat(legacyMask.getMaskParams()).isNull();
+
+        MaskingMatch noneRuleMask = MaskingMatch.builder()
+                .maskRule("NONE")
+                .build();
+        assertThat(noneRuleMask.isMaskingEnabled()).isFalse();
+        assertThat(noneRuleMask.getMaskRule()).isEqualTo("NONE");
+    }
+
+    @Test
+    @DisplayName("MaskRule enum 변환 메서드를 커버한다")
+    void maskRuleCoverage() {
+        // fromString 메서드
+        assertThat(com.example.common.masking.MaskRule.fromString(null)).isEqualTo(com.example.common.masking.MaskRule.FULL);
+        assertThat(com.example.common.masking.MaskRule.fromString("")).isEqualTo(com.example.common.masking.MaskRule.FULL);
+        assertThat(com.example.common.masking.MaskRule.fromString("   ")).isEqualTo(com.example.common.masking.MaskRule.FULL);
+        assertThat(com.example.common.masking.MaskRule.fromString("PARTIAL")).isEqualTo(com.example.common.masking.MaskRule.PARTIAL);
+        assertThat(com.example.common.masking.MaskRule.fromString("partial")).isEqualTo(com.example.common.masking.MaskRule.PARTIAL);
+        assertThat(com.example.common.masking.MaskRule.fromString("NONE")).isEqualTo(com.example.common.masking.MaskRule.NONE);
+        assertThat(com.example.common.masking.MaskRule.fromString("HASH")).isEqualTo(com.example.common.masking.MaskRule.HASH);
+        assertThat(com.example.common.masking.MaskRule.fromString("TOKENIZE")).isEqualTo(com.example.common.masking.MaskRule.TOKENIZE);
+        assertThat(com.example.common.masking.MaskRule.fromString("INVALID")).isEqualTo(com.example.common.masking.MaskRule.FULL);
+
+        // of 메서드
+        assertThat(com.example.common.masking.MaskRule.of(null)).isEqualTo(com.example.common.masking.MaskRule.NONE);
+        assertThat(com.example.common.masking.MaskRule.of("")).isEqualTo(com.example.common.masking.MaskRule.NONE);
+        assertThat(com.example.common.masking.MaskRule.of("PARTIAL")).isEqualTo(com.example.common.masking.MaskRule.PARTIAL);
+        assertThat(com.example.common.masking.MaskRule.of("hash")).isEqualTo(com.example.common.masking.MaskRule.HASH);
+        assertThat(com.example.common.masking.MaskRule.of("UNKNOWN")).isEqualTo(com.example.common.masking.MaskRule.NONE);
+    }
+
+    @Test
+    @DisplayName("MaskingFunctions masker 메서드를 커버한다")
+    void maskingFunctionsCoverage() {
+        // null match인 경우 - 마스킹 없이 원본 반환
+        var maskerNull = com.example.common.masking.MaskingFunctions.masker(null, DataKind.DEFAULT);
+        assertThat(maskerNull.apply("test")).isEqualTo("test");
+
+        var maskerNullBoth = com.example.common.masking.MaskingFunctions.masker(null);
+        assertThat(maskerNullBoth.apply("test")).isEqualTo("test");
+
+        // maskingEnabled=false인 경우 (화이트리스트) - 원본 반환
+        MaskingMatch whitelist = MaskingMatch.builder()
+                .maskingEnabled(false)
+                .build();
+        var maskerWhitelist = com.example.common.masking.MaskingFunctions.masker(whitelist, DataKind.DEFAULT);
+        assertThat(maskerWhitelist.apply("original")).isEqualTo("original");
+
+        // maskingEnabled=true인 경우 (블랙리스트) - 마스킹 적용
+        MaskingMatch blacklist = MaskingMatch.builder()
+                .maskingEnabled(true)
+                .dataKind("PHONE")
+                .build();
+        var maskerBlacklist = com.example.common.masking.MaskingFunctions.masker(blacklist, DataKind.PHONE);
+        assertThat(maskerBlacklist.apply("01012345678")).isNotEqualTo("01012345678");
+
+        // dataKind null인 경우에도 match가 null이면 원본 반환
+        var maskerNullKind = com.example.common.masking.MaskingFunctions.masker(null, null);
+        assertThat(maskerNullKind.apply("test")).isEqualTo("test");
+
+        // MaskingMatch에서 dataKind 사용
+        MaskingMatch withDataKind = MaskingMatch.builder()
+                .maskingEnabled(true)
+                .dataKind("SSN")
+                .build();
+        var maskerWithDataKind = com.example.common.masking.MaskingFunctions.masker(withDataKind);
+        assertThat(maskerWithDataKind.apply("900101-1234567")).isNotNull();
+
+        // applyMaskRule의 다양한 MaskRule 경우 커버
+        // NONE 규칙 테스트 - 원본 반환 (maskingEnabled=false)
+        MaskingMatch noneMatch = MaskingMatch.builder()
+                .maskingEnabled(false)
+                .build();
+        var noneRuleMasker = com.example.common.masking.MaskingFunctions.masker(noneMatch, DataKind.DEFAULT);
+        assertThat(noneRuleMasker.apply("original")).isEqualTo("original");
+
+        // PARTIAL 규칙 테스트 (PHONE은 PARTIAL) - 블랙리스트 정책 필요
+        MaskingMatch partialMatch = MaskingMatch.builder()
+                .maskingEnabled(true)
+                .dataKind("PHONE")
+                .build();
+        var partialMasker = com.example.common.masking.MaskingFunctions.masker(partialMatch, DataKind.PHONE);
+        assertThat(partialMasker.apply("01012345678")).contains("*");
+
+        // FULL 규칙 테스트 (SSN은 FULL) - 블랙리스트 정책 필요
+        MaskingMatch fullMatch = MaskingMatch.builder()
+                .maskingEnabled(true)
+                .dataKind("SSN")
+                .build();
+        var fullMasker = com.example.common.masking.MaskingFunctions.masker(fullMatch, DataKind.SSN);
+        String fullMasked = fullMasker.apply("900101-1234567");
+        // FULL 마스킹은 [MASKED] 또는 * 포함 가능
+        assertThat(fullMasked).satisfiesAnyOf(
+                m -> assertThat(m).contains("*"),
+                m -> assertThat(m).contains("[MASKED]")
+        );
+
+        // null value 테스트
+        var nullValueMasker = com.example.common.masking.MaskingFunctions.masker(null, DataKind.DEFAULT);
+        assertThat(nullValueMasker.apply(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("Maskable 인터페이스 기본 메서드를 커버한다")
+    void maskableCoverage() {
+        // Maskable 인터페이스의 default dataKind() 메서드 커버
+        Maskable<String> simpleMaskable = new Maskable<>() {
+            @Override public String raw() { return "raw"; }
+            @Override public String masked() { return "***"; }
+        };
+
+        assertThat(simpleMaskable.dataKind()).isEqualTo(DataKind.DEFAULT);
+        assertThat(simpleMaskable.raw()).isEqualTo("raw");
+        assertThat(simpleMaskable.masked()).isEqualTo("***");
+
+        // 기존 값 객체들의 Maskable 구현 확인
+        assertThat(CustomerId.of("CUST1234").dataKind()).isEqualTo(DataKind.CUSTOMER_ID);
+        assertThat(ResidentRegistrationId.of("900101-1234567").dataKind()).isEqualTo(DataKind.SSN);
+        assertThat(PhoneNumber.of("01012345678").dataKind()).isEqualTo(DataKind.PHONE);
+        assertThat(EmailAddress.of("test@example.com").dataKind()).isEqualTo(DataKind.EMAIL);
+        assertThat(CardId.of("4111111111111111").dataKind()).isEqualTo(DataKind.CARD_NO);
+        assertThat(AccountId.of("1234567890").dataKind()).isEqualTo(DataKind.ACCOUNT_NO);
     }
 }

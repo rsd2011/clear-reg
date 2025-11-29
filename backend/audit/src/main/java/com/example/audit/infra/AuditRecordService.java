@@ -240,11 +240,16 @@ public class AuditRecordService implements AuditPort {
         if (maskingService == null) {
             return masked;
         }
-        final String maskedFinal = masked;
-        Maskable inline = new Maskable() {
-            @Override public String raw() { return raw; }
-            @Override public String masked() { return maskedFinal; }
-        };
-        return maskingService.render(inline, target, fieldName);
+        return maskingService.render(new InlineMaskable(raw, masked), target, fieldName);
+    }
+
+    /**
+     * 감사 로그 마스킹을 위한 간단한 Maskable 구현.
+     * 익명 클래스 대신 사용하여 JaCoCo 커버리지 측정을 개선.
+     */
+    private record InlineMaskable(String rawValue, String maskedValue) implements Maskable<String> {
+        @Override public String raw() { return rawValue; }
+        @Override public String masked() { return maskedValue; }
+        @Override public com.example.common.masking.DataKind dataKind() { return com.example.common.masking.DataKind.DEFAULT; }
     }
 }

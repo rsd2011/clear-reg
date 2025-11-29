@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingService;
 import com.example.common.masking.MaskingStrategy;
 import com.example.common.masking.MaskingTarget;
@@ -69,7 +70,7 @@ class MaskingServiceUnmaskE2ETest {
         // given
         var target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .forceUnmask(true)
                 .requesterRoles(java.util.Set.of("AUDIT_ADMIN"))
                 .rowId("ROW-123")
@@ -88,7 +89,7 @@ class MaskingServiceUnmaskE2ETest {
         assertThat(repository.findAll()).hasSize(1);
         UnmaskAuditRecord record = repository.findAll().getFirst();
         assertThat(record.getSubjectType()).isEqualTo(SubjectType.CUSTOMER_INDIVIDUAL);
-        assertThat(record.getDataKind()).isEqualTo("RRN");
+        assertThat(record.getDataKind()).isEqualTo("SSN");
         assertThat(record.getFieldName()).isEqualTo("residentId");
         assertThat(record.getRowId()).isEqualTo("ROW-123");
         assertThat(record.getEventTime()).isNotNull();

@@ -317,12 +317,7 @@ public class DraftApplicationService {
     }
 
     private java.util.function.UnaryOperator<String> buildMasker(com.example.common.policy.MaskingMatch match) {
-        if (match == null || match.getMaskRule() == null) {
-            return java.util.function.UnaryOperator.identity();
-        }
-        String rule = match.getMaskRule();
-        String params = match.getMaskParams();
-        return value -> com.example.common.masking.MaskRuleProcessor.apply(rule, value, params);
+        return com.example.common.masking.MaskingFunctions.masker(match);
     }
 
     @Transactional(readOnly = true)

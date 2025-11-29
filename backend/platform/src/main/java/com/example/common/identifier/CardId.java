@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 카드 번호 (PAN) 값 객체. 숫자만 보관, 마스킹 기본. */
-public final class CardId {
+public final class CardId implements Maskable<String> {
 
     private final String digits; // normalized digits only
 
@@ -24,14 +26,21 @@ public final class CardId {
         return new CardId(digits);
     }
 
+    @Override
     public String raw() {
         return digits;
     }
 
+    @Override
     public String masked() {
         int len = digits.length();
         int visible = Math.min(4, len);
         return "*".repeat(len - visible) + digits.substring(len - visible);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.CARD_NO;
     }
 
     @Override

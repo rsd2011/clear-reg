@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.test.context.ContextConfiguration;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingService;
 import com.example.common.masking.MaskingStrategy;
 import com.example.common.masking.MaskingTarget;
@@ -61,7 +62,7 @@ class UnmaskAuditSinkTest {
     void unmaskPersisted() {
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .forceUnmask(true)
                 .build();
 
@@ -69,7 +70,7 @@ class UnmaskAuditSinkTest {
         sink.handle(UnmaskAuditEvent.builder()
                 .eventTime(Instant.now())
                 .subjectType(target.getSubjectType())
-                .dataKind(target.getDataKind())
+                .dataKind(target.getDataKind() != null ? target.getDataKind().name() : null)
                 .fieldName("residentId")
                 .rowId("ROW-1")
                 .build());
@@ -77,7 +78,7 @@ class UnmaskAuditSinkTest {
         assertThat(repository.findAll()).hasSize(1);
         UnmaskAuditRecord record = repository.findAll().getFirst();
         assertThat(record.getSubjectType()).isEqualTo(SubjectType.CUSTOMER_INDIVIDUAL);
-        assertThat(record.getDataKind()).isEqualTo("RRN");
+        assertThat(record.getDataKind()).isEqualTo("SSN");
         assertThat(record.getFieldName()).isEqualTo("residentId");
     }
 }

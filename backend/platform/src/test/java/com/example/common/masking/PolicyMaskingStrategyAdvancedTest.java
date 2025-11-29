@@ -23,10 +23,10 @@ class PolicyMaskingStrategyAdvancedTest {
 
         MaskingTarget target = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .forceUnmask(false)
-                .forceUnmaskKinds(Set.of("RRN"))
+                .forceUnmaskKinds(Set.of(DataKind.SSN))
                 .requesterRoles(Set.of("AUDIT_ADMIN"))
                 .build();
 

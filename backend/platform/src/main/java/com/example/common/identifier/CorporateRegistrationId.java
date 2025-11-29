@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 법인등록번호(13자리). */
-public final class CorporateRegistrationId {
+public final class CorporateRegistrationId implements Maskable<String> {
 
     private final String digits;
 
@@ -24,12 +26,19 @@ public final class CorporateRegistrationId {
         return new CorporateRegistrationId(digits);
     }
 
+    @Override
     public String raw() {
         return digits;
     }
 
+    @Override
     public String masked() {
         return "******-*******";
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.CORP_REG_NO;
     }
 
     @Override

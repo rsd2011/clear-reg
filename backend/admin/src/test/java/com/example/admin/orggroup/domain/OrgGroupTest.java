@@ -68,5 +68,22 @@ class OrgGroupTest {
         assertThat(emptyGroup).isNotNull();
         assertThat(emptyCat).isNotNull();
         assertThat(emptyMember).isNotNull();
+
+        // OrgGroupCategoryMap 커버리지
+        OrgGroupCategoryMap map = OrgGroupCategoryMap.builder()
+                .groupCode("GRP1")
+                .categoryCode("CAT1")
+                .build();
+        assertThat(map.getGroupCode()).isEqualTo("GRP1");
+        assertThat(map.getCategoryCode()).isEqualTo("CAT1");
+
+        // AllArgsConstructor 커버리지
+        OrgGroupCategoryMap mapAll = new OrgGroupCategoryMap("GRP2", "CAT2");
+        assertThat(mapAll.getGroupCode()).isEqualTo("GRP2");
+        assertThat(mapAll.getCategoryCode()).isEqualTo("CAT2");
+
+        // NoArgsConstructor 커버리지
+        OrgGroupCategoryMap emptyMap = new OrgGroupCategoryMap();
+        assertThat(emptyMap).isNotNull();
     }
 }

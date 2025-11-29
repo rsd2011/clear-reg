@@ -25,21 +25,19 @@ class MaskingAndPolicyBranchCoverageTest {
     void maskingTargetEquality() {
         MaskingTarget t1 = MaskingTarget.builder()
                 .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .forceUnmask(false)
-                .forceUnmaskKinds(Set.of("RRN"))
+                .forceUnmaskKinds(Set.of(DataKind.SSN))
                 .forceUnmaskFields(Set.of("name"))
                 .requesterRoles(Set.of("AUDIT_ADMIN"))
                 .rowId("row-1")
-                .maskRule("FULL")
-                .maskParams("{}")
                 .build();
-        MaskingTarget t2 = MaskingTarget.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind("RRN")
-                .defaultMask(true).forceUnmask(false).forceUnmaskKinds(Set.of("RRN"))
+        MaskingTarget t2 = MaskingTarget.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind(DataKind.SSN)
+                .defaultMask(true).forceUnmask(false).forceUnmaskKinds(Set.of(DataKind.SSN))
                 .forceUnmaskFields(Set.of("name")).requesterRoles(Set.of("AUDIT_ADMIN")).rowId("row-1")
-                .maskRule("FULL").maskParams("{}").build();
-        MaskingTarget different = MaskingTarget.builder().subjectType(SubjectType.EMPLOYEE).dataKind("CARD").defaultMask(false).build();
+                .build();
+        MaskingTarget different = MaskingTarget.builder().subjectType(SubjectType.EMPLOYEE).dataKind(DataKind.CARD_NO).defaultMask(false).build();
 
         assertThat(t1).isEqualTo(t2);
         assertThat(t1.hashCode()).isEqualTo(t2.hashCode());
@@ -51,15 +49,15 @@ class MaskingAndPolicyBranchCoverageTest {
         assertThat(nullFields).isEqualTo(MaskingTarget.builder().build());
         assertThat(t1.toString()).contains("CUSTOMER_INDIVIDUAL");
 
-        UnmaskAuditEvent ev1 = UnmaskAuditEvent.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind("RRN").fieldName("name").rowId("r1").requesterRoles(Set.of("ROLE")).build();
-        UnmaskAuditEvent ev2 = UnmaskAuditEvent.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind("RRN").fieldName("name").rowId("r1").requesterRoles(Set.of("ROLE")).build();
+        UnmaskAuditEvent ev1 = UnmaskAuditEvent.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind("SSN").fieldName("name").rowId("r1").requesterRoles(Set.of("ROLE")).build();
+        UnmaskAuditEvent ev2 = UnmaskAuditEvent.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL).dataKind("SSN").fieldName("name").rowId("r1").requesterRoles(Set.of("ROLE")).build();
         assertThat(ev1).isEqualTo(ev2);
     }
 
     @Test
     @DisplayName("OutputMaskingAdapter/MaskingService 강제 해제·마스킹 적용")
     void outputMaskingBranches() {
-        MaskingTarget force = MaskingTarget.builder().forceUnmask(true).dataKind("REF").forceUnmaskFields(Set.of("ref"))
+        MaskingTarget force = MaskingTarget.builder().forceUnmask(true).dataKind(DataKind.DEFAULT).forceUnmaskFields(Set.of("ref"))
                 .build();
         // null value
         assertThat(OutputMaskingAdapter.mask("ref", null, force, "FULL", null)).isNull();
@@ -68,11 +66,11 @@ class MaskingAndPolicyBranchCoverageTest {
         assertThat(OutputMaskingAdapter.mask("ref", "SECRET", force, "FULL", null)).isEqualTo("SECRET");
 
         // forceUnmaskKinds
-        MaskingTarget forceKind = MaskingTarget.builder().forceUnmaskKinds(Set.of("REF")).dataKind("REF").build();
+        MaskingTarget forceKind = MaskingTarget.builder().forceUnmaskKinds(Set.of(DataKind.DEFAULT)).dataKind(DataKind.DEFAULT).build();
         assertThat(OutputMaskingAdapter.mask("ref", "SECRET", forceKind, "FULL", null)).isEqualTo("SECRET");
 
         // forceUnmaskFields
-        MaskingTarget forceField = MaskingTarget.builder().forceUnmaskFields(Set.of("ref")).dataKind("OTHER").build();
+        MaskingTarget forceField = MaskingTarget.builder().forceUnmaskFields(Set.of("ref")).dataKind(DataKind.DEFAULT).build();
         assertThat(OutputMaskingAdapter.mask("ref", "SECRET", forceField, "FULL", null)).isEqualTo("SECRET");
 
         // Maskable path
@@ -80,7 +78,7 @@ class MaskingAndPolicyBranchCoverageTest {
             @Override public String raw() { return "RAW-VALUE"; }
             @Override public String masked() { return "MASKED"; }
         };
-        MaskingTarget normal = MaskingTarget.builder().dataKind("GENERIC").forceUnmask(false).build();
+        MaskingTarget normal = MaskingTarget.builder().dataKind(DataKind.DEFAULT).forceUnmask(false).build();
         String masked = OutputMaskingAdapter.mask("field", maskable, normal, "PARTIAL", null);
         assertThat(masked).isNotBlank();
 
@@ -89,7 +87,7 @@ class MaskingAndPolicyBranchCoverageTest {
         MaskingStrategy strategy = (target) -> false; // 마스킹 비활성화 => 항상 raw
         MaskingService service = new MaskingService(strategy, sink::add);
         String rendered = service.render(maskable, MaskingTarget.builder().subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("CARD").forceUnmask(true).rowId("row1").requesterRoles(Set.of("AUDIT_ADMIN")).build(), "field");
+                .dataKind(DataKind.CARD_NO).forceUnmask(true).rowId("row1").requesterRoles(Set.of("AUDIT_ADMIN")).build(), "field");
         assertThat(rendered).isEqualTo("RAW-VALUE");
         assertThat(sink).hasSize(1);
 

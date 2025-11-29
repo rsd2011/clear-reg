@@ -1,12 +1,14 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * 내부/외부 고객 식별자.
  */
-public final class CustomerId extends AbstractIdentifier {
+public final class CustomerId extends AbstractIdentifier implements Maskable<String> {
 
     private final String raw;
 
@@ -20,12 +22,19 @@ public final class CustomerId extends AbstractIdentifier {
         return new CustomerId(normalized);
     }
 
+    @Override
     public String raw() {
         return raw;
     }
 
+    @Override
     public String masked() {
         return mask(raw);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.CUSTOMER_ID;
     }
 
     @Override

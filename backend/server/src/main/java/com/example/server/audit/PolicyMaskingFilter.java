@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
 import com.example.common.policy.MaskingPolicyProvider;
@@ -83,7 +84,7 @@ public class PolicyMaskingFilter extends OncePerRequestFilter {
                         ctx.action() != null ? ctx.action().name() : null,
                         ctx.permissionGroupCode(),
                         orgGroups,
-                        null, // dataKind - 아래에서 MaskingTarget에서 설정
+                        (DataKind) null, // dataKind - 아래에서 MaskingTarget에서 설정
                         Instant.now()
                 ));
 
@@ -110,10 +111,10 @@ public class PolicyMaskingFilter extends OncePerRequestFilter {
 
     private MaskingTarget buildMaskingTarget(MaskingTarget base) {
         SubjectType subject = base != null ? base.getSubjectType() : SubjectType.UNKNOWN;
-        String dataKind = base != null ? base.getDataKind() : "HTTP";
+        DataKind dataKind = base != null ? base.getDataKind() : DataKind.DEFAULT;
         boolean defaultMask = base != null && base.isDefaultMask();
         boolean forceUnmask = base != null && base.isForceUnmask();
-        Set<String> forceKinds = base != null ? base.getForceUnmaskKinds() : Set.of();
+        Set<DataKind> forceKinds = base != null ? base.getForceUnmaskKinds() : Set.of();
         Set<String> forceFields = base != null ? base.getForceUnmaskFields() : Set.of();
         Set<String> requesterRoles = base != null ? base.getRequesterRoles() : Set.of();
         String rowId = base != null ? base.getRowId() : null;
@@ -123,7 +124,7 @@ public class PolicyMaskingFilter extends OncePerRequestFilter {
                 .dataKind(dataKind)
                 .defaultMask(defaultMask || base == null)
                 .forceUnmask(forceUnmask)
-                .forceUnmaskKinds(new HashSet<>(forceKinds))
+                .forceUnmaskKinds(forceKinds != null ? new HashSet<>(forceKinds) : new HashSet<>())
                 .forceUnmaskFields(new HashSet<>(forceFields))
                 .requesterRoles(new HashSet<>(requesterRoles))
                 .rowId(rowId)

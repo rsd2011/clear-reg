@@ -71,8 +71,7 @@ public class HrEmployeeExportController {
                 command,
                 employees,
                 target,
-                "PARTIAL",
-                "{\"keepEnd\":4}");
+                true);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"hr_employees.csv\"")

@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,6 +17,7 @@ import com.example.admin.maskingpolicy.domain.MaskingPolicy;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.masking.DataKind;
 import com.example.common.policy.MaskingMatch;
 
 @DisplayName("MaskingPolicyService")
@@ -36,9 +38,8 @@ class MaskingPolicyServiceTest {
                     .featureCode(FeatureCode.ORGANIZATION)
                     .actionCode(ActionCode.READ)
                     .permGroupCode("PG")
-                    .dataKind("SSN")
-                    .maskRule("PARTIAL")
-                    .maskParams("{\"visibleChars\":4}")
+                    .dataKinds(Set.of(DataKind.SSN))
+                    .maskingEnabled(true)
                     .auditEnabled(true)
                     .priority(1)
                     .active(true)
@@ -47,21 +48,20 @@ class MaskingPolicyServiceTest {
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", "READ", "PG", List.of(), "SSN", now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", "READ", "PG", List.of(), DataKind.SSN, now);
 
             assertThat(match).isPresent();
-            assertThat(match.get().getMaskRule()).isEqualTo("PARTIAL");
-            assertThat(match.get().getDataKind()).isEqualTo("SSN");
-            assertThat(match.get().getMaskParams()).isEqualTo("{\"visibleChars\":4}");
+            assertThat(match.get().isMaskingEnabled()).isTrue();
+            assertThat(match.get().getDataKinds()).contains(DataKind.SSN);
             assertThat(match.get().isAuditEnabled()).isTrue();
         }
 
         @Test
         @DisplayName("featureCode가 null이거나 빈 문자열이면 empty를 반환한다")
         void returnsEmptyWhenFeatureCodeInvalid() {
-            Optional<MaskingMatch> match1 = service.evaluate(null, null, null, null, null, Instant.now());
-            Optional<MaskingMatch> match2 = service.evaluate("", null, null, null, null, Instant.now());
-            Optional<MaskingMatch> match3 = service.evaluate("  ", null, null, null, null, Instant.now());
+            Optional<MaskingMatch> match1 = service.evaluate(null, null, null, null, (DataKind) null, Instant.now());
+            Optional<MaskingMatch> match2 = service.evaluate("", null, null, null, (DataKind) null, Instant.now());
+            Optional<MaskingMatch> match3 = service.evaluate("  ", null, null, null, (DataKind) null, Instant.now());
 
             assertThat(match1).isEmpty();
             assertThat(match2).isEmpty();
@@ -71,7 +71,7 @@ class MaskingPolicyServiceTest {
         @Test
         @DisplayName("잘못된 featureCode면 empty를 반환한다")
         void returnsEmptyWhenFeatureCodeUnknown() {
-            Optional<MaskingMatch> match = service.evaluate("INVALID_FEATURE", null, null, null, null, Instant.now());
+            Optional<MaskingMatch> match = service.evaluate("INVALID_FEATURE", null, null, null, (DataKind) null, Instant.now());
 
             assertThat(match).isEmpty();
         }
@@ -81,7 +81,7 @@ class MaskingPolicyServiceTest {
         void returnsEmptyWhenNoMatch() {
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of());
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, null, Instant.now());
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, Instant.now());
 
             assertThat(match).isEmpty();
         }
@@ -92,22 +92,22 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicy lowPriority = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .maskRule("NONE")
+                    .maskingEnabled(false)
                     .priority(100)
                     .active(true)
                     .build();
             MaskingPolicy highPriority = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(lowPriority, highPriority));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, null, now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, now);
 
             assertThat(match).isPresent();
-            assertThat(match.get().getMaskRule()).isEqualTo("FULL");
+            assertThat(match.get().isMaskingEnabled()).isTrue();
         }
 
         @Test
@@ -116,14 +116,14 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicy expired = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .effectiveTo(now.minusSeconds(1))
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(expired));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, null, now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, now);
 
             assertThat(match).isEmpty();
         }
@@ -134,14 +134,14 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicy future = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .effectiveFrom(now.plusSeconds(100))
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(future));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, null, now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, now);
 
             assertThat(match).isEmpty();
         }
@@ -152,64 +152,46 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicy ssnPolicy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .dataKind("SSN")
-                    .maskRule("PARTIAL")
+                    .dataKinds(Set.of(DataKind.SSN))
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             MaskingPolicy phonePolicy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .dataKind("PHONE")
-                    .maskRule("FULL")
+                    .dataKinds(Set.of(DataKind.PHONE))
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(ssnPolicy, phonePolicy));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, "SSN", now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, DataKind.SSN, now);
 
             assertThat(match).isPresent();
-            assertThat(match.get().getMaskRule()).isEqualTo("PARTIAL");
+            assertThat(match.get().getDataKinds()).contains(DataKind.SSN);
         }
 
         @Test
-        @DisplayName("dataKind가 null인 정책은 모든 종류에 매칭된다")
-        void nullDataKindMatchesAll() {
+        @DisplayName("dataKinds가 비어있는 정책은 모든 종류에 매칭된다")
+        void emptyDataKindsMatchesAll() {
             Instant now = Instant.now();
             MaskingPolicy generalPolicy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .dataKind(null)
-                    .maskRule("FULL")
+                    .dataKinds(Set.of()) // 빈 Set = 모든 종류에 적용
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(generalPolicy));
 
-            Optional<MaskingMatch> match1 = service.evaluate("ORGANIZATION", null, null, null, "SSN", now);
-            Optional<MaskingMatch> match2 = service.evaluate("ORGANIZATION", null, null, null, "PHONE", now);
-            Optional<MaskingMatch> match3 = service.evaluate("ORGANIZATION", null, null, null, null, now);
+            Optional<MaskingMatch> match1 = service.evaluate("ORGANIZATION", null, null, null, DataKind.SSN, now);
+            Optional<MaskingMatch> match2 = service.evaluate("ORGANIZATION", null, null, null, DataKind.PHONE, now);
+            Optional<MaskingMatch> match3 = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, now);
 
             assertThat(match1).isPresent();
             assertThat(match2).isPresent();
             assertThat(match3).isPresent();
-        }
-
-        @Test
-        @DisplayName("dataKind 대소문자 무관 매칭")
-        void dataKindCaseInsensitive() {
-            Instant now = Instant.now();
-            MaskingPolicy policy = MaskingPolicy.builder()
-                    .featureCode(FeatureCode.ORGANIZATION)
-                    .dataKind("SSN")
-                    .maskRule("PARTIAL")
-                    .priority(1)
-                    .active(true)
-                    .build();
-            given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
-
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, "ssn", now);
-
-            assertThat(match).isPresent();
         }
 
         @Test
@@ -219,13 +201,13 @@ class MaskingPolicyServiceTest {
             MaskingPolicy policy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
                     .orgGroupCode("ORG_A")
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, List.of("ORG_A", "ORG_B"), null, now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, List.of("ORG_A", "ORG_B"), (DataKind) null, now);
 
             assertThat(match).isPresent();
         }
@@ -237,13 +219,13 @@ class MaskingPolicyServiceTest {
             MaskingPolicy policy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
                     .orgGroupCode("ORG_X")
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, List.of("ORG_A", "ORG_B"), null, now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, List.of("ORG_A", "ORG_B"), (DataKind) null, now);
 
             assertThat(match).isEmpty();
         }
@@ -253,13 +235,13 @@ class MaskingPolicyServiceTest {
         void usesCurrentTimeWhenNowIsNull() {
             MaskingPolicy policy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, null, null);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, null);
 
             assertThat(match).isPresent();
         }
@@ -270,17 +252,61 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicy policy = MaskingPolicy.builder()
                     .featureCode(FeatureCode.ORGANIZATION)
-                    .maskRule("FULL")
+                    .maskingEnabled(true)
                     .auditEnabled(false)
                     .priority(1)
                     .active(true)
                     .build();
             given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
 
-            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, null, now);
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, (DataKind) null, now);
 
             assertThat(match).isPresent();
             assertThat(match.get().isAuditEnabled()).isFalse();
+        }
+
+        @Test
+        @DisplayName("여러 dataKinds를 가진 정책이 매칭된다")
+        void matchesMultipleDataKinds() {
+            Instant now = Instant.now();
+            MaskingPolicy policy = MaskingPolicy.builder()
+                    .featureCode(FeatureCode.ORGANIZATION)
+                    .dataKinds(Set.of(DataKind.SSN, DataKind.PHONE, DataKind.EMAIL))
+                    .maskingEnabled(true)
+                    .priority(1)
+                    .active(true)
+                    .build();
+            given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
+
+            assertThat(service.evaluate("ORGANIZATION", null, null, null, DataKind.SSN, now)).isPresent();
+            assertThat(service.evaluate("ORGANIZATION", null, null, null, DataKind.PHONE, now)).isPresent();
+            assertThat(service.evaluate("ORGANIZATION", null, null, null, DataKind.EMAIL, now)).isPresent();
+            assertThat(service.evaluate("ORGANIZATION", null, null, null, DataKind.CARD_NO, now)).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("레거시 호환성")
+    class LegacyCompatibility {
+
+        @Test
+        @DisplayName("String dataKind를 받는 deprecated 메서드가 동작한다")
+        void legacyEvaluateWorks() {
+            Instant now = Instant.now();
+            MaskingPolicy policy = MaskingPolicy.builder()
+                    .featureCode(FeatureCode.ORGANIZATION)
+                    .dataKinds(Set.of(DataKind.SSN))
+                    .maskingEnabled(true)
+                    .priority(1)
+                    .active(true)
+                    .build();
+            given(repository.findByActiveTrueOrderByPriorityAsc()).willReturn(List.of(policy));
+
+            @SuppressWarnings("deprecation")
+            Optional<MaskingMatch> match = service.evaluate("ORGANIZATION", null, null, null, "SSN", now);
+
+            assertThat(match).isPresent();
+            assertThat(match.get().getDataKinds()).contains(DataKind.SSN);
         }
     }
 }

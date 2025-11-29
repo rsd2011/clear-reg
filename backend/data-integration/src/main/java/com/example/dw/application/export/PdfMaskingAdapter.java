@@ -15,10 +15,22 @@ public final class PdfMaskingAdapter {
 
     public static void writeMaskedParagraph(Map<String, Object> row,
                                             MaskingTarget target,
+                                            boolean maskingEnabled,
+                                            Consumer<String> paragraphWriter) {
+        Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskingEnabled);
+        paragraphWriter.accept(masked.toString());
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public static void writeMaskedParagraph(Map<String, Object> row,
+                                            MaskingTarget target,
                                             String maskRule,
                                             String maskParams,
                                             Consumer<String> paragraphWriter) {
-        Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskRule, maskParams);
-        paragraphWriter.accept(masked.toString());
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        writeMaskedParagraph(row, target, maskingEnabled, paragraphWriter);
     }
 }

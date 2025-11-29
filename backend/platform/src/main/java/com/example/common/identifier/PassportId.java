@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 여권번호. 국가별 포맷 다양성 감안, 영숫자 6~9자로 제한. */
-public final class PassportId {
+public final class PassportId implements Maskable<String> {
     private final String raw;
 
     private PassportId(String raw) {
@@ -23,11 +25,18 @@ public final class PassportId {
         return new PassportId(trimmed);
     }
 
+    @Override
     public String raw() { return raw; }
 
+    @Override
     public String masked() {
         int visible = Math.min(3, raw.length());
         return "*".repeat(raw.length() - visible) + raw.substring(raw.length() - visible);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.PASSPORT_NO;
     }
 
     @Override

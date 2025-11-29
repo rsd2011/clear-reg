@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 사업자등록번호(10자리). */
-public final class BusinessRegistrationId {
+public final class BusinessRegistrationId implements Maskable<String> {
 
     private final String digits;
 
@@ -24,12 +26,19 @@ public final class BusinessRegistrationId {
         return new BusinessRegistrationId(digits);
     }
 
+    @Override
     public String raw() {
         return digits;
     }
 
+    @Override
     public String masked() {
         return "***-**-" + digits.substring(5);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.BUSINESS_REG_NO;
     }
 
     @Override

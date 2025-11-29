@@ -16,10 +16,23 @@ public final class ExcelMaskingAdapter {
     public static void writeMaskedRow(int rowIndex,
                                       Map<String, Object> row,
                                       MaskingTarget target,
+                                      boolean maskingEnabled,
+                                      BiConsumer<Integer, Map<String, Object>> rowWriter) {
+        Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskingEnabled);
+        rowWriter.accept(rowIndex, masked);
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public static void writeMaskedRow(int rowIndex,
+                                      Map<String, Object> row,
+                                      MaskingTarget target,
                                       String maskRule,
                                       String maskParams,
                                       BiConsumer<Integer, Map<String, Object>> rowWriter) {
-        Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskRule, maskParams);
-        rowWriter.accept(rowIndex, masked);
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        writeMaskedRow(rowIndex, row, target, maskingEnabled, rowWriter);
     }
 }

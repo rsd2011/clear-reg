@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.common.masking.DataKind;
 
 class MaskingServiceTest {
 
@@ -36,16 +37,16 @@ class MaskingServiceTest {
         MaskingService service = new MaskingService(strategy, sink);
 
         MaskingTarget target = MaskingTarget.builder()
-                .subjectType(SubjectType.CUSTOMER_INDIVIDUAL)
-                .dataKind("RRN")
+                .dataKind(DataKind.SSN)
                 .defaultMask(true)
                 .forceUnmask(true)
                 .requesterRoles(Set.of("AUDIT_ADMIN"))
                 .build();
 
-        Maskable maskable = new Maskable() {
+        Maskable<String> maskable = new Maskable<String>() {
             @Override public String raw() { return "123456-7890123"; }
             @Override public String masked() { return "123456-1******"; }
+            @Override public DataKind dataKind() { return DataKind.SSN; }
         };
 
         String result = service.render(maskable, target, "residentId");

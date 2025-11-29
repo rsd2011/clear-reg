@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 주민등록번호 (주민번호) 전용 값 객체. */
-public final class ResidentRegistrationId {
+public final class ResidentRegistrationId implements Maskable<String> {
 
     private static final String MASKED = "******-*******";
     private final String raw;
@@ -25,12 +27,19 @@ public final class ResidentRegistrationId {
         return new ResidentRegistrationId(trimmed);
     }
 
+    @Override
     public String raw() {
         return raw;
     }
 
+    @Override
     public String masked() {
         return MASKED;
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.SSN;
     }
 
     @Override

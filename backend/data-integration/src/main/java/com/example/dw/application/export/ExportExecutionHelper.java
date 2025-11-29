@@ -29,25 +29,46 @@ public class ExportExecutionHelper {
     public byte[] exportCsv(ExportCommand command,
                             List<Map<String, Object>> rows,
                             MaskingTarget target,
-                            String maskRule,
-                            String maskParams) {
-        String effectiveRule = maskRule != null ? maskRule : "PARTIAL";
-        return exportService.export(command, () -> buildCsv(rows, target, effectiveRule, maskParams));
+                            boolean maskingEnabled) {
+        return exportService.export(command, () -> buildCsv(rows, target, maskingEnabled));
     }
 
     public byte[] exportJson(ExportCommand command,
                              List<Map<String, Object>> rows,
                              MaskingTarget target,
+                             boolean maskingEnabled) {
+        return exportService.export(command, () -> buildJson(rows, target, maskingEnabled));
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public byte[] exportCsv(ExportCommand command,
+                            List<Map<String, Object>> rows,
+                            MaskingTarget target,
+                            String maskRule,
+                            String maskParams) {
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        return exportCsv(command, rows, target, maskingEnabled);
+    }
+
+    /**
+     * @deprecated maskRule, maskParams 파라미터는 더 이상 사용되지 않습니다.
+     */
+    @Deprecated
+    public byte[] exportJson(ExportCommand command,
+                             List<Map<String, Object>> rows,
+                             MaskingTarget target,
                              String maskRule,
                              String maskParams) {
-        String effectiveRule = maskRule != null ? maskRule : "PARTIAL";
-        return exportService.export(command, () -> buildJson(rows, target, effectiveRule, maskParams));
+        boolean maskingEnabled = maskRule != null && !"NONE".equalsIgnoreCase(maskRule);
+        return exportJson(command, rows, target, maskingEnabled);
     }
 
     private byte[] buildCsv(List<Map<String, Object>> rows,
                             MaskingTarget target,
-                            String maskRule,
-                            String maskParams) {
+                            boolean maskingEnabled) {
         if (rows.isEmpty()) {
             return new byte[0];
         }
@@ -57,7 +78,7 @@ public class ExportExecutionHelper {
         out.write(headerLine.getBytes(StandardCharsets.UTF_8), 0, headerLine.length());
         out.write('\n');
         for (Map<String, Object> row : rows) {
-            Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskRule, maskParams);
+            Map<String, Object> masked = ExportMaskingHelper.maskRow(row, target, maskingEnabled);
             String line = headers.stream()
                     .map(h -> String.valueOf(masked.getOrDefault(h, "")))
                     .reduce((a, b) -> a + "," + b)
@@ -70,11 +91,10 @@ public class ExportExecutionHelper {
 
     private byte[] buildJson(List<Map<String, Object>> rows,
                              MaskingTarget target,
-                             String maskRule,
-                             String maskParams) {
+                             boolean maskingEnabled) {
         try {
             var masked = rows.stream()
-                    .map(r -> ExportMaskingHelper.maskRow(r, target, maskRule, maskParams))
+                    .map(r -> ExportMaskingHelper.maskRow(r, target, maskingEnabled))
                     .toList();
             ObjectMapper mapper = objectMapper.copy().enable(SerializationFeature.INDENT_OUTPUT);
             return mapper.writeValueAsBytes(masked);

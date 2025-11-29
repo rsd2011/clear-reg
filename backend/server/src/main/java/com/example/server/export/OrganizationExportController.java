@@ -53,7 +53,7 @@ public class OrganizationExportController {
                 Map.of("source", "org-export"), reasonCode, reasonText, legalBasisCode,
                 com.example.audit.AuditMode.ASYNC_FALLBACK);
 
-        byte[] body = exportWriterService.exportExcel(cmd, (List<Map<String, Object>>) (List<?>) rows, target, "PARTIAL", "{}", (idx, row) -> {
+        byte[] body = exportWriterService.exportExcel(cmd, (List<Map<String, Object>>) (List<?>) rows, target, true, (idx, row) -> {
             // ByteArrayOutputStream은 ExportWriterService 쪽에서 보관하며 row를 줄 단위로 쌓는다.
         });
 
@@ -84,7 +84,7 @@ public class OrganizationExportController {
                 Map.of("source", "org-export"), reasonCode, reasonText, legalBasisCode,
                 com.example.audit.AuditMode.ASYNC_FALLBACK);
 
-        byte[] body = exportWriterService.exportPdf(cmd, (List<Map<String, Object>>) (List<?>) rows, target, "PARTIAL", "{}", paragraph -> {
+        byte[] body = exportWriterService.exportPdf(cmd, (List<Map<String, Object>>) (List<?>) rows, target, true, paragraph -> {
             // ExportWriterService에서 ByteArrayOutputStream에 누적된 텍스트를 반환한다.
         });
 

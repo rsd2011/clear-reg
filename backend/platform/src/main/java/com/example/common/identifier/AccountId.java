@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 계좌 번호 값 객체. */
-public final class AccountId {
+public final class AccountId implements Maskable<String> {
 
     private final String digits;
 
@@ -24,14 +26,21 @@ public final class AccountId {
         return new AccountId(digits);
     }
 
+    @Override
     public String raw() {
         return digits;
     }
 
+    @Override
     public String masked() {
         int len = digits.length();
         int visible = Math.min(4, len);
         return "*".repeat(len - visible) + digits.substring(len - visible);
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.ACCOUNT_NO;
     }
 
     @Override

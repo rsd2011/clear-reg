@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskingTarget;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,13 +30,13 @@ class ExportExecutionHelperTest {
     @DisplayName("CSV export 시 마스킹 적용 후 ExportService를 호출한다")
     void csvExportMasksAndDelegates() {
         ExportCommand cmd = new ExportCommand("csv", "masked.csv", 2, Map.of(), "RSN", "사유", "PIPA", null);
-        MaskingTarget target = MaskingTarget.builder().dataKind("accountNumber").build();
+        MaskingTarget target = MaskingTarget.builder().dataKind(DataKind.ACCOUNT_NO).build();
         List<Map<String, Object>> rows = List.of(
                 Map.of("account", "1234-5678-9012", "name", "Kim"),
                 Map.of("account", "9876-5432-1098", "name", "Lee"),
                 Map.of("name", "NoAccount")); // 헤더 없을 때도 빈 값 처리
 
-        helper.exportCsv(cmd, rows, target, "PARTIAL", "{\"keepEnd\":4}");
+        helper.exportCsv(cmd, rows, target, true);
 
         ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
         verify(exportService).export(Mockito.eq(cmd), captor.capture());
@@ -49,10 +50,10 @@ class ExportExecutionHelperTest {
     @DisplayName("JSON export 시 마스킹 적용 후 ExportService를 호출한다")
     void jsonExportMasksAndDelegates() {
         ExportCommand cmd = new ExportCommand("json", "masked.json", 1, Map.of(), null, null, null, null);
-        MaskingTarget target = MaskingTarget.builder().dataKind("rrn").build();
+        MaskingTarget target = MaskingTarget.builder().dataKind(DataKind.SSN).build();
         List<Map<String, Object>> rows = List.of(Map.of("rrn", "900101-1234567"));
 
-        helper.exportJson(cmd, rows, target, "PARTIAL", null);
+        helper.exportJson(cmd, rows, target, true);
 
         ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
         verify(exportService).export(Mockito.eq(cmd), captor.capture());
@@ -61,28 +62,29 @@ class ExportExecutionHelperTest {
     }
 
     @Test
-    @DisplayName("CSV export에서 maskRule/maskParams가 null이면 기본 마스킹만 적용된다")
-    void csvExportNullMaskParams() {
+    @DisplayName("CSV export에서 maskingEnabled=false면 마스킹이 적용되지 않는다 (화이트리스트)")
+    void csvExportWhitelist() {
         ExportCommand cmd = new ExportCommand("csv", "masked.csv", 1, Map.of(), null, null, null, null);
-        MaskingTarget target = MaskingTarget.builder().dataKind("rrn").build();
+        MaskingTarget target = MaskingTarget.builder().dataKind(DataKind.SSN).build();
         List<Map<String, Object>> rows = List.of(Map.of("rrn", "900101-1234567"));
 
-        helper.exportCsv(cmd, rows, target, null, null);
+        helper.exportCsv(cmd, rows, target, false);
 
         ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
         verify(exportService).export(any(), captor.capture());
         String csv = new String(captor.getAllValues().getLast().get(), StandardCharsets.UTF_8);
-        assertThat(csv).doesNotContain("900101-1234567");
+        // 화이트리스트: 마스킹 해제, 원본 유지
+        assertThat(csv).contains("900101-1234567");
     }
 
     @Test
-    @DisplayName("JSON export에서 maskRule이 null이면 기본 PARTIAL 마스킹을 적용한다")
-    void jsonExportNullMaskRule() {
+    @DisplayName("JSON export에서 maskingEnabled=true면 DataKind 기반 마스킹을 적용한다")
+    void jsonExportMaskingEnabled() {
         ExportCommand cmd = new ExportCommand("json", "masked.json", 1, Map.of(), null, null, null, null);
-        MaskingTarget target = MaskingTarget.builder().dataKind("rrn").build();
+        MaskingTarget target = MaskingTarget.builder().dataKind(DataKind.SSN).build();
         List<Map<String, Object>> rows = List.of(Map.of("rrn", "900101-1234567"));
 
-        helper.exportJson(cmd, rows, target, null, null);
+        helper.exportJson(cmd, rows, target, true);
 
         ArgumentCaptor<java.util.function.Supplier<byte[]>> captor = ArgumentCaptor.forClass(java.util.function.Supplier.class);
         verify(exportService).export(any(), captor.capture());

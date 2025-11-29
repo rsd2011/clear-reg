@@ -1,10 +1,12 @@
 package com.example.common.identifier;
 
+import com.example.common.masking.DataKind;
+import com.example.common.masking.Maskable;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 /** 전화번호 (국내외). 숫자만 저장, 기본 마스킹. */
-public final class PhoneNumber {
+public final class PhoneNumber implements Maskable<String> {
 
     private final String digits;
 
@@ -24,12 +26,19 @@ public final class PhoneNumber {
         return new PhoneNumber(digits);
     }
 
+    @Override
     public String raw() { return digits; }
 
+    @Override
     public String masked() {
         if (digits.length() <= 4) return digits;
         String tail = digits.substring(digits.length() - 4);
         return "***" + tail;
+    }
+
+    @Override
+    public DataKind dataKind() {
+        return DataKind.PHONE;
     }
 
     @Override
