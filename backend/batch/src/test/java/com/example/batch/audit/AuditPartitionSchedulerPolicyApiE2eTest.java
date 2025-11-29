@@ -82,7 +82,9 @@ import com.example.admin.codegroup.service.CodeGroupService;
 import com.example.admin.codegroup.service.CodeGroupQueryService;
 import com.example.admin.codegroup.registry.StaticCodeRegistry;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
+import com.example.admin.maskingpolicy.repository.MaskingPolicyRootRepository;
 import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRepository;
+import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRootRepository;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -292,7 +294,13 @@ class AuditPartitionSchedulerPolicyApiE2eTest {
     MaskingPolicyRepository maskingPolicyRepository;
 
     @MockBean
+    MaskingPolicyRootRepository maskingPolicyRootRepository;
+
+    @MockBean
     RowAccessPolicyRepository rowAccessPolicyRepository;
+
+    @MockBean
+    RowAccessPolicyRootRepository rowAccessPolicyRootRepository;
 
     @org.junit.jupiter.api.BeforeEach
     void setUpPolicyRepository() {
