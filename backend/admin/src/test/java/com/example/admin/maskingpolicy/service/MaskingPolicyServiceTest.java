@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.example.admin.maskingpolicy.domain.MaskingPolicyRoot;
-import com.example.admin.maskingpolicy.domain.MaskingPolicyVersion;
-import com.example.admin.maskingpolicy.repository.MaskingPolicyVersionRepository;
+import com.example.admin.maskingpolicy.domain.MaskingPolicy;
+import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.common.masking.DataKind;
@@ -26,14 +26,14 @@ import com.example.common.version.ChangeAction;
 @DisplayName("MaskingPolicyService")
 class MaskingPolicyServiceTest {
 
-    MaskingPolicyVersionRepository versionRepository = Mockito.mock(MaskingPolicyVersionRepository.class);
+    MaskingPolicyRepository versionRepository = Mockito.mock(MaskingPolicyRepository.class);
     MaskingPolicyService service = new MaskingPolicyService(versionRepository);
 
     private MaskingPolicyRoot createRoot() {
         return MaskingPolicyRoot.createWithCode("TEST_POLICY", OffsetDateTime.now());
     }
 
-    private MaskingPolicyVersion createVersion(MaskingPolicyRoot root,
+    private MaskingPolicy createVersion(MaskingPolicyRoot root,
                                                FeatureCode featureCode,
                                                ActionCode actionCode,
                                                String permGroupCode,
@@ -45,7 +45,7 @@ class MaskingPolicyServiceTest {
                                                Instant effectiveFrom,
                                                Instant effectiveTo) {
         OffsetDateTime now = OffsetDateTime.now();
-        return MaskingPolicyVersion.create(
+        return MaskingPolicy.create(
                 root,
                 1,
                 "Test Policy",
@@ -78,7 +78,7 @@ class MaskingPolicyServiceTest {
         void returnsMatchWhenEffective() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion version = createVersion(
+            MaskingPolicy version = createVersion(
                     root,
                     FeatureCode.ORGANIZATION,
                     ActionCode.READ,
@@ -137,11 +137,11 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicyRoot root1 = createRoot();
             MaskingPolicyRoot root2 = createRoot();
-            MaskingPolicyVersion lowPriority = createVersion(
+            MaskingPolicy lowPriority = createVersion(
                     root1, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), false, false, 100, null, null
             );
-            MaskingPolicyVersion highPriority = createVersion(
+            MaskingPolicy highPriority = createVersion(
                     root2, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), true, false, 1, null, null
             );
@@ -158,7 +158,7 @@ class MaskingPolicyServiceTest {
         void skipsExpiredPolicy() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion expired = createVersion(
+            MaskingPolicy expired = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), true, false, 1, null, now.minusSeconds(1)
             );
@@ -174,7 +174,7 @@ class MaskingPolicyServiceTest {
         void skipsFuturePolicy() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion future = createVersion(
+            MaskingPolicy future = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), true, false, 1, now.plusSeconds(100), null
             );
@@ -191,11 +191,11 @@ class MaskingPolicyServiceTest {
             Instant now = Instant.now();
             MaskingPolicyRoot root1 = createRoot();
             MaskingPolicyRoot root2 = createRoot();
-            MaskingPolicyVersion ssnPolicy = createVersion(
+            MaskingPolicy ssnPolicy = createVersion(
                     root1, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(DataKind.SSN), true, false, 1, null, null
             );
-            MaskingPolicyVersion phonePolicy = createVersion(
+            MaskingPolicy phonePolicy = createVersion(
                     root2, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(DataKind.PHONE), true, false, 1, null, null
             );
@@ -212,7 +212,7 @@ class MaskingPolicyServiceTest {
         void emptyDataKindsMatchesAll() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion generalPolicy = createVersion(
+            MaskingPolicy generalPolicy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), true, false, 1, null, null
             );
@@ -232,7 +232,7 @@ class MaskingPolicyServiceTest {
         void matchesOrgGroupCode() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion policy = createVersion(
+            MaskingPolicy policy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, "ORG_A",
                     Set.of(), true, false, 1, null, null
             );
@@ -248,7 +248,7 @@ class MaskingPolicyServiceTest {
         void skipsNonMatchingOrgGroup() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion policy = createVersion(
+            MaskingPolicy policy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, "ORG_X",
                     Set.of(), true, false, 1, null, null
             );
@@ -263,7 +263,7 @@ class MaskingPolicyServiceTest {
         @DisplayName("now가 null이면 현재 시간을 사용한다")
         void usesCurrentTimeWhenNowIsNull() {
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion policy = createVersion(
+            MaskingPolicy policy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), true, false, 1, null, null
             );
@@ -279,7 +279,7 @@ class MaskingPolicyServiceTest {
         void auditEnabledFalse() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion policy = createVersion(
+            MaskingPolicy policy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(), true, false, 1, null, null
             );
@@ -296,7 +296,7 @@ class MaskingPolicyServiceTest {
         void matchesMultipleDataKinds() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion policy = createVersion(
+            MaskingPolicy policy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(DataKind.SSN, DataKind.PHONE, DataKind.EMAIL), true, false, 1, null, null
             );
@@ -318,7 +318,7 @@ class MaskingPolicyServiceTest {
         void legacyEvaluateWorks() {
             Instant now = Instant.now();
             MaskingPolicyRoot root = createRoot();
-            MaskingPolicyVersion policy = createVersion(
+            MaskingPolicy policy = createVersion(
                     root, FeatureCode.ORGANIZATION, null, null, null,
                     Set.of(DataKind.SSN), true, false, 1, null, null
             );

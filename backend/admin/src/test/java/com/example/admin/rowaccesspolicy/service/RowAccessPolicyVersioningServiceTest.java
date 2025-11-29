@@ -1,4 +1,4 @@
-package com.example.admin.maskingpolicy.service;
+package com.example.admin.rowaccesspolicy.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -10,7 +10,6 @@ import static org.mockito.Mockito.verify;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -18,58 +17,57 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.maskingpolicy.domain.MaskingPolicyRoot;
-import com.example.admin.maskingpolicy.domain.MaskingPolicyVersion;
-import com.example.admin.maskingpolicy.dto.MaskingPolicyDraftRequest;
-import com.example.admin.maskingpolicy.dto.MaskingPolicyRootRequest;
-import com.example.admin.maskingpolicy.dto.MaskingPolicyVersionHistoryResponse;
-import com.example.admin.maskingpolicy.exception.MaskingPolicyRootNotFoundException;
-import com.example.admin.maskingpolicy.repository.MaskingPolicyRootRepository;
-import com.example.admin.maskingpolicy.repository.MaskingPolicyVersionRepository;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.domain.FeatureCode;
-import com.example.common.masking.DataKind;
+import com.example.admin.rowaccesspolicy.domain.RowAccessPolicy;
+import com.example.admin.rowaccesspolicy.domain.RowAccessPolicyRoot;
+import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyDraftRequest;
+import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyHistoryResponse;
+import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyRootRequest;
+import com.example.admin.rowaccesspolicy.exception.RowAccessPolicyRootNotFoundException;
+import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRepository;
+import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRootRepository;
 import com.example.common.security.RowScope;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 
-@DisplayName("MaskingPolicyVersionService")
-class MaskingPolicyVersionServiceTest {
+@DisplayName("RowAccessPolicyVersioningService")
+class RowAccessPolicyVersioningServiceTest {
 
-    private MaskingPolicyRootRepository rootRepository;
-    private MaskingPolicyVersionRepository versionRepository;
-    private MaskingPolicyVersionService service;
+    private RowAccessPolicyRootRepository rootRepository;
+    private RowAccessPolicyRepository versionRepository;
+    private RowAccessPolicyVersioningService service;
 
     @BeforeEach
     void setUp() {
-        rootRepository = mock(MaskingPolicyRootRepository.class);
-        versionRepository = mock(MaskingPolicyVersionRepository.class);
-        service = new MaskingPolicyVersionService(rootRepository, versionRepository);
+        rootRepository = mock(RowAccessPolicyRootRepository.class);
+        versionRepository = mock(RowAccessPolicyRepository.class);
+        service = new RowAccessPolicyVersioningService(rootRepository, versionRepository);
     }
 
     private AuthContext testContext() {
         return AuthContext.of("testuser", "ORG1", null, null, null, RowScope.ORG);
     }
 
-    private MaskingPolicyRoot createTestRoot() {
-        return MaskingPolicyRoot.create(OffsetDateTime.now());
+    private RowAccessPolicyRoot createTestRoot() {
+        return RowAccessPolicyRoot.create(OffsetDateTime.now());
     }
 
-    private MaskingPolicyVersion createTestVersion(MaskingPolicyRoot root, int versionNumber) {
-        return MaskingPolicyVersion.create(
+    private RowAccessPolicy createTestVersion(RowAccessPolicyRoot root, int versionNumber) {
+        return RowAccessPolicy.create(
                 root, versionNumber, "정책", "설명",
                 FeatureCode.DRAFT, null, null, null,
-                Set.of(DataKind.SSN), true, false, 100, true,
+                RowScope.OWN, 100, true,
                 null, null,
                 ChangeAction.CREATE, null, "user", "사용자",
                 OffsetDateTime.now());
     }
 
-    private MaskingPolicyVersion createTestDraft(MaskingPolicyRoot root, int versionNumber) {
-        return MaskingPolicyVersion.createDraft(
+    private RowAccessPolicy createTestDraft(RowAccessPolicyRoot root, int versionNumber) {
+        return RowAccessPolicy.createDraft(
                 root, versionNumber, "초안", "설명",
                 FeatureCode.DRAFT, null, null, null,
-                Set.of(DataKind.SSN), true, false, 100, true,
+                RowScope.OWN, 100, true,
                 null, null,
                 null, "user", "사용자",
                 OffsetDateTime.now());
@@ -83,14 +81,14 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 버전 이력이 있는 정책 / When: getVersionHistory 호출 / Then: 버전 목록 반환")
         void getVersionHistoryReturnsVersions() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion v1 = createTestVersion(root, 1);
-            MaskingPolicyVersion v2 = createTestVersion(root, 2);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy v1 = createTestVersion(root, 1);
+            RowAccessPolicy v2 = createTestVersion(root, 2);
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findHistoryByRootId(policyId)).willReturn(List.of(v2, v1));
 
-            List<MaskingPolicyVersionHistoryResponse> result = service.getVersionHistory(policyId);
+            List<RowAccessPolicyHistoryResponse> result = service.getVersionHistory(policyId);
 
             assertThat(result).hasSize(2);
         }
@@ -102,7 +100,7 @@ class MaskingPolicyVersionServiceTest {
             given(rootRepository.findById(policyId)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.getVersionHistory(policyId))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class);
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class);
         }
     }
 
@@ -114,12 +112,12 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 존재하는 버전 / When: getVersion 호출 / Then: 버전 반환")
         void getVersionReturnsVersion() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion version = createTestVersion(root, 1);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy version = createTestVersion(root, 1);
 
             given(versionRepository.findByRootIdAndVersion(policyId, 1)).willReturn(Optional.of(version));
 
-            MaskingPolicyVersionHistoryResponse result = service.getVersion(policyId, 1);
+            RowAccessPolicyHistoryResponse result = service.getVersion(policyId, 1);
 
             assertThat(result.version()).isEqualTo(1);
         }
@@ -131,7 +129,7 @@ class MaskingPolicyVersionServiceTest {
             given(versionRepository.findByRootIdAndVersion(policyId, 999)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.getVersion(policyId, 999))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class)
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class)
                     .hasMessageContaining("999");
         }
     }
@@ -144,13 +142,13 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 해당 시점에 유효한 버전 / When: getVersionAsOf 호출 / Then: 버전 반환")
         void getVersionAsOfReturnsVersion() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion version = createTestVersion(root, 1);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy version = createTestVersion(root, 1);
             OffsetDateTime asOf = OffsetDateTime.now();
 
             given(versionRepository.findByRootIdAsOf(policyId, asOf)).willReturn(Optional.of(version));
 
-            MaskingPolicyVersionHistoryResponse result = service.getVersionAsOf(policyId, asOf);
+            RowAccessPolicyHistoryResponse result = service.getVersionAsOf(policyId, asOf);
 
             assertThat(result.version()).isEqualTo(1);
         }
@@ -163,7 +161,7 @@ class MaskingPolicyVersionServiceTest {
             given(versionRepository.findByRootIdAsOf(policyId, asOf)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.getVersionAsOf(policyId, asOf))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class)
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class)
                     .hasMessageContaining("유효한 버전이 없습니다");
         }
     }
@@ -176,9 +174,9 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 롤백 대상 버전 / When: rollbackToVersion 호출 / Then: 롤백 버전 생성")
         void rollbackCreatesNewVersion() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion v1 = createTestVersion(root, 1);
-            MaskingPolicyVersion v2 = createTestVersion(root, 2);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy v1 = createTestVersion(root, 1);
+            RowAccessPolicy v2 = createTestVersion(root, 2);
             root.activateNewVersion(v1, OffsetDateTime.now());
             root.activateNewVersion(v2, OffsetDateTime.now());
 
@@ -187,7 +185,7 @@ class MaskingPolicyVersionServiceTest {
             given(versionRepository.findMaxVersionByRootId(policyId)).willReturn(2);
             given(versionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            MaskingPolicyVersionHistoryResponse result = service.rollbackToVersion(
+            RowAccessPolicyHistoryResponse result = service.rollbackToVersion(
                     policyId, 1, "롤백 사유", testContext());
 
             assertThat(result.version()).isEqualTo(3);
@@ -199,13 +197,13 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 존재하지 않는 롤백 대상 버전 / When: rollbackToVersion 호출 / Then: 예외 발생")
         void throwsExceptionWhenTargetVersionNotFound() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
+            RowAccessPolicyRoot root = createTestRoot();
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findByRootIdAndVersion(policyId, 999)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.rollbackToVersion(policyId, 999, "사유", testContext()))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class)
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class)
                     .hasMessageContaining("롤백할 버전을 찾을 수 없습니다");
         }
     }
@@ -218,19 +216,19 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 기존 초안 없음 / When: saveDraft 호출 / Then: 새 초안 생성")
         void saveDraftCreatesNewDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
+            RowAccessPolicyRoot root = createTestRoot();
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.empty());
             given(versionRepository.findMaxVersionByRootId(policyId)).willReturn(1);
             given(versionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            MaskingPolicyDraftRequest request = new MaskingPolicyDraftRequest(
+            RowAccessPolicyDraftRequest request = new RowAccessPolicyDraftRequest(
                     "초안", "설명", FeatureCode.DRAFT, null,
-                    null, null, Set.of("SSN"), true, false, 100, true,
+                    null, null, RowScope.OWN, 100, true,
                     null, null, null);
 
-            MaskingPolicyVersionHistoryResponse result = service.saveDraft(policyId, request, testContext());
+            RowAccessPolicyHistoryResponse result = service.saveDraft(policyId, request, testContext());
 
             assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
             verify(versionRepository).save(any());
@@ -240,18 +238,18 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 기존 초안 있음 / When: saveDraft 호출 / Then: 기존 초안 수정")
         void saveDraftUpdatesExistingDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion existingDraft = createTestDraft(root, 2);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy existingDraft = createTestDraft(root, 2);
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.of(existingDraft));
 
-            MaskingPolicyDraftRequest request = new MaskingPolicyDraftRequest(
+            RowAccessPolicyDraftRequest request = new RowAccessPolicyDraftRequest(
                     "수정된 초안", "수정된 설명", FeatureCode.DRAFT, null,
-                    null, null, Set.of("SSN"), true, false, 100, true,
+                    null, null, RowScope.ALL, 50, true,
                     null, null, "수정 사유");
 
-            MaskingPolicyVersionHistoryResponse result = service.saveDraft(policyId, request, testContext());
+            RowAccessPolicyHistoryResponse result = service.saveDraft(policyId, request, testContext());
 
             assertThat(result.name()).isEqualTo("수정된 초안");
             assertThat(result.description()).isEqualTo("수정된 설명");
@@ -266,12 +264,12 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 초안 존재 / When: getDraft 호출 / Then: 초안 반환")
         void getDraftReturnsDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion draft = createTestDraft(root, 2);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy draft = createTestDraft(root, 2);
 
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.of(draft));
 
-            MaskingPolicyVersionHistoryResponse result = service.getDraft(policyId);
+            RowAccessPolicyHistoryResponse result = service.getDraft(policyId);
 
             assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
         }
@@ -283,7 +281,7 @@ class MaskingPolicyVersionServiceTest {
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.getDraft(policyId))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class)
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class)
                     .hasMessageContaining("초안이 없습니다");
         }
     }
@@ -323,16 +321,16 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 초안 존재 / When: publishDraft 호출 / Then: 초안 게시")
         void publishDraftPublishesDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion v1 = createTestVersion(root, 1);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy v1 = createTestVersion(root, 1);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
-            MaskingPolicyVersion draft = createTestDraft(root, 2);
+            RowAccessPolicy draft = createTestDraft(root, 2);
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.of(draft));
 
-            MaskingPolicyVersionHistoryResponse result = service.publishDraft(policyId, testContext());
+            RowAccessPolicyHistoryResponse result = service.publishDraft(policyId, testContext());
 
             assertThat(result.status()).isEqualTo(VersionStatus.PUBLISHED);
             assertThat(result.changeAction()).isEqualTo(ChangeAction.PUBLISH);
@@ -342,13 +340,13 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 초안 없음 / When: publishDraft 호출 / Then: 예외 발생")
         void throwsExceptionWhenNoDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
+            RowAccessPolicyRoot root = createTestRoot();
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.publishDraft(policyId, testContext()))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class)
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class)
                     .hasMessageContaining("게시할 초안이 없습니다");
         }
     }
@@ -361,8 +359,8 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 초안 존재 / When: discardDraft 호출 / Then: 초안 삭제")
         void discardDraftDeletesDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion draft = createTestDraft(root, 2);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy draft = createTestDraft(root, 2);
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.of(draft));
@@ -376,13 +374,13 @@ class MaskingPolicyVersionServiceTest {
         @DisplayName("Given: 초안 없음 / When: discardDraft 호출 / Then: 예외 발생")
         void throwsExceptionWhenNoDraft() {
             UUID policyId = UUID.randomUUID();
-            MaskingPolicyRoot root = createTestRoot();
+            RowAccessPolicyRoot root = createTestRoot();
 
             given(rootRepository.findById(policyId)).willReturn(Optional.of(root));
             given(versionRepository.findDraftByRootId(policyId)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> service.discardDraft(policyId))
-                    .isInstanceOf(MaskingPolicyRootNotFoundException.class)
+                    .isInstanceOf(RowAccessPolicyRootNotFoundException.class)
                     .hasMessageContaining("삭제할 초안이 없습니다");
         }
     }
@@ -394,14 +392,14 @@ class MaskingPolicyVersionServiceTest {
         @Test
         @DisplayName("Given: 유효한 요청 / When: createInitialVersion 호출 / Then: 첫 번째 버전 생성")
         void createsInitialVersion() {
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyRootRequest request = new MaskingPolicyRootRequest(
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicyRootRequest request = new RowAccessPolicyRootRequest(
                     "정책", "설명", FeatureCode.DRAFT, null,
-                    null, null, Set.of("SSN"), true, false, 100, true, null, null);
+                    null, null, RowScope.OWN, 100, true, null, null);
 
             given(versionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            MaskingPolicyVersion result = service.createInitialVersion(
+            RowAccessPolicy result = service.createInitialVersion(
                     root, request, testContext(), OffsetDateTime.now());
 
             assertThat(result.getVersion()).isEqualTo(1);
@@ -417,18 +415,18 @@ class MaskingPolicyVersionServiceTest {
         @Test
         @DisplayName("Given: 기존 버전 / When: createUpdateVersion 호출 / Then: 새 버전 생성 및 기존 버전 종료")
         void createsUpdateVersion() {
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion v1 = createTestVersion(root, 1);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy v1 = createTestVersion(root, 1);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
-            MaskingPolicyRootRequest request = new MaskingPolicyRootRequest(
+            RowAccessPolicyRootRequest request = new RowAccessPolicyRootRequest(
                     "수정된 정책", "수정된 설명", FeatureCode.DRAFT, null,
-                    null, null, Set.of("SSN"), true, false, 50, true, null, null);
+                    null, null, RowScope.ALL, 50, true, null, null);
 
             given(versionRepository.findMaxVersionByRootId(root.getId())).willReturn(1);
             given(versionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            MaskingPolicyVersion result = service.createUpdateVersion(
+            RowAccessPolicy result = service.createUpdateVersion(
                     root, request, testContext(), OffsetDateTime.now());
 
             assertThat(result.getVersion()).isEqualTo(2);
@@ -444,14 +442,14 @@ class MaskingPolicyVersionServiceTest {
         @Test
         @DisplayName("Given: 기존 버전 / When: createDeleteVersion 호출 / Then: 비활성 버전 생성")
         void createsDeleteVersion() {
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion v1 = createTestVersion(root, 1);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy v1 = createTestVersion(root, 1);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
             given(versionRepository.findMaxVersionByRootId(root.getId())).willReturn(1);
             given(versionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            MaskingPolicyVersion result = service.createDeleteVersion(
+            RowAccessPolicy result = service.createDeleteVersion(
                     root, testContext(), OffsetDateTime.now());
 
             assertThat(result.getVersion()).isEqualTo(2);
@@ -467,14 +465,14 @@ class MaskingPolicyVersionServiceTest {
         @Test
         @DisplayName("Given: 비활성 버전 / When: createRestoreVersion 호출 / Then: 활성 버전 생성")
         void createsRestoreVersion() {
-            MaskingPolicyRoot root = createTestRoot();
-            MaskingPolicyVersion v1 = createTestVersion(root, 1);
+            RowAccessPolicyRoot root = createTestRoot();
+            RowAccessPolicy v1 = createTestVersion(root, 1);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
             given(versionRepository.findMaxVersionByRootId(root.getId())).willReturn(1);
             given(versionRepository.save(any())).willAnswer(inv -> inv.getArgument(0));
 
-            MaskingPolicyVersion result = service.createRestoreVersion(
+            RowAccessPolicy result = service.createRestoreVersion(
                     root, testContext(), OffsetDateTime.now());
 
             assertThat(result.getVersion()).isEqualTo(2);

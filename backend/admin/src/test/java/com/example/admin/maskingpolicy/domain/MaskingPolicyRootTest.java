@@ -66,7 +66,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 현재 버전이 있을 때 / When: getName 호출 / Then: 버전의 값 반환")
         void returnsCurrentVersionValues() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion version = createVersion(root, 1, "정책명", true);
+            MaskingPolicy version = createVersion(root, 1, "정책명", true);
             root.activateNewVersion(version, OffsetDateTime.now());
 
             assertThat(root.getName()).isEqualTo("정책명");
@@ -102,7 +102,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 새 버전 / When: activateNewVersion 호출 / Then: 현재 버전 설정")
         void activatesNewVersion() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion version = createVersion(root, 1, "정책", true);
+            MaskingPolicy version = createVersion(root, 1, "정책", true);
             OffsetDateTime now = OffsetDateTime.now();
 
             root.activateNewVersion(version, now);
@@ -115,10 +115,10 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 기존 버전이 있을 때 / When: activateNewVersion 호출 / Then: 기존 버전이 이전 버전으로 이동")
         void movesCurrentToPrevious() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion v1 = createVersion(root, 1, "v1", true);
+            MaskingPolicy v1 = createVersion(root, 1, "v1", true);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
-            MaskingPolicyVersion v2 = createVersion(root, 2, "v2", true);
+            MaskingPolicy v2 = createVersion(root, 2, "v2", true);
             root.activateNewVersion(v2, OffsetDateTime.now());
 
             assertThat(root.getCurrentVersion()).isEqualTo(v2);
@@ -129,14 +129,14 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: nextVersion이 있을 때 / When: activateNewVersion 호출 / Then: nextVersion이 null로 설정")
         void clearsNextVersion() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion v1 = createVersion(root, 1, "v1", true);
+            MaskingPolicy v1 = createVersion(root, 1, "v1", true);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
-            MaskingPolicyVersion draft = createDraft(root, 2);
+            MaskingPolicy draft = createDraft(root, 2);
             root.setDraftVersion(draft);
             assertThat(root.getNextVersion()).isNotNull();
 
-            MaskingPolicyVersion v2 = createVersion(root, 2, "v2", true);
+            MaskingPolicy v2 = createVersion(root, 2, "v2", true);
             root.activateNewVersion(v2, OffsetDateTime.now());
 
             assertThat(root.getNextVersion()).isNull();
@@ -146,7 +146,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 정책 / When: setDraftVersion 호출 / Then: nextVersion이 설정됨")
         void setsDraftVersion() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion draft = createDraft(root, 1);
+            MaskingPolicy draft = createDraft(root, 1);
 
             root.setDraftVersion(draft);
 
@@ -157,10 +157,10 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 초안이 있을 때 / When: publishDraft 호출 / Then: 초안이 현재 버전으로 전환")
         void publishesDraft() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion v1 = createVersion(root, 1, "v1", true);
+            MaskingPolicy v1 = createVersion(root, 1, "v1", true);
             root.activateNewVersion(v1, OffsetDateTime.now());
 
-            MaskingPolicyVersion draft = createDraft(root, 2);
+            MaskingPolicy draft = createDraft(root, 2);
             root.setDraftVersion(draft);
             OffsetDateTime publishTime = OffsetDateTime.now();
 
@@ -186,7 +186,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: nextVersion이 DRAFT가 아닐 때 / When: publishDraft 호출 / Then: IllegalStateException 발생")
         void throwsExceptionWhenNotDraft() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion published = createVersion(root, 1, "v1", true);
+            MaskingPolicy published = createVersion(root, 1, "v1", true);
             root.setDraftVersion(published);
 
             assertThatThrownBy(() -> root.publishDraft(OffsetDateTime.now()))
@@ -197,7 +197,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 초안이 있을 때 / When: discardDraft 호출 / Then: nextVersion이 null로 설정")
         void discardsDraft() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion draft = createDraft(root, 1);
+            MaskingPolicy draft = createDraft(root, 1);
             root.setDraftVersion(draft);
 
             root.discardDraft();
@@ -214,8 +214,8 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: previousVersion이 있을 때 / When: canRollback 호출 / Then: true 반환")
         void returnsTrueWhenPreviousExists() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion v1 = createVersion(root, 1, "v1", true);
-            MaskingPolicyVersion v2 = createVersion(root, 2, "v2", true);
+            MaskingPolicy v1 = createVersion(root, 1, "v1", true);
+            MaskingPolicy v2 = createVersion(root, 2, "v2", true);
             root.activateNewVersion(v1, OffsetDateTime.now());
             root.activateNewVersion(v2, OffsetDateTime.now());
 
@@ -239,7 +239,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: 현재 버전이 있을 때 / When: getCurrentVersionNumber 호출 / Then: 버전 번호 반환")
         void returnsVersionNumber() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion version = createVersion(root, 5, "정책", true);
+            MaskingPolicy version = createVersion(root, 5, "정책", true);
             root.activateNewVersion(version, OffsetDateTime.now());
 
             assertThat(root.getCurrentVersionNumber()).isEqualTo(5);
@@ -262,7 +262,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: DRAFT 상태의 nextVersion이 있을 때 / When: hasDraft 호출 / Then: true 반환")
         void returnsTrueWhenDraftExists() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion draft = createDraft(root, 1);
+            MaskingPolicy draft = createDraft(root, 1);
             root.setDraftVersion(draft);
 
             assertThat(root.hasDraft()).isTrue();
@@ -280,7 +280,7 @@ class MaskingPolicyRootTest {
         @DisplayName("Given: PUBLISHED 상태의 nextVersion이 있을 때 / When: hasDraft 호출 / Then: false 반환")
         void returnsFalseWhenNotDraft() {
             MaskingPolicyRoot root = MaskingPolicyRoot.create(OffsetDateTime.now());
-            MaskingPolicyVersion published = createVersion(root, 1, "정책", true);
+            MaskingPolicy published = createVersion(root, 1, "정책", true);
             root.setDraftVersion(published);
 
             assertThat(root.hasDraft()).isFalse();
@@ -289,8 +289,8 @@ class MaskingPolicyRootTest {
 
     // === 헬퍼 메서드 ===
 
-    private MaskingPolicyVersion createVersion(MaskingPolicyRoot root, int versionNumber, String name, boolean active) {
-        return MaskingPolicyVersion.create(
+    private MaskingPolicy createVersion(MaskingPolicyRoot root, int versionNumber, String name, boolean active) {
+        return MaskingPolicy.create(
                 root, versionNumber, name, "설명",
                 FeatureCode.DRAFT, null, null, null,
                 Set.of(DataKind.SSN), true, false, 100, active,
@@ -299,8 +299,8 @@ class MaskingPolicyRootTest {
                 OffsetDateTime.now());
     }
 
-    private MaskingPolicyVersion createDraft(MaskingPolicyRoot root, int versionNumber) {
-        return MaskingPolicyVersion.createDraft(
+    private MaskingPolicy createDraft(MaskingPolicyRoot root, int versionNumber) {
+        return MaskingPolicy.createDraft(
                 root, versionNumber, "초안", "설명",
                 FeatureCode.DRAFT, null, null, null,
                 Set.of(DataKind.SSN), true, false, 100, true,

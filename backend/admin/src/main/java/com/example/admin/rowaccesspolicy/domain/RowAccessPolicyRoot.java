@@ -1,4 +1,4 @@
-package com.example.admin.maskingpolicy.domain;
+package com.example.admin.rowaccesspolicy.domain;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -16,17 +16,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * 마스킹 정책 루트 엔티티.
+ * 행 접근 정책 루트 엔티티.
  * <p>
- * 버전 컨테이너 역할을 하며, 실제 비즈니스 데이터는 {@link MaskingPolicy}에 저장됩니다.
+ * 버전 컨테이너 역할을 하며, 실제 비즈니스 데이터는 {@link RowAccessPolicy}에 저장됩니다.
  * SCD Type 2 패턴을 사용하여 정책 변경 이력을 관리합니다.
  * </p>
  */
 @Entity
-@Table(name = "masking_policy_roots")
+@Table(name = "row_access_policy_roots")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MaskingPolicyRoot extends PrimaryKeyEntity {
+public class RowAccessPolicyRoot extends PrimaryKeyEntity {
 
     @Column(name = "policy_code", nullable = false, length = 100, unique = true)
     private String policyCode;
@@ -42,30 +42,30 @@ public class MaskingPolicyRoot extends PrimaryKeyEntity {
     /** 현재 활성 버전 */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "current_version_id")
-    private MaskingPolicy currentVersion;
+    private RowAccessPolicy currentVersion;
 
     /** 이전 활성 버전 (롤백 참조용) */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "previous_version_id")
-    private MaskingPolicy previousVersion;
+    private RowAccessPolicy previousVersion;
 
     /** 다음 예약 버전 (Draft 또는 결재 대기용) */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "next_version_id")
-    private MaskingPolicy nextVersion;
+    private RowAccessPolicy nextVersion;
 
-    private MaskingPolicyRoot(String policyCode, OffsetDateTime now) {
+    private RowAccessPolicyRoot(String policyCode, OffsetDateTime now) {
         this.policyCode = policyCode;
         this.createdAt = now;
         this.updatedAt = now;
     }
 
-    public static MaskingPolicyRoot create(OffsetDateTime now) {
-        return new MaskingPolicyRoot(UUID.randomUUID().toString(), now);
+    public static RowAccessPolicyRoot create(OffsetDateTime now) {
+        return new RowAccessPolicyRoot(UUID.randomUUID().toString(), now);
     }
 
-    public static MaskingPolicyRoot createWithCode(String policyCode, OffsetDateTime now) {
-        return new MaskingPolicyRoot(policyCode, now);
+    public static RowAccessPolicyRoot createWithCode(String policyCode, OffsetDateTime now) {
+        return new RowAccessPolicyRoot(policyCode, now);
     }
 
     /**
@@ -84,7 +84,7 @@ public class MaskingPolicyRoot extends PrimaryKeyEntity {
      * @param newVersion 새로 활성화할 버전
      * @param now        활성화 시점
      */
-    public void activateNewVersion(MaskingPolicy newVersion, OffsetDateTime now) {
+    public void activateNewVersion(RowAccessPolicy newVersion, OffsetDateTime now) {
         this.previousVersion = this.currentVersion;
         this.currentVersion = newVersion;
         this.nextVersion = null;
@@ -96,7 +96,7 @@ public class MaskingPolicyRoot extends PrimaryKeyEntity {
      *
      * @param draftVersion 초안 버전
      */
-    public void setDraftVersion(MaskingPolicy draftVersion) {
+    public void setDraftVersion(RowAccessPolicy draftVersion) {
         this.nextVersion = draftVersion;
     }
 
@@ -185,9 +185,9 @@ public class MaskingPolicyRoot extends PrimaryKeyEntity {
     }
 
     /**
-     * 현재 버전의 마스킹 활성화 여부를 반환합니다.
+     * 현재 버전의 RowScope를 반환합니다.
      */
-    public Boolean isMaskingEnabled() {
-        return currentVersion != null ? currentVersion.getMaskingEnabled() : null;
+    public com.example.common.security.RowScope getRowScope() {
+        return currentVersion != null ? currentVersion.getRowScope() : null;
     }
 }
