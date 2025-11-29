@@ -13,7 +13,9 @@ import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingFunctions;
-import com.example.common.policy.DataPolicyContextHolder;
+import com.example.common.policy.MaskingContextHolder;
+import com.example.common.policy.RowAccessContextHolder;
+import com.example.common.policy.RowAccessMatch;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeContextHolder;
 import com.example.draft.domain.DraftFormTemplate;
@@ -32,9 +34,10 @@ public class DraftAdminController {
     @GetMapping("/templates/form")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     public List<DraftFormTemplateSummary> listFormTemplates(@RequestParam(required = false) String businessType) {
-        var match = DataPolicyContextHolder.get();
-        var masker = MaskingFunctions.masker(match);
-        RowScope scope = effectiveScope(match);
+        var rowMatch = RowAccessContextHolder.get();
+        var maskMatch = MaskingContextHolder.get();
+        var masker = MaskingFunctions.masker(maskMatch);
+        RowScope scope = effectiveScope(rowMatch);
         var orgs = allowedOrganizations(scope);
         return draftFormTemplateRepository.findAll().stream()
                 .filter(t -> businessType == null || t.getBusinessType().equalsIgnoreCase(businessType))
@@ -44,7 +47,7 @@ public class DraftAdminController {
     }
 
 
-    private RowScope effectiveScope(com.example.common.policy.DataPolicyMatch match) {
+    private RowScope effectiveScope(RowAccessMatch match) {
         if (match != null && match.getRowScope() != null) {
             return match.getRowScope();
         }

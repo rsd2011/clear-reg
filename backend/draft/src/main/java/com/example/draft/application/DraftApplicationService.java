@@ -299,10 +299,10 @@ public class DraftApplicationService {
         if (rowScope == RowScope.CUSTOM) {
             throw new UnsupportedOperationException("CUSTOM RowScope는 별도 전략이 필요합니다.");
         }
-        // DataPolicyMatch가 있는 경우 정책 rowScope 우선 적용
-        var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
-        if (policyMatch != null && policyMatch.getRowScope() != null) {
-            rowScope = policyMatch.getRowScope();
+        // RowAccessMatch가 있는 경우 정책 rowScope 우선 적용
+        var rowAccessMatch = com.example.common.policy.RowAccessContextHolder.get();
+        if (rowAccessMatch != null && rowAccessMatch.getRowScope() != null) {
+            rowScope = rowAccessMatch.getRowScope();
         }
         rowScope = normalizeRowScope(rowScope);
         Specification<Draft> specification = RowScopeSpecifications.<Draft>organizationScoped(
@@ -311,12 +311,12 @@ public class DraftApplicationService {
                 organizationCode,
                 scopedOrganizations
         ).and(filter(status, businessFeatureCode, createdBy, titleContains));
-        java.util.function.UnaryOperator<String> masker = buildMasker(policyMatch);
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.MaskingContextHolder.get());
         return draftRepository.findAll(specification, pageable)
                 .map(draft -> toResponse(draft, masker));
     }
 
-    private java.util.function.UnaryOperator<String> buildMasker(com.example.common.policy.DataPolicyMatch match) {
+    private java.util.function.UnaryOperator<String> buildMasker(com.example.common.policy.MaskingMatch match) {
         if (match == null || match.getMaskRule() == null) {
             return java.util.function.UnaryOperator.identity();
         }
@@ -385,7 +385,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
-        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.DataPolicyContextHolder.get());
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.MaskingContextHolder.get());
         return draftHistoryRepository.findByDraftIdOrderByOccurredAtAsc(draftId)
                 .stream()
                 .map(h -> DraftHistoryResponse.from(h, masker))
@@ -397,7 +397,7 @@ public class DraftApplicationService {
         Draft draft = loadDraft(draftId);
         draft.assertOrganizationAccess(organizationCode, auditAccess);
         enforceReadAccess(draft, requester, auditAccess);
-        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.DataPolicyContextHolder.get());
+        java.util.function.UnaryOperator<String> masker = buildMasker(com.example.common.policy.MaskingContextHolder.get());
         return draftReferenceRepository.findByDraftIdAndActiveTrue(draftId)
                 .stream()
                 .map(ref -> DraftReferenceResponse.from(ref, masker))

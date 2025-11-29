@@ -17,6 +17,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
+import com.example.common.policy.MaskingPolicyProvider;
+import com.example.common.policy.MaskingQuery;
+import com.example.common.policy.RowAccessContextHolder;
 import com.example.common.policy.RowAccessPolicyProvider;
 import com.example.common.policy.RowAccessQuery;
 import com.example.common.masking.MaskingContextHolder;
@@ -32,12 +35,16 @@ import com.example.common.security.RowScopeContextHolder;
 public class PolicyMaskingFilter extends OncePerRequestFilter {
 
     private final RowAccessPolicyProvider rowAccessPolicyProvider;
+    private final MaskingPolicyProvider maskingPolicyProvider;
 
     public static final String ATTR_ROW_ACCESS_MATCH = "ROW_ACCESS_POLICY_MATCH";
+    public static final String ATTR_MASKING_MATCH = "MASKING_POLICY_MATCH";
     public static final String ATTR_MASKING_TARGET = "AUDIT_MASKING_TARGET";
 
-    public PolicyMaskingFilter(RowAccessPolicyProvider rowAccessPolicyProvider) {
+    public PolicyMaskingFilter(RowAccessPolicyProvider rowAccessPolicyProvider,
+                               MaskingPolicyProvider maskingPolicyProvider) {
         this.rowAccessPolicyProvider = rowAccessPolicyProvider;
+        this.maskingPolicyProvider = maskingPolicyProvider;
     }
 
     @Override
@@ -66,7 +73,23 @@ public class PolicyMaskingFilter extends OncePerRequestFilter {
 
                 rowAccessMatchOpt.ifPresent(match -> {
                     request.setAttribute(ATTR_ROW_ACCESS_MATCH, match);
+                    RowAccessContextHolder.set(match);
                     RowScopeContextHolder.set(new RowScopeContext(ctx.organizationCode(), orgGroups));
+                });
+
+                // MaskingPolicy 평가
+                var maskingMatchOpt = maskingPolicyProvider.evaluate(new MaskingQuery(
+                        ctx.feature() != null ? ctx.feature().name() : null,
+                        ctx.action() != null ? ctx.action().name() : null,
+                        ctx.permissionGroupCode(),
+                        orgGroups,
+                        null, // dataKind - 아래에서 MaskingTarget에서 설정
+                        Instant.now()
+                ));
+
+                maskingMatchOpt.ifPresent(match -> {
+                    request.setAttribute(ATTR_MASKING_MATCH, match);
+                    com.example.common.policy.MaskingContextHolder.set(match);
                 });
 
                 // MaskingTarget 설정 (기본값)
@@ -78,6 +101,8 @@ public class PolicyMaskingFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } finally {
+            RowAccessContextHolder.clear();
+            com.example.common.policy.MaskingContextHolder.clear();
             RowScopeContextHolder.clear();
             MaskingContextHolder.clear();
         }

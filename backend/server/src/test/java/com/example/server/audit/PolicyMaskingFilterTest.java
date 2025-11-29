@@ -28,6 +28,7 @@ import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingContextHolder;
 import com.example.common.masking.MaskingTarget;
 import com.example.common.masking.SubjectType;
+import com.example.common.policy.MaskingPolicyProvider;
 import com.example.common.policy.RowAccessMatch;
 import com.example.common.policy.RowAccessPolicyProvider;
 import com.example.common.security.RowScope;
@@ -47,7 +48,8 @@ class PolicyMaskingFilterTest {
     @DisplayName("Given 인증 컨텍스트 없음 When 필터 실행 Then 정책 평가·마스킹을 건너뛴다")
     void skipWhenNoAuthContext() throws ServletException, IOException {
         RowAccessPolicyProvider provider = Mockito.mock(RowAccessPolicyProvider.class);
-        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider);
+        MaskingPolicyProvider maskingProvider = Mockito.mock(MaskingPolicyProvider.class);
+        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider, maskingProvider);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -81,7 +83,8 @@ class PolicyMaskingFilterTest {
                 null
         ));
 
-        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider);
+        MaskingPolicyProvider maskingProvider = Mockito.mock(MaskingPolicyProvider.class);
+        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider, maskingProvider);
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/customers");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -114,7 +117,8 @@ class PolicyMaskingFilterTest {
                 null
         ));
 
-        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider);
+        MaskingPolicyProvider maskingProvider = Mockito.mock(MaskingPolicyProvider.class);
+        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider, maskingProvider);
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/customers");
         MockHttpServletResponse response = new MockHttpServletResponse();
         final boolean[] checked = {false};
@@ -166,7 +170,8 @@ class PolicyMaskingFilterTest {
                 .rowId("ROW-1")
                 .build();
 
-        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider);
+        MaskingPolicyProvider maskingProvider = Mockito.mock(MaskingPolicyProvider.class);
+        PolicyMaskingFilter filter = new PolicyMaskingFilter(provider, maskingProvider);
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/customers/1");
         request.setAttribute(PolicyMaskingFilter.ATTR_MASKING_TARGET, base);
         MockHttpServletResponse response = new MockHttpServletResponse();

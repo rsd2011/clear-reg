@@ -42,7 +42,6 @@ import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingFunctions;
-import com.example.common.policy.DataPolicyContextHolder;
 
 /**
  * 승인선 템플릿 관리 API.
@@ -68,7 +67,7 @@ public class ApprovalTemplateRootController {
     public List<ApprovalTemplateRootResponse> listTemplates(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return templateService.list(keyword, activeOnly).stream()
                 .map(r -> ApprovalTemplateRootResponse.apply(r, masker))
                 .toList();
@@ -78,7 +77,7 @@ public class ApprovalTemplateRootController {
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 단일 조회")
     public ApprovalTemplateRootResponse getTemplate(@PathVariable UUID id) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalTemplateRootResponse.apply(templateService.getById(id), masker);
     }
 
@@ -88,7 +87,7 @@ public class ApprovalTemplateRootController {
     @Operation(summary = "승인선 템플릿 생성")
     public ApprovalTemplateRootResponse createTemplate(@Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalTemplateRootResponse.apply(templateService.create(request, context), masker);
     }
 
@@ -98,7 +97,7 @@ public class ApprovalTemplateRootController {
     public ApprovalTemplateRootResponse updateTemplate(@PathVariable UUID id,
                                                        @Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalTemplateRootResponse.apply(templateService.update(id, request, context), masker);
     }
 
@@ -116,7 +115,7 @@ public class ApprovalTemplateRootController {
     @Operation(summary = "승인선 템플릿 활성화 (복원)")
     public ApprovalTemplateRootResponse activateTemplate(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalTemplateRootResponse.apply(templateService.activate(id, context), masker);
     }
 
@@ -124,7 +123,7 @@ public class ApprovalTemplateRootController {
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인선 템플릿 변경 이력 조회")
     public List<VersionHistoryResponse> getTemplateHistory(@PathVariable UUID id) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return templateService.getHistory(id).stream()
                 .map(r -> VersionHistoryResponse.apply(r, masker))
                 .toList();
@@ -135,7 +134,7 @@ public class ApprovalTemplateRootController {
     @Operation(summary = "승인선 템플릿 표시순서 일괄 변경")
     public List<ApprovalTemplateRootResponse> updateDisplayOrders(@Valid @RequestBody DisplayOrderUpdateRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return templateService.updateDisplayOrders(request, context).stream()
                 .map(r -> ApprovalTemplateRootResponse.apply(r, masker))
                 .toList();
@@ -149,7 +148,7 @@ public class ApprovalTemplateRootController {
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "버전 이력 조회 (SCD Type 2)")
     public List<VersionHistoryResponse> getVersionHistory(@PathVariable UUID id) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return versionService.getVersionHistory(id).stream()
                 .map(r -> VersionHistoryResponse.apply(r, masker))
                 .toList();
@@ -159,7 +158,7 @@ public class ApprovalTemplateRootController {
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "특정 버전 상세 조회")
     public VersionHistoryResponse getVersion(@PathVariable UUID id, @PathVariable Integer version) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionHistoryResponse.apply(versionService.getVersion(id, version), masker);
     }
 
@@ -169,7 +168,7 @@ public class ApprovalTemplateRootController {
     public VersionHistoryResponse getVersionAsOf(
             @PathVariable UUID id,
             @RequestParam @DateTimeFormat(iso = ISO.DATE_TIME) OffsetDateTime asOf) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionHistoryResponse.apply(versionService.getVersionAsOf(id, asOf), masker);
     }
 
@@ -180,7 +179,7 @@ public class ApprovalTemplateRootController {
             @PathVariable UUID id,
             @RequestParam Integer version1,
             @RequestParam Integer version2) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionComparisonResponse.apply(versionService.compareVersions(id, version1, version2), masker);
     }
 
@@ -198,7 +197,7 @@ public class ApprovalTemplateRootController {
             @RequestParam(required = false)
             @Size(max = 500, message = "변경 사유는 500자 이하여야 합니다") String changeReason) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionHistoryResponse.apply(
                 versionService.rollbackToVersion(id, targetVersion, changeReason, context), masker);
     }
@@ -211,7 +210,7 @@ public class ApprovalTemplateRootController {
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "초안 조회")
     public VersionHistoryResponse getDraft(@PathVariable UUID id) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionHistoryResponse.apply(versionService.getDraft(id), masker);
     }
 
@@ -229,7 +228,7 @@ public class ApprovalTemplateRootController {
             @PathVariable UUID id,
             @Valid @RequestBody DraftRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionHistoryResponse.apply(versionService.saveDraft(id, request, context), masker);
     }
 
@@ -238,7 +237,7 @@ public class ApprovalTemplateRootController {
     @Operation(summary = "초안 게시", description = "초안을 현재 활성 버전으로 전환합니다.")
     public VersionHistoryResponse publishDraft(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return VersionHistoryResponse.apply(versionService.publishDraft(id, context), masker);
     }
 

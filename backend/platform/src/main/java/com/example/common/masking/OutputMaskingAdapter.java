@@ -33,7 +33,7 @@ public class OutputMaskingAdapter {
             }
         }
 
-        UnaryOperator<String> masker = MaskingFunctions.masker(com.example.common.policy.DataPolicyMatch.builder()
+        UnaryOperator<String> masker = MaskingFunctions.masker(com.example.common.policy.MaskingMatch.builder()
                 .maskRule(maskRule)
                 .maskParams(maskParams)
                 .build());

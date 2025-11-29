@@ -35,7 +35,6 @@ import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.masking.MaskingFunctions;
-import com.example.common.policy.DataPolicyContextHolder;
 
 @RestController
 @Validated
@@ -55,7 +54,7 @@ public class ApprovalGroupController {
     @Operation(summary = "승인그룹 등록")
     public ApprovalGroupResponse createGroup(@Valid @RequestBody ApprovalGroupRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalGroupResponse.apply(approvalGroupService.createApprovalGroup(request, context, true), masker);
     }
 
@@ -63,7 +62,7 @@ public class ApprovalGroupController {
     @RequirePermission(feature = FeatureCode.APPROVAL_MANAGE, action = ActionCode.READ)
     @Operation(summary = "승인그룹 상세 조회")
     public ApprovalGroupResponse getGroup(@PathVariable UUID id) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalGroupResponse.apply(approvalGroupService.getApprovalGroup(id), masker);
     }
 
@@ -73,7 +72,7 @@ public class ApprovalGroupController {
     public ApprovalGroupResponse updateGroup(@PathVariable UUID id,
                                              @Valid @RequestBody ApprovalGroupUpdateRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalGroupResponse.apply(approvalGroupService.updateApprovalGroup(id, request, context, true), masker);
     }
 
@@ -91,7 +90,7 @@ public class ApprovalGroupController {
     @Operation(summary = "승인그룹 활성화 (복원)")
     public ApprovalGroupResponse activateGroup(@PathVariable UUID id) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalGroupResponse.apply(approvalGroupService.activateApprovalGroup(id, context, true), masker);
     }
 
@@ -102,7 +101,7 @@ public class ApprovalGroupController {
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return approvalGroupService.listApprovalGroups(keyword, activeOnly, context, true).stream()
                 .map(g -> ApprovalGroupResponse.apply(g, masker))
                 .toList();
@@ -120,7 +119,7 @@ public class ApprovalGroupController {
     @Operation(summary = "승인그룹 표시순서 일괄 업데이트")
     public List<ApprovalGroupResponse> updateGroupDisplayOrders(@Valid @RequestBody DisplayOrderUpdateRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return approvalGroupService.updateApprovalGroupDisplayOrders(request, context, true).stream()
                 .map(g -> ApprovalGroupResponse.apply(g, masker))
                 .toList();
@@ -131,7 +130,7 @@ public class ApprovalGroupController {
     @Operation(summary = "승인그룹 요약 목록 조회", description = "템플릿 매핑용 승인그룹 ID, 코드, 이름만 반환")
     public List<ApprovalGroupSummaryResponse> listGroupSummary(
             @RequestParam(defaultValue = "true") boolean activeOnly) {
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return approvalGroupService.listGroupSummary(activeOnly).stream()
                 .map(r -> ApprovalGroupSummaryResponse.apply(r, masker))
                 .toList();

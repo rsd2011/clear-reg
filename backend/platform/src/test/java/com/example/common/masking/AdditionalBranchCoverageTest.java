@@ -1,14 +1,10 @@
 package com.example.common.masking;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.common.policy.DataPolicyMatch;
 import com.example.common.policy.MaskingMatch;
 
 @DisplayName("추가 브랜치 커버리지")
@@ -22,18 +18,18 @@ class AdditionalBranchCoverageTest {
         assertThat(MaskRule.of("invalid")).isEqualTo(MaskRule.NONE);
         assertThat(MaskRule.of("tokenize")).isEqualTo(MaskRule.TOKENIZE);
 
-        DataPolicyMatch emptyMatch = null;
+        MaskingMatch emptyMatch = null;
         assertThat(MaskingFunctions.masker(emptyMatch).apply("VALUE")).isEqualTo("VALUE");
 
-        DataPolicyMatch fullMatch = DataPolicyMatch.builder().maskRule("FULL").maskParams(null).build();
+        MaskingMatch fullMatch = MaskingMatch.builder().maskRule("FULL").maskParams(null).build();
         assertThat(MaskingFunctions.masker(fullMatch).apply("123456")).isEqualTo("[MASKED]");
 
-        DataPolicyMatch partial = DataPolicyMatch.builder().maskRule("PARTIAL").build();
+        MaskingMatch partial = MaskingMatch.builder().maskRule("PARTIAL").build();
         assertThat(MaskingFunctions.masker(partial).apply("12345678")).startsWith("12");
         assertThat(MaskingFunctions.masker(partial).apply("123")).isEqualTo("***");
-        DataPolicyMatch hash = DataPolicyMatch.builder().maskRule("HASH").build();
+        MaskingMatch hash = MaskingMatch.builder().maskRule("HASH").build();
         assertThat(MaskingFunctions.masker(hash).apply("abc")).hasSize(64);
-        DataPolicyMatch tokenize = DataPolicyMatch.builder().maskRule("TOKENIZE").build();
+        MaskingMatch tokenize = MaskingMatch.builder().maskRule("TOKENIZE").build();
         assertThat(MaskingFunctions.masker(tokenize).apply("abc")).contains("-");
 
         // null value

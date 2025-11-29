@@ -185,7 +185,7 @@ public class DraftController {
     public List<DraftTemplatePresetResponse> listTemplates(@RequestParam("businessFeature") String businessFeature) {
         AuthContext context = currentContext();
         ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
-        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         boolean audit = hasAuditPermission();
         return draftApplicationService.listTemplatePresets(businessFeature, context.organizationCode(), audit).stream()
@@ -198,7 +198,7 @@ public class DraftController {
     public List<DraftTemplatePresetResponse> recommendTemplates(@RequestParam("businessFeature") String businessFeature) {
         AuthContext context = currentContext();
         ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
-        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return draftApplicationService.recommendTemplatePresets(businessFeature, context.organizationCode(), context.username()).stream()
                 .map(t -> DraftTemplatePresetResponse.apply(t, masker))

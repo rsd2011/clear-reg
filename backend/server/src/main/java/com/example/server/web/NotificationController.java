@@ -34,7 +34,7 @@ public class NotificationController {
     @RequirePermission(feature = FeatureCode.ALERT, action = ActionCode.READ)
     public List<NotificationResponse> myNotifications() {
         String username = currentUsername();
-        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return notificationService.notificationsFor(username).stream()
                 .map(n -> NotificationResponse.from(n, masker))

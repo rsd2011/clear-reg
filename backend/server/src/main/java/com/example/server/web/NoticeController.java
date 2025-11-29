@@ -31,7 +31,7 @@ public class NoticeController {
     @GetMapping
     @RequirePermission(feature = FeatureCode.NOTICE, action = ActionCode.READ)
     public List<NoticeResponse> getNotices(@RequestParam(required = false) NoticeAudience audience) {
-        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return noticeService.listActiveNotices(audience).stream()
                 .map(n -> NoticeResponse.apply(n, masker))

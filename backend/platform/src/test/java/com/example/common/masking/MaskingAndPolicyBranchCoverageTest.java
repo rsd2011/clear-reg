@@ -3,7 +3,6 @@ package com.example.common.masking;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
 
@@ -11,8 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.jpa.domain.Specification;
 
-import com.example.common.identifier.AccountId;
-import com.example.common.policy.DataPolicyMatch;
+import com.example.common.policy.RowAccessMatch;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeContext;
 import com.example.common.security.RowScopeEvaluator;
@@ -101,18 +99,18 @@ class MaskingAndPolicyBranchCoverageTest {
     }
 
     @Test
-    @DisplayName("DataPolicyMatch/RowScopeEvaluator/Filter 브랜치")
+    @DisplayName("RowAccessMatch/RowScopeEvaluator/Filter 브랜치")
     void policyAndRowScopeBranches() {
-        DataPolicyMatch match = DataPolicyMatch.builder().policyId(java.util.UUID.randomUUID())
-                .rowScope(RowScope.ORG).maskRule("FULL").priority(1).build();
-        assertThat(match).isEqualTo(DataPolicyMatch.builder().policyId(match.getPolicyId())
-                .rowScope(RowScope.ORG).maskRule("FULL").priority(1).build());
+        RowAccessMatch match = RowAccessMatch.builder().policyId(java.util.UUID.randomUUID())
+                .rowScope(RowScope.ORG).priority(1).build();
+        assertThat(match).isEqualTo(RowAccessMatch.builder().policyId(match.getPolicyId())
+                .rowScope(RowScope.ORG).priority(1).build());
 
         RowScopeContext ctx = new RowScopeContext("ORG1", List.of("ORG1", "ORG2"));
         Specification<Object> spec = RowScopeEvaluator.toSpecification(match, ctx, null);
         assertThat(spec).isNotNull();
 
-        DataPolicyMatch matchAll = DataPolicyMatch.builder().rowScope(RowScope.ALL).build();
+        RowAccessMatch matchAll = RowAccessMatch.builder().rowScope(RowScope.ALL).build();
         Specification<Object> specAll = RowScopeEvaluator.toSpecification(matchAll, null, null);
         assertThat(specAll).isNotNull();
 

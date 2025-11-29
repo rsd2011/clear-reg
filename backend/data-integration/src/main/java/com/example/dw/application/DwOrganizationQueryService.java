@@ -41,9 +41,9 @@ public class DwOrganizationQueryService {
     public Page<DwOrganizationNode> getOrganizations(Pageable pageable,
                                                      RowScope rowScope,
                                                      String organizationCode) {
-        var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
-        if (policyMatch != null && policyMatch.getRowScope() != null) {
-            rowScope = policyMatch.getRowScope();
+        var rowAccessMatch = com.example.common.policy.RowAccessContextHolder.get();
+        if (rowAccessMatch != null && rowAccessMatch.getRowScope() != null) {
+            rowScope = rowAccessMatch.getRowScope();
         }
 
         if (rowScope == null) {

@@ -15,8 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import com.example.audit.AuditPort;
-import com.example.common.policy.DataPolicyContextHolder;
-import com.example.common.policy.DataPolicyMatch;
+import com.example.common.policy.RowAccessContextHolder;
+import com.example.common.policy.RowAccessMatch;
 import com.example.common.security.RowScope;
 import com.example.dw.application.readmodel.OrganizationReadModelPort;
 import com.example.dw.application.readmodel.OrganizationTreeReadModel;
@@ -40,15 +40,15 @@ class DwOrganizationQueryServiceBranchTest {
     }
 
     @Test
-    @DisplayName("DataPolicyContextHolder rowScope가 있으면 우선 사용한다")
+    @DisplayName("RowAccessContextHolder rowScope가 있으면 우선 사용한다")
     void policyOverridesRowScope() {
-        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ALL).build());
+        RowAccessContextHolder.set(RowAccessMatch.builder().rowScope(RowScope.ALL).build());
         when(tree.snapshot()).thenReturn(DwOrganizationTreeService.OrganizationTreeSnapshot.fromNodes(List.of()));
         DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, null, auditPort);
 
         Page<DwOrganizationNode> result = svc.getOrganizations(PageRequest.of(0, 5), RowScope.OWN, "ORG1");
         assertThat(result.getContent()).isEmpty();
-        DataPolicyContextHolder.clear();
+        RowAccessContextHolder.clear();
     }
 
     @Test

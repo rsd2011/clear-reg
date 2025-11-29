@@ -22,9 +22,9 @@ import com.example.common.file.dto.FileMetadataDto;
 import com.example.common.file.FileStatus;
 import com.example.common.identifier.*;
 import com.example.common.masking.*;
-import com.example.common.policy.DataPolicyContextHolder;
-import com.example.common.policy.DataPolicyMatch;
-import com.example.common.policy.DataPolicyQuery;
+import com.example.common.policy.MaskingMatch;
+import com.example.common.policy.RowAccessContextHolder;
+import com.example.common.policy.RowAccessMatch;
 import com.example.common.policy.PolicyToggleSettings;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeContext;
@@ -39,17 +39,13 @@ class CoverageSweeperTest {
     @Test
     @DisplayName("정책/스레드홀더/토글 DTO 기본 동작을 커버한다")
     void policyCoverage() {
-        DataPolicyMatch match = DataPolicyMatch.builder()
-                .maskRule("FULL")
+        RowAccessMatch match = RowAccessMatch.builder()
                 .rowScope(RowScope.OWN)
                 .priority(1)
                 .build();
-        DataPolicyContextHolder.set(match);
-        assertThat(DataPolicyContextHolder.get().getRowScope()).isEqualTo(RowScope.OWN);
-        DataPolicyContextHolder.clear();
-
-        DataPolicyQuery query = new DataPolicyQuery("F", "A", "P", List.of("G1"), null);
-        assertThat(query.nowOrDefault()).isNotNull();
+        RowAccessContextHolder.set(match);
+        assertThat(RowAccessContextHolder.get().getRowScope()).isEqualTo(RowScope.OWN);
+        RowAccessContextHolder.clear();
 
         PolicyToggleSettings settings = new PolicyToggleSettings(
                 true, true, true, List.of("PWD"), 1024, List.of("PDF", "XLSX"),
@@ -118,7 +114,7 @@ class CoverageSweeperTest {
     void rowScopeCoverage() {
         RowScopeContext ctx = new RowScopeContext("ORG1", List.of("ORG1", "ORG1-CHILD"));
         RowScopeContextHolder.set(ctx);
-        DataPolicyMatch match = DataPolicyMatch.builder().rowScope(RowScope.ORG).build();
+        RowAccessMatch match = RowAccessMatch.builder().rowScope(RowScope.ORG).build();
 
         var spec = RowScopeEvaluator.toSpecification(match, null, (root, query, cb) -> cb.conjunction());
         assertThat(spec).isNotNull();
@@ -169,7 +165,7 @@ class CoverageSweeperTest {
         String masked = OutputMaskingAdapter.mask("other", "123456", target, "PARTIAL", null);
         assertThat(masked).startsWith("12").endsWith("56");
 
-        String tokenized = MaskingFunctions.masker(DataPolicyMatch.builder().maskRule("TOKENIZE").rowScope(RowScope.ALL).build()).apply("abc");
+        String tokenized = MaskingFunctions.masker(MaskingMatch.builder().maskRule("TOKENIZE").build()).apply("abc");
         assertThat(tokenized).hasSizeGreaterThan(5);
 
         // schedule/policy artifacts coverage
@@ -210,5 +206,112 @@ class CoverageSweeperTest {
         GreetingService svc = new GreetingService();
         assertThat(svc.greet(null)).isEqualTo("Hello, World!");
         assertThat(svc.greet("Alice")).contains("Alice");
+    }
+
+    @Test
+    @DisplayName("MaskingMatch/RowAccessMatch의 equals/hashCode/toString 브랜치를 커버한다")
+    void matchEqualsHashCodeCoverage() {
+        UUID policyId = UUID.randomUUID();
+
+        // MaskingMatch - 모든 필드 설정
+        MaskingMatch mask1 = MaskingMatch.builder()
+                .policyId(policyId)
+                .dataKind("RRN")
+                .maskRule("PARTIAL")
+                .maskParams("{\"keep\":4}")
+                .auditEnabled(true)
+                .priority(1)
+                .build();
+
+        MaskingMatch mask2 = MaskingMatch.builder()
+                .policyId(policyId)
+                .dataKind("RRN")
+                .maskRule("PARTIAL")
+                .maskParams("{\"keep\":4}")
+                .auditEnabled(true)
+                .priority(1)
+                .build();
+
+        MaskingMatch mask3 = MaskingMatch.builder()
+                .policyId(UUID.randomUUID())
+                .dataKind("PHONE")
+                .maskRule("FULL")
+                .maskParams(null)
+                .auditEnabled(false)
+                .priority(2)
+                .build();
+
+        // equals 브랜치 커버
+        assertThat(mask1).isEqualTo(mask2);
+        assertThat(mask1).isNotEqualTo(mask3);
+        assertThat(mask1).isNotEqualTo(null);
+        assertThat(mask1).isNotEqualTo("not a match");
+        assertThat(mask1).isEqualTo(mask1); // self comparison
+
+        // hashCode
+        assertThat(mask1.hashCode()).isEqualTo(mask2.hashCode());
+        assertThat(mask1.hashCode()).isNotEqualTo(mask3.hashCode());
+
+        // toString
+        assertThat(mask1.toString()).contains("MaskingMatch");
+        assertThat(mask1.toString()).contains("RRN");
+
+        // getter
+        assertThat(mask1.getPolicyId()).isEqualTo(policyId);
+        assertThat(mask1.getDataKind()).isEqualTo("RRN");
+        assertThat(mask1.getMaskRule()).isEqualTo("PARTIAL");
+        assertThat(mask1.getMaskParams()).isEqualTo("{\"keep\":4}");
+        assertThat(mask1.isAuditEnabled()).isTrue();
+        assertThat(mask1.getPriority()).isEqualTo(1);
+
+        // RowAccessMatch - 모든 필드 설정
+        RowAccessMatch row1 = RowAccessMatch.builder()
+                .policyId(policyId)
+                .rowScope(RowScope.ORG)
+                .priority(1)
+                .build();
+
+        RowAccessMatch row2 = RowAccessMatch.builder()
+                .policyId(policyId)
+                .rowScope(RowScope.ORG)
+                .priority(1)
+                .build();
+
+        RowAccessMatch row3 = RowAccessMatch.builder()
+                .policyId(UUID.randomUUID())
+                .rowScope(RowScope.OWN)
+                .priority(2)
+                .build();
+
+        // equals 브랜치 커버
+        assertThat(row1).isEqualTo(row2);
+        assertThat(row1).isNotEqualTo(row3);
+        assertThat(row1).isNotEqualTo(null);
+        assertThat(row1).isNotEqualTo("not a match");
+        assertThat(row1).isEqualTo(row1); // self comparison
+
+        // hashCode
+        assertThat(row1.hashCode()).isEqualTo(row2.hashCode());
+        assertThat(row1.hashCode()).isNotEqualTo(row3.hashCode());
+
+        // toString
+        assertThat(row1.toString()).contains("RowAccessMatch");
+        assertThat(row1.toString()).contains("ORG");
+
+        // getter
+        assertThat(row1.getPolicyId()).isEqualTo(policyId);
+        assertThat(row1.getRowScope()).isEqualTo(RowScope.ORG);
+        assertThat(row1.getPriority()).isEqualTo(1);
+
+        // null 필드 케이스
+        MaskingMatch maskNull = MaskingMatch.builder().build();
+        RowAccessMatch rowNull = RowAccessMatch.builder().build();
+
+        assertThat(maskNull.getPolicyId()).isNull();
+        assertThat(rowNull.getPolicyId()).isNull();
+        assertThat(maskNull).isNotEqualTo(mask1);
+        assertThat(rowNull).isNotEqualTo(row1);
+        assertThat(maskNull.hashCode()).isNotEqualTo(mask1.hashCode());
+        assertThat(rowNull.hashCode()).isNotEqualTo(row1.hashCode());
     }
 }

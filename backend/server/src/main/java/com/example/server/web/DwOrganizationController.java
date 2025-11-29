@@ -40,7 +40,7 @@ public class DwOrganizationController {
         if (context.rowScope() == null || context.organizationCode() == null) {
             throw new AccessDeniedException("조직 스코프 정보가 올바르지 않습니다.");
         }
-        var match = com.example.common.policy.DataPolicyContextHolder.get();
+        var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
         return organizationPort.getOrganizations(pageable, context.rowScope(), context.organizationCode())
                 .getContent()

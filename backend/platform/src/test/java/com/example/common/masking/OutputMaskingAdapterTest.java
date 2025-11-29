@@ -7,8 +7,6 @@ import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.common.policy.DataPolicyMatch;
-
 class OutputMaskingAdapterTest {
 
     @Test

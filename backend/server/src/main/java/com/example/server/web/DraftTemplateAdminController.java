@@ -26,7 +26,6 @@ import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.common.masking.MaskingFunctions;
-import com.example.common.policy.DataPolicyContextHolder;
 import com.example.draft.application.TemplateAdminService;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
 import com.example.draft.application.dto.DraftTemplatePresetRequest;
@@ -51,7 +50,7 @@ public class DraftTemplateAdminController {
     @Operation(summary = "승인선 템플릿 등록")
     public ApprovalTemplateRootResponse createApprovalTemplateRoot(@Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalTemplateRootResponse.apply(templateAdminService.createApprovalTemplateRoot(request, context, true), masker);
     }
 
@@ -61,7 +60,7 @@ public class DraftTemplateAdminController {
     public ApprovalTemplateRootResponse updateApprovalTemplateRoot(@PathVariable UUID id,
                                                                     @Valid @RequestBody ApprovalTemplateRootRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return ApprovalTemplateRootResponse.apply(templateAdminService.updateApprovalTemplateRoot(id, request, context, true), masker);
     }
 
@@ -70,7 +69,7 @@ public class DraftTemplateAdminController {
     @Operation(summary = "승인선 템플릿 목록 조회")
     public List<ApprovalTemplateRootResponse> listApprovalTemplateRoots(@RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return templateAdminService.listApprovalTemplateRoots(null, null, activeOnly, context, true).stream()
                 .map(t -> ApprovalTemplateRootResponse.apply(t, masker))
                 .toList();
@@ -82,7 +81,7 @@ public class DraftTemplateAdminController {
     @Operation(summary = "기안 양식 템플릿 등록")
     public DraftFormTemplateResponse createDraftFormTemplate(@Valid @RequestBody DraftFormTemplateRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return DraftFormTemplateResponse.apply(templateAdminService.createDraftFormTemplate(request, context, true), masker);
     }
 
@@ -92,7 +91,7 @@ public class DraftTemplateAdminController {
     public DraftFormTemplateResponse updateDraftFormTemplate(@PathVariable UUID id,
                                                              @Valid @RequestBody DraftFormTemplateRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return DraftFormTemplateResponse.apply(templateAdminService.updateDraftFormTemplate(id, request, context, true), masker);
     }
 
@@ -103,7 +102,7 @@ public class DraftTemplateAdminController {
                                                                   @RequestParam(required = false) String organizationCode,
                                                                   @RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return templateAdminService.listDraftFormTemplates(businessType, organizationCode, activeOnly, context, true).stream()
                 .map(t -> DraftFormTemplateResponse.apply(t, masker))
                 .toList();
@@ -115,7 +114,7 @@ public class DraftTemplateAdminController {
     @Operation(summary = "템플릿 프리셋 등록")
     public DraftTemplatePresetResponse createDraftTemplatePreset(@Valid @RequestBody DraftTemplatePresetRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return DraftTemplatePresetResponse.apply(
                 templateAdminService.createDraftTemplatePreset(request, context, true),
                 masker);
@@ -127,7 +126,7 @@ public class DraftTemplateAdminController {
     public DraftTemplatePresetResponse updateDraftTemplatePreset(@PathVariable UUID id,
                                                                   @Valid @RequestBody DraftTemplatePresetRequest request) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return DraftTemplatePresetResponse.apply(
                 templateAdminService.updateDraftTemplatePreset(id, request, context, true),
                 masker);
@@ -140,7 +139,7 @@ public class DraftTemplateAdminController {
                                                                       @RequestParam(required = false) String organizationCode,
                                                                       @RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(DataPolicyContextHolder.get());
+        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
         return templateAdminService.listDraftTemplatePresets(businessType, organizationCode, activeOnly, context, true).stream()
                 .map(r -> DraftTemplatePresetResponse.apply(r, masker))
                 .toList();
