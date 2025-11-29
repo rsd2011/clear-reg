@@ -43,7 +43,7 @@ public class DwOrganizationQueryService {
                                                      String organizationCode) {
         var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
         if (policyMatch != null && policyMatch.getRowScope() != null) {
-            rowScope = RowScope.of(policyMatch.getRowScope(), rowScope);
+            rowScope = policyMatch.getRowScope();
         }
 
         if (rowScope == null) {

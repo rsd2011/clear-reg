@@ -302,7 +302,7 @@ public class DraftApplicationService {
         // DataPolicyMatch가 있는 경우 정책 rowScope 우선 적용
         var policyMatch = com.example.common.policy.DataPolicyContextHolder.get();
         if (policyMatch != null && policyMatch.getRowScope() != null) {
-            rowScope = RowScope.of(policyMatch.getRowScope(), rowScope);
+            rowScope = policyMatch.getRowScope();
         }
         rowScope = normalizeRowScope(rowScope);
         Specification<Draft> specification = RowScopeSpecifications.<Draft>organizationScoped(

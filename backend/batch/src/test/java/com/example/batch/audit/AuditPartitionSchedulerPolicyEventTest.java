@@ -52,10 +52,7 @@ import com.example.dwgateway.web.FileController;
 import com.example.dw.application.DwOrganizationQueryService;
 import com.example.dw.application.export.ExportAuditService;
 import com.example.dw.application.export.ExportExecutionHelper;
-import com.example.admin.datapolicy.service.DataPolicyProviderAdapter;
-import com.example.admin.datapolicy.service.DataPolicyService;
 import com.example.admin.orggroup.service.OrgGroupPermissionResolver;
-import com.example.admin.datapolicy.repository.DataPolicyRepository;
 import com.example.admin.orggroup.repository.OrgGroupRepository;
 import com.example.auth.domain.UserAccountRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -83,6 +80,8 @@ import com.example.admin.codegroup.locale.LocaleCodeProvider;
 import com.example.admin.codegroup.service.CodeGroupService;
 import com.example.admin.codegroup.service.CodeGroupQueryService;
 import com.example.admin.codegroup.registry.StaticCodeRegistry;
+import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
+import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRepository;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -201,16 +200,7 @@ class AuditPartitionSchedulerPolicyEventTest {
     ExportExecutionHelper exportExecutionHelper;
 
     @MockBean
-    DataPolicyProviderAdapter dataPolicyProviderAdapter;
-
-    @MockBean
-    DataPolicyService dataPolicyService;
-
-    @MockBean
     OrgGroupPermissionResolver orgGroupPermissionResolver;
-
-    @MockBean
-    DataPolicyRepository dataPolicyRepository;
 
     @MockBean
     OrgGroupRepository orgGroupRepository;
@@ -292,6 +282,12 @@ class AuditPartitionSchedulerPolicyEventTest {
 
     @MockBean
     StaticCodeRegistry staticCodeRegistry;
+
+    @MockBean
+    MaskingPolicyRepository maskingPolicyRepository;
+
+    @MockBean
+    RowAccessPolicyRepository rowAccessPolicyRepository;
 
     @org.junit.jupiter.api.BeforeEach
     void setUpPolicyRepository() {

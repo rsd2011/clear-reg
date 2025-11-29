@@ -13,9 +13,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.annotation.RequirePermission;
-import com.example.common.policy.DataPolicyProvider;
-import com.example.common.policy.DataPolicyQuery;
+import com.example.common.policy.MaskingPolicyProvider;
+import com.example.common.policy.MaskingQuery;
 import com.example.common.policy.PolicySettingsProvider;
+import com.example.common.policy.RowAccessPolicyProvider;
+import com.example.common.policy.RowAccessQuery;
 import com.example.server.policy.PolicyDebugResponse;
 
 @RestController
@@ -25,12 +27,15 @@ import com.example.server.policy.PolicyDebugResponse;
 public class PolicyDebugController {
 
     private final PolicySettingsProvider policySettingsProvider;
-    private final DataPolicyProvider dataPolicyProvider;
+    private final RowAccessPolicyProvider rowAccessPolicyProvider;
+    private final MaskingPolicyProvider maskingPolicyProvider;
 
     public PolicyDebugController(PolicySettingsProvider policySettingsProvider,
-                                 DataPolicyProvider dataPolicyProvider) {
+                                 RowAccessPolicyProvider rowAccessPolicyProvider,
+                                 MaskingPolicyProvider maskingPolicyProvider) {
         this.policySettingsProvider = policySettingsProvider;
-        this.dataPolicyProvider = dataPolicyProvider;
+        this.rowAccessPolicyProvider = rowAccessPolicyProvider;
+        this.maskingPolicyProvider = maskingPolicyProvider;
     }
 
     @GetMapping("/effective")
@@ -38,13 +43,17 @@ public class PolicyDebugController {
     public PolicyDebugResponse effective(@RequestParam String featureCode,
                                          @RequestParam(required = false) String actionCode,
                                          @RequestParam(required = false) String permGroupCode,
-                                         @RequestParam(required = false) Long orgPolicyId,
                                          @RequestParam(required = false) List<String> orgGroupCodes,
-                                         @RequestParam(required = false) String businessType,
-                                         @RequestParam(required = false) String sensitiveTag) {
+                                         @RequestParam(required = false) String dataKind) {
         var toggles = policySettingsProvider.currentSettings();
-        var query = new DataPolicyQuery(featureCode, actionCode, permGroupCode, orgPolicyId, orgGroupCodes, businessType, sensitiveTag, Instant.now());
-        var match = dataPolicyProvider.evaluate(query).orElse(null);
-        return PolicyDebugResponse.of(toggles, match);
+        Instant now = Instant.now();
+
+        var rowAccessQuery = new RowAccessQuery(featureCode, actionCode, permGroupCode, orgGroupCodes, now);
+        var rowAccessMatch = rowAccessPolicyProvider.evaluate(rowAccessQuery).orElse(null);
+
+        var maskingQuery = new MaskingQuery(featureCode, actionCode, permGroupCode, orgGroupCodes, dataKind, now);
+        var maskingMatch = maskingPolicyProvider.evaluate(maskingQuery).orElse(null);
+
+        return PolicyDebugResponse.of(toggles, rowAccessMatch, maskingMatch);
     }
 }

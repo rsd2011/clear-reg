@@ -15,8 +15,7 @@ class DataPolicyMatchTest {
         UUID id = UUID.randomUUID();
         DataPolicyMatch match = DataPolicyMatch.builder()
                 .policyId(id)
-                .rowScope("ORG")
-                .rowScopeExpr("org_code = :org")
+                .rowScope(com.example.common.security.RowScope.ORG)
                 .maskRule("PARTIAL")
                 .maskParams("{\"k\":\"v\"}")
                 .priority(1)

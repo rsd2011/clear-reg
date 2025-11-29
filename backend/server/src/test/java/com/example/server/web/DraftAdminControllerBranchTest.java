@@ -44,7 +44,7 @@ class DraftAdminControllerBranchTest {
     @Test
     @DisplayName("RowScope.ORГ이면 조직 계층에 포함된 템플릿만 반환한다")
     void listTemplates_filtersByOrgScope() {
-        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ORG.name()).build());
+        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ORG).build());
         RowScopeContextHolder.set(new RowScopeContext("ORG1", List.of("ORG1", "ORG_CHILD")));
 
         DraftFormTemplate org1 = DraftFormTemplate.create("name1", "HR", "ORG1", "{}", OffsetDateTime.now());
@@ -60,7 +60,7 @@ class DraftAdminControllerBranchTest {
     @Test
     @DisplayName("RowScope.OWN이면 단일 조직 코드가 없으면 필터에 걸린다")
     void listTemplates_filtersByOwnScope() {
-        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.OWN.name()).build());
+        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.OWN).build());
         RowScopeContextHolder.set(new RowScopeContext("ORG1", List.of()));
 
         DraftFormTemplate org1 = DraftFormTemplate.create("name1", "HR", "ORG1", "{}", OffsetDateTime.now());

@@ -16,11 +16,11 @@ class DataPolicyBranchCoverageTest {
     @DisplayName("DataPolicyMatch equals/hashCode 다양한 필드")
     void dataPolicyMatchBranches() {
         UUID id = UUID.randomUUID();
-        DataPolicyMatch match1 = DataPolicyMatch.builder().policyId(id).rowScope("ORG").rowScopeExpr("org_code")
+        DataPolicyMatch match1 = DataPolicyMatch.builder().policyId(id).rowScope(com.example.common.security.RowScope.ORG)
                 .maskRule("FULL").maskParams("{}").priority(10).build();
-        DataPolicyMatch match2 = DataPolicyMatch.builder().policyId(id).rowScope("ORG").rowScopeExpr("org_code")
+        DataPolicyMatch match2 = DataPolicyMatch.builder().policyId(id).rowScope(com.example.common.security.RowScope.ORG)
                 .maskRule("FULL").maskParams("{}").priority(10).build();
-        DataPolicyMatch match3 = DataPolicyMatch.builder().policyId(UUID.randomUUID()).rowScope("ALL").build();
+        DataPolicyMatch match3 = DataPolicyMatch.builder().policyId(UUID.randomUUID()).rowScope(com.example.common.security.RowScope.ALL).build();
 
         assertThat(match1).isEqualTo(match2);
         assertThat(match1).isNotEqualTo(match3);
@@ -36,7 +36,7 @@ class DataPolicyBranchCoverageTest {
         assertThat(empty).isEqualTo(DataPolicyMatch.builder().build());
 
         assertThat(match1).isNotEqualTo(builderFrom(match1).policyId(UUID.randomUUID()).build());
-        assertThat(match1).isNotEqualTo(builderFrom(match1).rowScope("ALL").build());
+        assertThat(match1).isNotEqualTo(builderFrom(match1).rowScope(com.example.common.security.RowScope.ALL).build());
         assertThat(match1).isNotEqualTo(builderFrom(match1).maskRule("PARTIAL").build());
         assertThat(match1).isNotEqualTo(builderFrom(match1).priority(99).build());
 
@@ -49,7 +49,6 @@ class DataPolicyBranchCoverageTest {
         return DataPolicyMatch.builder()
                 .policyId(base.getPolicyId())
                 .rowScope(base.getRowScope())
-                .rowScopeExpr(base.getRowScopeExpr())
                 .maskRule(base.getMaskRule())
                 .maskParams(base.getMaskParams())
                 .priority(base.getPriority());
@@ -58,10 +57,10 @@ class DataPolicyBranchCoverageTest {
     @Test
     @DisplayName("DataPolicyQuery now 기본값")
     void dataPolicyQueryNowDefault() {
-        DataPolicyQuery queryWithNow = new DataPolicyQuery("F", "A", "PG", 1L, List.of("G1"), "BT", null, Instant.EPOCH);
+        DataPolicyQuery queryWithNow = new DataPolicyQuery("F", "A", "PG", List.of("G1"), Instant.EPOCH);
         assertThat(queryWithNow.nowOrDefault()).isEqualTo(Instant.EPOCH);
 
-        DataPolicyQuery queryNoNow = new DataPolicyQuery("F", "A", "PG", 1L, List.of("G1"), "BT", null, null);
+        DataPolicyQuery queryNoNow = new DataPolicyQuery("F", "A", "PG", List.of("G1"), null);
         assertThat(queryNoNow.nowOrDefault()).isNotNull();
     }
 }

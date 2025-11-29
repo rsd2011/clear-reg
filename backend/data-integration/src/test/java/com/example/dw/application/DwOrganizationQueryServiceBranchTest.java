@@ -42,7 +42,7 @@ class DwOrganizationQueryServiceBranchTest {
     @Test
     @DisplayName("DataPolicyContextHolder rowScope가 있으면 우선 사용한다")
     void policyOverridesRowScope() {
-        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ALL.name()).build());
+        DataPolicyContextHolder.set(DataPolicyMatch.builder().rowScope(RowScope.ALL).build());
         when(tree.snapshot()).thenReturn(DwOrganizationTreeService.OrganizationTreeSnapshot.fromNodes(List.of()));
         DwOrganizationQueryService svc = new DwOrganizationQueryService(tree, custom, null, auditPort);
 

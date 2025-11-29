@@ -20,27 +20,23 @@ class CurrentUserTest {
         @Test
         @DisplayName("Given 모든 필드 When 생성하면 Then 모든 필드가 올바르게 설정된다")
         void createCurrentUserWithAllFields() {
-        CurrentUser user = new CurrentUser(
-                "testUser",
-                "ORG1",
-                "ADMIN_GROUP",
-                "ORGANIZATION",
-                "READ",
-                RowScope.ORG,
-                100L,
-                List.of("GROUP1", "GROUP2"),
-                "HR"
-        );
+            CurrentUser user = new CurrentUser(
+                    "testUser",
+                    "ORG1",
+                    "ADMIN_GROUP",
+                    "ORGANIZATION",
+                    "READ",
+                    RowScope.ORG,
+                    List.of("GROUP1", "GROUP2")
+            );
 
-        assertThat(user.username()).isEqualTo("testUser");
-        assertThat(user.organizationCode()).isEqualTo("ORG1");
-        assertThat(user.permissionGroupCode()).isEqualTo("ADMIN_GROUP");
-        assertThat(user.featureCode()).isEqualTo("ORGANIZATION");
-        assertThat(user.actionCode()).isEqualTo("READ");
-        assertThat(user.rowScope()).isEqualTo(RowScope.ORG);
-        assertThat(user.orgPolicyId()).isEqualTo(100L);
+            assertThat(user.username()).isEqualTo("testUser");
+            assertThat(user.organizationCode()).isEqualTo("ORG1");
+            assertThat(user.permissionGroupCode()).isEqualTo("ADMIN_GROUP");
+            assertThat(user.featureCode()).isEqualTo("ORGANIZATION");
+            assertThat(user.actionCode()).isEqualTo("READ");
+            assertThat(user.rowScope()).isEqualTo(RowScope.ORG);
             assertThat(user.orgGroupCodes()).containsExactly("GROUP1", "GROUP2");
-            assertThat(user.businessType()).isEqualTo("HR");
         }
 
         @Test
@@ -53,15 +49,11 @@ class CurrentUserTest {
                     null,
                     null,
                     RowScope.OWN,
-                    null,
-                    List.of(),
-                    null
+                    List.of()
             );
 
             assertThat(user.username()).isEqualTo("user");
-            assertThat(user.orgPolicyId()).isNull();
             assertThat(user.orgGroupCodes()).isEmpty();
-            assertThat(user.businessType()).isNull();
         }
 
         @Test
@@ -74,9 +66,7 @@ class CurrentUserTest {
                     "DRAFT",
                     "CREATE",
                     RowScope.ALL,
-                    1L,
-                    null,
-                    "TYPE"
+                    null
             );
 
             assertThat(user.orgGroupCodes()).isEmpty();
@@ -96,9 +86,7 @@ class CurrentUserTest {
                     "DRAFT",
                     "CREATE",
                     RowScope.ALL,
-                    1L,
-                    mutableList,
-                    "TYPE"
+                    mutableList
             );
 
             mutableList.add("GROUP2");
@@ -117,9 +105,7 @@ class CurrentUserTest {
                     "DRAFT",
                     "CREATE",
                     RowScope.ALL,
-                    1L,
-                    List.of("GROUP1"),
-                    "TYPE"
+                    List.of("GROUP1")
             );
 
             List<String> codes = user.orgGroupCodes();
@@ -130,13 +116,12 @@ class CurrentUserTest {
     }
 
     @Nested
-    @DisplayName("역호환성 생성자 (deprecated)")
+    @DisplayName("역호환성 생성자")
     class LegacyConstructor {
 
         @Test
-        @DisplayName("Given 6개 파라미터 When deprecated 생성자 사용하면 Then 기본값이 설정된다")
-        @SuppressWarnings("removal")
-        void deprecatedConstructorSetsDefaults() {
+        @DisplayName("Given 6개 파라미터 When 역호환성 생성자 사용하면 Then 기본값이 설정된다")
+        void legacyConstructorSetsDefaults() {
             CurrentUser user = new CurrentUser(
                     "legacyUser",
                     "ORG_LEGACY",
@@ -152,15 +137,12 @@ class CurrentUserTest {
             assertThat(user.featureCode()).isEqualTo("FEATURE");
             assertThat(user.actionCode()).isEqualTo("ACTION");
             assertThat(user.rowScope()).isEqualTo(RowScope.OWN);
-            assertThat(user.orgPolicyId()).isNull();
             assertThat(user.orgGroupCodes()).isEmpty();
-            assertThat(user.businessType()).isNull();
         }
 
         @Test
-        @DisplayName("Given deprecated 생성자 When RowScope 설정하면 Then 올바르게 저장된다")
-        @SuppressWarnings("removal")
-        void deprecatedConstructorWithDifferentRowScopes() {
+        @DisplayName("Given 역호환성 생성자 When RowScope 설정하면 Then 올바르게 저장된다")
+        void legacyConstructorWithDifferentRowScopes() {
             CurrentUser userAll = new CurrentUser("u1", "O1", "G1", "F1", "A1", RowScope.ALL);
             CurrentUser userOrg = new CurrentUser("u2", "O2", "G2", "F2", "A2", RowScope.ORG);
 
@@ -178,11 +160,11 @@ class CurrentUserTest {
         void equalValuesAreEqual() {
             CurrentUser user1 = new CurrentUser(
                     "user", "ORG", "GROUP", "DRAFT", "CREATE",
-                    RowScope.ALL, 1L, List.of("G1"), "TYPE"
+                    RowScope.ALL, List.of("G1")
             );
             CurrentUser user2 = new CurrentUser(
                     "user", "ORG", "GROUP", "DRAFT", "CREATE",
-                    RowScope.ALL, 1L, List.of("G1"), "TYPE"
+                    RowScope.ALL, List.of("G1")
             );
 
             assertThat(user1).isEqualTo(user2);
@@ -194,11 +176,11 @@ class CurrentUserTest {
         void differentValuesAreNotEqual() {
             CurrentUser user1 = new CurrentUser(
                     "user1", "ORG", "GROUP", "DRAFT", "CREATE",
-                    RowScope.ALL, 1L, List.of("G1"), "TYPE"
+                    RowScope.ALL, List.of("G1")
             );
             CurrentUser user2 = new CurrentUser(
                     "user2", "ORG", "GROUP", "DRAFT", "CREATE",
-                    RowScope.ALL, 1L, List.of("G1"), "TYPE"
+                    RowScope.ALL, List.of("G1")
             );
 
             assertThat(user1).isNotEqualTo(user2);

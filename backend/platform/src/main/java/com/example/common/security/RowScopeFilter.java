@@ -3,6 +3,7 @@ package com.example.common.security;
 import org.springframework.data.jpa.domain.Specification;
 
 import com.example.common.policy.DataPolicyMatch;
+import com.example.common.policy.RowAccessMatch;
 
 import java.util.Objects;
 
@@ -41,6 +42,25 @@ public final class RowScopeFilter {
     }
 
     /**
+     * RowAccessMatch와 컨텍스트를 기반으로 RowScopeFilter를 생성한다.
+     *
+     * @param match RowAccessPolicy 매칭 결과
+     * @param ctx   RowScope 컨텍스트
+     * @param custom 커스텀 Specification (null 가능)
+     * @param <T>   엔티티 타입
+     * @return 생성된 RowScopeFilter
+     */
+    public static <T> RowScopeFilter from(RowAccessMatch match, RowScopeContext ctx, Specification<T> custom) {
+        RowScope row = match.getRowScope();
+        Specification<T> spec = RowScopeSpecifications.organizationScoped("organizationCode",
+                row,
+                ctx != null ? ctx.organizationCode() : null,
+                ctx != null ? ctx.organizationHierarchy() : null,
+                custom);
+        return new RowScopeFilter(row, spec);
+    }
+
+    /**
      * DataPolicyMatch와 컨텍스트를 기반으로 RowScopeFilter를 생성한다.
      *
      * @param match DataPolicy 매칭 결과
@@ -48,9 +68,11 @@ public final class RowScopeFilter {
      * @param custom 커스텀 Specification (null 가능)
      * @param <T>   엔티티 타입
      * @return 생성된 RowScopeFilter
+     * @deprecated RowAccessMatch를 사용하는 버전으로 마이그레이션하세요.
      */
+    @Deprecated(forRemoval = true)
     public static <T> RowScopeFilter from(DataPolicyMatch match, RowScopeContext ctx, Specification<T> custom) {
-        RowScope row = RowScope.of(match.getRowScope());
+        RowScope row = match.getRowScope();
         Specification<T> spec = RowScopeSpecifications.organizationScoped("organizationCode",
                 row,
                 ctx != null ? ctx.organizationCode() : null,

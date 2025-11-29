@@ -41,14 +41,14 @@ class CoverageSweeperTest {
     void policyCoverage() {
         DataPolicyMatch match = DataPolicyMatch.builder()
                 .maskRule("FULL")
-                .rowScope("OWN")
+                .rowScope(RowScope.OWN)
                 .priority(1)
                 .build();
         DataPolicyContextHolder.set(match);
-        assertThat(DataPolicyContextHolder.get().getRowScope()).isEqualTo("OWN");
+        assertThat(DataPolicyContextHolder.get().getRowScope()).isEqualTo(RowScope.OWN);
         DataPolicyContextHolder.clear();
 
-        DataPolicyQuery query = new DataPolicyQuery("F", "A", "P", 1L, List.of("G1"), "BT", null, null);
+        DataPolicyQuery query = new DataPolicyQuery("F", "A", "P", List.of("G1"), null);
         assertThat(query.nowOrDefault()).isNotNull();
 
         PolicyToggleSettings settings = new PolicyToggleSettings(
@@ -118,7 +118,7 @@ class CoverageSweeperTest {
     void rowScopeCoverage() {
         RowScopeContext ctx = new RowScopeContext("ORG1", List.of("ORG1", "ORG1-CHILD"));
         RowScopeContextHolder.set(ctx);
-        DataPolicyMatch match = DataPolicyMatch.builder().rowScope("ORG").build();
+        DataPolicyMatch match = DataPolicyMatch.builder().rowScope(RowScope.ORG).build();
 
         var spec = RowScopeEvaluator.toSpecification(match, null, (root, query, cb) -> cb.conjunction());
         assertThat(spec).isNotNull();
@@ -169,7 +169,7 @@ class CoverageSweeperTest {
         String masked = OutputMaskingAdapter.mask("other", "123456", target, "PARTIAL", null);
         assertThat(masked).startsWith("12").endsWith("56");
 
-        String tokenized = MaskingFunctions.masker(DataPolicyMatch.builder().maskRule("TOKENIZE").build()).apply("abc");
+        String tokenized = MaskingFunctions.masker(DataPolicyMatch.builder().maskRule("TOKENIZE").rowScope(RowScope.ALL).build()).apply("abc");
         assertThat(tokenized).hasSizeGreaterThan(5);
 
         // schedule/policy artifacts coverage

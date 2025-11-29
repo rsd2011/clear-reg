@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Configuration;
 
 import com.example.audit.AuditPort;
 import com.example.audit.NoopAuditPort;
-import com.example.common.policy.DataPolicyProvider;
-import com.example.server.audit.DataPolicyMaskingFilter;
+import com.example.common.policy.RowAccessPolicyProvider;
+import com.example.server.audit.PolicyMaskingFilter;
 import com.example.server.audit.SensitiveApiFilter;
 import com.example.server.config.SensitiveApiProperties;
 
@@ -19,14 +19,14 @@ public class AuditWebConfig {
 
     private final ObjectProvider<AuditPort> auditPortProvider;
     private final SensitiveApiProperties sensitiveApiProperties;
-    private final ObjectProvider<DataPolicyProvider> dataPolicyProvider;
+    private final ObjectProvider<RowAccessPolicyProvider> rowAccessPolicyProvider;
 
     public AuditWebConfig(ObjectProvider<AuditPort> auditPortProvider,
                          SensitiveApiProperties sensitiveApiProperties,
-                         ObjectProvider<DataPolicyProvider> dataPolicyProvider) {
+                         ObjectProvider<RowAccessPolicyProvider> rowAccessPolicyProvider) {
         this.auditPortProvider = auditPortProvider;
         this.sensitiveApiProperties = sensitiveApiProperties;
-        this.dataPolicyProvider = dataPolicyProvider;
+        this.rowAccessPolicyProvider = rowAccessPolicyProvider;
     }
 
     @Bean
@@ -39,9 +39,9 @@ public class AuditWebConfig {
     }
 
     @Bean
-    public FilterRegistrationBean<DataPolicyMaskingFilter> dataPolicyMaskingFilter() {
-        FilterRegistrationBean<DataPolicyMaskingFilter> bean = new FilterRegistrationBean<>();
-        bean.setFilter(new DataPolicyMaskingFilter(dataPolicyProvider.getIfAvailable(() -> query -> java.util.Optional.empty())));
+    public FilterRegistrationBean<PolicyMaskingFilter> policyMaskingFilter() {
+        FilterRegistrationBean<PolicyMaskingFilter> bean = new FilterRegistrationBean<>();
+        bean.setFilter(new PolicyMaskingFilter(rowAccessPolicyProvider.getIfAvailable(() -> query -> java.util.Optional.empty())));
         bean.addUrlPatterns("/api/*");
         bean.setOrder(-1); // sensitive 필터보다 먼저 적용
         return bean;

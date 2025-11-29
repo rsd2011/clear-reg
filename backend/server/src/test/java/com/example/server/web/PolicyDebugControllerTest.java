@@ -14,11 +14,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
-import com.example.common.policy.DataPolicyMatch;
-import com.example.common.policy.DataPolicyProvider;
-import com.example.common.policy.DataPolicyQuery;
+import com.example.common.policy.MaskingMatch;
+import com.example.common.policy.MaskingPolicyProvider;
+import com.example.common.policy.MaskingQuery;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
+import com.example.common.policy.RowAccessMatch;
+import com.example.common.policy.RowAccessPolicyProvider;
+import com.example.common.policy.RowAccessQuery;
+import com.example.common.security.RowScope;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -38,7 +42,10 @@ class PolicyDebugControllerTest {
     PolicySettingsProvider policySettingsProvider;
 
     @MockBean
-    DataPolicyProvider dataPolicyProvider;
+    RowAccessPolicyProvider rowAccessPolicyProvider;
+
+    @MockBean
+    MaskingPolicyProvider maskingPolicyProvider;
 
     @MockBean
     RequirePermissionAspect aspect; // bypass security for test
@@ -59,13 +66,20 @@ class PolicyDebugControllerTest {
                 java.util.List.of(),20_000_000L,java.util.List.of("pdf"),false,0,
                 true,true,true,730,true,"MEDIUM",true,java.util.List.of(),java.util.List.of());
         given(policySettingsProvider.currentSettings()).willReturn(toggles);
-        DataPolicyMatch match = DataPolicyMatch.builder()
+
+        RowAccessMatch rowMatch = RowAccessMatch.builder()
                 .policyId(java.util.UUID.randomUUID())
-                .rowScope("ORG")
-                .maskRule("PARTIAL")
+                .rowScope(RowScope.ORG)
                 .priority(1)
                 .build();
-        given(dataPolicyProvider.evaluate(any(DataPolicyQuery.class))).willReturn(java.util.Optional.of(match));
+        given(rowAccessPolicyProvider.evaluate(any(RowAccessQuery.class))).willReturn(java.util.Optional.of(rowMatch));
+
+        MaskingMatch maskMatch = MaskingMatch.builder()
+                .policyId(java.util.UUID.randomUUID())
+                .maskRule("PARTIAL")
+                .auditEnabled(false)
+                .build();
+        given(maskingPolicyProvider.evaluate(any(MaskingQuery.class))).willReturn(java.util.Optional.of(maskMatch));
 
         String json = mockMvc.perform(get("/api/admin/policies/effective")
                         .param("featureCode", FeatureCode.NOTICE.name())
@@ -75,5 +89,6 @@ class PolicyDebugControllerTest {
 
         assertThat(json).contains("policyToggles");
         assertThat(json).contains("maskRule");
+        assertThat(json).contains("rowScope");
     }
 }

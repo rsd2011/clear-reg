@@ -104,15 +104,15 @@ class MaskingAndPolicyBranchCoverageTest {
     @DisplayName("DataPolicyMatch/RowScopeEvaluator/Filter 브랜치")
     void policyAndRowScopeBranches() {
         DataPolicyMatch match = DataPolicyMatch.builder().policyId(java.util.UUID.randomUUID())
-                .rowScope(RowScope.ORG.name()).maskRule("FULL").priority(1).build();
+                .rowScope(RowScope.ORG).maskRule("FULL").priority(1).build();
         assertThat(match).isEqualTo(DataPolicyMatch.builder().policyId(match.getPolicyId())
-                .rowScope(RowScope.ORG.name()).maskRule("FULL").priority(1).build());
+                .rowScope(RowScope.ORG).maskRule("FULL").priority(1).build());
 
         RowScopeContext ctx = new RowScopeContext("ORG1", List.of("ORG1", "ORG2"));
         Specification<Object> spec = RowScopeEvaluator.toSpecification(match, ctx, null);
         assertThat(spec).isNotNull();
 
-        DataPolicyMatch matchAll = DataPolicyMatch.builder().rowScope(null).build();
+        DataPolicyMatch matchAll = DataPolicyMatch.builder().rowScope(RowScope.ALL).build();
         Specification<Object> specAll = RowScopeEvaluator.toSpecification(matchAll, null, null);
         assertThat(specAll).isNotNull();
 

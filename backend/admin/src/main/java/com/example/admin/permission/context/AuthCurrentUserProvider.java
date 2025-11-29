@@ -11,8 +11,8 @@ import com.example.common.security.RowScope;
 /**
  * AuthContext를 CurrentUser로 변환하는 Provider.
  *
- * <p>DataPolicy 기반 마스킹으로 마이그레이션 완료.
- * 마스킹 규칙은 DataPolicyEvaluator가 DataPolicyProvider를 통해 직접 조회합니다.
+ * <p>MaskingPolicy 기반 마스킹으로 마이그레이션 완료.
+ * 마스킹 규칙은 MaskingEvaluator가 MaskingPolicyProvider를 통해 직접 조회합니다.
  */
 @Component
 public class AuthCurrentUserProvider implements CurrentUserProvider {
@@ -30,9 +30,7 @@ public class AuthCurrentUserProvider implements CurrentUserProvider {
                 context.feature() != null ? context.feature().name() : null,
                 context.action() != null ? context.action().name() : null,
                 context.rowScope() != null ? context.rowScope() : RowScope.ALL,
-                context.orgPolicyId(),
-                context.orgGroupCodes(),
-                context.businessType()
+                context.orgGroupCodes()
         );
     }
 }

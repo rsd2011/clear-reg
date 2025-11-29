@@ -41,9 +41,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                 context.feature() != null ? context.feature().name() : null,
                 context.action() != null ? context.action().name() : null,
                 context.rowScope() != null ? context.rowScope() : RowScope.ALL,
-                context.orgPolicyId(),
-                context.orgGroupCodes(),
-                context.businessType()
+                context.orgGroupCodes()
         );
     }
 }

@@ -1,18 +1,21 @@
 package com.example.common.policy;
 
+import com.example.common.security.RowScope;
+
 import lombok.Builder;
 import lombok.Value;
 
+/**
+ * @deprecated RowAccessMatch와 MaskingMatch를 사용하세요.
+ */
+@Deprecated(forRemoval = true)
 @Value
 @Builder
 public class DataPolicyMatch {
     java.util.UUID policyId;
-    String sensitiveTag;
-    String rowScope;
-    String rowScopeExpr;
+    RowScope rowScope;
     String maskRule;
     String maskParams;
-    String requiredActionCode;
     boolean auditEnabled;
     Integer priority;
 }

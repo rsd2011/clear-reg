@@ -23,9 +23,7 @@ class AuthContextCoverageTest {
         assertThat(ctx.feature()).isEqualTo(FeatureCode.ORGANIZATION);
         assertThat(ctx.action()).isEqualTo(ActionCode.READ);
         assertThat(ctx.rowScope()).isEqualTo(RowScope.ALL);
-        assertThat(ctx.orgPolicyId()).isNull();
         assertThat(ctx.orgGroupCodes()).isEmpty();
-        assertThat(ctx.businessType()).isNull();
     }
 
     @Test
@@ -33,11 +31,9 @@ class AuthContextCoverageTest {
     void fullConstructorSetsAllFields() {
         AuthContext ctx = new AuthContext("u", "org", "grp",
                 FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ORG,
-                100L, List.of("GROUP1", "GROUP2"), "HR");
+                List.of("GROUP1", "GROUP2"));
 
-        assertThat(ctx.orgPolicyId()).isEqualTo(100L);
         assertThat(ctx.orgGroupCodes()).containsExactly("GROUP1", "GROUP2");
-        assertThat(ctx.businessType()).isEqualTo("HR");
     }
 
     @Test
@@ -45,7 +41,7 @@ class AuthContextCoverageTest {
     void orgGroupCodesNormalizedToEmptyList() {
         AuthContext ctx = new AuthContext("u", "org", "grp",
                 FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ORG,
-                null, null, null);
+                null);
 
         assertThat(ctx.orgGroupCodes()).isNotNull().isEmpty();
     }

@@ -46,7 +46,7 @@ public class DraftAdminController {
 
     private RowScope effectiveScope(com.example.common.policy.DataPolicyMatch match) {
         if (match != null && match.getRowScope() != null) {
-            return RowScope.of(match.getRowScope(), RowScope.ALL);
+            return match.getRowScope();
         }
         return AuthContextHolder.current().map(c -> c.rowScope() != null ? c.rowScope() : RowScope.ALL).orElse(RowScope.ALL);
     }

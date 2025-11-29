@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.common.policy.DataPolicyMatch;
+import com.example.common.policy.MaskingMatch;
 
 @DisplayName("추가 브랜치 커버리지")
 class AdditionalBranchCoverageTest {
@@ -37,6 +38,25 @@ class AdditionalBranchCoverageTest {
 
         // null value
         assertThat(MaskRuleProcessor.apply("FULL", null, null)).isNull();
+    }
+
+    @Test
+    @DisplayName("MaskingMatch를 사용한 MaskingFunctions 테스트")
+    void maskingFunctionsWithMaskingMatch() {
+        MaskingMatch emptyMatch = null;
+        assertThat(MaskingFunctions.masker(emptyMatch).apply("VALUE")).isEqualTo("VALUE");
+
+        MaskingMatch fullMatch = MaskingMatch.builder().maskRule("FULL").maskParams(null).build();
+        assertThat(MaskingFunctions.masker(fullMatch).apply("123456")).isEqualTo("[MASKED]");
+
+        MaskingMatch partial = MaskingMatch.builder().maskRule("PARTIAL").build();
+        assertThat(MaskingFunctions.masker(partial).apply("12345678")).startsWith("12");
+
+        MaskingMatch hash = MaskingMatch.builder().maskRule("HASH").build();
+        assertThat(MaskingFunctions.masker(hash).apply("abc")).hasSize(64);
+
+        MaskingMatch tokenize = MaskingMatch.builder().maskRule("TOKENIZE").build();
+        assertThat(MaskingFunctions.masker(tokenize).apply("abc")).contains("-");
     }
 
     @Test

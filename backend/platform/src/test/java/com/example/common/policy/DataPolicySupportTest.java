@@ -17,12 +17,12 @@ class DataPolicySupportTest {
     @Test
     void queryNowDefaultAndContextHolderLifecycle() {
         Instant fixed = Instant.parse("2025-01-01T00:00:00Z");
-        DataPolicyQuery q = new DataPolicyQuery("F", "A", "PG", 1L, List.of("ORG1"), "BT", null, fixed);
+        DataPolicyQuery q = new DataPolicyQuery("F", "A", "PG", List.of("ORG1"), fixed);
         assertThat(q.nowOrDefault()).isEqualTo(fixed);
 
         var match = DataPolicyMatch.builder()
                 .policyId(java.util.UUID.randomUUID())
-                .rowScope(RowScope.ORG.name())
+                .rowScope(RowScope.ORG)
                 .maskRule("PARTIAL")
                 .maskParams("{\"k\":\"v\"}")
                 .priority(1)
@@ -36,7 +36,7 @@ class DataPolicySupportTest {
 
     @Test
     void rowScopeEvaluatorBuildsSpecAndClears() {
-        var match = DataPolicyMatch.builder().rowScope(RowScope.ORG.name()).build();
+        var match = DataPolicyMatch.builder().rowScope(RowScope.ORG).build();
         RowScopeContext ctx = new RowScopeContext("ORG1", List.of("ORG1", "ORG1-CHILD"));
         RowScopeContextHolder.set(ctx);
 

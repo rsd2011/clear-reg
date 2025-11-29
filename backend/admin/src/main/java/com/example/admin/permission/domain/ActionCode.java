@@ -45,4 +45,12 @@ public enum ActionCode {
         || this == DRAFT_READ
         || this == DRAFT_AUDIT;
   }
+
+  /**
+   * 마스킹 해제 권한이 있는 액션인지 확인한다.
+   * UNMASK 액션만 마스킹된 민감 데이터의 원본을 조회할 수 있다.
+   */
+  public boolean canUnmask() {
+    return this == UNMASK;
+  }
 }
