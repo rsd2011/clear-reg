@@ -8,7 +8,6 @@ import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.exception.PermissionDeniedException;
-import com.example.admin.permission.spi.OrganizationPolicyProvider;
 import com.example.admin.permission.spi.UserInfo;
 import com.example.admin.permission.spi.UserInfoProvider;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -25,19 +24,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class PermissionEvaluator {
 
+  private static final String DEFAULT_PERMISSION_GROUP = "DEFAULT";
+
   private final UserInfoProvider userInfoProvider;
   private final PermissionGroupService permissionGroupService;
-  private final OrganizationPolicyProvider organizationPolicyProvider;
   private final List<PermissionCheck> permissionChecks;
 
   public PermissionEvaluator(
       UserInfoProvider userInfoProvider,
       PermissionGroupService permissionGroupService,
-      OrganizationPolicyProvider organizationPolicyProvider,
       List<PermissionCheck> permissionChecks) {
     this.userInfoProvider = userInfoProvider;
     this.permissionGroupService = permissionGroupService;
-    this.organizationPolicyProvider = organizationPolicyProvider;
     this.permissionChecks = permissionChecks == null ? List.of() : permissionChecks;
   }
 
@@ -72,7 +70,7 @@ public class PermissionEvaluator {
   private String determineGroupCode(UserInfo userInfo) {
     String groupCode = userInfo.getPermissionGroupCode();
     if (groupCode == null || groupCode.isBlank()) {
-      return organizationPolicyProvider.defaultPermissionGroup(userInfo.getOrganizationCode());
+      return DEFAULT_PERMISSION_GROUP;
     }
     return groupCode;
   }

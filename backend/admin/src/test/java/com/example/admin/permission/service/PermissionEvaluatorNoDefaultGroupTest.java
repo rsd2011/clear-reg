@@ -7,7 +7,6 @@ import com.example.admin.permission.TestUserInfo;
 import com.example.admin.permission.domain.ActionCode;
 import com.example.admin.permission.domain.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
-import com.example.admin.permission.spi.OrganizationPolicyProvider;
 import com.example.admin.permission.spi.UserInfo;
 import com.example.admin.permission.spi.UserInfoProvider;
 import java.util.List;
@@ -27,22 +26,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 class PermissionEvaluatorNoDefaultGroupTest {
 
   @Mock UserInfoProvider userInfoProvider;
-  @Mock
-  PermissionGroupService groupService;
-  @Mock OrganizationPolicyProvider organizationPolicyProvider;
+  @Mock PermissionGroupService groupService;
 
   @Test
-  @DisplayName("기본 그룹이 없으면 PermissionDeniedException을 던진다")
-  void throwsWhenNoDefaultGroup() {
+  @DisplayName("DEFAULT 그룹이 존재하지 않으면 PermissionDeniedException을 던진다")
+  void throwsWhenDefaultGroupNotFound() {
     SecurityContextHolder.getContext()
         .setAuthentication(new TestingAuthenticationToken("user", "pw"));
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(
-            userInfoProvider, groupService, organizationPolicyProvider, List.of());
+        new PermissionEvaluator(userInfoProvider, groupService, List.of());
 
     UserInfo user = new TestUserInfo("user", "ORG", null, Set.of());
     given(userInfoProvider.getByUsernameOrThrow("user")).willReturn(user);
-    given(organizationPolicyProvider.defaultPermissionGroup("ORG")).willReturn(null);
+    given(groupService.getByCodeOrThrow("DEFAULT"))
+        .willThrow(new PermissionDeniedException("그룹을 찾을 수 없습니다: DEFAULT"));
 
     assertThatThrownBy(() -> evaluator.evaluate(FeatureCode.ORGANIZATION, ActionCode.READ))
         .isInstanceOf(PermissionDeniedException.class);

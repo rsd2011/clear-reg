@@ -27,16 +27,6 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
     Optional<Menu> findByCodeAndActiveTrue(String code);
 
     /**
-     * 부모 메뉴가 없는 최상위 메뉴 목록을 정렬 순서대로 조회한다.
-     */
-    List<Menu> findByParentIsNullAndActiveTrueOrderBySortOrderAsc();
-
-    /**
-     * 특정 부모의 자식 메뉴 목록을 정렬 순서대로 조회한다.
-     */
-    List<Menu> findByParent_CodeAndActiveTrueOrderBySortOrderAsc(String parentCode);
-
-    /**
      * 모든 활성화된 메뉴를 정렬 순서대로 조회한다.
      */
     List<Menu> findByActiveTrueOrderBySortOrderAsc();
