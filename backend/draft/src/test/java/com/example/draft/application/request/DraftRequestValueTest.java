@@ -1,4 +1,6 @@
 package com.example.draft.application.request;
+import com.example.admin.draft.dto.DraftFormTemplateRequest;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
 
 import com.example.draft.application.dto.*;
 

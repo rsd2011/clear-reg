@@ -1,4 +1,4 @@
-package com.example.draft.application.dto;
+package com.example.admin.draft.dto;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
@@ -9,6 +9,9 @@ import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 import com.example.admin.draft.domain.DraftFormTemplate;
 
+/**
+ * 기안 양식 템플릿 응답 DTO.
+ */
 public record DraftFormTemplateResponse(
         UUID id,
         String templateCode,
@@ -17,6 +20,7 @@ public record DraftFormTemplateResponse(
         String schemaJson,
         Integer version,
         boolean active,
+        String componentPath,
         VersionStatus status,
         ChangeAction changeAction,
         String changeReason,
@@ -42,6 +46,7 @@ public record DraftFormTemplateResponse(
                 fn.apply(template.getSchemaJson()),
                 template.getVersion(),
                 template.isActive(),
+                template.getComponentPath(),
                 template.getStatus(),
                 template.getChangeAction(),
                 template.getChangeReason(),
@@ -65,6 +70,7 @@ public record DraftFormTemplateResponse(
                 fn.apply(response.schemaJson()),
                 response.version(),
                 response.active(),
+                response.componentPath(),
                 response.status(),
                 response.changeAction(),
                 response.changeReason(),

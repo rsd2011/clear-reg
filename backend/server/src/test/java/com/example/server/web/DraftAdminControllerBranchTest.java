@@ -13,7 +13,7 @@ import com.example.common.orggroup.WorkType;
 import com.example.common.version.ChangeAction;
 import com.example.admin.draft.domain.DraftFormTemplate;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
-import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRepository;
 
 class DraftAdminControllerBranchTest {
 

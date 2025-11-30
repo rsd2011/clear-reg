@@ -65,6 +65,16 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
     @Column(name = "active", nullable = false)
     private boolean active = true;
 
+    /**
+     * Vue 컴포넌트 경로 (Nuxt 4 프론트엔드용).
+     * <p>
+     * 예: "forms/hr-update", "forms/general/default"
+     * 프론트엔드에서 동적 컴포넌트 로딩에 사용됩니다.
+     * </p>
+     */
+    @Column(name = "component_path", length = 255)
+    private String componentPath;
+
     // === 버전 상태 (Draft/Published) ===
 
     @Enumerated(EnumType.STRING)
@@ -105,6 +115,7 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
                               WorkType workType,
                               String schemaJson,
                               boolean active,
+                              String componentPath,
                               VersionStatus status,
                               ChangeAction changeAction,
                               String changeReason,
@@ -120,6 +131,7 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
         this.workType = workType;
         this.schemaJson = schemaJson;
         this.active = active;
+        this.componentPath = componentPath;
         this.status = status;
         this.changeAction = changeAction;
         this.changeReason = changeReason;
@@ -146,7 +158,28 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
                                            String changedByName,
                                            OffsetDateTime now) {
         return new DraftFormTemplate(
-                root, version, name, workType, schemaJson, active,
+                root, version, name, workType, schemaJson, active, null,
+                VersionStatus.PUBLISHED, changeAction, changeReason,
+                changedBy, changedByName, now, null);
+    }
+
+    /**
+     * 새 버전 생성 (componentPath 포함).
+     */
+    public static DraftFormTemplate create(DraftFormTemplateRoot root,
+                                           Integer version,
+                                           String name,
+                                           WorkType workType,
+                                           String schemaJson,
+                                           boolean active,
+                                           String componentPath,
+                                           ChangeAction changeAction,
+                                           String changeReason,
+                                           String changedBy,
+                                           String changedByName,
+                                           OffsetDateTime now) {
+        return new DraftFormTemplate(
+                root, version, name, workType, schemaJson, active, componentPath,
                 VersionStatus.PUBLISHED, changeAction, changeReason,
                 changedBy, changedByName, now, null);
     }
@@ -165,7 +198,27 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
                                                 String changedByName,
                                                 OffsetDateTime now) {
         return new DraftFormTemplate(
-                root, version, name, workType, schemaJson, active,
+                root, version, name, workType, schemaJson, active, null,
+                VersionStatus.DRAFT, ChangeAction.DRAFT, changeReason,
+                changedBy, changedByName, now, null);
+    }
+
+    /**
+     * 초안(Draft) 버전 생성 (componentPath 포함).
+     */
+    public static DraftFormTemplate createDraft(DraftFormTemplateRoot root,
+                                                Integer version,
+                                                String name,
+                                                WorkType workType,
+                                                String schemaJson,
+                                                boolean active,
+                                                String componentPath,
+                                                String changeReason,
+                                                String changedBy,
+                                                String changedByName,
+                                                OffsetDateTime now) {
+        return new DraftFormTemplate(
+                root, version, name, workType, schemaJson, active, componentPath,
                 VersionStatus.DRAFT, ChangeAction.DRAFT, changeReason,
                 changedBy, changedByName, now, null);
     }
@@ -185,7 +238,28 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
                                                        OffsetDateTime now,
                                                        Integer rollbackFromVersion) {
         return new DraftFormTemplate(
-                root, version, name, workType, schemaJson, active,
+                root, version, name, workType, schemaJson, active, null,
+                VersionStatus.PUBLISHED, ChangeAction.ROLLBACK, changeReason,
+                changedBy, changedByName, now, rollbackFromVersion);
+    }
+
+    /**
+     * 롤백 시 버전 생성 (componentPath 포함).
+     */
+    public static DraftFormTemplate createFromRollback(DraftFormTemplateRoot root,
+                                                       Integer version,
+                                                       String name,
+                                                       WorkType workType,
+                                                       String schemaJson,
+                                                       boolean active,
+                                                       String componentPath,
+                                                       String changeReason,
+                                                       String changedBy,
+                                                       String changedByName,
+                                                       OffsetDateTime now,
+                                                       Integer rollbackFromVersion) {
+        return new DraftFormTemplate(
+                root, version, name, workType, schemaJson, active, componentPath,
                 VersionStatus.PUBLISHED, ChangeAction.ROLLBACK, changeReason,
                 changedBy, changedByName, now, rollbackFromVersion);
     }
@@ -238,6 +312,19 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
                             boolean active,
                             String changeReason,
                             OffsetDateTime now) {
+        updateDraft(name, workType, schemaJson, active, null, changeReason, now);
+    }
+
+    /**
+     * 초안 내용 업데이트 (componentPath 포함).
+     */
+    public void updateDraft(String name,
+                            WorkType workType,
+                            String schemaJson,
+                            boolean active,
+                            String componentPath,
+                            String changeReason,
+                            OffsetDateTime now) {
         if (this.status != VersionStatus.DRAFT) {
             throw new IllegalStateException("초안 상태에서만 수정할 수 있습니다. 현재 상태: " + this.status);
         }
@@ -245,6 +332,7 @@ public class DraftFormTemplate extends PrimaryKeyEntity {
         this.workType = workType;
         this.schemaJson = schemaJson;
         this.active = active;
+        this.componentPath = componentPath;
         this.changeReason = changeReason;
         this.changedAt = now;
         this.updatedAt = now;

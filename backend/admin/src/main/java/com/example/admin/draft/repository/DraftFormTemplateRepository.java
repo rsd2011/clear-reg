@@ -1,4 +1,4 @@
-package com.example.draft.domain.repository;
+package com.example.admin.draft.repository;
 
 import java.util.List;
 import java.util.Optional;
@@ -71,4 +71,28 @@ public interface DraftFormTemplateRepository extends JpaRepository<DraftFormTemp
             "AND t.status = 'PUBLISHED' " +
             "AND t.validTo IS NULL")
     Optional<DraftFormTemplate> findByIdAndActiveTrue(@Param("id") UUID id);
+
+    /**
+     * Root의 모든 버전을 조회한다 (버전 히스토리용).
+     * 버전 번호 내림차순으로 정렬합니다.
+     *
+     * @param root 루트
+     * @return 버전 목록 (최신순)
+     */
+    @Query("SELECT t FROM DraftFormTemplate t " +
+            "WHERE t.root = :root " +
+            "ORDER BY t.version DESC")
+    List<DraftFormTemplate> findAllByRootOrderByVersionDesc(@Param("root") DraftFormTemplateRoot root);
+
+    /**
+     * Root ID로 모든 버전을 조회한다 (버전 히스토리용).
+     * 버전 번호 내림차순으로 정렬합니다.
+     *
+     * @param rootId 루트 ID
+     * @return 버전 목록 (최신순)
+     */
+    @Query("SELECT t FROM DraftFormTemplate t " +
+            "WHERE t.root.id = :rootId " +
+            "ORDER BY t.version DESC")
+    List<DraftFormTemplate> findAllByRootIdOrderByVersionDesc(@Param("rootId") UUID rootId);
 }

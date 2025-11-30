@@ -21,15 +21,18 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
-import com.example.draft.application.TemplateAdminService;
+import com.example.admin.draft.service.TemplateAdminService;
 import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
-import com.example.draft.application.dto.DraftFormTemplateResponse;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class DraftTemplateAdminControllerExtraTest {
 
     TemplateAdminService service = mock(TemplateAdminService.class);
-    DraftTemplateAdminController controller = new DraftTemplateAdminController(service);
+    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    DraftTemplateAdminController controller = new DraftTemplateAdminController(service, objectMapper);
 
     @AfterEach
     void tearDown() {
@@ -82,6 +85,7 @@ class DraftTemplateAdminControllerExtraTest {
 
         DraftFormTemplateResponse resp = new DraftFormTemplateResponse(
                 UUID.randomUUID(), "CODE", "이름", WorkType.HR_UPDATE, "{}", 1, true,
+                null, // componentPath
                 com.example.common.version.VersionStatus.PUBLISHED,
                 com.example.common.version.ChangeAction.CREATE, null,
                 "user", "User", OffsetDateTime.now(), OffsetDateTime.now(), null,

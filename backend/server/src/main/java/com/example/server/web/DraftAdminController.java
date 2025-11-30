@@ -19,7 +19,7 @@ import com.example.common.orggroup.WorkType;
 import com.example.common.policy.MaskingContextHolder;
 import com.example.common.version.VersionStatus;
 import com.example.admin.draft.domain.DraftFormTemplate;
-import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRepository;
 
 @RestController
 @RequestMapping("/api/admin/draft")

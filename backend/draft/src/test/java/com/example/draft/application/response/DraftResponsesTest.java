@@ -1,4 +1,5 @@
 package com.example.draft.application.response;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
 
 import com.example.draft.application.dto.*;
 
