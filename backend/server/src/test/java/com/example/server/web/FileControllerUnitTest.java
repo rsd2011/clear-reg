@@ -15,8 +15,8 @@ import org.mockito.Mockito;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.ResponseEntity;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.file.FileDownload;

@@ -11,11 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import java.util.List;
+
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.common.security.RowScope;
 
 @SpringBootTest(classes = AsyncConfig.class)
 class AsyncConfigTest {
@@ -33,7 +34,7 @@ class AsyncConfigTest {
     @DisplayName("Async TaskExecutor가 AuthContext를 전파한다")
     void asyncExecutorPropagatesAuthContext() throws Exception {
         AuthContext context = AuthContext.of("tester", "ORG", "DEFAULT",
-                FeatureCode.NOTICE, ActionCode.READ, RowScope.OWN);
+                FeatureCode.NOTICE, ActionCode.READ, List.of());
         AuthContextHolder.set(context);
 
         Future<String> future = applicationTaskExecutor.submit(() ->

@@ -47,8 +47,8 @@ import com.example.admin.codegroup.dto.MigrationStatusResponse;
 import com.example.admin.codegroup.registry.StaticCodeRegistry;
 import com.example.admin.codegroup.service.CodeGroupQueryService;
 import com.example.admin.codegroup.service.CodeGroupService;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.aop.RequirePermissionAspect;
 import com.example.admin.permission.context.AuthContext;
@@ -98,7 +98,7 @@ class CodeGroupControllerTest {
 
     @BeforeEach
     void setUpAuth() throws Throwable {
-        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.COMMON_CODE, ActionCode.READ, com.example.common.security.RowScope.ALL);
+        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.COMMON_CODE, ActionCode.READ, java.util.List.of());
         PermissionDecision allowDecision = org.mockito.Mockito.mock(PermissionDecision.class);
         given(allowDecision.toContext()).willReturn(authContext);
         given(permissionEvaluator.evaluate(any(), any())).willReturn(allowDecision);

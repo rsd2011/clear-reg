@@ -12,8 +12,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.common.policy.MaskingMatch;
 import com.example.common.policy.MaskingPolicyProvider;
 import com.example.common.policy.MaskingQuery;

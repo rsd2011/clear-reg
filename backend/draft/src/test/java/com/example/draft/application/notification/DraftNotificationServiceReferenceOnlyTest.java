@@ -42,7 +42,7 @@ class DraftNotificationServiceReferenceOnlyTest {
                 OffsetDateTime.now()
         );
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of(ref));
-        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of());
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP\"]")).willReturn(List.of());
 
         UUID stepId = step.getId();
         svc.notify("ACTION", draft, null, stepId, null, null, OffsetDateTime.now());

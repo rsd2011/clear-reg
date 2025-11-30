@@ -18,8 +18,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
@@ -43,7 +43,7 @@ class NoticeAdminControllerTest {
     @BeforeEach
     void setUp() {
         AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
-                FeatureCode.NOTICE, ActionCode.UPDATE, RowScope.ALL));
+                FeatureCode.NOTICE, ActionCode.UPDATE, List.of()));
     }
 
     @AfterEach

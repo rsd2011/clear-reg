@@ -51,7 +51,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인 그룹 생성 시 컨텍스트와 true 플래그가 전달된다")
     void createGroupUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
 
         ApprovalGroupRequest request = new ApprovalGroupRequest("GC", "이름", "설명", 0);
@@ -76,7 +76,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인 그룹 목록 조회 시 컨텍스트와 파라미터가 전달된다")
     void listGroupsPassesArguments() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
 
         ApprovalGroupResponse response = new ApprovalGroupResponse(
@@ -99,7 +99,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인 그룹 상세 조회 시 ID가 전달된다")
     void getGroupUsesId() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG", null, null, null, RowScope.ALL));
+        AuthContextHolder.set(AuthContext.of("user", "ORG", null, null, null, List.of()));
 
         UUID id = UUID.randomUUID();
         ApprovalGroupResponse response = new ApprovalGroupResponse(
@@ -122,7 +122,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인 그룹 수정 시 컨텍스트와 요청이 전달된다")
     void updateGroupUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, List.of());
         AuthContextHolder.set(ctx);
 
         UUID id = UUID.randomUUID();
@@ -147,7 +147,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인 그룹 삭제 시 컨텍스트가 전달된다")
     void deleteGroupUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, List.of());
         AuthContextHolder.set(ctx);
 
         UUID id = UUID.randomUUID();
@@ -159,7 +159,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인 그룹 활성화 시 컨텍스트가 전달된다")
     void activateGroupUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, List.of());
         AuthContextHolder.set(ctx);
 
         UUID id = UUID.randomUUID();
@@ -183,7 +183,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("그룹 코드 중복 검사 결과를 반환한다")
     void checkGroupCodeExistsReturnsResult() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG", null, null, null, RowScope.ALL));
+        AuthContextHolder.set(AuthContext.of("user", "ORG", null, null, null, List.of()));
 
         when(service.existsGroupCode("GC")).thenReturn(true);
 
@@ -196,7 +196,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("표시순서 일괄 업데이트 시 컨텍스트가 전달된다")
     void updateDisplayOrdersUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", null, null, null, List.of());
         AuthContextHolder.set(ctx);
 
         UUID id = UUID.randomUUID();
@@ -223,7 +223,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인그룹 요약 목록 조회 시 경량 응답이 반환된다")
     void listGroupSummaryReturnsLightweightResponse() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL));
+        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", null, null, List.of()));
 
         UUID id1 = UUID.randomUUID();
         UUID id2 = UUID.randomUUID();
@@ -243,7 +243,7 @@ class ApprovalGroupControllerTest {
     @Test
     @DisplayName("승인그룹 요약 목록 - activeOnly=false 시 모든 그룹 반환 요청")
     void listGroupSummaryIncludesInactive() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL));
+        AuthContextHolder.set(AuthContext.of("user", "ORG", "PG", null, null, List.of()));
 
         when(service.listGroupSummary(false)).thenReturn(List.of(
                 new ApprovalGroupSummaryResponse(UUID.randomUUID(), "ACTIVE", "활성"),

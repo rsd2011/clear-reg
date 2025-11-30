@@ -9,9 +9,10 @@ import static org.mockito.Mockito.mock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.orggroup.WorkType;
-import com.example.common.security.RowScope;
 import com.example.admin.draft.dto.DraftFormTemplateRequest;
 import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.admin.draft.repository.DraftFormTemplateRepository;
@@ -30,7 +31,7 @@ class DraftFormTemplateServiceCreateFormTemplateInactiveTest {
         given(formRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", WorkType.GENERAL, "{}", false, null);
-        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
         DraftFormTemplateResponse res = service.createDraftFormTemplate(req, ctx, false);
         assertThat(res.active()).isFalse();

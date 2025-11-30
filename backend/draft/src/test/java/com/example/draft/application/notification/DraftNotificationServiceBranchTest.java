@@ -34,7 +34,7 @@ class DraftNotificationServiceBranchTest {
         draft.addApprovalStep(step);
 
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());
-        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of());
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP\"]")).willReturn(List.of());
 
         svc.notify("ACTION", draft, null, step.getId(), null, null, OffsetDateTime.now());
 

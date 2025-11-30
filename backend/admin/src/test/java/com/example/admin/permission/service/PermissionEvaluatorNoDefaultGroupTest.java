@@ -4,12 +4,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import com.example.admin.permission.TestUserInfo;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.spi.UserInfo;
 import com.example.admin.permission.spi.UserInfoProvider;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class PermissionEvaluatorNoDefaultGroupTest {
     SecurityContextHolder.getContext()
         .setAuthentication(new TestingAuthenticationToken("user", "pw"));
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(userInfoProvider, groupService, List.of());
+        new PermissionEvaluator(userInfoProvider, groupService);
 
     UserInfo user = new TestUserInfo("user", "ORG", null, Set.of());
     given(userInfoProvider.getByUsernameOrThrow("user")).willReturn(user);

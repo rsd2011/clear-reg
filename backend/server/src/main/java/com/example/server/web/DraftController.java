@@ -17,13 +17,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.annotation.RequirePermission;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.policy.RowAccessMatch;
+import com.example.common.policy.RowAccessPolicyProvider;
+import com.example.common.policy.RowAccessQuery;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.dto.DraftCreateRequest;
@@ -47,14 +50,17 @@ public class DraftController {
     private final DraftApplicationService draftApplicationService;
     private final PermissionEvaluator permissionEvaluator;
     private final DwOrganizationQueryService organizationQueryService;
+    private final RowAccessPolicyProvider rowAccessPolicyProvider;
     private static final RowScope DEFAULT_ROW_SCOPE = RowScope.ORG;
 
     public DraftController(DraftApplicationService draftApplicationService,
                            PermissionEvaluator permissionEvaluator,
-                           DwOrganizationQueryService organizationQueryService) {
+                           DwOrganizationQueryService organizationQueryService,
+                           RowAccessPolicyProvider rowAccessPolicyProvider) {
         this.draftApplicationService = draftApplicationService;
         this.permissionEvaluator = permissionEvaluator;
         this.organizationQueryService = organizationQueryService;
+        this.rowAccessPolicyProvider = rowAccessPolicyProvider;
     }
 
     @GetMapping
@@ -66,7 +72,7 @@ public class DraftController {
                                           @RequestParam(required = false) String title) {
         AuthContext context = currentContext();
         boolean audit = hasAuditPermission();
-        RowScope rowScope = audit ? RowScope.ALL : effectiveRowScope(context.rowScope());
+        RowScope rowScope = audit ? RowScope.ALL : effectiveRowScope(resolveRowScope(context));
         Collection<String> scopedOrganizations = resolveOrganizations(rowScope, context.organizationCode());
         return draftApplicationService.listDrafts(pageable, rowScope, context.organizationCode(), scopedOrganizations,
                 status, businessFeatureCode, createdBy, title);
@@ -279,5 +285,17 @@ public class DraftController {
             return RowScope.ORG;
         }
         return requested;
+    }
+
+    private RowScope resolveRowScope(AuthContext context) {
+        RowAccessQuery query = new RowAccessQuery(
+                context.feature() != null ? context.feature().name() : null,
+                context.action() != null ? context.action().name() : null,
+                context.permissionGroupCode(),
+                context.orgGroupCodes(),
+                null);
+        return rowAccessPolicyProvider.evaluate(query)
+                .map(RowAccessMatch::getRowScope)
+                .orElse(DEFAULT_ROW_SCOPE);
     }
 }

@@ -39,8 +39,9 @@ class DraftNotificationServiceTest {
         DraftApprovalStep step = DraftApprovalStep.fromTemplate(templateStep);
         draft.addApprovalStep(step);
 
-        PermissionGroup permGroup = new PermissionGroup("PERM_GRP", "Test Group");
-        permGroup.setApprovalGroupCode("GRP");
+        PermissionGroup permGroup = mock(PermissionGroup.class);
+        given(permGroup.getCode()).willReturn("PERM_GRP");
+        given(permGroup.getApprovalGroupCodes()).willReturn(List.of("GRP"));
         UserAccount user = UserAccount.builder()
                 .username("user1")
                 .password("password")
@@ -48,7 +49,7 @@ class DraftNotificationServiceTest {
                 .permissionGroupCode("PERM_GRP")
                 .build();
 
-        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of(permGroup));
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP\"]")).willReturn(List.of(permGroup));
         given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());
 

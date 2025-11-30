@@ -5,8 +5,8 @@ import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import com.example.admin.permission.domain.FeatureCode;
-import com.example.admin.permission.domain.ActionCode;
+import com.example.common.security.FeatureCode;
+import com.example.common.security.ActionCode;
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.common.masking.DataKind;
 import com.example.common.masking.DataKindSetConverter;

@@ -46,7 +46,7 @@ class ApprovalTemplateRootControllerTest {
     }
 
     private AuthContext setupContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
         return ctx;
     }

@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicy;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicyRoot;
 import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyHistoryResponse;
@@ -46,7 +46,7 @@ class RowAccessPolicyRootServiceTest {
     }
 
     private AuthContext testContext() {
-        return AuthContext.of("testuser", "ORG1", null, null, null, RowScope.ORG);
+        return AuthContext.of("testuser", "ORG1", null, null, null, List.of());
     }
 
     private RowAccessPolicyRoot createTestPolicyWithVersion(String name, int priority, boolean active) {
@@ -415,9 +415,9 @@ class RowAccessPolicyRootServiceTest {
         @DisplayName("Given: 특정 RowScope의 정책 / When: listByRowScope 호출 / Then: 해당 정책만 반환")
         void listByRowScopeReturnsPolicies() {
             RowAccessPolicyRoot policy = createTestPolicyWithVersion("정책");
-            given(rootRepository.findActiveByRowScope(RowScope.OWN)).willReturn(List.of(policy));
+            given(rootRepository.findActiveByRowScope(RowScope.ALL)).willReturn(List.of(policy));
 
-            List<RowAccessPolicyRootResponse> result = service.listByRowScope(RowScope.OWN);
+            List<RowAccessPolicyRootResponse> result = service.listByRowScope(RowScope.ALL);
 
             assertThat(result).hasSize(1);
         }

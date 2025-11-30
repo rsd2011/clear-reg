@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
 
-import com.example.admin.permission.domain.ActionCode;
+import com.example.common.security.ActionCode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
@@ -57,7 +57,7 @@ class NotificationControllerTest {
     void setUp() {
         AuthContextHolder.set(AuthContext.of("tester", "ORG", "DEFAULT",
                 FeatureCode.ALERT, ActionCode.READ,
-                RowScope.ALL));
+                java.util.List.of()));
     }
 
     @AfterEach

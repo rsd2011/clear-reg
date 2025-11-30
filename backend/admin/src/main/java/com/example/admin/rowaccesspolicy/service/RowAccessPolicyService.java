@@ -8,8 +8,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicy;
 import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRepository;
 import com.example.common.policy.RowAccessMatch;

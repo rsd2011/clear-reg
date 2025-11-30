@@ -10,11 +10,15 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.policy.RowAccessPolicyProvider;
 import com.example.dwgateway.dw.DwOrganizationPort;
+
+import java.util.List;
 
 class DwOrganizationControllerAccessTest {
 
     DwOrganizationPort port = mock(DwOrganizationPort.class);
+    RowAccessPolicyProvider rowAccessPolicyProvider = mock(RowAccessPolicyProvider.class);
 
     @AfterEach
     void tearDown() {
@@ -24,8 +28,8 @@ class DwOrganizationControllerAccessTest {
     @Test
     @DisplayName("rowScope가 없으면 조직 조회를 거부한다")
     void organizations_deniedWhenScopeMissing() {
-        AuthContextHolder.set(AuthContext.of("user", null, null, null, null, null));
-        DwOrganizationController controller = new DwOrganizationController(port);
+        AuthContextHolder.set(AuthContext.of("user", null, null, null, null, List.of()));
+        DwOrganizationController controller = new DwOrganizationController(port, rowAccessPolicyProvider);
 
         assertThatThrownBy(controller::organizations)
                 .isInstanceOf(AccessDeniedException.class)

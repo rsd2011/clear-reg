@@ -11,12 +11,11 @@ public class Slf4jPermissionAuditLogger implements PermissionAuditLogger {
   @Override
   public void onAccessGranted(AuthContext context) {
     log.info(
-        "PERMISSION_GRANTED user={} group={} feature={} action={} scope={}",
+        "PERMISSION_GRANTED user={} group={} feature={} action={}",
         context.username(),
         context.permissionGroupCode(),
         context.feature(),
-        context.action(),
-        context.rowScope());
+        context.action());
   }
 
   @Override

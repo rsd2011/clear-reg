@@ -1,4 +1,4 @@
-package com.example.admin.permission.domain;
+package com.example.common.security;
 
 import com.example.common.codegroup.annotation.ManagedCode;
 

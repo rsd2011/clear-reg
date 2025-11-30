@@ -39,8 +39,10 @@ public class ApprovalAuthorizationService {
         String approvalGroupCode = resolveTargetGroupCode(request, action)
                 .orElseThrow(() -> new ApprovalAccessDeniedException("활성 결재 단계를 찾을 수 없습니다."));
 
+        // JSON 배열 형식으로 변환하여 네이티브 쿼리의 @> 연산자에 맞춤
+        String jsonArray = "[\"" + approvalGroupCode + "\"]";
         List<PermissionGroup> permissionGroups =
-                permissionGroupRepository.findByApprovalGroupCode(approvalGroupCode);
+                permissionGroupRepository.findByApprovalGroupCode(jsonArray);
 
         if (permissionGroups.isEmpty()) {
             throw new ApprovalAccessDeniedException("결재 그룹에 매핑된 권한 그룹이 없습니다.");

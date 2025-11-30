@@ -8,7 +8,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
-import com.example.admin.permission.domain.ActionCode;
+import com.example.common.security.ActionCode;
 import com.example.common.masking.DataKind;
 import com.example.common.masking.MaskRule;
 import com.example.common.policy.MaskingMatch;

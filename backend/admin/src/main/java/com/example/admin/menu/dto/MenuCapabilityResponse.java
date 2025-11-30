@@ -1,8 +1,8 @@
 package com.example.admin.menu.dto;
 
 import com.example.admin.menu.domain.MenuCapability;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 
 /**
  * 메뉴 Capability 응답 DTO.

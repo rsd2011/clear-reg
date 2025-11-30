@@ -31,8 +31,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.context.AuthContext;
@@ -75,10 +75,13 @@ class DraftControllerTest {
     @MockBean
     private com.example.dw.application.DwOrganizationQueryService organizationQueryService;
 
+    @MockBean
+    private com.example.common.policy.RowAccessPolicyProvider rowAccessPolicyProvider;
+
     @BeforeEach
     void setUp() {
         AuthContextHolder.set(AuthContext.of("writer", "ORG-001", "DEFAULT",
-                FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ALL));
+                FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, List.of()));
     }
 
     @AfterEach
@@ -271,7 +274,7 @@ class DraftControllerTest {
     @DisplayName("Given 리스트 요청 When GET 호출 Then RowScope 조직으로 필터링한다")
     void givenListRequest_whenListing_thenFiltersByRowScope() throws Exception {
         AuthContextHolder.set(AuthContext.of("writer", "ORG-001", "DEFAULT",
-                FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
+                FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(organizationQueryService.getOrganizations(Pageable.unpaged(), RowScope.ORG, "ORG-001"))
                 .willReturn(new PageImpl<>(List.of(sampleOrgNode("ORG-001"))));
         DraftResponse response = sampleResponse(DraftStatus.DRAFT);

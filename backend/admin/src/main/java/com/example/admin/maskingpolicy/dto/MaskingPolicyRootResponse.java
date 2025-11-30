@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import com.example.common.masking.DataKind;
 import com.example.admin.maskingpolicy.domain.MaskingPolicyRoot;
 import com.example.admin.maskingpolicy.domain.MaskingPolicy;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 
 /**
  * 마스킹 정책 루트 응답 DTO.

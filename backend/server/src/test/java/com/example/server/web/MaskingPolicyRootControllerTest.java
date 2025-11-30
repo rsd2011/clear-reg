@@ -28,8 +28,8 @@ import com.example.admin.maskingpolicy.service.MaskingPolicyRootService;
 import com.example.admin.maskingpolicy.service.MaskingPolicyVersioningService;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.common.security.RowScope;
 import com.example.common.version.ChangeAction;
@@ -48,7 +48,7 @@ class MaskingPolicyRootControllerTest {
     }
 
     private AuthContext setupContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
         return ctx;
     }

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -15,9 +16,11 @@ import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCapability;
 import com.example.admin.menu.domain.MenuCode;
 import com.example.admin.menu.repository.MenuRepository;
-import com.example.admin.permission.domain.FeatureCode;
-import com.example.admin.permission.domain.ActionCode;
+import com.example.common.security.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.admin.permission.domain.PermissionGroupRoot;
 import com.example.admin.permission.domain.PermissionMenu;
+import com.example.admin.permission.repository.PermissionGroupRootRepository;
 import com.example.admin.permission.repository.PermissionMenuRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +29,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+/**
+ * PermissionMenuService 테스트.
+ *
+ * <p>PermissionMenu는 이제 permissionGroupCode 대신 PermissionGroupRoot를 FK로 참조합니다.
+ */
 @DisplayName("PermissionMenuService 테스트")
 class PermissionMenuServiceTest {
 
@@ -33,14 +41,23 @@ class PermissionMenuServiceTest {
     private PermissionMenuRepository permissionMenuRepository;
 
     @Mock
+    private PermissionGroupRootRepository permissionGroupRootRepository;
+
+    @Mock
     private MenuRepository menuRepository;
 
     private PermissionMenuService service;
+    private PermissionGroupRoot adminGroup;
+    private PermissionGroupRoot userGroup;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        service = new PermissionMenuService(permissionMenuRepository, menuRepository);
+        service = new PermissionMenuService(permissionMenuRepository, permissionGroupRootRepository, menuRepository);
+
+        OffsetDateTime now = OffsetDateTime.now();
+        adminGroup = PermissionGroupRoot.createWithCode("ADMIN", now);
+        userGroup = PermissionGroupRoot.createWithCode("USER", now);
     }
 
     @Nested
@@ -63,7 +80,7 @@ class PermissionMenuServiceTest {
         void returnsSingleRootNode() {
             Menu menu = new Menu(MenuCode.DASHBOARD, "대시보드");
             menu.updateDetails("대시보드", "home", 1, null);
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, null, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(pm));
@@ -80,11 +97,11 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 카테고리와 자식 메뉴 When getMenuTree 호출하면 Then 계층 구조 반환")
         void returnsHierarchicalTree() {
             PermissionMenu category = PermissionMenu.forCategory(
-                    "ADMIN", "ADMIN_CAT", "관리", "folder", null, 1);
+                    adminGroup, "ADMIN_CAT", "관리", "folder", null, 1);
 
             Menu childMenu = new Menu(MenuCode.USER_MGMT, "사용자관리");
             childMenu.updateDetails("사용자관리", "people", 1, null);
-            PermissionMenu child = PermissionMenu.forMenu("ADMIN", childMenu, category, 1);
+            PermissionMenu child = PermissionMenu.forMenu(adminGroup, childMenu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(category, child));
@@ -107,11 +124,11 @@ class PermissionMenuServiceTest {
         @DisplayName("Given Capability 없는 사용자 When 호출하면 Then 카테고리만 있는 빈 트리")
         void returnsEmptyTreeForNoCapabilities() {
             PermissionMenu category = PermissionMenu.forCategory(
-                    "ADMIN", "CAT", "카테고리", "icon", null, 1);
+                    adminGroup, "CAT", "카테고리", "icon", null, 1);
 
             Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
             menu.addCapability(new MenuCapability(FeatureCode.DRAFT, ActionCode.READ));
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, category, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(category, pm));
@@ -129,12 +146,12 @@ class PermissionMenuServiceTest {
             MenuCapability cap = new MenuCapability(FeatureCode.DRAFT, ActionCode.READ);
 
             PermissionMenu category = PermissionMenu.forCategory(
-                    "ADMIN", "CAT", "카테고리", "icon", null, 1);
+                    adminGroup, "CAT", "카테고리", "icon", null, 1);
 
             Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
             menu.updateDetails("메뉴", "icon", 1, null);
             menu.addCapability(cap);
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, category, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(category, pm));
@@ -154,7 +171,7 @@ class PermissionMenuServiceTest {
             Menu menu = new Menu(MenuCode.NOTICE, "공개메뉴");
             menu.updateDetails("공개메뉴", "icon", 1, null);
             // 요구 Capability 없음
-            PermissionMenu pm = PermissionMenu.forMenu("USER", menu, null, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(userGroup, menu, null, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("USER"))
                     .willReturn(List.of(pm));
@@ -175,6 +192,7 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 유효한 파라미터 When addMenu 호출하면 Then 메뉴 추가")
         void addsMenu() {
             Menu menu = new Menu(MenuCode.MENU_MGMT, "새메뉴");
+            given(permissionGroupRootRepository.findByGroupCode("ADMIN")).willReturn(Optional.of(adminGroup));
             given(menuRepository.findByCode(MenuCode.MENU_MGMT)).willReturn(Optional.of(menu));
             given(permissionMenuRepository.save(any(PermissionMenu.class)))
                     .willAnswer(inv -> inv.getArgument(0));
@@ -190,6 +208,8 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 존재하지 않는 메뉴 When addMenu 호출하면 Then 예외 발생")
         void throwsOnNonExistentMenu() {
             // INVALID는 MenuCode enum에 없으므로 fromString이 null 반환
+            given(permissionGroupRootRepository.findByGroupCode("ADMIN")).willReturn(Optional.of(adminGroup));
+
             assertThatThrownBy(() -> service.addMenu("ADMIN", "INVALID", null, 1))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining("Invalid menu code");
@@ -203,6 +223,7 @@ class PermissionMenuServiceTest {
         @Test
         @DisplayName("Given 유효한 파라미터 When addCategory 호출하면 Then 카테고리 추가")
         void addsCategory() {
+            given(permissionGroupRootRepository.findByGroupCode("ADMIN")).willReturn(Optional.of(adminGroup));
             given(permissionMenuRepository.save(any(PermissionMenu.class)))
                     .willAnswer(inv -> inv.getArgument(0));
 
@@ -240,7 +261,7 @@ class PermissionMenuServiceTest {
         void updatesDisplayOrder() {
             UUID id = UUID.randomUUID();
             Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, null, 1);
             given(permissionMenuRepository.findById(id)).willReturn(Optional.of(pm));
 
             service.updateDisplayOrder("ADMIN", id, 99);
@@ -270,9 +291,9 @@ class PermissionMenuServiceTest {
             UUID childId = UUID.randomUUID();
             UUID parentId = UUID.randomUUID();
             Menu menu = new Menu(MenuCode.DRAFT_CREATE, "자식");
-            PermissionMenu child = PermissionMenu.forMenu("ADMIN", menu, null, 1);
+            PermissionMenu child = PermissionMenu.forMenu(adminGroup, menu, null, 1);
             PermissionMenu newParent = PermissionMenu.forCategory(
-                    "ADMIN", "PARENT", "부모", "icon", null, 1);
+                    adminGroup, "PARENT", "부모", "icon", null, 1);
 
             given(permissionMenuRepository.findById(childId)).willReturn(Optional.of(child));
             given(permissionMenuRepository.findById(parentId)).willReturn(Optional.of(newParent));
@@ -288,8 +309,8 @@ class PermissionMenuServiceTest {
             UUID childId = UUID.randomUUID();
             Menu menu = new Menu(MenuCode.DRAFT_CREATE, "자식");
             PermissionMenu parent = PermissionMenu.forCategory(
-                    "ADMIN", "OLD_PARENT", "기존부모", "icon", null, 1);
-            PermissionMenu child = PermissionMenu.forMenu("ADMIN", menu, parent, 1);
+                    adminGroup, "OLD_PARENT", "기존부모", "icon", null, 1);
+            PermissionMenu child = PermissionMenu.forMenu(adminGroup, menu, parent, 1);
 
             given(permissionMenuRepository.findById(childId)).willReturn(Optional.of(child));
 
@@ -331,7 +352,7 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 존재하는 메뉴코드 When findByMenuCode 호출하면 Then PermissionMenu 반환")
         void findsPermissionMenu() {
             Menu menu = new Menu(MenuCode.DASHBOARD, "대시보드");
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, null, 1);
             given(permissionMenuRepository.findByPermissionGroupCodeAndMenuCode("ADMIN", "DASHBOARD"))
                     .willReturn(Optional.of(pm));
 
@@ -350,7 +371,7 @@ class PermissionMenuServiceTest {
         @DisplayName("Given 존재하는 카테고리코드 When findByCategoryCode 호출하면 Then PermissionMenu 반환")
         void findsPermissionMenu() {
             PermissionMenu pm = PermissionMenu.forCategory(
-                    "ADMIN", "SETTINGS", "설정", "icon", null, 1);
+                    adminGroup, "SETTINGS", "설정", "icon", null, 1);
             given(permissionMenuRepository.findByPermissionGroupCodeAndCategoryCode("ADMIN", "SETTINGS"))
                     .willReturn(Optional.of(pm));
 
@@ -371,8 +392,9 @@ class PermissionMenuServiceTest {
             UUID parentId = UUID.randomUUID();
             Menu menu = new Menu(MenuCode.APPROVAL_INBOX, "자식메뉴");
             PermissionMenu parent = PermissionMenu.forCategory(
-                    "ADMIN", "PARENT_CAT", "부모", "icon", null, 1);
+                    adminGroup, "PARENT_CAT", "부모", "icon", null, 1);
 
+            given(permissionGroupRootRepository.findByGroupCode("ADMIN")).willReturn(Optional.of(adminGroup));
             given(menuRepository.findByCode(MenuCode.APPROVAL_INBOX)).willReturn(Optional.of(menu));
             given(permissionMenuRepository.findById(parentId)).willReturn(Optional.of(parent));
             given(permissionMenuRepository.save(any(PermissionMenu.class)))
@@ -393,8 +415,9 @@ class PermissionMenuServiceTest {
         void addsCategoryWithParent() {
             UUID parentId = UUID.randomUUID();
             PermissionMenu parent = PermissionMenu.forCategory(
-                    "ADMIN", "PARENT_CAT", "부모", "icon", null, 1);
+                    adminGroup, "PARENT_CAT", "부모", "icon", null, 1);
 
+            given(permissionGroupRootRepository.findByGroupCode("ADMIN")).willReturn(Optional.of(adminGroup));
             given(permissionMenuRepository.findById(parentId)).willReturn(Optional.of(parent));
             given(permissionMenuRepository.save(any(PermissionMenu.class)))
                     .willAnswer(inv -> inv.getArgument(0));
@@ -414,11 +437,11 @@ class PermissionMenuServiceTest {
         @DisplayName("Given null userCapabilities When 호출하면 Then 빈 카테고리 제외")
         void handlesNullCapabilities() {
             PermissionMenu category = PermissionMenu.forCategory(
-                    "ADMIN", "CAT", "카테고리", "icon", null, 1);
+                    adminGroup, "CAT", "카테고리", "icon", null, 1);
 
             Menu menu = new Menu(MenuCode.DRAFT, "메뉴");
             menu.addCapability(new MenuCapability(FeatureCode.DRAFT, ActionCode.READ));
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, category, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, category, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(category, pm));
@@ -439,7 +462,7 @@ class PermissionMenuServiceTest {
             menu.updateDetails("다중권한메뉴", "icon", 1, null);
             menu.addCapability(cap1);
             menu.addCapability(cap2);
-            PermissionMenu pm = PermissionMenu.forMenu("ADMIN", menu, null, 1);
+            PermissionMenu pm = PermissionMenu.forMenu(adminGroup, menu, null, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(pm));
@@ -467,9 +490,9 @@ class PermissionMenuServiceTest {
             Menu menu3 = new Menu(MenuCode.DASHBOARD, "메뉴3");
             menu3.updateDetails("메뉴3", "icon3", 1, null);
 
-            PermissionMenu pm1 = PermissionMenu.forMenu("ADMIN", menu1, null, 2);
-            PermissionMenu pm2 = PermissionMenu.forMenu("ADMIN", menu2, null, null);
-            PermissionMenu pm3 = PermissionMenu.forMenu("ADMIN", menu3, null, 1);
+            PermissionMenu pm1 = PermissionMenu.forMenu(adminGroup, menu1, null, 2);
+            PermissionMenu pm2 = PermissionMenu.forMenu(adminGroup, menu2, null, null);
+            PermissionMenu pm3 = PermissionMenu.forMenu(adminGroup, menu3, null, 1);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(pm1, pm2, pm3));
@@ -490,8 +513,8 @@ class PermissionMenuServiceTest {
             Menu menu2 = new Menu(MenuCode.APPROVAL, "메뉴2");
             menu2.updateDetails("메뉴2", "icon2", 1, null);
 
-            PermissionMenu pm1 = PermissionMenu.forMenu("ADMIN", menu1, null, null);
-            PermissionMenu pm2 = PermissionMenu.forMenu("ADMIN", menu2, null, null);
+            PermissionMenu pm1 = PermissionMenu.forMenu(adminGroup, menu1, null, null);
+            PermissionMenu pm2 = PermissionMenu.forMenu(adminGroup, menu2, null, null);
 
             given(permissionMenuRepository.findByPermissionGroupCode("ADMIN"))
                     .willReturn(List.of(pm1, pm2));

@@ -79,8 +79,10 @@ public class DraftNotificationService {
                 .filter(step -> step.getState() == DraftApprovalState.WAITING)
                 .findFirst()
                 .map(step -> {
+                    // JSON 배열 형식으로 변환하여 네이티브 쿼리의 @> 연산자에 맞춤
+                    String jsonArray = "[\"" + step.getApprovalGroupCode() + "\"]";
                     List<PermissionGroup> groups =
-                            permissionGroupRepository.findByApprovalGroupCode(step.getApprovalGroupCode());
+                            permissionGroupRepository.findByApprovalGroupCode(jsonArray);
 
                     if (groups.isEmpty()) {
                         return List.<String>of();

@@ -24,8 +24,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
@@ -59,10 +59,13 @@ class DraftControllerHistoryReferenceTest {
     @MockBean
     private com.example.dw.application.DwOrganizationQueryService organizationQueryService;
 
+    @MockBean
+    private com.example.common.policy.RowAccessPolicyProvider rowAccessPolicyProvider;
+
     @BeforeEach
     void setUp() {
         AuthContextHolder.set(AuthContext.of("writer", ORG, "DEFAULT",
-                FeatureCode.DRAFT, ActionCode.DRAFT_READ, com.example.common.security.RowScope.ALL));
+                FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT))
                 .willThrow(new PermissionDeniedException("denied"));
     }

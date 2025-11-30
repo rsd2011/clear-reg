@@ -1,8 +1,8 @@
 package com.example.server.readmodel;
 
 import com.example.admin.menu.domain.MenuCapability;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.service.PermissionGroupService;
 import com.example.admin.permission.service.PermissionMenuService;

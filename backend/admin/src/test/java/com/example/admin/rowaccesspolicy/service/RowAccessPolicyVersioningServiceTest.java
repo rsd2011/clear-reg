@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicy;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicyRoot;
 import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyDraftRequest;
@@ -46,7 +46,7 @@ class RowAccessPolicyVersioningServiceTest {
     }
 
     private AuthContext testContext() {
-        return AuthContext.of("testuser", "ORG1", null, null, null, RowScope.ORG);
+        return AuthContext.of("testuser", "ORG1", null, null, null, List.of());
     }
 
     private RowAccessPolicyRoot createTestRoot() {

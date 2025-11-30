@@ -42,8 +42,8 @@ import com.example.admin.permission.aop.RequirePermissionAspect;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.permission.context.PermissionDecision;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.file.audit.FileAuditOutboxRelay;
 import com.example.server.config.CurrentUserArgumentResolver;
@@ -83,7 +83,7 @@ class MenuControllerTest {
 
     @BeforeEach
     void setUpAuth() throws Throwable {
-        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.MENU, ActionCode.READ, com.example.common.security.RowScope.ALL);
+        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.MENU, ActionCode.READ, java.util.List.of());
         PermissionDecision allowDecision = org.mockito.Mockito.mock(PermissionDecision.class);
         given(allowDecision.toContext()).willReturn(authContext);
         given(permissionEvaluator.evaluate(any(), any())).willReturn(allowDecision);

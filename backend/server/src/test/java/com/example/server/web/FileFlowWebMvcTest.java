@@ -42,8 +42,8 @@ import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.permission.context.PermissionDecision;
 import com.example.admin.permission.aop.RequirePermissionAspect;
 import com.example.admin.permission.context.AuthContext;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.common.file.FileDownload;
 import com.example.common.file.dto.FileMetadataDto;
@@ -93,7 +93,7 @@ class FileFlowWebMvcTest {
 
     @BeforeEach
     void setUpAuth() throws Throwable {
-        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.FILE, ActionCode.READ, com.example.common.security.RowScope.ALL);
+        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.FILE, ActionCode.READ, java.util.List.of());
         allowDecision = org.mockito.Mockito.mock(PermissionDecision.class);
         org.mockito.BDDMockito.given(allowDecision.toContext()).willReturn(authContext);
         given(permissionEvaluator.evaluate(any(), any())).willReturn(allowDecision);

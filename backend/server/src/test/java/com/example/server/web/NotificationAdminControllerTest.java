@@ -5,8 +5,8 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.security.RowScope;
@@ -50,7 +50,7 @@ class NotificationAdminControllerTest {
     @BeforeEach
     void initContext() {
         AuthContextHolder.set(AuthContext.of("admin", "ORG", "ADMIN",
-                FeatureCode.ALERT, ActionCode.UPDATE, RowScope.ALL));
+                FeatureCode.ALERT, ActionCode.UPDATE, java.util.List.of()));
     }
 
     @AfterEach

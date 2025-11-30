@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * 권한 평가 결과를 담는 도메인 객체.
  *
- * <p>DataPolicy 기반 마스킹으로 마이그레이션되어 maskRules 전달 제거됨.
+ * <p>RowScope는 RowAccessPolicy로 이관되어 AuthContext에서 제거됨.
  *
  * <p>도메인 로직({@link #toContext()})을 포함하므로 Class로 구현됨.
  */
@@ -53,8 +53,7 @@ public final class PermissionDecision {
         userInfo.getOrganizationCode(),
         userInfo.getPermissionGroupCode(),
         assignment.getFeature(),
-        assignment.getAction(),
-        assignment.getRowScope());
+        assignment.getAction());
   }
 
   @Override

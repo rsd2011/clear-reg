@@ -36,7 +36,7 @@ class DraftFormTemplateServiceListFormTemplateAuditNullTest {
         DraftFormTemplate f2 = createPublishedTemplate(root, "f2", WorkType.FILE_EXPORT, false, now);
         given(formRepo.findAllCurrent()).willReturn(List.of(f1, f2));
 
-        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
         List<DraftFormTemplateResponse> result = service.listDraftFormTemplates(null, false, ctx, true);
 

@@ -1,12 +1,18 @@
 package com.example.admin.permission.domain;
 
-import com.example.common.security.RowScope;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import java.util.Optional;
+import java.util.Objects;
 
+/**
+ * 권한 할당 VO.
+ * 
+ * <p>특정 기능(Feature)에 대한 액션(Action) 권한을 나타냅니다.</p>
+ */
 @Embeddable
 public class PermissionAssignment {
 
@@ -18,28 +24,11 @@ public class PermissionAssignment {
   @Column(name = "action_code", nullable = false)
   private ActionCode action;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "row_scope", nullable = false)
-  private RowScope rowScope = RowScope.OWN;
-
-  @Column(name = "row_condition_expression")
-  private String rowConditionExpression;
-
   protected PermissionAssignment() {}
 
-  public PermissionAssignment(FeatureCode feature, ActionCode action, RowScope rowScope) {
-    this(feature, action, rowScope, null);
-  }
-
-  public PermissionAssignment(
-      FeatureCode feature, ActionCode action, RowScope rowScope, String rowConditionExpression) {
+  public PermissionAssignment(FeatureCode feature, ActionCode action) {
     this.feature = feature;
     this.action = action;
-    this.rowScope = rowScope == null ? RowScope.OWN : rowScope;
-    this.rowConditionExpression =
-        (rowConditionExpression == null || rowConditionExpression.isBlank())
-            ? null
-            : rowConditionExpression;
   }
 
   public FeatureCode getFeature() {
@@ -50,11 +39,24 @@ public class PermissionAssignment {
     return action;
   }
 
-  public RowScope getRowScope() {
-    return rowScope;
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    PermissionAssignment that = (PermissionAssignment) o;
+    return feature == that.feature && action == that.action;
   }
 
-  public Optional<String> getRowConditionExpression() {
-    return Optional.ofNullable(rowConditionExpression);
+  @Override
+  public int hashCode() {
+    return Objects.hash(feature, action);
+  }
+
+  @Override
+  public String toString() {
+    return "PermissionAssignment{" +
+           "feature=" + feature +
+           ", action=" + action +
+           '}';
   }
 }

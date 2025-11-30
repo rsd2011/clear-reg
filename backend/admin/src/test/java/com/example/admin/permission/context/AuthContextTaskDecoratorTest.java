@@ -2,9 +2,9 @@ package com.example.admin.permission.context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
-import com.example.common.security.RowScope;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +29,7 @@ class AuthContextTaskDecoratorTest {
             "DEFAULT",
             FeatureCode.FILE,
             ActionCode.DOWNLOAD,
-            RowScope.OWN);
+            List.of("ORG_GROUP1"));
     AuthContextHolder.set(context);
     AtomicReference<AuthContext> observed = new AtomicReference<>();
 

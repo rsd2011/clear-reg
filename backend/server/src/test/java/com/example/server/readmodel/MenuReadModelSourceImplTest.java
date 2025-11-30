@@ -17,8 +17,8 @@ import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCapability;
 import com.example.admin.menu.domain.MenuCode;
 import com.example.admin.menu.service.MenuService;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.dw.application.readmodel.MenuReadModel;
 
 class MenuReadModelSourceImplTest {

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
@@ -12,14 +13,13 @@ import com.example.admin.permission.audit.PermissionAuditLogger;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.permission.context.PermissionDecision;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.spi.UserInfo;
-import com.example.common.security.RowScope;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.AfterEach;
@@ -90,7 +90,7 @@ class RequirePermissionAspectTest {
 
             UserInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
-            PermissionGroup group = new PermissionGroup("TEST_GROUP", "테스트그룹");
+            PermissionGroup group = createMockGroup("TEST_GROUP", "테스트그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
 
             given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.READ)).willReturn(decision);
@@ -113,7 +113,7 @@ class RequirePermissionAspectTest {
 
             UserInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
-            PermissionGroup group = new PermissionGroup("GROUP", "그룹");
+            PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
 
             given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.CREATE)).willReturn(decision);
@@ -134,7 +134,7 @@ class RequirePermissionAspectTest {
 
             UserInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignmentForOrg();
-            PermissionGroup group = new PermissionGroup("GROUP", "그룹");
+            PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
 
             given(permissionEvaluator.evaluate(FeatureCode.ORGANIZATION, ActionCode.READ)).willReturn(decision);
@@ -188,7 +188,7 @@ class RequirePermissionAspectTest {
 
             UserInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
-            PermissionGroup group = new PermissionGroup("GROUP", "그룹");
+            PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
 
             given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.READ)).willReturn(decision);
@@ -213,7 +213,7 @@ class RequirePermissionAspectTest {
 
             UserInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
-            PermissionGroup group = new PermissionGroup("GROUP", "그룹");
+            PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
 
             given(permissionEvaluator.evaluate(FeatureCode.DRAFT, ActionCode.CREATE)).willReturn(decision);
@@ -224,6 +224,13 @@ class RequirePermissionAspectTest {
 
             verify(auditLogger, never()).onAccessDenied(any(), any());
         }
+    }
+
+    private PermissionGroup createMockGroup(String code, String name) {
+        PermissionGroup group = mock(PermissionGroup.class);
+        given(group.getCode()).willReturn(code);
+        given(group.getName()).willReturn(name);
+        return group;
     }
 
     private UserInfo createUserInfo() {
@@ -251,11 +258,11 @@ class RequirePermissionAspectTest {
     }
 
     private PermissionAssignment createAssignment() {
-        return new PermissionAssignment(FeatureCode.DRAFT, ActionCode.READ, RowScope.ORG);
+        return new PermissionAssignment(FeatureCode.DRAFT, ActionCode.READ);
     }
 
     private PermissionAssignment createAssignmentForOrg() {
-        return new PermissionAssignment(FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+        return new PermissionAssignment(FeatureCode.ORGANIZATION, ActionCode.READ);
     }
 
     // 테스트용 클래스들

@@ -3,8 +3,8 @@ package com.example.admin.maskingpolicy.dto;
 import java.time.Instant;
 import java.util.Set;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -17,8 +17,10 @@ import org.mockito.Mockito;
 import com.example.admin.menu.domain.MenuCapability;
 import com.example.auth.domain.UserAccount;
 import com.example.auth.domain.UserAccountService;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import static org.mockito.BDDMockito.given;
+
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.service.PermissionGroupService;
@@ -50,9 +52,12 @@ class PermissionMenuReadModelSourceImplTest {
                 .build();
         when(userAccountService.getByUsernameOrThrow("user1")).thenReturn(account);
 
-        PermissionGroup group = new PermissionGroup("GROUP1", "Group");
-        PermissionAssignment assignment = new PermissionAssignment(FeatureCode.FILE, ActionCode.READ, com.example.common.security.RowScope.ORG);
-        group.replaceAssignments(List.of(assignment));
+        PermissionGroup group = Mockito.mock(PermissionGroup.class);
+        given(group.getCode()).willReturn("GROUP1");
+        PermissionAssignment assignment = new PermissionAssignment(FeatureCode.FILE, ActionCode.READ);
+        given(group.getAssignments()).willReturn(List.of(assignment));
+        // assignmentFor()는 PermissionMenuReadModelSourceImpl에서 메뉴 필터링에 사용됨
+        given(group.assignmentFor(FeatureCode.FILE, ActionCode.READ)).willReturn(java.util.Optional.of(assignment));
         when(permissionGroupService.getByCodeOrThrow("GROUP1")).thenReturn(group);
 
         // PermissionMenuService mock setup
@@ -88,8 +93,9 @@ class PermissionMenuReadModelSourceImplTest {
                 .build();
         when(userAccountService.getByUsernameOrThrow("user2")).thenReturn(account);
 
-        PermissionGroup group = new PermissionGroup("DEFAULT", "Default");
-        group.replaceAssignments(List.of());
+        PermissionGroup group = Mockito.mock(PermissionGroup.class);
+        given(group.getCode()).willReturn("DEFAULT");
+        given(group.getAssignments()).willReturn(List.of());
         when(permissionGroupService.getByCodeOrThrow("DEFAULT")).thenReturn(group);
 
         // Empty menu tree

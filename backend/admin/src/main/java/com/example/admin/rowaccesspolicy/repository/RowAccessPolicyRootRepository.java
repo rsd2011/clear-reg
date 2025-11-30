@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicyRoot;
 import com.example.common.security.RowScope;
 

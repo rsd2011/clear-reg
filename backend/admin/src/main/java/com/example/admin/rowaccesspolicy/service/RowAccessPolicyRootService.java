@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.permission.context.AuthContext;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.rowaccesspolicy.domain.RowAccessPolicyRoot;
 import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyHistoryResponse;
 import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyRootRequest;

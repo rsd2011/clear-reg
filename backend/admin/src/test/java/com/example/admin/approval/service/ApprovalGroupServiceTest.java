@@ -49,7 +49,7 @@ class ApprovalGroupServiceTest {
             given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
             ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "name", "desc", 10);
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             ApprovalGroupResponse res = service.createApprovalGroup(req, ctx, false);
 
@@ -64,7 +64,7 @@ class ApprovalGroupServiceTest {
             given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
             ApprovalGroupRequest req = new ApprovalGroupRequest("G1", "name", "desc", null);
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             ApprovalGroupResponse res = service.createApprovalGroup(req, ctx, false);
 
@@ -85,7 +85,7 @@ class ApprovalGroupServiceTest {
             given(groupRepo.save(any())).willAnswer(invocation -> invocation.getArgument(0));
 
             ApprovalGroupUpdateRequest req = new ApprovalGroupUpdateRequest("newName", "newDesc", 10);
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);
 
@@ -100,7 +100,7 @@ class ApprovalGroupServiceTest {
             given(groupRepo.findById(id)).willReturn(Optional.empty());
 
             ApprovalGroupUpdateRequest req = new ApprovalGroupUpdateRequest("newName", "newDesc", 10);
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             assertThatThrownBy(() -> service.updateApprovalGroup(id, req, ctx, false))
                     .isInstanceOf(ApprovalGroupNotFoundException.class);
@@ -114,7 +114,7 @@ class ApprovalGroupServiceTest {
             given(groupRepo.findById(id)).willReturn(Optional.of(group));
 
             ApprovalGroupUpdateRequest req = new ApprovalGroupUpdateRequest("newName", "newDesc", null);
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             ApprovalGroupResponse res = service.updateApprovalGroup(id, req, ctx, false);
 
@@ -134,7 +134,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup group2 = ApprovalGroup.create("G2", "name2", null, 10, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups(null, true, ctx, false);
             assertThat(result).hasSize(2);
@@ -149,7 +149,7 @@ class ApprovalGroupServiceTest {
             inactive.deactivate(OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(active, inactive));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups(null, true, ctx, false);
             assertThat(result).hasSize(1);
@@ -163,7 +163,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup group2 = ApprovalGroup.create("G2", "other", null, 10, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups("test", false, ctx, false);
             assertThat(result).hasSize(1);
@@ -177,7 +177,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup group2 = ApprovalGroup.create("OTHER", "name2", "desc2", 10, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups("test", false, ctx, false);
             assertThat(result).hasSize(1);
@@ -191,7 +191,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup group2 = ApprovalGroup.create("G2", "name2", "other desc", 10, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups("테스트", false, ctx, false);
             assertThat(result).hasSize(1);
@@ -205,7 +205,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup group2 = ApprovalGroup.create("KEYWORD_CODE", "name2", null, 10, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups("KEYWORD", false, ctx, false);
             assertThat(result).hasSize(1);
@@ -219,7 +219,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup group2 = ApprovalGroup.create("G2", "name2", null, 10, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(group1, group2));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups("   ", false, ctx, false);
             assertThat(result).hasSize(2);
@@ -232,7 +232,7 @@ class ApprovalGroupServiceTest {
             ApprovalGroup groupB = ApprovalGroup.create("GB", "Alpha", null, 0, OffsetDateTime.now());
             given(groupRepo.findAll()).willReturn(List.of(groupA, groupB));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.listApprovalGroups(null, false, ctx, false);
             assertThat(result).hasSize(2);
@@ -252,7 +252,7 @@ class ApprovalGroupServiceTest {
             UUID id = UUID.randomUUID();
             given(groupRepo.findById(id)).willReturn(Optional.of(group));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             service.deleteApprovalGroup(id, ctx, false);
 
@@ -265,7 +265,7 @@ class ApprovalGroupServiceTest {
             UUID id = UUID.randomUUID();
             given(groupRepo.findById(id)).willReturn(Optional.empty());
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             assertThatThrownBy(() -> service.deleteApprovalGroup(id, ctx, false))
                     .isInstanceOf(ApprovalGroupNotFoundException.class);
@@ -284,7 +284,7 @@ class ApprovalGroupServiceTest {
             UUID id = UUID.randomUUID();
             given(groupRepo.findById(id)).willReturn(Optional.of(group));
 
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             ApprovalGroupResponse res = service.activateApprovalGroup(id, ctx, false);
 
@@ -331,7 +331,7 @@ class ApprovalGroupServiceTest {
             DisplayOrderUpdateRequest req = new DisplayOrderUpdateRequest(List.of(
                     new DisplayOrderUpdateRequest.DisplayOrderItem(id1, 5),
                     new DisplayOrderUpdateRequest.DisplayOrderItem(id2, 15)));
-            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+            AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
             List<ApprovalGroupResponse> result = service.updateApprovalGroupDisplayOrders(req, ctx, false);
 

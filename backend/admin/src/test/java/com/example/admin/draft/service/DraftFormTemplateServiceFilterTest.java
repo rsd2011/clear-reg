@@ -26,7 +26,7 @@ class DraftFormTemplateServiceFilterTest {
     DraftFormTemplateService service = new DraftFormTemplateService(
             formRepo,
             mock(DraftFormTemplateRootRepository.class));
-    AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+    AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
     @Test
     @DisplayName("양식 템플릿은 workType, activeOnly 필터를 적용한다")

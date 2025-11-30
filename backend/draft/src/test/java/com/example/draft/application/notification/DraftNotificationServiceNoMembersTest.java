@@ -35,9 +35,10 @@ class DraftNotificationServiceNoMembersTest {
         draft.addApprovalStep(step);
 
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());
-        PermissionGroup permGroup = new PermissionGroup("PERM_GRP", "Test Group");
-        permGroup.setApprovalGroupCode("GRP");
-        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of(permGroup));
+        PermissionGroup permGroup = mock(PermissionGroup.class);
+        given(permGroup.getCode()).willReturn("PERM_GRP");
+        given(permGroup.getApprovalGroupCodes()).willReturn(List.of("GRP"));
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP\"]")).willReturn(List.of(permGroup));
         given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of());
 
         svc.notify("ACTION", draft, null, step.getId(), "delegate", null, OffsetDateTime.now());

@@ -2,8 +2,8 @@ package com.example.admin.menu.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

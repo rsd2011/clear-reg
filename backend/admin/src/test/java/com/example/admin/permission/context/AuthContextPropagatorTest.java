@@ -2,9 +2,9 @@ package com.example.admin.permission.context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
-import com.example.common.security.RowScope;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
@@ -28,7 +28,7 @@ class AuthContextPropagatorTest {
             "DEFAULT",
             FeatureCode.NOTICE,
             ActionCode.READ,
-            RowScope.OWN);
+            List.of());
     AuthContextHolder.set(context);
     AtomicReference<AuthContext> observed = new AtomicReference<>();
 
@@ -53,7 +53,7 @@ class AuthContextPropagatorTest {
             "AUDIT",
             FeatureCode.AUDIT_LOG,
             ActionCode.READ,
-            RowScope.ALL);
+            List.of());
     AuthContextHolder.set(
         AuthContext.of(
             "caller",
@@ -61,7 +61,7 @@ class AuthContextPropagatorTest {
             "DEFAULT",
             FeatureCode.NOTICE,
             ActionCode.READ,
-            RowScope.OWN));
+            List.of()));
 
     Callable<String> callable =
         AuthContextPropagator.wrap(

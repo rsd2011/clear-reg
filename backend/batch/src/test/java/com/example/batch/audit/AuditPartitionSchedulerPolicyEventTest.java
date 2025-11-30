@@ -64,6 +64,7 @@ import com.example.auth.security.JwtProperties;
 import com.example.auth.domain.RefreshTokenRepository;
 import com.example.auth.config.SessionPolicyProperties;
 import com.example.admin.permission.repository.PermissionGroupRepository;
+import com.example.admin.permission.repository.PermissionGroupRootRepository;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.AuditRecordService;
 import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
@@ -112,6 +113,7 @@ class AuditPartitionSchedulerPolicyEventTest {
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
         registry.add("security.policy.audit-partition-enabled", () -> "true");
         registry.add("security.policy.audit-partition-preload-months", () -> "0");
+        registry.add("security.permission.declarative.enabled", () -> "false");
     }
 
     @Autowired
@@ -239,6 +241,9 @@ class AuditPartitionSchedulerPolicyEventTest {
 
     @MockBean
     PermissionGroupRepository permissionGroupRepository;
+
+    @MockBean
+    PermissionGroupRootRepository permissionGroupRootRepository;
 
     @MockBean
     AuditLogRepository auditLogRepository;

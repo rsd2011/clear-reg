@@ -2,15 +2,16 @@ package com.example.admin.permission.declarative;
 
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.domain.PermissionGroupRoot;
 import com.example.admin.permission.repository.PermissionGroupRepository;
-import com.example.admin.permission.service.RowConditionEvaluator;
-import com.example.common.security.RowScope;
+import com.example.admin.permission.repository.PermissionGroupRootRepository;
+import com.example.common.version.ChangeAction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedHashSet;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -19,29 +20,37 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+/**
+ * YAML 기반 선언형 PermissionGroup 로더.
+ * <p>
+ * 애플리케이션 시작 시 권한 정의 YAML 파일을 읽어 PermissionGroup을 동기화합니다.
+ * 버전 관리 적용됨 - PermissionGroupRoot와 PermissionGroup을 함께 관리합니다.
+ * </p>
+ */
 @Component
 @Slf4j
 class DeclarativePermissionGroupLoader implements ApplicationRunner {
 
-  private final PermissionGroupRepository repository;
+  private final PermissionGroupRootRepository rootRepository;
+  private final PermissionGroupRepository versionRepository;
   private final DeclarativePermissionProperties properties;
   private final ResourceLoader resourceLoader;
   private final ObjectMapper yamlMapper;
-  private final RowConditionEvaluator rowConditionEvaluator;
 
   DeclarativePermissionGroupLoader(
-      PermissionGroupRepository repository,
+      PermissionGroupRootRepository rootRepository,
+      PermissionGroupRepository versionRepository,
       DeclarativePermissionProperties properties,
       ResourceLoader resourceLoader,
-      @Lazy @Qualifier("permissionPolicyYamlMapper") ObjectMapper permissionPolicyYamlMapper,
-      RowConditionEvaluator rowConditionEvaluator) {
-    this.repository = repository;
+      @Lazy @Qualifier("permissionPolicyYamlMapper") ObjectMapper permissionPolicyYamlMapper) {
+    this.rootRepository = rootRepository;
+    this.versionRepository = versionRepository;
     this.properties = properties;
     this.resourceLoader = resourceLoader;
     this.yamlMapper = permissionPolicyYamlMapper;
-    this.rowConditionEvaluator = rowConditionEvaluator;
   }
 
   @Override
@@ -68,37 +77,54 @@ class DeclarativePermissionGroupLoader implements ApplicationRunner {
     }
   }
 
+  @Transactional
   void synchronize(List<PermissionGroupDefinition> definitions) {
+    OffsetDateTime now = OffsetDateTime.now();
+    
     for (PermissionGroupDefinition definition : definitions) {
       Assert.hasText(definition.code(), "PermissionGroup code는 필수입니다.");
       Assert.hasText(definition.name(), "PermissionGroup name은 필수입니다.");
 
-      PermissionGroup group =
-          repository
-              .findByCode(definition.code())
-              .orElseGet(() -> new PermissionGroup(definition.code(), definition.name()));
+      PermissionGroupRoot root = rootRepository.findByGroupCode(definition.code())
+          .orElseGet(() -> {
+            PermissionGroupRoot newRoot = PermissionGroupRoot.createWithCode(definition.code(), now);
+            return rootRepository.save(newRoot);
+          });
 
-      group.updateDetails(
+      List<PermissionAssignment> assignments = toAssignments(definition.assignmentsOrEmpty());
+      List<String> approvalGroupCodes = definition.approvalGroupCodesOrEmpty();
+
+      int nextVersion = versionRepository.findMaxVersionByRootId(root.getId()) + 1;
+      
+      PermissionGroup group = PermissionGroup.create(
+          root,
+          nextVersion,
           definition.name(),
           definition.description(),
-          definition.defaultRowScope() == null ? RowScope.OWN : definition.defaultRowScope());
-      group.replaceAssignments(toAssignments(definition.assignmentsOrEmpty()));
-      repository.save(group);
-      log.debug("PermissionGroup [{}] 동기화 완료", group.getCode());
+          true, // active
+          assignments,
+          approvalGroupCodes,
+          ChangeAction.CREATE,
+          "선언형 정의 동기화",
+          "SYSTEM",
+          "System",
+          now);
+      
+      versionRepository.save(group);
+      root.activateNewVersion(group, now);
+      rootRepository.save(root);
+      
+      log.debug("PermissionGroup [{}] 동기화 완료 (version={})", definition.code(), nextVersion);
     }
   }
 
-  private Set<PermissionAssignment> toAssignments(
+  private List<PermissionAssignment> toAssignments(
       List<PermissionAssignmentDefinition> definitions) {
-    Set<PermissionAssignment> assignments = new LinkedHashSet<>();
+    List<PermissionAssignment> assignments = new ArrayList<>();
     for (PermissionAssignmentDefinition definition : definitions) {
       Assert.notNull(definition.feature(), "feature는 필수입니다.");
       Assert.notNull(definition.action(), "action은 필수입니다.");
-      RowScope rowScope = definition.rowScope() == null ? RowScope.OWN : definition.rowScope();
-      String condition = definition.condition();
-      rowConditionEvaluator.validate(condition);
-      assignments.add(
-          new PermissionAssignment(definition.feature(), definition.action(), rowScope, condition));
+      assignments.add(new PermissionAssignment(definition.feature(), definition.action()));
     }
     return assignments;
   }

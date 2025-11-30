@@ -2,8 +2,8 @@ package com.example.admin.rowaccesspolicy.dto;
 
 import java.time.Instant;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.common.security.RowScope;
 
 import jakarta.validation.constraints.NotBlank;

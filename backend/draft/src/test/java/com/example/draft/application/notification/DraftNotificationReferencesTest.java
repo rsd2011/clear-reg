@@ -39,9 +39,10 @@ class DraftNotificationReferencesTest {
         step.delegateTo("delegate", "", OffsetDateTime.now());
 
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of(ref("ref1", draft)));
-        PermissionGroup permGroup = new PermissionGroup("PERM_GRP", "Test Group");
-        permGroup.setApprovalGroupCode("GRP");
-        given(permGroupRepo.findByApprovalGroupCode("GRP")).willReturn(List.of(permGroup));
+        PermissionGroup permGroup = mock(PermissionGroup.class);
+        given(permGroup.getCode()).willReturn("PERM_GRP");
+        given(permGroup.getApprovalGroupCodes()).willReturn(List.of("GRP"));
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP\"]")).willReturn(List.of(permGroup));
         given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(
                 UserAccount.builder().username("next").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP").build()
         ));

@@ -11,8 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.maskingpolicy.domain.MaskingPolicy;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.common.masking.DataKind;
 import com.example.common.policy.MaskingMatch;
 

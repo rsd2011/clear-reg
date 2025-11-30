@@ -2,19 +2,27 @@ package com.example.admin.permission.context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
+import com.example.admin.permission.domain.PermissionGroupRoot;
 import com.example.admin.permission.spi.UserInfo;
-import com.example.common.security.RowScope;
+import com.example.common.version.ChangeAction;
 
+/**
+ * PermissionDecision 테스트.
+ *
+ * <p>RowScope는 RowAccessPolicy로 이관되어 PermissionAssignment에서 제거되었습니다.
+ */
 @DisplayName("PermissionDecision 테스트")
 class PermissionDecisionTest {
 
@@ -27,8 +35,8 @@ class PermissionDecisionTest {
         void allFieldsAreSet() {
             UserInfo userInfo = createUserInfo("user1", "ORG001", "GROUP001");
             PermissionAssignment assignment = new PermissionAssignment(
-                    FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
-            PermissionGroup group = new PermissionGroup("GROUP001", "테스트 그룹");
+                    FeatureCode.ORGANIZATION, ActionCode.READ);
+            PermissionGroup group = createTestGroup("GROUP001", "테스트 그룹");
 
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
 
@@ -57,8 +65,8 @@ class PermissionDecisionTest {
         void convertsToAuthContext() {
             UserInfo userInfo = createUserInfo("testUser", "ORG100", "GRP100");
             PermissionAssignment assignment = new PermissionAssignment(
-                    FeatureCode.DRAFT, ActionCode.UPDATE, RowScope.ORG);
-            PermissionGroup group = new PermissionGroup("GRP100", "그룹");
+                    FeatureCode.DRAFT, ActionCode.UPDATE);
+            PermissionGroup group = createTestGroup("GRP100", "그룹");
 
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
             AuthContext context = decision.toContext();
@@ -68,7 +76,6 @@ class PermissionDecisionTest {
             assertThat(context.permissionGroupCode()).isEqualTo("GRP100");
             assertThat(context.feature()).isEqualTo(FeatureCode.DRAFT);
             assertThat(context.action()).isEqualTo(ActionCode.UPDATE);
-            assertThat(context.rowScope()).isEqualTo(RowScope.ORG);
         }
     }
 
@@ -89,8 +96,8 @@ class PermissionDecisionTest {
         void equalValuesReturnsTrue() {
             UserInfo userInfo = createUserInfo("user", "org", "grp");
             PermissionAssignment assignment = new PermissionAssignment(
-                    FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.OWN);
-            PermissionGroup group = new PermissionGroup("grp", "그룹");
+                    FeatureCode.ORGANIZATION, ActionCode.READ);
+            PermissionGroup group = createTestGroup("grp", "그룹");
 
             PermissionDecision decision1 = new PermissionDecision(userInfo, assignment, group);
             PermissionDecision decision2 = new PermissionDecision(userInfo, assignment, group);
@@ -120,8 +127,8 @@ class PermissionDecisionTest {
             UserInfo userInfo1 = createUserInfo("user1", "org", "grp");
             UserInfo userInfo2 = createUserInfo("user2", "org", "grp");
             PermissionAssignment assignment = new PermissionAssignment(
-                    FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.OWN);
-            PermissionGroup group = new PermissionGroup("grp", "그룹");
+                    FeatureCode.ORGANIZATION, ActionCode.READ);
+            PermissionGroup group = createTestGroup("grp", "그룹");
 
             PermissionDecision decision1 = new PermissionDecision(userInfo1, assignment, group);
             PermissionDecision decision2 = new PermissionDecision(userInfo2, assignment, group);
@@ -139,8 +146,8 @@ class PermissionDecisionTest {
         void equalObjectsHaveSameHashCode() {
             UserInfo userInfo = createUserInfo("user", "org", "grp");
             PermissionAssignment assignment = new PermissionAssignment(
-                    FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.OWN);
-            PermissionGroup group = new PermissionGroup("grp", "그룹");
+                    FeatureCode.ORGANIZATION, ActionCode.READ);
+            PermissionGroup group = createTestGroup("grp", "그룹");
 
             PermissionDecision decision1 = new PermissionDecision(userInfo, assignment, group);
             PermissionDecision decision2 = new PermissionDecision(userInfo, assignment, group);
@@ -166,8 +173,8 @@ class PermissionDecisionTest {
         void includesAllFields() {
             UserInfo userInfo = createUserInfo("testUser", "ORG001", "GRP001");
             PermissionAssignment assignment = new PermissionAssignment(
-                    FeatureCode.DRAFT, ActionCode.UPDATE, RowScope.ORG);
-            PermissionGroup group = new PermissionGroup("GRP001", "테스트 그룹");
+                    FeatureCode.DRAFT, ActionCode.UPDATE);
+            PermissionGroup group = createTestGroup("GRP001", "테스트 그룹");
 
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
             String result = decision.toString();
@@ -183,9 +190,27 @@ class PermissionDecisionTest {
     private PermissionDecision createDecision() {
         UserInfo userInfo = createUserInfo("user", "org", "grp");
         PermissionAssignment assignment = new PermissionAssignment(
-                FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.OWN);
-        PermissionGroup group = new PermissionGroup("grp", "그룹");
+                FeatureCode.ORGANIZATION, ActionCode.READ);
+        PermissionGroup group = createTestGroup("grp", "그룹");
         return new PermissionDecision(userInfo, assignment, group);
+    }
+
+    private PermissionGroup createTestGroup(String code, String name) {
+        OffsetDateTime now = OffsetDateTime.now();
+        PermissionGroupRoot root = PermissionGroupRoot.createWithCode(code, now);
+        return PermissionGroup.create(
+                root,
+                1,
+                name,
+                "테스트용 그룹",
+                true,
+                List.of(),
+                List.of(),
+                ChangeAction.CREATE,
+                "테스트 생성",
+                "SYSTEM",
+                "System",
+                now);
     }
 
     private UserInfo createUserInfo(String username, String orgCode, String groupCode) {

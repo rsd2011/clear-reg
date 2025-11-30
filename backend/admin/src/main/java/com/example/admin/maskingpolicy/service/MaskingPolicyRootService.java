@@ -16,7 +16,7 @@ import com.example.admin.maskingpolicy.dto.MaskingPolicyHistoryResponse;
 import com.example.admin.maskingpolicy.exception.MaskingPolicyRootNotFoundException;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRootRepository;
 import com.example.admin.permission.context.AuthContext;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 
 /**
  * 마스킹 정책 관리 서비스.

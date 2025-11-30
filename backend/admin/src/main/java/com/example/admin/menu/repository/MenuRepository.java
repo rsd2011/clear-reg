@@ -6,8 +6,8 @@ import java.util.UUID;
 
 import com.example.admin.menu.domain.Menu;
 import com.example.admin.menu.domain.MenuCode;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

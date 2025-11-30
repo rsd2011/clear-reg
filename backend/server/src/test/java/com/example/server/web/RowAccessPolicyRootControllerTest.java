@@ -21,8 +21,8 @@ import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyDraftRequest;
 import com.example.admin.rowaccesspolicy.dto.RowAccessPolicyHistoryResponse;
@@ -47,7 +47,7 @@ class RowAccessPolicyRootControllerTest {
     }
 
     private AuthContext setupContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
         return ctx;
     }

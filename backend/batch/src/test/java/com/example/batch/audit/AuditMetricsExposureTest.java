@@ -50,6 +50,7 @@ import com.example.auth.security.JwtProperties;
 import com.example.auth.domain.RefreshTokenRepository;
 import com.example.auth.config.SessionPolicyProperties;
 import com.example.admin.permission.repository.PermissionGroupRepository;
+import com.example.admin.permission.repository.PermissionGroupRootRepository;
 import com.example.audit.infra.persistence.AuditLogRepository;
 import com.example.audit.infra.AuditRecordService;
 import com.example.audit.infra.persistence.AuditMonthlySummaryRepository;
@@ -82,7 +83,8 @@ import static org.mockito.ArgumentMatchers.any;
 @TestPropertySource(properties = {
         "management.endpoints.web.exposure.include=prometheus",
         "management.endpoint.prometheus.enabled=true",
-        "audit.archive.enabled=false" // 실행은 막지만 빈 초기화로 메트릭은 등록됨
+        "audit.archive.enabled=false", // 실행은 막지만 빈 초기화로 메트릭은 등록됨
+        "security.permission.declarative.enabled=false" // 선언형 권한 로더 비활성화
 })
 @Import(TestObjectMapperConfig.class)
 @ActiveProfiles("test")
@@ -204,6 +206,9 @@ class AuditMetricsExposureTest {
 
     @MockBean
     PermissionGroupRepository permissionGroupRepository;
+
+    @MockBean
+    PermissionGroupRootRepository permissionGroupRootRepository;
 
     @MockBean
     AuditLogRepository auditLogRepository;

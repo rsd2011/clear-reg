@@ -44,7 +44,7 @@ class DraftFormTemplateControllerSummaryTest {
     @Test
     @DisplayName("workType 필터가 적용되어 해당 업무유형의 템플릿만 반환된다")
     void listSummary_filtersByWorkType() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
 
         OffsetDateTime now = OffsetDateTime.now();
@@ -60,7 +60,7 @@ class DraftFormTemplateControllerSummaryTest {
     @Test
     @DisplayName("workType이 null이면 모든 활성 템플릿을 반환한다")
     void listSummary_returnsAllWhenNoFilter() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
 
         OffsetDateTime now = OffsetDateTime.now();
@@ -76,7 +76,7 @@ class DraftFormTemplateControllerSummaryTest {
     @Test
     @DisplayName("반환된 응답에는 name, workType, version이 포함된다")
     void listSummary_returnsSummaryWithExpectedFields() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
+        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, List.of());
         AuthContextHolder.set(ctx);
 
         OffsetDateTime now = OffsetDateTime.now();

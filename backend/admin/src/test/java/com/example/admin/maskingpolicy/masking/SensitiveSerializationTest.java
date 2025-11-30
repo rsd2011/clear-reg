@@ -7,16 +7,16 @@ import static org.mockito.Mockito.mock;
 
 import com.example.admin.maskingpolicy.config.MaskingPolicyConfiguration;
 import com.example.admin.maskingpolicy.service.MaskingEvaluator;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthCurrentUserProvider;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.annotation.Sensitive;
 import com.example.common.policy.MaskingMatch;
 import com.example.common.policy.MaskingPolicyProvider;
-import com.example.common.security.RowScope;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +47,7 @@ class SensitiveSerializationTest {
     // AuthContext 설정
     AuthContextHolder.set(AuthContext.of(
         "auditor", "ORG", "AUDIT",
-        FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL));
+        FeatureCode.ORGANIZATION, ActionCode.UNMASK, List.of()));
 
     // MaskingPolicy가 마스킹 비활성화 반환
     MaskingMatch match = MaskingMatch.builder()
@@ -72,7 +72,7 @@ class SensitiveSerializationTest {
     // AuthContext 설정 (READ 권한만)
     AuthContextHolder.set(AuthContext.of(
         "auditor", "ORG", "AUDIT",
-        FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL));
+        FeatureCode.ORGANIZATION, ActionCode.READ, List.of()));
 
     // MaskingPolicy가 마스킹 활성화 반환
     MaskingMatch match = MaskingMatch.builder()
@@ -95,7 +95,7 @@ class SensitiveSerializationTest {
   void givenNoMatchingPolicy_whenSerializing_thenDefaultMask() throws Exception {
     AuthContextHolder.set(AuthContext.of(
         "user", "ORG", "USER_GROUP",
-        FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ORG));
+        FeatureCode.ORGANIZATION, ActionCode.READ, List.of()));
 
     given(maskingPolicyProvider.evaluate(any())).willReturn(Optional.empty());
 

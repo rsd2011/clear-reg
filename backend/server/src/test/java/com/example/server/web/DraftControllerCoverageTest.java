@@ -15,11 +15,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.policy.RowAccessPolicyProvider;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.dto.DraftResponse;
@@ -32,7 +33,8 @@ class DraftControllerCoverageTest {
     DraftApplicationService draftService = org.mockito.Mockito.mock(DraftApplicationService.class);
     PermissionEvaluator permissionEvaluator = org.mockito.Mockito.mock(PermissionEvaluator.class);
     DwOrganizationQueryService orgService = org.mockito.Mockito.mock(DwOrganizationQueryService.class);
-    DraftController controller = new DraftController(draftService, permissionEvaluator, orgService);
+    RowAccessPolicyProvider rowAccessPolicyProvider = org.mockito.Mockito.mock(RowAccessPolicyProvider.class);
+    DraftController controller = new DraftController(draftService, permissionEvaluator, orgService, rowAccessPolicyProvider);
 
     private DraftResponse sampleResponse() {
         return new DraftResponse(UUID.randomUUID(), "t", "c", "DRAFT", "ORG1", "user", DraftStatus.DRAFT,
@@ -61,7 +63,7 @@ class DraftControllerCoverageTest {
     @Test
     @DisplayName("RowScope.ORG는 그대로 사용된다 (OWN이 아닌 경우)")
     void listDrafts_orgScopePassesThrough() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
@@ -77,7 +79,7 @@ class DraftControllerCoverageTest {
     @Test
     @DisplayName("RowScope OWN는 ORG로 정규화되어 listDrafts에 전달된다")
     void listDrafts_normalizesOwnScope() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.OWN));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
@@ -94,7 +96,7 @@ class DraftControllerCoverageTest {
     @DisplayName("delegateDraft 호출 시 서비스로 위임한다")
     void delegateDraft_delegatesToService() {
         UUID id = UUID.randomUUID();
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_DELEGATE, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_DELEGATE, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
         given(draftService.getDraft(eq(id), eq("ORG1"), eq("user"), eq(false))).willReturn(sampleResponse());
@@ -109,7 +111,7 @@ class DraftControllerCoverageTest {
     @DisplayName("approveDeferredDraft 호출 시 서비스로 위임한다")
     void approveDeferredDraft_delegatesToService() {
         UUID id = UUID.randomUUID();
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_APPROVE, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_APPROVE, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
         given(draftService.getDraft(eq(id), eq("ORG1"), eq("user"), eq(false))).willReturn(sampleResponse());
@@ -123,7 +125,7 @@ class DraftControllerCoverageTest {
     @Test
     @DisplayName("defaultTemplates 호출 시 서비스로 위임한다")
     void defaultTemplates_delegatesToService() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
         given(draftService.suggestTemplate(eq("DRAFT"), eq("ORG1")))
@@ -137,7 +139,7 @@ class DraftControllerCoverageTest {
     @Test
     @DisplayName("recommendTemplates 호출 시 서비스로 위임한다")
     void recommendTemplates_delegatesToService() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
         given(draftService.recommendFormTemplates(eq("DRAFT"), eq("ORG1"), eq("user")))
@@ -152,7 +154,7 @@ class DraftControllerCoverageTest {
     @DisplayName("audit 호출 시 서비스로 위임한다")
     void audit_delegatesToService() {
         UUID id = UUID.randomUUID();
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT, RowScope.ALL));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_AUDIT, List.of()));
         given(draftService.listAudit(eq(id), eq("ORG1"), eq("user"), eq(true), any(), any(), any(), any()))
                 .willReturn(List.of());
 
@@ -165,7 +167,7 @@ class DraftControllerCoverageTest {
     @DisplayName("getDraft 호출 시 서비스로 위임한다")
     void getDraft_delegatesToService() {
         UUID id = UUID.randomUUID();
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
         given(draftService.getDraft(eq(id), eq("ORG1"), eq("user"), eq(false))).willReturn(sampleResponse());

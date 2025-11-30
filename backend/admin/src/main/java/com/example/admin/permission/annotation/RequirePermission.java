@@ -1,7 +1,7 @@
 package com.example.admin.permission.annotation;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;

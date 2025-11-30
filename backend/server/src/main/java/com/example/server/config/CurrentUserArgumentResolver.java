@@ -14,7 +14,8 @@ import com.example.common.security.RowScope;
 /**
  * 컨트롤러 메서드의 CurrentUser 파라미터를 해결하는 ArgumentResolver.
  *
- * <p>AuthContextHolder에서 현재 인증 컨텍스트를 가져와 CurrentUser로 변환합니다.</p>
+ * <p>AuthContextHolder에서 현재 인증 컨텍스트를 가져와 CurrentUser로 변환합니다.
+ * RowScope는 RowAccessPolicy로 이관되었으므로, 기본값 ALL을 사용합니다.</p>
  */
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 
@@ -40,7 +41,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                 context.permissionGroupCode(),
                 context.feature() != null ? context.feature().name() : null,
                 context.action() != null ? context.action().name() : null,
-                context.rowScope() != null ? context.rowScope() : RowScope.ALL,
+                RowScope.ALL, // RowScope는 RowAccessPolicy로 이관됨
                 context.orgGroupCodes()
         );
     }

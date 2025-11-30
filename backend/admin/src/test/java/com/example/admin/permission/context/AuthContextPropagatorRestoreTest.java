@@ -2,9 +2,9 @@ package com.example.admin.permission.context;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
-import com.example.common.security.RowScope;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +14,7 @@ class AuthContextPropagatorRestoreTest {
   @DisplayName("runWithContext는 이전 컨텍스트를 복원하고 새 컨텍스트를 적용한다")
   void runWithContextRestoresPrevious() {
     AuthContext previous =
-        AuthContext.of("prev", "ORG", "PG", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.OWN);
+        AuthContext.of("prev", "ORG", "PG", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
     AuthContextHolder.set(previous);
 
     AuthContext newCtx =
@@ -24,7 +24,7 @@ class AuthContextPropagatorRestoreTest {
             "PG",
             FeatureCode.ORGANIZATION,
             ActionCode.UPDATE,
-            RowScope.ALL);
+            List.of());
 
     AuthContextPropagator.runWithContext(
         newCtx,

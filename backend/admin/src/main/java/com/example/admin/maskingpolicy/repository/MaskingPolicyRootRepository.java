@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.admin.maskingpolicy.domain.MaskingPolicyRoot;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 
 /**
  * 마스킹 정책 루트 Repository.

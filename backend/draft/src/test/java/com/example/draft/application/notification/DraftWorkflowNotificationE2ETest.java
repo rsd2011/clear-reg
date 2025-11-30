@@ -49,9 +49,10 @@ class DraftWorkflowNotificationE2ETest {
         com.example.draft.domain.DraftReference ref = com.example.draft.domain.DraftReference.create(
                 "ref-user", "ORG", "creator", OffsetDateTime.now());
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of(ref));
-        PermissionGroup permGroup2 = new PermissionGroup("PERM_GRP2", "Test Group 2");
-        permGroup2.setApprovalGroupCode("GRP2");
-        given(permGroupRepo.findByApprovalGroupCode("GRP2")).willReturn(List.of(permGroup2));
+        PermissionGroup permGroup2 = mock(PermissionGroup.class);
+        given(permGroup2.getCode()).willReturn("PERM_GRP2");
+        given(permGroup2.getApprovalGroupCodes()).willReturn(List.of("GRP2"));
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP2\"]")).willReturn(List.of(permGroup2));
         given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP2"))).willReturn(List.of(
                 UserAccount.builder().username("next-user").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP2").build()
         ));

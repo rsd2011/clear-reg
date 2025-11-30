@@ -7,10 +7,12 @@ import com.example.audit.AuditMode;
 import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
 import com.example.admin.permission.context.AuthContext;
+
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 @Component
-@org.springframework.context.annotation.Primary
+@Primary
 public class AuditPortPermissionAuditLogger implements PermissionAuditLogger {
 
   private final AuditPort auditPort;
@@ -57,8 +59,6 @@ public class AuditPortPermissionAuditLogger implements PermissionAuditLogger {
               .riskLevel(success ? RiskLevel.LOW : RiskLevel.HIGH)
               .extraEntry(
                   "action", ctx != null && ctx.action() != null ? ctx.action().name() : null)
-              .extraEntry(
-                  "rowScope", ctx != null && ctx.rowScope() != null ? ctx.rowScope().name() : null)
               .build();
       auditPort.record(event, AuditMode.ASYNC_FALLBACK);
     } catch (Exception ignore) {

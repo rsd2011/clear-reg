@@ -1,9 +1,7 @@
 package com.example.admin.permission.declarative;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatNoException;
 
-import com.example.admin.permission.service.RowConditionEvaluator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -23,7 +21,6 @@ class PermissionDefinitionSchemaTest {
 
   private final ObjectMapper mapper =
       new ObjectMapper(new YAMLFactory()).registerModule(new JavaTimeModule());
-  private final RowConditionEvaluator rowConditionEvaluator = new RowConditionEvaluator();
 
   @Test
   @DisplayName("권한 정의가 중복 없이 필수 항목을 채운다")
@@ -53,9 +50,7 @@ class PermissionDefinitionSchemaTest {
     for (PermissionAssignmentDefinition assignment : definition.assignmentsOrEmpty()) {
       assertThat(assignment.feature()).describedAs("feature for %s", definition.code()).isNotNull();
       assertThat(assignment.action()).describedAs("action for %s", definition.code()).isNotNull();
-      assertThatNoException()
-          .describedAs("row condition for %s", definition.code())
-          .isThrownBy(() -> rowConditionEvaluator.validate(assignment.condition()));
+      // RowCondition은 RowAccessPolicy로 이관되어 제거됨
     }
   }
 }

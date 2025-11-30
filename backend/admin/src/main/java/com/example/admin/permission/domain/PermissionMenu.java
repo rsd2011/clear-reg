@@ -35,6 +35,10 @@ import java.util.Objects;
  * <p>{@link #parent}를 통해 자기참조로 트리 구조를 형성한다.
  * parent가 null이면 루트 레벨이다.</p>
  *
+ * <h3>권한 그룹과의 관계</h3>
+ * <p>{@link PermissionGroupRoot}와 FK 관계로 연결된다.
+ * 권한 그룹의 버전에 무관하게 동일한 메뉴 구성을 유지한다.</p>
+ *
  * <h3>사용 예시</h3>
  * <pre>
  * 권한그룹: ADMIN
@@ -49,15 +53,15 @@ import java.util.Objects;
     uniqueConstraints = {
         @UniqueConstraint(
             name = "uk_pm_group_menu",
-            columnNames = {"permission_group_code", "menu_id"}
+            columnNames = {"permission_group_id", "menu_id"}
         ),
         @UniqueConstraint(
             name = "uk_pm_group_category",
-            columnNames = {"permission_group_code", "category_code"}
+            columnNames = {"permission_group_id", "category_code"}
         )
     },
     indexes = {
-        @Index(name = "idx_pm_perm_group", columnList = "permission_group_code"),
+        @Index(name = "idx_pm_perm_group", columnList = "permission_group_id"),
         @Index(name = "idx_pm_menu", columnList = "menu_id"),
         @Index(name = "idx_pm_parent", columnList = "parent_id"),
         @Index(name = "idx_pm_category", columnList = "category_code")
@@ -68,10 +72,11 @@ import java.util.Objects;
 public class PermissionMenu extends PrimaryKeyEntity {
 
     /**
-     * 권한 그룹 코드. 필수.
+     * 권한 그룹 루트 (FK).
      */
-    @Column(name = "permission_group_code", nullable = false, length = 100)
-    private String permissionGroupCode;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "permission_group_id", nullable = false)
+    private PermissionGroupRoot permissionGroup;
 
     /**
      * 연결된 메뉴. null이면 카테고리.
@@ -124,19 +129,19 @@ public class PermissionMenu extends PrimaryKeyEntity {
     /**
      * 메뉴 타입의 PermissionMenu를 생성한다.
      *
-     * @param permissionGroupCode 권한 그룹 코드
+     * @param permissionGroup 권한 그룹 루트
      * @param menu 연결할 메뉴
      * @param parent 부모 PermissionMenu (null이면 루트)
      * @param displayOrder 표시 순서
      * @return 메뉴 타입 PermissionMenu
      */
-    public static PermissionMenu forMenu(String permissionGroupCode, Menu menu,
+    public static PermissionMenu forMenu(PermissionGroupRoot permissionGroup, Menu menu,
                                           PermissionMenu parent, Integer displayOrder) {
-        Objects.requireNonNull(permissionGroupCode, "permissionGroupCode must not be null");
+        Objects.requireNonNull(permissionGroup, "permissionGroup must not be null");
         Objects.requireNonNull(menu, "menu must not be null for menu type");
 
         PermissionMenu pm = new PermissionMenu();
-        pm.permissionGroupCode = permissionGroupCode;
+        pm.permissionGroup = permissionGroup;
         pm.menu = menu;
         pm.parent = parent;
         pm.displayOrder = displayOrder;
@@ -146,7 +151,7 @@ public class PermissionMenu extends PrimaryKeyEntity {
     /**
      * 카테고리 타입의 PermissionMenu를 생성한다.
      *
-     * @param permissionGroupCode 권한 그룹 코드
+     * @param permissionGroup 권한 그룹 루트
      * @param categoryCode 카테고리 코드
      * @param categoryName 카테고리 이름
      * @param categoryIcon 카테고리 아이콘 (nullable)
@@ -154,16 +159,16 @@ public class PermissionMenu extends PrimaryKeyEntity {
      * @param displayOrder 표시 순서
      * @return 카테고리 타입 PermissionMenu
      */
-    public static PermissionMenu forCategory(String permissionGroupCode,
+    public static PermissionMenu forCategory(PermissionGroupRoot permissionGroup,
                                               String categoryCode, String categoryName,
                                               String categoryIcon,
                                               PermissionMenu parent, Integer displayOrder) {
-        Objects.requireNonNull(permissionGroupCode, "permissionGroupCode must not be null");
+        Objects.requireNonNull(permissionGroup, "permissionGroup must not be null");
         Objects.requireNonNull(categoryCode, "categoryCode must not be null for category type");
         Objects.requireNonNull(categoryName, "categoryName must not be null for category type");
 
         PermissionMenu pm = new PermissionMenu();
-        pm.permissionGroupCode = permissionGroupCode;
+        pm.permissionGroup = permissionGroup;
         pm.categoryCode = categoryCode;
         pm.categoryName = categoryName;
         pm.categoryIcon = categoryIcon;
@@ -173,6 +178,13 @@ public class PermissionMenu extends PrimaryKeyEntity {
     }
 
     // ========== Query Methods ==========
+
+    /**
+     * 권한 그룹 코드를 반환한다.
+     */
+    public String getPermissionGroupCode() {
+        return permissionGroup != null ? permissionGroup.getGroupCode() : null;
+    }
 
     /**
      * 카테고리인지 확인한다.
@@ -244,7 +256,7 @@ public class PermissionMenu extends PrimaryKeyEntity {
     @Override
     public String toString() {
         return "PermissionMenu{" +
-               "permissionGroupCode='" + permissionGroupCode + '\'' +
+               "permissionGroupCode='" + getPermissionGroupCode() + '\'' +
                ", " + (isCategory() ? "category=" + categoryCode : "menu=" + menu.getCode()) +
                ", parent=" + (parent != null ? parent.getCode() : "null") +
                ", displayOrder=" + displayOrder +

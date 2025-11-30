@@ -2,6 +2,7 @@ package com.example.approval.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -44,7 +45,7 @@ class ApprovalAuthorizationServiceTest {
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
         UserAccount user = createUserAccount("actor", "ORG", "PERM_GRP");
 
-        given(permissionGroupRepository.findByApprovalGroupCode("GRP1")).willReturn(List.of(permGroup));
+        given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
         given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
 
         service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG");
@@ -59,7 +60,7 @@ class ApprovalAuthorizationServiceTest {
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
         UserAccount user = createUserAccount("actor", "ORG", "PERM_GRP");
 
-        given(permissionGroupRepository.findByApprovalGroupCode("GRP1")).willReturn(List.of(permGroup));
+        given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
         given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
 
         service.ensureAuthorized(request, ApprovalAction.DEFER_APPROVE, "actor", "ORG");
@@ -72,7 +73,7 @@ class ApprovalAuthorizationServiceTest {
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
         UserAccount user = createUserAccount("actor", "ORG", "PERM_GRP");
 
-        given(permissionGroupRepository.findByApprovalGroupCode("GRP1")).willReturn(List.of(permGroup));
+        given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
         given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
 
         service.ensureAuthorized(request, ApprovalAction.DELEGATE, "actor", "ORG");
@@ -82,7 +83,7 @@ class ApprovalAuthorizationServiceTest {
     @DisplayName("Given 매핑된 권한 그룹 없음 When 승인 요청하면 Then 예외 발생")
     void denyWhenPermissionGroupMissing() {
         ApprovalRequest request = sampleRequest();
-        given(permissionGroupRepository.findByApprovalGroupCode("GRP1")).willReturn(List.of());
+        given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of());
 
         assertThatThrownBy(() -> service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG"))
                 .isInstanceOf(ApprovalAccessDeniedException.class);
@@ -95,7 +96,7 @@ class ApprovalAuthorizationServiceTest {
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
         UserAccount user = createUserAccount("actor", "OTHER_ORG", "PERM_GRP");
 
-        given(permissionGroupRepository.findByApprovalGroupCode("GRP1")).willReturn(List.of(permGroup));
+        given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
         given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
 
         assertThatThrownBy(() -> service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG"))
@@ -108,7 +109,7 @@ class ApprovalAuthorizationServiceTest {
         ApprovalRequest request = sampleRequest();
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
 
-        given(permissionGroupRepository.findByApprovalGroupCode("GRP1")).willReturn(List.of(permGroup));
+        given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
         given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of());
 
         assertThatThrownBy(() -> service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG"))
@@ -139,8 +140,11 @@ class ApprovalAuthorizationServiceTest {
     }
 
     private PermissionGroup createPermissionGroup(String code, String approvalGroupCode) {
-        PermissionGroup group = new PermissionGroup(code, "Test Group");
-        group.setApprovalGroupCode(approvalGroupCode);
+        PermissionGroup group = mock(PermissionGroup.class);
+        // getCode()는 ApprovalAuthorizationService.ensureAuthorized에서 권한 그룹 코드 조회에 사용됨
+        given(group.getCode()).willReturn(code);
+        // getApprovalGroupCodes()는 현재 사용되지 않지만 테스트 가독성을 위해 유지
+        org.mockito.Mockito.lenient().when(group.getApprovalGroupCodes()).thenReturn(List.of(approvalGroupCode));
         return group;
     }
 

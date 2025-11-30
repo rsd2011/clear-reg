@@ -5,15 +5,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.admin.permission.context.AuthCurrentUserProvider;
 import com.example.common.policy.MaskingMatch;
 import com.example.common.policy.MaskingPolicyProvider;
-import com.example.common.security.RowScope;
 import com.example.testing.bdd.Scenario;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -47,7 +47,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given UNMASK 권한 When mask 호출 Then 원본 값이 반환된다")
     void givenUnmaskPermission_whenMasking_thenReturnRawValue() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL);
+          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -66,7 +66,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 마스킹 규칙 When mask 호출 Then 정책에 따른 값으로 변환한다")
     void givenMaskedContext_whenMasking_thenRedact() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.OWN);
+          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -92,7 +92,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 매칭 정책 없음 When mask 호출 Then 기본 마스킹 값으로 대체한다")
     void givenNoPolicyMatch_whenMasking_thenUseDefaultPlaceholder() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       when(maskingPolicyProvider.evaluate(any())).thenReturn(Optional.empty());
@@ -105,7 +105,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 화이트리스트(maskingEnabled=false) When mask 호출 Then 원본 값이 반환된다")
     void givenWhitelist_whenMasking_thenReturnRawValue() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -124,7 +124,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given PHONE DataKind When mask 호출 Then 부분 마스킹된다")
     void givenPhoneDataKind_whenMasking_thenPartialMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -144,7 +144,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given SSN DataKind When mask 호출 Then FULL 마스킹된다")
     void givenSsnDataKind_whenMasking_thenFullMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -164,7 +164,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given EMAIL DataKind When mask 호출 Then PARTIAL 마스킹된다")
     void givenEmailDataKind_whenMasking_thenPartialMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -184,7 +184,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 알 수 없는 DataKind When mask 호출 Then 기본 마스킹(FULL)이 적용된다")
     void givenUnknownDataKind_whenMasking_thenUseDefaultMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -204,7 +204,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given CARD_NO DataKind When mask 호출 Then PARTIAL 마스킹된다")
     void givenCardNoDataKind_whenMasking_thenPartialMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -225,7 +225,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 알 수 없는 DataKind When mask 호출 Then DEFAULT(FULL) 마스킹된다")
     void givenUnknownDataKindFallsbackToDefault_whenMasking_thenFullMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -245,7 +245,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given DEFAULT DataKind When mask 호출 Then FULL 마스킹된다")
     void givenDefaultDataKind_whenMasking_thenFullMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -265,7 +265,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 화이트리스트 + auditEnabled=true When mask 호출 Then 원본 반환 및 감사 로그")
     void givenWhitelistWithAudit_whenMasking_thenReturnRawAndLog() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "AUDIT_GROUP", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "AUDIT_GROUP", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -290,7 +290,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given 4자 이하 문자열 When PARTIAL 마스킹 Then 기본 마스킹 적용")
     void givenShortString_whenPartialMask_thenDefaultMask() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -310,7 +310,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given null 값 When 마스킹 Then null 반환")
     void givenNullValue_whenMask_thenReturnNull() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -333,7 +333,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given Boolean 값 When 마스킹 Then false 반환")
     void givenBooleanValue_whenMask_thenReturnFalse() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -364,7 +364,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given UNMASK 권한 When mask Then 원본 반환")
     void givenUnmaskPermission_whenMask_thenReturnRaw() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -384,7 +384,7 @@ class MaskingEvaluatorTest {
     void givenNullActionCodeInContext_whenMask_thenUseFallbackRead() {
       // actionCode가 null인 context 생성
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, null, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, null, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -408,7 +408,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given auditEnabled=true When 언마스킹 성공 Then 로그 기록 (확인 불가, 동작 검증)")
     void givenAuditEnabled_whenUnmaskGranted_thenLogRecorded() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, RowScope.ALL);
+          "user", "ORG", "AUDIT", FeatureCode.ORGANIZATION, ActionCode.UNMASK, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()
@@ -428,7 +428,7 @@ class MaskingEvaluatorTest {
     @DisplayName("Given auditEnabled=true When 언마스킹 차단 Then 경고 로그 기록 (동작 검증)")
     void givenAuditEnabled_whenUnmaskBlocked_thenWarnLogRecorded() {
       AuthContext context = AuthContext.of(
-          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, RowScope.ALL);
+          "user", "ORG", "DEFAULT", FeatureCode.ORGANIZATION, ActionCode.READ, List.of());
       AuthContextHolder.set(context);
 
       MaskingMatch match = MaskingMatch.builder()

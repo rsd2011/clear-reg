@@ -50,7 +50,7 @@ class ApprovalTemplateServiceTest {
     }
 
     private AuthContext testContext() {
-        return AuthContext.of("testuser", "ORG1", null, null, null, RowScope.ORG);
+        return AuthContext.of("testuser", "ORG1", null, null, null, List.of());
     }
 
     /**

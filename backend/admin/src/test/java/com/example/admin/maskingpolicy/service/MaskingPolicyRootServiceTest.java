@@ -27,7 +27,7 @@ import com.example.admin.maskingpolicy.dto.MaskingPolicyHistoryResponse;
 import com.example.admin.maskingpolicy.exception.MaskingPolicyRootNotFoundException;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRootRepository;
 import com.example.admin.permission.context.AuthContext;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.FeatureCode;
 import com.example.common.masking.DataKind;
 import com.example.common.security.RowScope;
 import com.example.common.version.ChangeAction;
@@ -48,7 +48,7 @@ class MaskingPolicyRootServiceTest {
     }
 
     private AuthContext testContext() {
-        return AuthContext.of("testuser", "ORG1", null, null, null, RowScope.ORG);
+        return AuthContext.of("testuser", "ORG1", null, null, null, List.of());
     }
 
     private MaskingPolicyRoot createTestPolicyWithVersion(String name, int priority, boolean active) {

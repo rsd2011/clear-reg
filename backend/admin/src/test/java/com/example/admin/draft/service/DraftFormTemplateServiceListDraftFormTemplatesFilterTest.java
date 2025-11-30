@@ -37,7 +37,7 @@ class DraftFormTemplateServiceListDraftFormTemplatesFilterTest {
 
         given(formRepo.findCurrentByWorkType(WorkType.GENERAL)).willReturn(List.of(activeTemplate, inactiveTemplate));
 
-        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
+        AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, List.of());
 
         List<DraftFormTemplateResponse> result = service.listDraftFormTemplates(WorkType.GENERAL, true, ctx, false);
 

@@ -32,8 +32,8 @@ import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.aop.RequirePermissionAspect;
 import com.example.admin.permission.context.AuthContext;
@@ -82,7 +82,7 @@ class NoticeAdminControllerWebMvcTest {
 
     @BeforeEach
     void setUpAuth() throws Throwable {
-        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.NOTICE, ActionCode.UPDATE, com.example.common.security.RowScope.ALL);
+        authContext = AuthContext.of("tester", "ORG", "PG", FeatureCode.NOTICE, ActionCode.UPDATE, java.util.List.of());
         allowDecision = org.mockito.Mockito.mock(PermissionDecision.class);
         given(allowDecision.toContext()).willReturn(authContext);
         given(permissionEvaluator.evaluate(any(), any())).willReturn(allowDecision);

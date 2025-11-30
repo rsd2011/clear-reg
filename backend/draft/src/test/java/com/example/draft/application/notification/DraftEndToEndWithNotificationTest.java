@@ -45,9 +45,10 @@ class DraftEndToEndWithNotificationTest {
         ));
 
         // step1 notify: next approver는 GRP1 멤버
-        PermissionGroup permGroup1 = new PermissionGroup("PERM_GRP1", "Test Group 1");
-        permGroup1.setApprovalGroupCode("GRP1");
-        given(permGroupRepo.findByApprovalGroupCode("GRP1")).willReturn(List.of(permGroup1));
+        PermissionGroup permGroup1 = mock(PermissionGroup.class);
+        given(permGroup1.getCode()).willReturn("PERM_GRP1");
+        given(permGroup1.getApprovalGroupCodes()).willReturn(List.of("GRP1"));
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup1));
         given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP1"))).willReturn(List.of(
                 UserAccount.builder().username("user1").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP1").build()
         ));
@@ -61,9 +62,10 @@ class DraftEndToEndWithNotificationTest {
         assertThat(step1.getState()).isEqualTo(DraftApprovalState.SKIPPED);
 
         // step2 notify: 다음 단계 GRP2 멤버
-        PermissionGroup permGroup2 = new PermissionGroup("PERM_GRP2", "Test Group 2");
-        permGroup2.setApprovalGroupCode("GRP2");
-        given(permGroupRepo.findByApprovalGroupCode("GRP2")).willReturn(List.of(permGroup2));
+        PermissionGroup permGroup2 = mock(PermissionGroup.class);
+        given(permGroup2.getCode()).willReturn("PERM_GRP2");
+        given(permGroup2.getApprovalGroupCodes()).willReturn(List.of("GRP2"));
+        given(permGroupRepo.findByApprovalGroupCode("[\"GRP2\"]")).willReturn(List.of(permGroup2));
         given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP2"))).willReturn(List.of(
                 UserAccount.builder().username("user2").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP2").build()
         ));

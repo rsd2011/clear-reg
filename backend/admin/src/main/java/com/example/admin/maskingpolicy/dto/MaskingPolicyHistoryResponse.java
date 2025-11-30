@@ -9,8 +9,8 @@ import java.util.stream.Collectors;
 
 import com.example.common.masking.DataKind;
 import com.example.admin.maskingpolicy.domain.MaskingPolicy;
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
 

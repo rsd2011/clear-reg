@@ -17,12 +17,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
-import com.example.admin.permission.domain.ActionCode;
-import com.example.admin.permission.domain.FeatureCode;
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.service.PermissionEvaluator;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.policy.RowAccessPolicyProvider;
 import com.example.common.security.RowScope;
 import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.dto.DraftResponse;
@@ -35,7 +36,8 @@ class DraftControllerBranchCoverageTest {
     DraftApplicationService draftService = org.mockito.Mockito.mock(DraftApplicationService.class);
     PermissionEvaluator permissionEvaluator = org.mockito.Mockito.mock(PermissionEvaluator.class);
     DwOrganizationQueryService orgService = org.mockito.Mockito.mock(DwOrganizationQueryService.class);
-    DraftController controller = new DraftController(draftService, permissionEvaluator, orgService);
+    RowAccessPolicyProvider rowAccessPolicyProvider = org.mockito.Mockito.mock(RowAccessPolicyProvider.class);
+    DraftController controller = new DraftController(draftService, permissionEvaluator, orgService, rowAccessPolicyProvider);
 
     @AfterEach
     void tearDown() {
@@ -45,7 +47,7 @@ class DraftControllerBranchCoverageTest {
     @Test
     @DisplayName("rowScope null이면 기본값 ORG로 조회한다")
     void listDrafts_defaultsToOrgScope() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, null));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no audit"));
         given(orgService.getOrganizations(any(Pageable.class), eq(RowScope.ORG), eq("ORG1")))
@@ -61,7 +63,7 @@ class DraftControllerBranchCoverageTest {
     @Test
     @DisplayName("감사 권한이 있으면 RowScope.ALL로 조회하며 조직 목록을 비워 전달한다")
     void listDrafts_auditUsesAllScope() {
-        AuthContextHolder.set(AuthContext.of("auditor", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("auditor", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_READ, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT))).willReturn(null);
         given(draftService.listDrafts(any(), any(), any(), any(), any(), any(), any(), any()))
                 .willReturn(new PageImpl<>(List.of(sampleResponse())));
@@ -74,7 +76,7 @@ class DraftControllerBranchCoverageTest {
     @Test
     @DisplayName("알 수 없는 FeatureCode로 템플릿 조회 시 예외를 던진다")
     void listTemplates_unknownFeatureThrows() {
-        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
+        AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, List.of()));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT))).willThrow(new PermissionDeniedException("no audit"));
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
