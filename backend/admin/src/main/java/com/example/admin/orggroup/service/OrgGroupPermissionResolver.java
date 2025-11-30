@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.example.admin.orggroup.domain.OrgGroup;
 import com.example.admin.orggroup.properties.OrgGroupSettingsProperties;
+import com.example.common.orggroup.OrgGroupRoleType;
 import com.example.admin.orggroup.repository.OrgGroupRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -41,7 +42,8 @@ public class OrgGroupPermissionResolver {
     var groups = repository.findByMemberOrgIdsOrderBySortAsc(orgIds);
 
     for (OrgGroup g : groups) {
-      String code = isLeader ? g.getLeaderPermGroupCode() : g.getMemberPermGroupCode();
+      OrgGroupRoleType roleType = isLeader ? OrgGroupRoleType.LEADER : OrgGroupRoleType.MEMBER;
+      String code = g.getPermGroupCodeByRole(roleType);
       if (StringUtils.hasText(code)) {
         ordered.add(code);
       }
@@ -68,8 +70,9 @@ public class OrgGroupPermissionResolver {
     var groups = repository.findByMemberOrgIdsOrderBySortAsc(orgIds);
 
     for (OrgGroup g : groups) {
-      if (StringUtils.hasText(g.getManagerPermGroupCode())) {
-        ordered.add(g.getManagerPermGroupCode());
+      String code = g.getPermGroupCodeByRole(OrgGroupRoleType.MANAGER);
+      if (StringUtils.hasText(code)) {
+        ordered.add(code);
       }
     }
 
