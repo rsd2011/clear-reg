@@ -41,11 +41,11 @@ import com.example.admin.draft.domain.DraftFormTemplate;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
-import com.example.draft.domain.exception.DraftTemplateNotFoundException;
+import com.example.admin.draft.exception.DraftTemplateNotFoundException;
 import com.example.draft.domain.DraftAction;
 import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
-import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeSpecifications;
@@ -328,12 +328,12 @@ public class DraftApplicationService {
      * 기안 양식 템플릿 목록을 조회한다.
      */
     @Transactional(readOnly = true)
-    public List<com.example.draft.application.dto.DraftFormTemplateResponse> listFormTemplates(String businessFeatureCode, String organizationCode) {
+    public List<com.example.admin.draft.dto.DraftFormTemplateResponse> listFormTemplates(String businessFeatureCode, String organizationCode) {
         // businessFeatureCode를 기반으로 적절한 템플릿 목록 조회
         List<DraftFormTemplate> templates = formTemplateRepository.findAllCurrent();
         return templates.stream()
                 .filter(DraftFormTemplate::isActive)
-                .map(com.example.draft.application.dto.DraftFormTemplateResponse::from)
+                .map(com.example.admin.draft.dto.DraftFormTemplateResponse::from)
                 .toList();
     }
 
@@ -341,12 +341,12 @@ public class DraftApplicationService {
      * 추천 기안 양식 템플릿 목록을 조회한다.
      */
     @Transactional(readOnly = true)
-    public List<com.example.draft.application.dto.DraftFormTemplateResponse> recommendFormTemplates(String businessFeatureCode, String organizationCode, String username) {
+    public List<com.example.admin.draft.dto.DraftFormTemplateResponse> recommendFormTemplates(String businessFeatureCode, String organizationCode, String username) {
         // 사용자의 조직과 기능에 맞는 추천 템플릿 조회
         List<DraftFormTemplate> templates = formTemplateRepository.findAllCurrent();
         return templates.stream()
                 .filter(DraftFormTemplate::isActive)
-                .map(com.example.draft.application.dto.DraftFormTemplateResponse::from)
+                .map(com.example.admin.draft.dto.DraftFormTemplateResponse::from)
                 .toList();
     }
 

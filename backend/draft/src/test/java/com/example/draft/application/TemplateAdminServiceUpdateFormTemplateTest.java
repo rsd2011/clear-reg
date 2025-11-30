@@ -1,4 +1,5 @@
 package com.example.draft.application;
+import com.example.admin.draft.service.TemplateAdminService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,12 +16,12 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
-import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.draft.application.dto.DraftFormTemplateResponse;
+import com.example.admin.draft.dto.DraftFormTemplateRequest;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
-import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 
 class TemplateAdminServiceUpdateFormTemplateTest {
 

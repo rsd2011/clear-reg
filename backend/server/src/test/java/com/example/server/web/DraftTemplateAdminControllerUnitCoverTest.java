@@ -22,14 +22,17 @@ import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
-import com.example.draft.application.TemplateAdminService;
-import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.draft.application.dto.DraftFormTemplateResponse;
+import com.example.admin.draft.service.TemplateAdminService;
+import com.example.admin.draft.dto.DraftFormTemplateRequest;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 class DraftTemplateAdminControllerUnitCoverTest {
 
     TemplateAdminService service = Mockito.mock(TemplateAdminService.class);
-    DraftTemplateAdminController controller = new DraftTemplateAdminController(service);
+    ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+    DraftTemplateAdminController controller = new DraftTemplateAdminController(service, objectMapper);
 
     @AfterEach
     void tearDown() {
@@ -82,6 +85,7 @@ class DraftTemplateAdminControllerUnitCoverTest {
         OffsetDateTime now = OffsetDateTime.now();
         DraftFormTemplateResponse resp = new DraftFormTemplateResponse(
                 UUID.randomUUID(), "CODE", "이름", WorkType.GENERAL, "{}", 1, true,
+                null, // componentPath
                 VersionStatus.PUBLISHED, ChangeAction.CREATE, null,
                 "user", "User", now, now, null, now, now);
         when(service.createDraftFormTemplate(any(), any(), anyBoolean())).thenReturn(resp);
@@ -100,6 +104,7 @@ class DraftTemplateAdminControllerUnitCoverTest {
         OffsetDateTime now = OffsetDateTime.now();
         DraftFormTemplateResponse resp = new DraftFormTemplateResponse(
                 id, "CODE", "이름", WorkType.GENERAL, "{}", 1, true,
+                null, // componentPath
                 VersionStatus.PUBLISHED, ChangeAction.UPDATE, null,
                 "user", "User", now, now, null, now, now);
         when(service.updateDraftFormTemplate(any(), any(), any(), anyBoolean())).thenReturn(resp);

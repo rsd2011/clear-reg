@@ -1,4 +1,4 @@
-package com.example.draft.application;
+package com.example.admin.draft.service;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -13,13 +13,13 @@ import com.example.common.version.ChangeAction;
 import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
-import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.draft.application.dto.DraftFormTemplateResponse;
+import com.example.admin.draft.dto.DraftFormTemplateRequest;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.admin.draft.domain.DraftFormTemplate;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
-import com.example.draft.domain.exception.DraftTemplateNotFoundException;
-import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
+import com.example.admin.draft.exception.DraftTemplateNotFoundException;
+import com.example.admin.draft.repository.DraftFormTemplateRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 
 @Service
 @Transactional
@@ -226,7 +226,131 @@ public class TemplateAdminService {
     public void discardDraft(UUID rootId, AuthContext context) {
         DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
-        
+
         root.discardDraft();
+    }
+
+    /**
+     * 템플릿 ID로 단건 조회한다.
+     *
+     * @param id 템플릿 ID
+     * @return 템플릿 응답
+     */
+    @Transactional(readOnly = true)
+    public DraftFormTemplateResponse findById(UUID id) {
+        DraftFormTemplate template = draftFormTemplateRepository.findById(id)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
+        return DraftFormTemplateResponse.from(template);
+    }
+
+    /**
+     * Root ID로 버전 히스토리를 조회한다.
+     *
+     * @param rootId 루트 ID
+     * @return 버전 목록 (최신순)
+     */
+    @Transactional(readOnly = true)
+    public List<DraftFormTemplateResponse> getVersionHistory(UUID rootId) {
+        // Root 존재 확인
+        if (!draftFormTemplateRootRepository.existsById(rootId)) {
+            throw new DraftTemplateNotFoundException("기안 양식 템플릿 루트를 찾을 수 없습니다.");
+        }
+
+        return draftFormTemplateRepository.findAllByRootIdOrderByVersionDesc(rootId).stream()
+                .map(DraftFormTemplateResponse::from)
+                .toList();
+    }
+
+    /**
+     * 특정 버전으로 롤백한다.
+     * 지정된 버전의 내용을 복사하여 새 버전을 생성합니다.
+     *
+     * @param targetVersionId 롤백 대상 버전 ID
+     * @param changeReason    롤백 사유
+     * @param context         인증 컨텍스트
+     * @param overwriteDraft  기존 초안 덮어쓰기 여부
+     * @return 새로 생성된 버전
+     */
+    public DraftFormTemplateResponse rollbackToVersion(UUID targetVersionId,
+                                                        String changeReason,
+                                                        AuthContext context,
+                                                        boolean overwriteDraft) {
+        DraftFormTemplate targetVersion = draftFormTemplateRepository.findById(targetVersionId)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("롤백 대상 버전을 찾을 수 없습니다."));
+
+        DraftFormTemplateRoot root = targetVersion.getRoot();
+
+        // 초안이 존재하면서 덮어쓰기가 false인 경우 오류
+        if (root.hasDraft() && !overwriteDraft) {
+            throw new IllegalStateException("이미 초안 버전이 존재합니다. 덮어쓰려면 overwriteDraft=true를 지정하세요.");
+        }
+
+        // 기존 초안 삭제
+        if (root.hasDraft()) {
+            root.discardDraft();
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        Integer maxVersion = draftFormTemplateRepository.findMaxVersionByRoot(root);
+        int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
+
+        // 롤백 버전 생성 (대상 버전의 내용을 복사)
+        DraftFormTemplate rollbackVersion = DraftFormTemplate.createFromRollback(
+                root,
+                newVersion,
+                targetVersion.getName(),
+                targetVersion.getWorkType(),
+                targetVersion.getSchemaJson(),
+                targetVersion.isActive(),
+                targetVersion.getComponentPath(),
+                changeReason != null ? changeReason : "버전 " + targetVersion.getVersion() + "으로 롤백",
+                context.username(),
+                context.username(),
+                now,
+                targetVersion.getVersion());
+        draftFormTemplateRepository.save(rollbackVersion);
+
+        // 현재 버전 종료 및 롤백 버전 활성화
+        root.activateNewVersion(rollbackVersion, now);
+
+        return DraftFormTemplateResponse.from(rollbackVersion);
+    }
+
+    /**
+     * 템플릿을 삭제한다 (soft delete - active를 false로).
+     *
+     * @param rootId  루트 ID
+     * @param context 인증 컨텍스트
+     */
+    public void deleteTemplate(UUID rootId, AuthContext context) {
+        DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
+
+        DraftFormTemplate currentVersion = root.getCurrentVersion();
+        if (currentVersion == null) {
+            throw new IllegalStateException("현재 버전이 없습니다.");
+        }
+
+        OffsetDateTime now = OffsetDateTime.now();
+        Integer maxVersion = draftFormTemplateRepository.findMaxVersionByRoot(root);
+        int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
+
+        // 비활성화된 새 버전 생성
+        DraftFormTemplate deletedVersion = DraftFormTemplate.create(
+                root,
+                newVersion,
+                currentVersion.getName(),
+                currentVersion.getWorkType(),
+                currentVersion.getSchemaJson(),
+                false, // 비활성화
+                currentVersion.getComponentPath(),
+                ChangeAction.DELETE,
+                "템플릿 삭제",
+                context.username(),
+                context.username(),
+                now);
+        draftFormTemplateRepository.save(deletedVersion);
+
+        root.activateNewVersion(deletedVersion, now);
     }
 }

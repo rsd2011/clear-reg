@@ -1,4 +1,4 @@
-package com.example.draft.domain.repository;
+package com.example.admin.draft.repository;
 
 import java.util.List;
 import java.util.Optional;

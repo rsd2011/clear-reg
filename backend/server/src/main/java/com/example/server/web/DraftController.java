@@ -32,7 +32,7 @@ import com.example.draft.application.dto.DraftResponse;
 import com.example.draft.application.dto.DraftTemplateSuggestionResponse;
 import com.example.draft.application.dto.DraftHistoryResponse;
 import com.example.draft.application.dto.DraftReferenceResponse;
-import com.example.draft.application.dto.DraftFormTemplateResponse;
+import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationQueryService;
 
