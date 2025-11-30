@@ -300,4 +300,235 @@ class DraftFormSchemaTest {
                     .hasMessageContaining("Failed to deserialize");
         }
     }
+
+    @Nested
+    @DisplayName("DraftFormSchema 기본값 처리")
+    class SchemaDefaultValueTest {
+
+        @Test
+        @DisplayName("null 버전은 기본 버전으로 대체된다")
+        void nullVersionReplacedWithDefault() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    null, List.of(), null, null, null, null);
+
+            assertThat(schema.version()).isEqualTo("1.0");
+        }
+
+        @Test
+        @DisplayName("빈 버전은 기본 버전으로 대체된다")
+        void blankVersionReplacedWithDefault() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    "  ", List.of(), null, null, null, null);
+
+            assertThat(schema.version()).isEqualTo("1.0");
+        }
+
+        @Test
+        @DisplayName("null 필드 목록은 빈 목록으로 대체된다")
+        void nullFieldsReplacedWithEmptyList() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    "1.0", null, null, null, null, null);
+
+            assertThat(schema.fields()).isNotNull().isEmpty();
+        }
+
+        @Test
+        @DisplayName("null 레이아웃은 단일 컬럼으로 대체된다")
+        void nullLayoutReplacedWithSingleColumn() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    "1.0", List.of(), null, null, null, null);
+
+            assertThat(schema.layout()).isNotNull();
+            assertThat(schema.layout().columns()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("null 첨부파일 설정은 비활성화로 대체된다")
+        void nullAttachmentConfigReplacedWithDisabled() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    "1.0", List.of(), null, null, null, null);
+
+            assertThat(schema.attachmentConfig()).isNotNull();
+            assertThat(schema.attachmentConfig().enabled()).isFalse();
+        }
+
+        @Test
+        @DisplayName("null 기본값은 빈 맵으로 대체된다")
+        void nullDefaultValuesReplacedWithEmptyMap() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    "1.0", List.of(), null, null, null, null);
+
+            assertThat(schema.defaultValues()).isNotNull().isEmpty();
+        }
+
+        @Test
+        @DisplayName("null 유효성 검사 규칙은 빈 목록으로 대체된다")
+        void nullValidationRulesReplacedWithEmptyList() {
+            DraftFormSchema schema = new DraftFormSchema(
+                    "1.0", List.of(), null, null, null, null);
+
+            assertThat(schema.validationRules()).isNotNull().isEmpty();
+        }
+
+        @Test
+        @DisplayName("of(fields, layout) 메서드로 스키마를 생성할 수 있다")
+        void createSchemaWithFieldsAndLayout() {
+            FormLayout layout = FormLayout.columns(2);
+            DraftFormSchema schema = DraftFormSchema.of(
+                    List.of(TextField.of("name", "이름", true)),
+                    layout);
+
+            assertThat(schema.version()).isEqualTo("1.0");
+            assertThat(schema.fields()).hasSize(1);
+            assertThat(schema.layout().columns()).isEqualTo(2);
+            assertThat(schema.attachmentConfig().enabled()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("DraftFormSchema.Builder 테스트")
+    class SchemaBuilderTest {
+
+        @Test
+        @DisplayName("Builder로 version을 설정할 수 있다")
+        void builderSetsVersion() {
+            DraftFormSchema schema = DraftFormSchema.builder()
+                    .version("2.0")
+                    .build();
+
+            assertThat(schema.version()).isEqualTo("2.0");
+        }
+
+        @Test
+        @DisplayName("Builder로 attachmentConfig를 설정할 수 있다")
+        void builderSetsAttachmentConfig() {
+            AttachmentConfig config = AttachmentConfig.defaultConfig();
+            DraftFormSchema schema = DraftFormSchema.builder()
+                    .attachmentConfig(config)
+                    .build();
+
+            assertThat(schema.attachmentConfig().enabled()).isTrue();
+        }
+
+        @Test
+        @DisplayName("Builder로 validationRules를 설정할 수 있다")
+        void builderSetsValidationRules() {
+            DraftFormSchema schema = DraftFormSchema.builder()
+                    .validationRules(List.of(
+                            DraftFormSchema.ValidationRule.requiredIf("field", "condition", "메시지")))
+                    .build();
+
+            assertThat(schema.validationRules()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("ValidationRule 테스트")
+    class ValidationRuleTest {
+
+        @Test
+        @DisplayName("requiredIf로 조건부 필수 규칙을 생성할 수 있다")
+        void requiredIfCreatesConditionalRule() {
+            DraftFormSchema.ValidationRule rule = DraftFormSchema.ValidationRule.requiredIf(
+                    "email", "type == 'ONLINE'", "온라인 유형일 때 이메일은 필수입니다");
+
+            assertThat(rule.name()).isEqualTo("required_if_email");
+            assertThat(rule.type()).isEqualTo("required_if");
+            assertThat(rule.fields()).containsExactly("email");
+            assertThat(rule.condition()).isEqualTo("type == 'ONLINE'");
+            assertThat(rule.message()).isEqualTo("온라인 유형일 때 이메일은 필수입니다");
+        }
+    }
+
+    @Nested
+    @DisplayName("FormLayout 기본값 처리")
+    class FormLayoutDefaultValueTest {
+
+        @Test
+        @DisplayName("columns가 0 이하면 1로 대체된다")
+        void zeroColumnsReplacedWithOne() {
+            FormLayout layout = new FormLayout(0, null, null, null);
+
+            assertThat(layout.columns()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("columns가 음수면 1로 대체된다")
+        void negativeColumnsReplacedWithOne() {
+            FormLayout layout = new FormLayout(-5, null, null, null);
+
+            assertThat(layout.columns()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("null 섹션은 빈 목록으로 대체된다")
+        void nullSectionsReplacedWithEmptyList() {
+            FormLayout layout = new FormLayout(2, null, Map.of(), List.of());
+
+            assertThat(layout.sections()).isNotNull().isEmpty();
+        }
+
+        @Test
+        @DisplayName("null 필드너비 맵은 빈 맵으로 대체된다")
+        void nullFieldWidthsReplacedWithEmptyMap() {
+            FormLayout layout = new FormLayout(2, List.of(), null, List.of());
+
+            assertThat(layout.fieldWidths()).isNotNull().isEmpty();
+        }
+
+        @Test
+        @DisplayName("null 필드순서는 빈 목록으로 대체된다")
+        void nullFieldOrderReplacedWithEmptyList() {
+            FormLayout layout = new FormLayout(2, List.of(), Map.of(), null);
+
+            assertThat(layout.fieldOrder()).isNotNull().isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("AttachmentConfig 팩토리 메서드 테스트")
+    class AttachmentConfigFactoryTest {
+
+        @Test
+        @DisplayName("optional 메서드로 선택적 첨부파일 설정을 생성할 수 있다")
+        void optionalCreatesOptionalConfig() {
+            AttachmentConfig config = AttachmentConfig.optional(5, 25L * 1024 * 1024);
+
+            assertThat(config.enabled()).isTrue();
+            assertThat(config.required()).isFalse();
+            assertThat(config.maxFiles()).isEqualTo(5);
+            assertThat(config.maxTotalSize()).isEqualTo(25L * 1024 * 1024);
+            assertThat(config.maxFileSize()).isEqualTo(5L * 1024 * 1024); // 25MB / 5
+        }
+
+        @Test
+        @DisplayName("required 메서드로 필수 첨부파일 설정을 생성할 수 있다")
+        void requiredCreatesRequiredConfig() {
+            AttachmentConfig config = AttachmentConfig.required(3, 15L * 1024 * 1024);
+
+            assertThat(config.enabled()).isTrue();
+            assertThat(config.required()).isTrue();
+            assertThat(config.maxFiles()).isEqualTo(3);
+            assertThat(config.maxTotalSize()).isEqualTo(15L * 1024 * 1024);
+            assertThat(config.maxFileSize()).isEqualTo(5L * 1024 * 1024); // 15MB / 3
+        }
+
+        @Test
+        @DisplayName("null acceptedTypes는 빈 목록으로 대체된다")
+        void nullAcceptedTypesReplacedWithEmptyList() {
+            AttachmentConfig config = new AttachmentConfig(
+                    true, false, 10, 50L, 10L, null, List.of());
+
+            assertThat(config.acceptedTypes()).isNotNull().isEmpty();
+        }
+
+        @Test
+        @DisplayName("null categories는 빈 목록으로 대체된다")
+        void nullCategoriesReplacedWithEmptyList() {
+            AttachmentConfig config = new AttachmentConfig(
+                    true, false, 10, 50L, 10L, List.of(), null);
+
+            assertThat(config.categories()).isNotNull().isEmpty();
+        }
+    }
 }

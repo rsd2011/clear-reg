@@ -84,6 +84,9 @@ import com.example.admin.maskingpolicy.repository.MaskingPolicyRepository;
 import com.example.admin.maskingpolicy.repository.MaskingPolicyRootRepository;
 import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRepository;
 import com.example.admin.rowaccesspolicy.repository.RowAccessPolicyRootRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRepository;
+import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
+import com.example.admin.orggroup.repository.OrgGroupApprovalMappingRepository;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
@@ -296,6 +299,15 @@ class AuditPartitionSchedulerPolicyEventTest {
 
     @MockBean
     RowAccessPolicyRootRepository rowAccessPolicyRootRepository;
+
+    @MockBean
+    DraftFormTemplateRepository draftFormTemplateRepository;
+
+    @MockBean
+    DraftFormTemplateRootRepository draftFormTemplateRootRepository;
+
+    @MockBean
+    OrgGroupApprovalMappingRepository orgGroupApprovalMappingRepository;
 
     @org.junit.jupiter.api.BeforeEach
     void setUpPolicyRepository() {
