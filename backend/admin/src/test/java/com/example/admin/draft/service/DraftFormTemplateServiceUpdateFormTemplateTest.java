@@ -1,5 +1,5 @@
-package com.example.draft.application;
-import com.example.admin.draft.service.TemplateAdminService;
+package com.example.admin.draft.service;
+import com.example.admin.draft.service.DraftFormTemplateService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -19,21 +19,17 @@ import com.example.common.security.RowScope;
 import com.example.admin.draft.dto.DraftFormTemplateRequest;
 import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
-import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.admin.draft.repository.DraftFormTemplateRepository;
 import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 
-class TemplateAdminServiceUpdateFormTemplateTest {
+class DraftFormTemplateServiceUpdateFormTemplateTest {
 
     @Test
     @DisplayName("기안 양식 템플릿을 업데이트하면 새 버전이 생성된다")
     void updateFormTemplate() {
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         DraftFormTemplateRootRepository rootRepo = mock(DraftFormTemplateRootRepository.class);
-        TemplateAdminService service = new TemplateAdminService(
-                mock(ApprovalTemplateRootService.class),
-                formRepo,
-                rootRepo);
+        DraftFormTemplateService service = new DraftFormTemplateService(formRepo, rootRepo);
 
         OffsetDateTime now = OffsetDateTime.now();
         DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);

@@ -1,5 +1,5 @@
-package com.example.draft.application;
-import com.example.admin.draft.service.TemplateAdminService;
+package com.example.admin.draft.service;
+import com.example.admin.draft.service.DraftFormTemplateService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -23,7 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.admin.draft.domain.DraftFormTemplate;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.admin.permission.context.AuthContext;
@@ -36,10 +35,7 @@ import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class TemplateAdminServiceVersionHistoryTest {
-
-    @Mock
-    private ApprovalTemplateRootService approvalTemplateRootService;
+class DraftFormTemplateServiceVersionHistoryTest {
 
     @Mock
     private DraftFormTemplateRepository draftFormTemplateRepository;
@@ -48,7 +44,7 @@ class TemplateAdminServiceVersionHistoryTest {
     private DraftFormTemplateRootRepository draftFormTemplateRootRepository;
 
     @InjectMocks
-    private TemplateAdminService service;
+    private DraftFormTemplateService service;
 
     private AuthContext createContext() {
         AuthContext context = mock(AuthContext.class);

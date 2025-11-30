@@ -127,7 +127,7 @@ class DraftControllerCoverageTest {
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
         given(draftService.suggestTemplate(eq("DRAFT"), eq("ORG1")))
-                .willReturn(new com.example.draft.application.dto.DraftTemplateSuggestionResponse(null, null, null, null, false));
+                .willReturn(new com.example.admin.draft.dto.DraftTemplateSuggestionResponse(null, null, null, null, false));
 
         controller.defaultTemplates("DRAFT");
 

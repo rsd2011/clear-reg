@@ -10,9 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.orggroup.WorkType;
 import com.example.common.version.ChangeAction;
-import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
-import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
-import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.admin.draft.dto.DraftFormTemplateRequest;
 import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.admin.draft.domain.DraftFormTemplate;
@@ -21,42 +18,20 @@ import com.example.admin.draft.exception.DraftTemplateNotFoundException;
 import com.example.admin.draft.repository.DraftFormTemplateRepository;
 import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 
+/**
+ * 기안 양식 템플릿 관리 서비스.
+ */
 @Service
 @Transactional
-public class TemplateAdminService {
+public class DraftFormTemplateService {
 
-    private final ApprovalTemplateRootService approvalTemplateRootService;
     private final DraftFormTemplateRepository draftFormTemplateRepository;
     private final DraftFormTemplateRootRepository draftFormTemplateRootRepository;
 
-    public TemplateAdminService(ApprovalTemplateRootService approvalTemplateRootService,
-                                DraftFormTemplateRepository draftFormTemplateRepository,
-                                DraftFormTemplateRootRepository draftFormTemplateRootRepository) {
-        this.approvalTemplateRootService = approvalTemplateRootService;
+    public DraftFormTemplateService(DraftFormTemplateRepository draftFormTemplateRepository,
+                                    DraftFormTemplateRootRepository draftFormTemplateRootRepository) {
         this.draftFormTemplateRepository = draftFormTemplateRepository;
         this.draftFormTemplateRootRepository = draftFormTemplateRootRepository;
-    }
-
-    public ApprovalTemplateRootResponse createApprovalTemplateRoot(ApprovalTemplateRootRequest request,
-                                                                    AuthContext context,
-                                                                    boolean audit) {
-        return approvalTemplateRootService.create(request, context);
-    }
-
-    public ApprovalTemplateRootResponse updateApprovalTemplateRoot(UUID id,
-                                                                    ApprovalTemplateRootRequest request,
-                                                                    AuthContext context,
-                                                                    boolean audit) {
-        return approvalTemplateRootService.update(id, request, context);
-    }
-
-    @Transactional(readOnly = true)
-    public List<ApprovalTemplateRootResponse> listApprovalTemplateRoots(String businessType,
-                                                                         String organizationCode,
-                                                                         boolean activeOnly,
-                                                                         AuthContext context,
-                                                                         boolean audit) {
-        return approvalTemplateRootService.list(null, activeOnly);
     }
 
     /**
@@ -67,11 +42,11 @@ public class TemplateAdminService {
                                                               AuthContext context,
                                                               boolean audit) {
         OffsetDateTime now = OffsetDateTime.now();
-        
+
         // Root 생성
         DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
         draftFormTemplateRootRepository.save(root);
-        
+
         // 첫 번째 버전 생성
         DraftFormTemplate template = DraftFormTemplate.create(
                 root,
@@ -89,7 +64,7 @@ public class TemplateAdminService {
 
         // Root에 현재 버전 설정
         root.activateNewVersion(template, now);
-        
+
         return DraftFormTemplateResponse.from(template);
     }
 
@@ -103,13 +78,13 @@ public class TemplateAdminService {
                                                               boolean audit) {
         DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
-        
+
         OffsetDateTime now = OffsetDateTime.now();
-        
+
         // 현재 최대 버전 조회
         Integer maxVersion = draftFormTemplateRepository.findMaxVersionByRoot(root);
         int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
-        
+
         // 새 버전 생성
         DraftFormTemplate newTemplate = DraftFormTemplate.create(
                 root,
@@ -124,10 +99,10 @@ public class TemplateAdminService {
                 context.username(),
                 now);
         draftFormTemplateRepository.save(newTemplate);
-        
+
         // 버전 전환
         root.activateNewVersion(newTemplate, now);
-        
+
         return DraftFormTemplateResponse.from(newTemplate);
     }
 
@@ -145,11 +120,22 @@ public class TemplateAdminService {
         } else {
             templates = draftFormTemplateRepository.findAllCurrent();
         }
-        
+
         return templates.stream()
                 .filter(t -> !activeOnly || t.isActive())
                 .map(DraftFormTemplateResponse::from)
                 .toList();
+    }
+
+    /**
+     * 기안 양식 템플릿 요약 목록을 조회한다 (schemaJson 제외).
+     */
+    @Transactional(readOnly = true)
+    public List<DraftFormTemplate> listDraftFormTemplateSummaries(WorkType workType) {
+        if (workType != null) {
+            return draftFormTemplateRepository.findCurrentByWorkType(workType);
+        }
+        return draftFormTemplateRepository.findAllCurrent();
     }
 
     /**
@@ -180,15 +166,15 @@ public class TemplateAdminService {
                                                   AuthContext context) {
         DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
-        
+
         if (root.hasDraft()) {
             throw new IllegalStateException("이미 초안 버전이 존재합니다.");
         }
-        
+
         OffsetDateTime now = OffsetDateTime.now();
         Integer maxVersion = draftFormTemplateRepository.findMaxVersionByRoot(root);
         int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
-        
+
         DraftFormTemplate draft = DraftFormTemplate.createDraft(
                 root,
                 newVersion,
@@ -201,9 +187,9 @@ public class TemplateAdminService {
                 context.username(),
                 now);
         draftFormTemplateRepository.save(draft);
-        
+
         root.setDraftVersion(draft);
-        
+
         return DraftFormTemplateResponse.from(draft);
     }
 
@@ -213,10 +199,10 @@ public class TemplateAdminService {
     public DraftFormTemplateResponse publishDraft(UUID rootId, AuthContext context) {
         DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
-        
+
         OffsetDateTime now = OffsetDateTime.now();
         root.publishDraft(now);
-        
+
         return DraftFormTemplateResponse.from(root.getCurrentVersion());
     }
 

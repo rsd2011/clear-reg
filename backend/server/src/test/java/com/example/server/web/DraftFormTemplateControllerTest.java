@@ -3,7 +3,6 @@ package com.example.server.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,18 +20,16 @@ import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
-import com.example.admin.draft.service.TemplateAdminService;
-import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
-import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
+import com.example.admin.draft.service.DraftFormTemplateService;
 import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-class DraftTemplateAdminControllerExtraTest {
+class DraftFormTemplateControllerTest {
 
-    TemplateAdminService service = mock(TemplateAdminService.class);
+    DraftFormTemplateService service = mock(DraftFormTemplateService.class);
     ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-    DraftTemplateAdminController controller = new DraftTemplateAdminController(service, objectMapper);
+    DraftFormTemplateController controller = new DraftFormTemplateController(service, objectMapper);
 
     @AfterEach
     void tearDown() {
@@ -44,37 +41,8 @@ class DraftTemplateAdminControllerExtraTest {
     void throwsWhenContextMissing() {
         AuthContextHolder.clear();
 
-        assertThatThrownBy(() -> controller.listApprovalTemplateRoots(true))
+        assertThatThrownBy(() -> controller.list(null, true))
                 .isInstanceOf(PermissionDeniedException.class);
-    }
-
-    @Test
-    @DisplayName("승인선 템플릿 생성 시 현재 컨텍스트를 전달한다")
-    void createApprovalTemplateRootUsesContext() {
-        AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
-        AuthContextHolder.set(ctx);
-
-        ApprovalTemplateRootRequest request = new ApprovalTemplateRootRequest(
-                "이름",
-                0,
-                null,
-                true, List.of());
-        ApprovalTemplateRootResponse response = new ApprovalTemplateRootResponse(
-                UUID.randomUUID(),
-                "CODE",
-                "이름",
-                0,
-                null,
-                true,
-                OffsetDateTime.now(),
-                OffsetDateTime.now(),
-                List.of());
-        when(service.createApprovalTemplateRoot(eq(request), eq(ctx), eq(true))).thenReturn(response);
-
-        ApprovalTemplateRootResponse result = controller.createApprovalTemplateRoot(request);
-
-        assertThat(result).isEqualTo(response);
-        verify(service).createApprovalTemplateRoot(eq(request), eq(ctx), eq(true));
     }
 
     @Test
@@ -85,14 +53,14 @@ class DraftTemplateAdminControllerExtraTest {
 
         DraftFormTemplateResponse resp = new DraftFormTemplateResponse(
                 UUID.randomUUID(), "CODE", "이름", WorkType.HR_UPDATE, "{}", 1, true,
-                null, // componentPath
+                null,
                 com.example.common.version.VersionStatus.PUBLISHED,
                 com.example.common.version.ChangeAction.CREATE, null,
                 "user", "User", OffsetDateTime.now(), OffsetDateTime.now(), null,
                 OffsetDateTime.now(), OffsetDateTime.now());
         when(service.listDraftFormTemplates(eq(WorkType.HR_UPDATE), eq(false), eq(ctx), eq(true))).thenReturn(List.of(resp));
 
-        List<DraftFormTemplateResponse> result = controller.listDraftFormTemplates(WorkType.HR_UPDATE, false);
+        List<DraftFormTemplateResponse> result = controller.list(WorkType.HR_UPDATE, false);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).templateCode()).isEqualTo("CODE");
@@ -100,26 +68,24 @@ class DraftTemplateAdminControllerExtraTest {
     }
 
     @Test
-    @DisplayName("승인선 템플릿 목록 조회도 컨텍스트와 파라미터를 그대로 전달한다")
-    void listApprovalTemplateRootsPassesArguments() {
+    @DisplayName("단건 조회 시 ID로 템플릿을 조회한다")
+    void getTemplateById() {
         AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
-        ApprovalTemplateRootResponse response = new ApprovalTemplateRootResponse(
-                UUID.randomUUID(),
-                "CODE",
-                "이름",
-                0,
+        UUID id = UUID.randomUUID();
+        DraftFormTemplateResponse resp = new DraftFormTemplateResponse(
+                id, "CODE", "이름", WorkType.GENERAL, "{}", 1, true,
                 null,
-                true,
-                OffsetDateTime.now(),
-                OffsetDateTime.now(),
-                List.of());
-        when(service.listApprovalTemplateRoots(isNull(), isNull(), eq(false), eq(ctx), eq(true)))
-                .thenReturn(List.of(response));
+                com.example.common.version.VersionStatus.PUBLISHED,
+                com.example.common.version.ChangeAction.CREATE, null,
+                "user", "User", OffsetDateTime.now(), OffsetDateTime.now(), null,
+                OffsetDateTime.now(), OffsetDateTime.now());
+        when(service.findById(eq(id))).thenReturn(resp);
 
-        List<ApprovalTemplateRootResponse> result = controller.listApprovalTemplateRoots(false);
+        DraftFormTemplateResponse result = controller.get(id);
 
-        assertThat(result).containsExactly(response);
+        assertThat(result.id()).isEqualTo(id);
+        verify(service).findById(eq(id));
     }
 }

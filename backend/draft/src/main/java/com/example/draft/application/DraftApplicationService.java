@@ -49,7 +49,7 @@ import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeSpecifications;
-import com.example.draft.application.dto.DraftTemplateSuggestionResponse;
+import com.example.admin.draft.dto.DraftTemplateSuggestionResponse;
 import com.example.draft.domain.BusinessTemplateMapping;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
@@ -321,7 +321,13 @@ public class DraftApplicationService {
         BusinessTemplateMapping mapping = mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(businessFeatureCode, organizationCode)
                 .or(() -> mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(businessFeatureCode))
                 .orElseThrow(() -> new DraftTemplateNotFoundException("기본 매핑된 템플릿이 없습니다."));
-        return DraftTemplateSuggestionResponse.from(mapping);
+        return DraftTemplateSuggestionResponse.of(
+                mapping.getApprovalTemplateRoot().getId(),
+                mapping.getApprovalTemplateRoot().getTemplateCode(),
+                mapping.getDraftFormTemplate().getId(),
+                mapping.getDraftFormTemplate().getTemplateCode(),
+                mapping.getOrganizationCode()
+        );
     }
 
     /**

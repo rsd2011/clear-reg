@@ -29,7 +29,7 @@ import com.example.draft.application.DraftApplicationService;
 import com.example.draft.application.dto.DraftCreateRequest;
 import com.example.draft.application.dto.DraftDecisionRequest;
 import com.example.draft.application.dto.DraftResponse;
-import com.example.draft.application.dto.DraftTemplateSuggestionResponse;
+import com.example.admin.draft.dto.DraftTemplateSuggestionResponse;
 import com.example.draft.application.dto.DraftHistoryResponse;
 import com.example.draft.application.dto.DraftReferenceResponse;
 import com.example.admin.draft.dto.DraftFormTemplateResponse;

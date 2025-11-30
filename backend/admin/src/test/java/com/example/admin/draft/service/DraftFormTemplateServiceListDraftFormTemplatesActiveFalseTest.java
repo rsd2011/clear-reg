@@ -1,5 +1,5 @@
-package com.example.draft.application;
-import com.example.admin.draft.service.TemplateAdminService;
+package com.example.admin.draft.service;
+import com.example.admin.draft.service.DraftFormTemplateService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -18,34 +18,31 @@ import com.example.common.version.ChangeAction;
 import com.example.admin.draft.dto.DraftFormTemplateResponse;
 import com.example.admin.draft.domain.DraftFormTemplate;
 import com.example.admin.draft.domain.DraftFormTemplateRoot;
-import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.admin.draft.repository.DraftFormTemplateRepository;
 import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 
-class TemplateAdminServiceListDraftFormTemplatesFilterTest {
+class DraftFormTemplateServiceListDraftFormTemplatesActiveFalseTest {
 
     @Test
-    @DisplayName("workType 지정 + activeOnly=true일 때 해당 업무유형의 활성 템플릿만 반환한다")
-    void filtersFormTemplatesByWorkTypeAndActive() {
+    @DisplayName("activeOnly=false이면 모든 활성/비활성 템플릿을 반환한다")
+    void returnsAllTemplatesWhenActiveOnlyIsFalse() {
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
-        TemplateAdminService service = new TemplateAdminService(
-                mock(ApprovalTemplateRootService.class),
-                formRepo,
-                mock(DraftFormTemplateRootRepository.class));
+        DraftFormTemplateService service = new DraftFormTemplateService(
+                formRepo, mock(DraftFormTemplateRootRepository.class));
 
         OffsetDateTime now = OffsetDateTime.now();
         DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
-        DraftFormTemplate activeTemplate = createPublishedTemplate(root, "f1", WorkType.GENERAL, true, now);
-        DraftFormTemplate inactiveTemplate = createPublishedTemplate(root, "f2", WorkType.GENERAL, false, now);
+        DraftFormTemplate active = createPublishedTemplate(root, "f1", WorkType.GENERAL, true, now);
+        DraftFormTemplate inactive = createPublishedTemplate(root, "f2", WorkType.GENERAL, false, now);
 
-        given(formRepo.findCurrentByWorkType(WorkType.GENERAL)).willReturn(List.of(activeTemplate, inactiveTemplate));
+        given(formRepo.findCurrentByWorkType(WorkType.GENERAL)).willReturn(List.of(active, inactive));
 
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
-        List<DraftFormTemplateResponse> result = service.listDraftFormTemplates(WorkType.GENERAL, true, ctx, false);
+        List<DraftFormTemplateResponse> result = service.listDraftFormTemplates(WorkType.GENERAL, false, ctx, false);
 
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).name()).isEqualTo("f1");
+        assertThat(result).extracting(DraftFormTemplateResponse::name)
+                .containsExactlyInAnyOrder("f1", "f2");
     }
 
     private DraftFormTemplate createPublishedTemplate(DraftFormTemplateRoot root, String name, WorkType workType, boolean active, OffsetDateTime now) {
