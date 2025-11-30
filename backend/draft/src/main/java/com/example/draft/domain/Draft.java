@@ -10,7 +10,7 @@ import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftWorkflowException;
 import com.example.approval.api.ApprovalStatus;
-import com.example.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplate;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

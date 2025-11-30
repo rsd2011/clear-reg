@@ -16,11 +16,9 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.context.AuthContext;
 import com.example.common.security.RowScope;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
-import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 
 class TemplateAdminServiceListLineTemplateAuditNullTest {
 
@@ -30,10 +28,8 @@ class TemplateAdminServiceListLineTemplateAuditNullTest {
         ApprovalTemplateRootService rootService = mock(ApprovalTemplateRootService.class);
         TemplateAdminService service = new TemplateAdminService(
                 rootService,
-                mock(ApprovalTemplateRootRepository.class),
                 mock(DraftFormTemplateRepository.class),
-                mock(DraftTemplatePresetRepository.class),
-                new ObjectMapper());
+                mock(DraftFormTemplateRootRepository.class));
 
         OffsetDateTime now = OffsetDateTime.now();
         List<ApprovalTemplateRootResponse> expectedList = List.of(

@@ -8,45 +8,33 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.admin.permission.context.AuthContext;
-import com.example.common.security.RowScope;
-import com.example.admin.approval.domain.ApprovalTemplateRoot;
-import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.common.orggroup.WorkType;
+import com.example.common.version.ChangeAction;
 import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.draft.application.dto.DraftTemplatePresetRequest;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.draft.application.dto.DraftTemplatePresetResponse;
-import com.example.draft.domain.DraftFormTemplate;
-import com.example.draft.domain.DraftTemplatePreset;
-import com.example.draft.domain.exception.DraftAccessDeniedException;
+import com.example.admin.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 
 @Service
 @Transactional
 public class TemplateAdminService {
 
     private final ApprovalTemplateRootService approvalTemplateRootService;
-    private final ApprovalTemplateRootRepository approvalTemplateRootRepository;
     private final DraftFormTemplateRepository draftFormTemplateRepository;
-    private final DraftTemplatePresetRepository presetRepository;
-    private final ObjectMapper objectMapper;
+    private final DraftFormTemplateRootRepository draftFormTemplateRootRepository;
 
     public TemplateAdminService(ApprovalTemplateRootService approvalTemplateRootService,
-                                ApprovalTemplateRootRepository approvalTemplateRootRepository,
                                 DraftFormTemplateRepository draftFormTemplateRepository,
-                                DraftTemplatePresetRepository presetRepository,
-                                ObjectMapper objectMapper) {
+                                DraftFormTemplateRootRepository draftFormTemplateRootRepository) {
         this.approvalTemplateRootService = approvalTemplateRootService;
-        this.approvalTemplateRootRepository = approvalTemplateRootRepository;
         this.draftFormTemplateRepository = draftFormTemplateRepository;
-        this.presetRepository = presetRepository;
-        this.objectMapper = objectMapper;
+        this.draftFormTemplateRootRepository = draftFormTemplateRootRepository;
     }
 
     public ApprovalTemplateRootResponse createApprovalTemplateRoot(ApprovalTemplateRootRequest request,
@@ -71,182 +59,174 @@ public class TemplateAdminService {
         return approvalTemplateRootService.list(null, activeOnly);
     }
 
+    /**
+     * 기안 양식 템플릿을 생성한다.
+     * Root와 첫 번째 버전을 함께 생성합니다.
+     */
     public DraftFormTemplateResponse createDraftFormTemplate(DraftFormTemplateRequest request,
                                                               AuthContext context,
                                                               boolean audit) {
-        String org = ensureOrganizationNullable(request.organizationCode(), context, audit);
         OffsetDateTime now = OffsetDateTime.now();
+        
+        // Root 생성
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+        draftFormTemplateRootRepository.save(root);
+        
+        // 첫 번째 버전 생성
         DraftFormTemplate template = DraftFormTemplate.create(
+                root,
+                1,
                 request.name(),
-                request.businessType(),
-                org,
+                request.workType(),
                 request.schemaJson(),
+                request.active(),
+                ChangeAction.CREATE,
+                request.changeReason(),
+                context.username(),
+                context.username(),
                 now);
-        if (!request.active()) {
-            template.update(template.getName(), template.getSchemaJson(), request.active(), now);
-        }
-        return DraftFormTemplateResponse.from(draftFormTemplateRepository.save(template));
-    }
+        draftFormTemplateRepository.save(template);
 
-    public DraftFormTemplateResponse updateDraftFormTemplate(UUID id,
-                                                              DraftFormTemplateRequest request,
-                                                              AuthContext context,
-                                                              boolean audit) {
-        DraftFormTemplate template = draftFormTemplateRepository.findById(id)
-                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
-        if (template.getOrganizationCode() != null) {
-            ensureOrganizationAccess(template.getOrganizationCode(), context, audit);
-        }
-        template.update(request.name(), request.schemaJson(), request.active(), OffsetDateTime.now());
+        // Root에 현재 버전 설정
+        root.activateNewVersion(template, now);
+        
         return DraftFormTemplateResponse.from(template);
     }
 
+    /**
+     * 기안 양식 템플릿을 수정한다.
+     * 새 버전을 생성하고 이전 버전을 닫습니다.
+     */
+    public DraftFormTemplateResponse updateDraftFormTemplate(UUID rootId,
+                                                              DraftFormTemplateRequest request,
+                                                              AuthContext context,
+                                                              boolean audit) {
+        DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
+        
+        OffsetDateTime now = OffsetDateTime.now();
+        
+        // 현재 최대 버전 조회
+        Integer maxVersion = draftFormTemplateRepository.findMaxVersionByRoot(root);
+        int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
+        
+        // 새 버전 생성
+        DraftFormTemplate newTemplate = DraftFormTemplate.create(
+                root,
+                newVersion,
+                request.name(),
+                request.workType(),
+                request.schemaJson(),
+                request.active(),
+                ChangeAction.UPDATE,
+                request.changeReason(),
+                context.username(),
+                context.username(),
+                now);
+        draftFormTemplateRepository.save(newTemplate);
+        
+        // 버전 전환
+        root.activateNewVersion(newTemplate, now);
+        
+        return DraftFormTemplateResponse.from(newTemplate);
+    }
+
+    /**
+     * 기안 양식 템플릿 목록을 조회한다.
+     */
     @Transactional(readOnly = true)
-    public List<DraftFormTemplateResponse> listDraftFormTemplates(String businessType,
-                                                                  String organizationCode,
+    public List<DraftFormTemplateResponse> listDraftFormTemplates(WorkType workType,
                                                                   boolean activeOnly,
                                                                   AuthContext context,
                                                                   boolean audit) {
-        if (!audit) {
-            organizationCode = context.organizationCode();
+        List<DraftFormTemplate> templates;
+        if (workType != null) {
+            templates = draftFormTemplateRepository.findCurrentByWorkType(workType);
+        } else {
+            templates = draftFormTemplateRepository.findAllCurrent();
         }
-        String orgFilter = organizationCode;
-        return draftFormTemplateRepository.findAll().stream()
-                .filter(t -> businessType == null || businessType.equalsIgnoreCase(t.getBusinessType()))
-                .filter(t -> orgFilter == null || t.getOrganizationCode() == null || orgFilter.equals(t.getOrganizationCode()))
+        
+        return templates.stream()
                 .filter(t -> !activeOnly || t.isActive())
                 .map(DraftFormTemplateResponse::from)
                 .toList();
     }
 
-    public DraftTemplatePresetResponse createDraftTemplatePreset(DraftTemplatePresetRequest request,
-                                                                  AuthContext context,
-                                                                  boolean audit) {
-        String org = ensureOrganizationNullable(request.organizationCode(), context, audit);
-        OffsetDateTime now = OffsetDateTime.now();
-        DraftFormTemplate formTemplate = draftFormTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
-                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
-        formTemplate.assertOrganization(org == null ? context.organizationCode() : org);
-        ensureBusinessMatches(formTemplate, request.businessFeatureCode());
-        ApprovalTemplateRoot approvalTemplate = null;
-        if (request.defaultApprovalTemplateId() != null) {
-            approvalTemplate = approvalTemplateRootRepository.findByIdAndActiveVersion(request.defaultApprovalTemplateId())
-                    .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-        }
-        DraftTemplatePreset preset = DraftTemplatePreset.create(
-                request.name(),
-                request.businessFeatureCode(),
-                org,
-                request.titleTemplate(),
-                request.contentTemplate(),
-                formTemplate,
-                approvalTemplate,
-                request.defaultFormPayload(),
-                serializeVariables(request.variables()),
-                request.active(),
-                now);
-        return DraftTemplatePresetResponse.from(presetRepository.save(preset), request.variables(), java.util.function.UnaryOperator.identity());
-    }
-
-    public DraftTemplatePresetResponse updateDraftTemplatePreset(UUID id,
-                                                                  DraftTemplatePresetRequest request,
-                                                                  AuthContext context,
-                                                                  boolean audit) {
-        DraftTemplatePreset preset = presetRepository.findById(id)
-                .orElseThrow(() -> new DraftTemplateNotFoundException("템플릿 프리셋을 찾을 수 없습니다."));
-        if (preset.getOrganizationCode() != null) {
-            ensureOrganizationAccess(preset.getOrganizationCode(), context, audit);
-        }
-        if (!preset.getBusinessFeatureCode().equalsIgnoreCase(request.businessFeatureCode())) {
-            throw new IllegalArgumentException("businessFeatureCode는 변경할 수 없습니다.");
-        }
-        DraftFormTemplate formTemplate = draftFormTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
-                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
-        formTemplate.assertOrganization(preset.getOrganizationCode() == null ? context.organizationCode() : preset.getOrganizationCode());
-        ensureBusinessMatches(formTemplate, preset.getBusinessFeatureCode());
-        ApprovalTemplateRoot approvalTemplate = null;
-        if (request.defaultApprovalTemplateId() != null) {
-            approvalTemplate = approvalTemplateRootRepository.findByIdAndActiveVersion(request.defaultApprovalTemplateId())
-                    .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-        }
-        preset.update(request.name(),
-                request.titleTemplate(),
-                request.contentTemplate(),
-                formTemplate,
-                approvalTemplate,
-                request.defaultFormPayload(),
-                serializeVariables(request.variables()),
-                request.active(),
-                OffsetDateTime.now());
-        return DraftTemplatePresetResponse.from(preset, request.variables(), java.util.function.UnaryOperator.identity());
-    }
-
+    /**
+     * 기안 양식 템플릿 루트 목록을 조회한다.
+     */
     @Transactional(readOnly = true)
-    public List<DraftTemplatePresetResponse> listDraftTemplatePresets(String businessType,
-                                                                      String organizationCode,
-                                                                      boolean activeOnly,
-                                                                      AuthContext context,
-                                                                      boolean audit) {
-        if (!audit) {
-            organizationCode = context.organizationCode();
+    public List<DraftFormTemplateRoot> listDraftFormTemplateRoots(WorkType workType, boolean activeOnly) {
+        if (workType != null) {
+            return draftFormTemplateRootRepository.findByWorkTypeAndActive(workType);
         }
-        String orgFilter = organizationCode;
-        return presetRepository.findAll().stream()
-                .filter(p -> businessType == null || businessType.equalsIgnoreCase(p.getBusinessFeatureCode()))
-                .filter(p -> orgFilter == null || p.isGlobal() || orgFilter.equals(p.getOrganizationCode()))
-                .filter(p -> !activeOnly || p.isActive())
-                .map(this::toResponse)
-                .toList();
+        return draftFormTemplateRootRepository.findAllActive();
     }
 
-    private DraftTemplatePresetResponse toResponse(DraftTemplatePreset preset) {
-        return DraftTemplatePresetResponse.from(preset, deserializeVariables(preset.getVariablesJson()), java.util.function.UnaryOperator.identity());
+    /**
+     * 템플릿 코드로 Root를 조회한다.
+     */
+    @Transactional(readOnly = true)
+    public DraftFormTemplateRoot findRootByTemplateCode(String templateCode) {
+        return draftFormTemplateRootRepository.findByTemplateCode(templateCode)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다: " + templateCode));
     }
 
-    private List<String> deserializeVariables(String variablesJson) {
-        if (variablesJson == null || variablesJson.isBlank()) {
-            return List.of();
+    /**
+     * 초안 버전을 생성한다.
+     */
+    public DraftFormTemplateResponse createDraft(UUID rootId,
+                                                  DraftFormTemplateRequest request,
+                                                  AuthContext context) {
+        DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
+        
+        if (root.hasDraft()) {
+            throw new IllegalStateException("이미 초안 버전이 존재합니다.");
         }
-        try {
-            return objectMapper.readValue(variablesJson, new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
-            });
-        } catch (Exception e) {
-            return List.of();
-        }
+        
+        OffsetDateTime now = OffsetDateTime.now();
+        Integer maxVersion = draftFormTemplateRepository.findMaxVersionByRoot(root);
+        int newVersion = (maxVersion != null ? maxVersion : 0) + 1;
+        
+        DraftFormTemplate draft = DraftFormTemplate.createDraft(
+                root,
+                newVersion,
+                request.name(),
+                request.workType(),
+                request.schemaJson(),
+                request.active(),
+                request.changeReason(),
+                context.username(),
+                context.username(),
+                now);
+        draftFormTemplateRepository.save(draft);
+        
+        root.setDraftVersion(draft);
+        
+        return DraftFormTemplateResponse.from(draft);
     }
 
-    private String serializeVariables(List<String> variables) {
-        if (variables == null || variables.isEmpty()) {
-            return "[]";
-        }
-        try {
-            return objectMapper.writeValueAsString(variables);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("variables 직렬화에 실패했습니다.", e);
-        }
+    /**
+     * 초안을 게시한다.
+     */
+    public DraftFormTemplateResponse publishDraft(UUID rootId, AuthContext context) {
+        DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
+        
+        OffsetDateTime now = OffsetDateTime.now();
+        root.publishDraft(now);
+        
+        return DraftFormTemplateResponse.from(root.getCurrentVersion());
     }
 
-    private void ensureBusinessMatches(DraftFormTemplate formTemplate, String businessFeatureCode) {
-        if (!formTemplate.matchesBusiness(businessFeatureCode)) {
-            throw new IllegalArgumentException("비즈니스 유형에 맞지 않는 양식 템플릿입니다.");
-        }
-    }
-
-
-    private String ensureOrganizationNullable(String organizationCode, AuthContext context, boolean audit) {
-        if (organizationCode == null || organizationCode.isBlank()) {
-            return null;
-        }
-        ensureOrganizationAccess(organizationCode, context, audit);
-        return organizationCode;
-    }
-
-    private void ensureOrganizationAccess(String organizationCode, AuthContext context, boolean audit) {
-        if (audit) {
-            return;
-        }
-        if (context.rowScope() != RowScope.ALL && !organizationCode.equals(context.organizationCode())) {
-            throw new DraftAccessDeniedException("해당 조직에 대한 권한이 없습니다.");
-        }
+    /**
+     * 초안을 삭제한다.
+     */
+    public void discardDraft(UUID rootId, AuthContext context) {
+        DraftFormTemplateRoot root = draftFormTemplateRootRepository.findById(rootId)
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식 템플릿을 찾을 수 없습니다."));
+        
+        root.discardDraft();
     }
 }

@@ -15,8 +15,10 @@ import com.example.admin.approval.domain.ApprovalTemplate;
 import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.admin.approval.dto.ApprovalGroupResponse;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
+import com.example.common.orggroup.WorkType;
 import com.example.common.version.ChangeAction;
-import com.example.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 
 class DraftResponsesTest {
 
@@ -50,7 +52,12 @@ class DraftResponsesTest {
     @DisplayName("DraftFormTemplateResponse apply/from에 마스킹 함수가 적용된다")
     void draftFormTemplateResponseApplyMasks() {
         OffsetDateTime now = OffsetDateTime.now();
-        DraftFormTemplate template = DraftFormTemplate.create("Form","BT","ORG","{}", now);
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "Form", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "system", "System", now);
+        // create()는 이미 PUBLISHED 상태로 생성됨
+        root.activateNewVersion(template, now);
         DraftFormTemplateResponse resp = DraftFormTemplateResponse.from(template, mask());
         assertThat(resp.name()).isEqualTo("x");
         DraftFormTemplateResponse again = DraftFormTemplateResponse.apply(resp, mask());

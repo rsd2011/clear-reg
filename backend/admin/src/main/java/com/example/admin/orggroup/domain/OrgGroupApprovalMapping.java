@@ -3,7 +3,7 @@ package com.example.admin.orggroup.domain;
 import java.time.OffsetDateTime;
 
 import com.example.admin.approval.domain.ApprovalTemplateRoot;
-import com.example.admin.draft.domain.DraftTemplatePreset;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.common.jpa.PrimaryKeyEntity;
 import com.example.common.orggroup.WorkType;
 
@@ -61,12 +61,12 @@ public class OrgGroupApprovalMapping extends PrimaryKeyEntity {
     private ApprovalTemplateRoot approvalTemplateRoot;
 
     /**
-     * 적용할 기안 템플릿 프리셋 (선택).
-     * <p>기안 생성 시 사용할 양식과 기본값을 정의한다.</p>
+     * 적용할 기안 양식 템플릿 (선택).
+     * <p>기안 생성 시 사용할 양식을 정의한다.</p>
      */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "draft_template_preset_id")
-    private DraftTemplatePreset draftTemplatePreset;
+    @JoinColumn(name = "draft_form_template_root_id")
+    private DraftFormTemplateRoot draftFormTemplateRoot;
 
     /**
      * 생성 일시.
@@ -83,22 +83,22 @@ public class OrgGroupApprovalMapping extends PrimaryKeyEntity {
     /**
      * 생성자.
      *
-     * @param orgGroup             조직그룹 (필수)
-     * @param workType             업무유형 (null 허용 - 기본 템플릿)
-     * @param approvalTemplateRoot 승인선 템플릿 (필수)
-     * @param draftTemplatePreset  기안 템플릿 프리셋 (선택)
-     * @param now                  생성 시점
+     * @param orgGroup              조직그룹 (필수)
+     * @param workType              업무유형 (null 허용 - 기본 템플릿)
+     * @param approvalTemplateRoot  승인선 템플릿 (필수)
+     * @param draftFormTemplateRoot 기안 양식 템플릿 (선택)
+     * @param now                   생성 시점
      */
     private OrgGroupApprovalMapping(
             OrgGroup orgGroup,
             WorkType workType,
             ApprovalTemplateRoot approvalTemplateRoot,
-            DraftTemplatePreset draftTemplatePreset,
+            DraftFormTemplateRoot draftFormTemplateRoot,
             OffsetDateTime now) {
         this.orgGroup = orgGroup;
         this.workType = workType;
         this.approvalTemplateRoot = approvalTemplateRoot;
-        this.draftTemplatePreset = draftTemplatePreset;
+        this.draftFormTemplateRoot = draftFormTemplateRoot;
         this.createdAt = now;
         this.updatedAt = now;
     }
@@ -106,18 +106,18 @@ public class OrgGroupApprovalMapping extends PrimaryKeyEntity {
     /**
      * 매핑을 생성한다.
      *
-     * @param orgGroup             조직그룹
-     * @param workType             업무유형 (null 허용)
-     * @param approvalTemplateRoot 승인선 템플릿
-     * @param draftTemplatePreset  기안 템플릿 프리셋 (선택)
-     * @param now                  생성 시점
+     * @param orgGroup              조직그룹
+     * @param workType              업무유형 (null 허용)
+     * @param approvalTemplateRoot  승인선 템플릿
+     * @param draftFormTemplateRoot 기안 양식 템플릿 (선택)
+     * @param now                   생성 시점
      * @return 새로운 매핑 인스턴스
      */
     public static OrgGroupApprovalMapping create(
             OrgGroup orgGroup,
             WorkType workType,
             ApprovalTemplateRoot approvalTemplateRoot,
-            DraftTemplatePreset draftTemplatePreset,
+            DraftFormTemplateRoot draftFormTemplateRoot,
             OffsetDateTime now) {
         if (orgGroup == null) {
             throw new IllegalArgumentException("조직그룹은 필수입니다.");
@@ -125,11 +125,11 @@ public class OrgGroupApprovalMapping extends PrimaryKeyEntity {
         if (approvalTemplateRoot == null) {
             throw new IllegalArgumentException("승인선 템플릿은 필수입니다.");
         }
-        return new OrgGroupApprovalMapping(orgGroup, workType, approvalTemplateRoot, draftTemplatePreset, now);
+        return new OrgGroupApprovalMapping(orgGroup, workType, approvalTemplateRoot, draftFormTemplateRoot, now);
     }
 
     /**
-     * 매핑을 생성한다 (기안 템플릿 없이).
+     * 매핑을 생성한다 (기안 양식 템플릿 없이).
      *
      * @param orgGroup             조직그룹
      * @param workType             업무유형 (null 허용)
@@ -175,23 +175,23 @@ public class OrgGroupApprovalMapping extends PrimaryKeyEntity {
     }
 
     /**
-     * 기안 템플릿 프리셋을 변경한다.
+     * 기안 양식 템플릿을 변경한다.
      *
-     * @param newPreset 새 기안 템플릿 프리셋 (null 허용)
-     * @param now       변경 시점
+     * @param newFormTemplateRoot 새 기안 양식 템플릿 (null 허용)
+     * @param now                 변경 시점
      */
-    public void changeDraftTemplatePreset(DraftTemplatePreset newPreset, OffsetDateTime now) {
-        this.draftTemplatePreset = newPreset;
+    public void changeDraftFormTemplateRoot(DraftFormTemplateRoot newFormTemplateRoot, OffsetDateTime now) {
+        this.draftFormTemplateRoot = newFormTemplateRoot;
         this.updatedAt = now;
     }
 
     /**
-     * 기안 템플릿 프리셋이 설정되어 있는지 확인한다.
+     * 기안 양식 템플릿이 설정되어 있는지 확인한다.
      *
-     * @return 프리셋이 설정되어 있으면 true
+     * @return 템플릿이 설정되어 있으면 true
      */
-    public boolean hasDraftTemplatePreset() {
-        return this.draftTemplatePreset != null;
+    public boolean hasDraftFormTemplateRoot() {
+        return this.draftFormTemplateRoot != null;
     }
 
     /**

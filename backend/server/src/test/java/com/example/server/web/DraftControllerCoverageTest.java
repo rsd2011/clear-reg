@@ -140,12 +140,12 @@ class DraftControllerCoverageTest {
         AuthContextHolder.set(AuthContext.of("user", "ORG1", "PG", FeatureCode.DRAFT, ActionCode.DRAFT_CREATE, RowScope.ORG));
         given(permissionEvaluator.evaluate(eq(FeatureCode.DRAFT), eq(ActionCode.DRAFT_AUDIT)))
                 .willThrow(new PermissionDeniedException("no"));
-        given(draftService.recommendTemplatePresets(eq("DRAFT"), eq("ORG1"), eq("user")))
+        given(draftService.recommendFormTemplates(eq("DRAFT"), eq("ORG1"), eq("user")))
                 .willReturn(List.of());
 
         controller.recommendTemplates("DRAFT");
 
-        verify(draftService).recommendTemplatePresets(eq("DRAFT"), eq("ORG1"), eq("user"));
+        verify(draftService).recommendFormTemplates(eq("DRAFT"), eq("ORG1"), eq("user"));
     }
 
     @Test

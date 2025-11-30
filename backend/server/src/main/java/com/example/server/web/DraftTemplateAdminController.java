@@ -28,9 +28,8 @@ import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.common.masking.MaskingFunctions;
 import com.example.draft.application.TemplateAdminService;
 import com.example.draft.application.dto.DraftFormTemplateRequest;
-import com.example.draft.application.dto.DraftTemplatePresetRequest;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.draft.application.dto.DraftTemplatePresetResponse;
+import com.example.common.orggroup.WorkType;
 
 @RestController
 @Validated
@@ -98,50 +97,12 @@ public class DraftTemplateAdminController {
     @GetMapping("/form-templates")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
     @Operation(summary = "기안 양식 템플릿 목록 조회")
-    public List<DraftFormTemplateResponse> listDraftFormTemplates(@RequestParam(required = false) String businessType,
-                                                                  @RequestParam(required = false) String organizationCode,
+    public List<DraftFormTemplateResponse> listDraftFormTemplates(@RequestParam(required = false) WorkType workType,
                                                                   @RequestParam(defaultValue = "true") boolean activeOnly) {
         AuthContext context = currentContext();
         var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
-        return templateAdminService.listDraftFormTemplates(businessType, organizationCode, activeOnly, context, true).stream()
+        return templateAdminService.listDraftFormTemplates(workType, activeOnly, context, true).stream()
                 .map(t -> DraftFormTemplateResponse.apply(t, masker))
-                .toList();
-    }
-
-    // Draft Template Presets
-    @PostMapping("/template-presets")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
-    @Operation(summary = "템플릿 프리셋 등록")
-    public DraftTemplatePresetResponse createDraftTemplatePreset(@Valid @RequestBody DraftTemplatePresetRequest request) {
-        AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
-        return DraftTemplatePresetResponse.apply(
-                templateAdminService.createDraftTemplatePreset(request, context, true),
-                masker);
-    }
-
-    @PutMapping("/template-presets/{id}")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
-    @Operation(summary = "템플릿 프리셋 수정")
-    public DraftTemplatePresetResponse updateDraftTemplatePreset(@PathVariable UUID id,
-                                                                  @Valid @RequestBody DraftTemplatePresetRequest request) {
-        AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
-        return DraftTemplatePresetResponse.apply(
-                templateAdminService.updateDraftTemplatePreset(id, request, context, true),
-                masker);
-    }
-
-    @GetMapping("/template-presets")
-    @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_AUDIT)
-    @Operation(summary = "템플릿 프리셋 목록 조회")
-    public List<DraftTemplatePresetResponse> listDraftTemplatePresets(@RequestParam(required = false) String businessType,
-                                                                      @RequestParam(required = false) String organizationCode,
-                                                                      @RequestParam(defaultValue = "true") boolean activeOnly) {
-        AuthContext context = currentContext();
-        var masker = MaskingFunctions.masker(com.example.common.policy.MaskingContextHolder.get());
-        return templateAdminService.listDraftTemplatePresets(businessType, organizationCode, activeOnly, context, true).stream()
-                .map(r -> DraftTemplatePresetResponse.apply(r, masker))
                 .toList();
     }
 

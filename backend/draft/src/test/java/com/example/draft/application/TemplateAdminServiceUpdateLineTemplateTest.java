@@ -19,11 +19,9 @@ import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepResponse;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
-import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 
 class TemplateAdminServiceUpdateLineTemplateTest {
 
@@ -31,13 +29,10 @@ class TemplateAdminServiceUpdateLineTemplateTest {
     @DisplayName("라인 템플릿 업데이트 시 이름/active/steps가 교체된다")
     void updateLineTemplateReplacesSteps() {
         ApprovalTemplateRootService rootService = mock(ApprovalTemplateRootService.class);
-        ApprovalTemplateRootRepository rootRepo = mock(ApprovalTemplateRootRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 rootService,
-                rootRepo,
                 mock(DraftFormTemplateRepository.class),
-                mock(DraftTemplatePresetRepository.class),
-                new ObjectMapper());
+                mock(DraftFormTemplateRootRepository.class));
 
         OffsetDateTime now = OffsetDateTime.now();
         UUID id = UUID.fromString("00000000-0000-0000-0000-000000000031");
@@ -54,8 +49,6 @@ class TemplateAdminServiceUpdateLineTemplateTest {
         );
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
-        // Service mock 설정: update 호출 시 예상 응답 반환
-        // ApprovalTemplateRootResponse(id, templateCode, name, displayOrder, description, active, createdAt, updatedAt, steps)
         ApprovalTemplateRootResponse expectedResponse = new ApprovalTemplateRootResponse(
                 id,
                 "TMPL-001",

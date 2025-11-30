@@ -2,6 +2,7 @@ package com.example.draft.domain;
 
 import java.time.OffsetDateTime;
 
+import com.example.admin.draft.domain.DraftFormTemplate;
 import com.example.common.jpa.PrimaryKeyEntity;
 
 import jakarta.persistence.Column;

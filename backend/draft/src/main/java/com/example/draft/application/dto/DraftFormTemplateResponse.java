@@ -4,19 +4,27 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
-import com.example.draft.domain.DraftFormTemplate;
-import com.example.draft.domain.TemplateScope;
+import com.example.common.orggroup.WorkType;
+import com.example.common.version.ChangeAction;
+import com.example.common.version.VersionStatus;
+import com.example.admin.draft.domain.DraftFormTemplate;
 
 public record DraftFormTemplateResponse(
         UUID id,
         String templateCode,
         String name,
-        String businessType,
-        TemplateScope scope,
-        String organizationCode,
+        WorkType workType,
         String schemaJson,
-        int version,
+        Integer version,
         boolean active,
+        VersionStatus status,
+        ChangeAction changeAction,
+        String changeReason,
+        String changedBy,
+        String changedByName,
+        OffsetDateTime changedAt,
+        OffsetDateTime validFrom,
+        OffsetDateTime validTo,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt
 ) {
@@ -30,12 +38,18 @@ public record DraftFormTemplateResponse(
                 template.getId(),
                 fn.apply(template.getTemplateCode()),
                 fn.apply(template.getName()),
-                template.getBusinessType(),
-                template.getScope(),
-                template.getOrganizationCode(),
+                template.getWorkType(),
                 fn.apply(template.getSchemaJson()),
                 template.getVersion(),
                 template.isActive(),
+                template.getStatus(),
+                template.getChangeAction(),
+                template.getChangeReason(),
+                template.getChangedBy(),
+                template.getChangedByName(),
+                template.getChangedAt(),
+                template.getValidFrom(),
+                template.getValidTo(),
                 template.getCreatedAt(),
                 template.getUpdatedAt()
         );
@@ -47,12 +61,18 @@ public record DraftFormTemplateResponse(
                 response.id(),
                 fn.apply(response.templateCode()),
                 fn.apply(response.name()),
-                response.businessType(),
-                response.scope(),
-                response.organizationCode(),
+                response.workType(),
                 fn.apply(response.schemaJson()),
                 response.version(),
                 response.active(),
+                response.status(),
+                response.changeAction(),
+                response.changeReason(),
+                response.changedBy(),
+                response.changedByName(),
+                response.changedAt(),
+                response.validFrom(),
+                response.validTo(),
                 response.createdAt(),
                 response.updatedAt());
     }

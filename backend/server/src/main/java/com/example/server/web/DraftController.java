@@ -32,7 +32,7 @@ import com.example.draft.application.dto.DraftResponse;
 import com.example.draft.application.dto.DraftTemplateSuggestionResponse;
 import com.example.draft.application.dto.DraftHistoryResponse;
 import com.example.draft.application.dto.DraftReferenceResponse;
-import com.example.draft.application.dto.DraftTemplatePresetResponse;
+import com.example.draft.application.dto.DraftFormTemplateResponse;
 import com.example.dw.application.DwOrganizationNode;
 import com.example.dw.application.DwOrganizationQueryService;
 
@@ -182,26 +182,25 @@ public class DraftController {
 
     @GetMapping("/templates")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CREATE)
-    public List<DraftTemplatePresetResponse> listTemplates(@RequestParam("businessFeature") String businessFeature) {
+    public List<DraftFormTemplateResponse> listTemplates(@RequestParam("businessFeature") String businessFeature) {
         AuthContext context = currentContext();
         ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
         var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
-        boolean audit = hasAuditPermission();
-        return draftApplicationService.listTemplatePresets(businessFeature, context.organizationCode(), audit).stream()
-                .map(t -> DraftTemplatePresetResponse.apply(t, masker))
+        return draftApplicationService.listFormTemplates(businessFeature, context.organizationCode()).stream()
+                .map(t -> DraftFormTemplateResponse.apply(t, masker))
                 .toList();
     }
 
     @GetMapping("/templates/recommend")
     @RequirePermission(feature = FeatureCode.DRAFT, action = ActionCode.DRAFT_CREATE)
-    public List<DraftTemplatePresetResponse> recommendTemplates(@RequestParam("businessFeature") String businessFeature) {
+    public List<DraftFormTemplateResponse> recommendTemplates(@RequestParam("businessFeature") String businessFeature) {
         AuthContext context = currentContext();
         ensureBusinessPermission(businessFeature, ActionCode.DRAFT_CREATE);
         var match = com.example.common.policy.MaskingContextHolder.get();
         var masker = com.example.common.masking.MaskingFunctions.masker(match);
-        return draftApplicationService.recommendTemplatePresets(businessFeature, context.organizationCode(), context.username()).stream()
-                .map(t -> DraftTemplatePresetResponse.apply(t, masker))
+        return draftApplicationService.recommendFormTemplates(businessFeature, context.organizationCode(), context.username()).stream()
+                .map(t -> DraftFormTemplateResponse.apply(t, masker))
                 .toList();
     }
 

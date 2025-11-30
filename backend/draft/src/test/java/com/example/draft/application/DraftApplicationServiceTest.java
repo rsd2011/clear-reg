@@ -21,6 +21,7 @@ import com.example.admin.approval.domain.ApprovalGroup;
 import com.example.admin.approval.domain.ApprovalTemplate;
 import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.admin.approval.domain.ApprovalTemplateStep;
+import com.example.common.orggroup.WorkType;
 import com.example.common.version.ChangeAction;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,9 +40,9 @@ import com.example.draft.application.dto.DraftDecisionRequest;
 import com.example.draft.application.dto.DraftResponse;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.Draft;
-import com.example.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.draft.domain.DraftStatus;
-import com.example.draft.domain.DraftTemplatePreset;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.approval.api.ApprovalFacade;
 import com.example.approval.api.ApprovalStatus;
@@ -50,9 +51,9 @@ import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
 import com.example.draft.domain.repository.DraftRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
 import com.example.draft.application.notification.DraftNotificationService;
 import com.example.common.security.RowScope;
 import com.example.draft.application.business.DraftBusinessPolicy;
@@ -76,6 +77,9 @@ class DraftApplicationServiceTest {
     private DraftFormTemplateRepository formTemplateRepository;
 
     @Mock
+    private DraftFormTemplateRootRepository formTemplateRootRepository;
+
+    @Mock
     private DraftNotificationService notificationService;
 
     @Mock
@@ -86,9 +90,6 @@ class DraftApplicationServiceTest {
 
     @Mock
     private DraftReferenceRepository draftReferenceRepository;
-
-    @Mock
-    private DraftTemplatePresetRepository presetRepository;
 
     @Mock
     private com.example.draft.application.audit.DraftAuditPublisher auditPublisher;
@@ -113,8 +114,8 @@ class DraftApplicationServiceTest {
         clock = Clock.fixed(NOW.toInstant(), ZoneOffset.UTC);
         objectMapper = new ObjectMapper();
         service = new DraftApplicationService(draftRepository, templateRepository, formTemplateRepository,
-                mappingRepository,
-                draftHistoryRepository, draftReferenceRepository, presetRepository, notificationService, auditPublisher, businessPolicy,
+                formTemplateRootRepository, mappingRepository,
+                draftHistoryRepository, draftReferenceRepository, notificationService, auditPublisher, businessPolicy,
                 approvalFacade, eventPublisher, objectMapper, clock);
         lenient().when(approvalFacade.requestApproval(any())).thenAnswer(invocation -> {
             var cmd = invocation.getArgument(0, com.example.approval.api.dto.ApprovalRequestCommand.class);
@@ -125,13 +126,14 @@ class DraftApplicationServiceTest {
     @Test
     void givenValidRequest_whenCreate_thenDraftPersisted() {
         ApprovalTemplateRoot template = sampleTemplate(ORG);
-        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
+        DraftFormTemplate formTemplate = sampleFormTemplate();
+        DraftFormTemplateRoot formTemplateRoot = formTemplate.getRoot();
         given(templateRepository.findByIdAndActiveVersion(template.getId())).willReturn(Optional.of(template));
-        given(formTemplateRepository.findByIdAndActiveTrue(formTemplate.getId())).willReturn(Optional.of(formTemplate));
+        given(formTemplateRootRepository.findById(formTemplateRoot.getId())).willReturn(Optional.of(formTemplateRoot));
         given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), formTemplate.getId(), "{}", List.of(), null, java.util.Map.of());
+                template.getId(), formTemplateRoot.getId(), "{}", List.of(), null, java.util.Map.of());
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.title()).isEqualTo("제목");
@@ -142,14 +144,15 @@ class DraftApplicationServiceTest {
     @Test
     void givenAttachments_whenCreate_thenAttachedToDraft() {
         ApprovalTemplateRoot template = sampleTemplate(ORG);
-        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
+        DraftFormTemplate formTemplate = sampleFormTemplate();
+        DraftFormTemplateRoot formTemplateRoot = formTemplate.getRoot();
         given(templateRepository.findByIdAndActiveVersion(template.getId())).willReturn(Optional.of(template));
-        given(formTemplateRepository.findByIdAndActiveTrue(formTemplate.getId())).willReturn(Optional.of(formTemplate));
+        given(formTemplateRootRepository.findById(formTemplateRoot.getId())).willReturn(Optional.of(formTemplateRoot));
         given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
         DraftAttachmentRequest attachment = new DraftAttachmentRequest(UUID.randomUUID(), "evidence.pdf", "application/pdf", 1234L);
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), formTemplate.getId(), "{}", List.of(attachment), null, java.util.Map.of());
+                template.getId(), formTemplateRoot.getId(), "{}", List.of(attachment), null, java.util.Map.of());
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.attachments()).hasSize(1);
@@ -159,13 +162,14 @@ class DraftApplicationServiceTest {
     @Test
     void givenGlobalTemplate_whenCreate_thenOrganizationCheckSkipped() {
         ApprovalTemplateRoot template = createTemplateRoot("글로벌");
-        DraftFormTemplate formTemplate = DraftFormTemplate.create("글로벌", "NOTICE", null, "{}", NOW);
+        DraftFormTemplate formTemplate = sampleFormTemplate();
+        DraftFormTemplateRoot formTemplateRoot = formTemplate.getRoot();
         given(templateRepository.findByIdAndActiveVersion(template.getId())).willReturn(Optional.of(template));
-        given(formTemplateRepository.findByIdAndActiveTrue(formTemplate.getId())).willReturn(Optional.of(formTemplate));
+        given(formTemplateRootRepository.findById(formTemplateRoot.getId())).willReturn(Optional.of(formTemplateRoot));
         given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
 
         DraftCreateRequest request = new DraftCreateRequest("제목", "내용", "NOTICE",
-                template.getId(), formTemplate.getId(), "{}", List.of(), null, java.util.Map.of());
+                template.getId(), formTemplateRoot.getId(), "{}", List.of(), null, java.util.Map.of());
         DraftResponse response = service.createDraft(request, "writer", ORG);
 
         assertThat(response.templateCode()).isEqualTo(template.getTemplateCode());
@@ -174,7 +178,7 @@ class DraftApplicationServiceTest {
     @Test
     void givenNullTemplateIds_whenCreate_thenUsesDefaultMapping() {
         ApprovalTemplateRoot template = sampleTemplate(ORG);
-        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
+        DraftFormTemplate formTemplate = sampleFormTemplate();
         com.example.draft.domain.BusinessTemplateMapping mapping = com.example.draft.domain.BusinessTemplateMapping.create(
                 "NOTICE", ORG, template, formTemplate, NOW);
         given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
@@ -191,78 +195,9 @@ class DraftApplicationServiceTest {
     }
 
     @Test
-    void givenTemplatePreset_whenCreate_thenUsesPresetDefaultsAndVariables() {
-        ApprovalTemplateRoot template = sampleTemplate(ORG);
-        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
-        String defaultPayload = objectMapper.createObjectNode()
-                .put("base", true)
-                .put("field", "default")
-                .toString();
-        DraftTemplatePreset preset = DraftTemplatePreset.create(
-                "사전 기안",
-                "NOTICE",
-                ORG,
-                "{작성자}의 휴가",
-                "본문 {custom}",
-                formTemplate,
-                template,
-                defaultPayload,
-                "[\"custom\",\"작성자\"]",
-                true,
-                NOW);
-        given(presetRepository.findByIdAndActiveTrue(preset.getId())).willReturn(Optional.of(preset));
-        given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
-
-        DraftCreateRequest request = new DraftCreateRequest("ignored", "ignored", "NOTICE",
-                null, null, "{\"field\":\"user\"}", List.of(), preset.getId(), java.util.Map.of("custom", "급히"));
-
-        DraftResponse response = service.createDraft(request, "writer", ORG);
-
-        assertThat(response.templatePresetId()).isEqualTo(preset.getId());
-        assertThat(response.title()).contains("writer");
-        assertThat(response.content()).contains("급히");
-        assertThat(response.formPayload()).contains("base").contains("user");
-    }
-
-    @Test
-    void givenPresetWithAllowedVariables_whenCreate_thenDisallowsUnknownVariableAndMergesPayload() {
-        ApprovalTemplateRoot approvalTemplate = sampleTemplate(ORG);
-        DraftFormTemplate formTemplate = sampleFormTemplate(ORG);
-        DraftTemplatePreset preset = DraftTemplatePreset.create(
-                "프리셋",
-                "NOTICE",
-                ORG,
-                "{custom} {작성자}",
-                "내용 {custom} {other}",
-                formTemplate,
-                null,
-                "{\"nested\":{\"x\":1}}",
-                "[\"custom\"]",
-                true,
-                NOW);
-        com.example.draft.domain.BusinessTemplateMapping mapping = com.example.draft.domain.BusinessTemplateMapping.create(
-                "NOTICE", ORG, approvalTemplate, formTemplate, NOW);
-
-        given(presetRepository.findByIdAndActiveTrue(preset.getId())).willReturn(Optional.of(preset));
-        given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
-                .willReturn(Optional.of(mapping));
-        given(draftRepository.save(any(Draft.class))).willAnswer(invocation -> invocation.getArgument(0));
-
-        DraftCreateRequest request = new DraftCreateRequest("원제목", "원본문", "NOTICE",
-                null, null, "{\"nested\":{\"y\":2},\"b\":3}", List.of(), preset.getId(),
-                java.util.Map.of("custom", "C", "other", "IGNORED"));
-
-        DraftResponse response = service.createDraft(request, "actor", ORG);
-
-        assertThat(response.title()).contains("C").contains("actor");
-        assertThat(response.content()).contains("C").doesNotContain("IGNORED");
-        assertThat(response.formPayload()).contains("\"x\":1").contains("\"y\":2").contains("\"b\":3");
-    }
-
-    @Test
     void givenGlobalFallback_whenSuggestTemplate_thenReturnsGlobalMapping() {
         ApprovalTemplateRoot template = sampleTemplate("GLOBAL");
-        DraftFormTemplate formTemplate = sampleFormTemplate("GLOBAL");
+        DraftFormTemplate formTemplate = sampleFormTemplate();
         com.example.draft.domain.BusinessTemplateMapping global = com.example.draft.domain.BusinessTemplateMapping.create(
                 "NOTICE", null, template, formTemplate, NOW);
         given(mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue("NOTICE", ORG))
@@ -455,7 +390,6 @@ class DraftApplicationServiceTest {
         ApprovalTemplate version = ApprovalTemplate.create(
                 root, 1, "기본", 0, null, true,
                 ChangeAction.CREATE, null, "system", "System", NOW);
-        // ApprovalGroup을 생성하고 addStep 호출
         ApprovalGroup group1 = ApprovalGroup.create("GRP1", "그룹1", "설명", 1, NOW);
         ApprovalGroup group2 = ApprovalGroup.create("GRP2", "그룹2", "설명", 2, NOW);
         version.addStep(ApprovalTemplateStep.create(version, 1, group1, false));
@@ -473,7 +407,13 @@ class DraftApplicationServiceTest {
         return root;
     }
 
-    private DraftFormTemplate sampleFormTemplate(String organizationCode) {
-        return DraftFormTemplate.create("폼", "NOTICE", organizationCode, "{}", NOW);
+    private DraftFormTemplate sampleFormTemplate() {
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(NOW);
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "폼", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "system", "System", NOW);
+        // create()는 이미 PUBLISHED 상태로 생성되므로 publish() 호출 불필요
+        root.activateNewVersion(template, NOW);
+        return template;
     }
 }

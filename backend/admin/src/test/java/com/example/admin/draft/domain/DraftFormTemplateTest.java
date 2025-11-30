@@ -1,149 +1,186 @@
 package com.example.admin.draft.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("DraftFormTemplate 엔티티")
+import com.example.common.orggroup.WorkType;
+import com.example.common.version.ChangeAction;
+import com.example.common.version.VersionStatus;
+
 class DraftFormTemplateTest {
 
-    private static final OffsetDateTime NOW = OffsetDateTime.of(2025, 1, 15, 10, 0, 0, 0, ZoneOffset.UTC);
+    @Test
+    @DisplayName("create는 PUBLISHED 상태의 템플릿을 생성한다")
+    void createReturnsPublishedTemplate() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
 
-    @Nested
-    @DisplayName("생성")
-    class Creation {
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "Name", WorkType.GENERAL, "{\"fields\":[]}", true,
+                ChangeAction.CREATE, "신규 생성", "user", "User", now);
 
-        @Test
-        @DisplayName("Given: 조직코드가 있으면 When: 생성하면 Then: ORGANIZATION 범위로 생성된다")
-        void createsWithOrganizationScope() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "테스트 양식",
-                    "GENERAL",
-                    "ORG1",
-                    "{\"type\":\"object\"}",
-                    NOW);
-
-            assertThat(template.getName()).isEqualTo("테스트 양식");
-            assertThat(template.getBusinessType()).isEqualTo("GENERAL");
-            assertThat(template.getOrganizationCode()).isEqualTo("ORG1");
-            assertThat(template.getScope()).isEqualTo(TemplateScope.ORGANIZATION);
-            assertThat(template.getSchemaJson()).isEqualTo("{\"type\":\"object\"}");
-            assertThat(template.getVersion()).isEqualTo(1);
-            assertThat(template.isActive()).isTrue();
-            assertThat(template.getTemplateCode()).isNotNull();
-            assertThat(template.getCreatedAt()).isEqualTo(NOW);
-            assertThat(template.getUpdatedAt()).isEqualTo(NOW);
-        }
-
-        @Test
-        @DisplayName("Given: 조직코드가 null이면 When: 생성하면 Then: GLOBAL 범위로 생성된다")
-        void createsWithGlobalScope() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "전역 양식",
-                    "GENERAL",
-                    null,
-                    "{}",
-                    NOW);
-
-            assertThat(template.getOrganizationCode()).isNull();
-            assertThat(template.getScope()).isEqualTo(TemplateScope.GLOBAL);
-            assertThat(template.isGlobal()).isTrue();
-        }
+        assertThat(template.getId()).isNotNull();
+        assertThat(template.getRoot()).isEqualTo(root);
+        assertThat(template.getVersion()).isEqualTo(1);
+        assertThat(template.getName()).isEqualTo("Name");
+        assertThat(template.getWorkType()).isEqualTo(WorkType.GENERAL);
+        assertThat(template.getSchemaJson()).isEqualTo("{\"fields\":[]}");
+        assertThat(template.isActive()).isTrue();
+        assertThat(template.getChangeAction()).isEqualTo(ChangeAction.CREATE);
+        assertThat(template.getChangeReason()).isEqualTo("신규 생성");
+        assertThat(template.getChangedBy()).isEqualTo("user");
+        assertThat(template.getChangedByName()).isEqualTo("User");
+        assertThat(template.getStatus()).isEqualTo(VersionStatus.PUBLISHED);
     }
 
-    @Nested
-    @DisplayName("수정")
-    class Update {
+    @Test
+    @DisplayName("createDraft는 DRAFT 상태의 템플릿을 생성한다")
+    void createDraftReturnsDraftTemplate() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
 
-        @Test
-        @DisplayName("Given: 템플릿이 있으면 When: 수정하면 Then: 값과 버전이 변경된다")
-        void updatesSuccessfully() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "원본 양식",
-                    "GENERAL",
-                    "ORG1",
-                    "{}",
-                    NOW);
+        DraftFormTemplate template = DraftFormTemplate.createDraft(
+                root, 1, "Name", WorkType.HR_UPDATE, "{}", true,
+                null, "user", "User", now);
 
-            OffsetDateTime later = NOW.plusHours(1);
-            template.update("수정된 양식", "{\"updated\":true}", false, later);
-
-            assertThat(template.getName()).isEqualTo("수정된 양식");
-            assertThat(template.getSchemaJson()).isEqualTo("{\"updated\":true}");
-            assertThat(template.isActive()).isFalse();
-            assertThat(template.getVersion()).isEqualTo(2);
-            assertThat(template.getUpdatedAt()).isEqualTo(later);
-            assertThat(template.getCreatedAt()).isEqualTo(NOW);
-        }
+        assertThat(template.getStatus()).isEqualTo(VersionStatus.DRAFT);
+        assertThat(template.getWorkType()).isEqualTo(WorkType.HR_UPDATE);
+        assertThat(template.isDraft()).isTrue();
     }
 
-    @Nested
-    @DisplayName("조직 검증")
-    class OrganizationValidation {
+    @Test
+    @DisplayName("publish는 DRAFT 상태를 PUBLISHED로 변경한다")
+    void publishChangesDraftToPublished() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
 
-        @Test
-        @DisplayName("Given: 조직별 템플릿인데 같은 조직이면 When: assertOrganization Then: 통과")
-        void passesWhenSameOrganization() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "조직 양식",
-                    "GENERAL",
-                    "ORG1",
-                    "{}",
-                    NOW);
+        DraftFormTemplate template = DraftFormTemplate.createDraft(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                null, "user", "User", now);
 
-            template.assertOrganization("ORG1");
-            // 예외 없이 통과
-        }
+        assertThat(template.getStatus()).isEqualTo(VersionStatus.DRAFT);
 
-        @Test
-        @DisplayName("Given: 전역 템플릿이면 When: assertOrganization Then: 통과")
-        void passesWhenGlobalTemplate() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "전역 양식",
-                    "GENERAL",
-                    null,
-                    "{}",
-                    NOW);
+        template.publish(now.plusSeconds(1));
 
-            template.assertOrganization("ANY_ORG");
-            // 예외 없이 통과
-        }
+        assertThat(template.getStatus()).isEqualTo(VersionStatus.PUBLISHED);
+        assertThat(template.getChangeAction()).isEqualTo(ChangeAction.PUBLISH);
     }
 
-    @Nested
-    @DisplayName("비즈니스 매칭")
-    class BusinessMatching {
+    @Test
+    @DisplayName("publish는 DRAFT가 아닌 상태에서 예외를 던진다")
+    void publishThrowsWhenNotDraft() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
 
-        @Test
-        @DisplayName("Given: 비즈니스 유형이 일치하면 When: matchesBusiness Then: true 반환")
-        void matchesWhenSameBusinessType() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "양식",
-                    "GENERAL",
-                    null,
-                    "{}",
-                    NOW);
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "user", "User", now);
 
-            assertThat(template.matchesBusiness("GENERAL")).isTrue();
-            assertThat(template.matchesBusiness("general")).isTrue();
-        }
+        assertThatThrownBy(() -> template.publish(now))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("초안 상태에서만 게시할 수 있습니다");
+    }
 
-        @Test
-        @DisplayName("Given: 비즈니스 유형이 다르면 When: matchesBusiness Then: false 반환")
-        void doesNotMatchWhenDifferentBusinessType() {
-            DraftFormTemplate template = DraftFormTemplate.create(
-                    "양식",
-                    "GENERAL",
-                    null,
-                    "{}",
-                    NOW);
+    @Test
+    @DisplayName("close는 버전을 종료하고 HISTORICAL로 변경한다")
+    void closeEndsVersionAndMarksHistorical() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
 
-            assertThat(template.matchesBusiness("OTHER")).isFalse();
-        }
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "user", "User", now);
+
+        template.close(now.plusSeconds(1));
+
+        assertThat(template.getStatus()).isEqualTo(VersionStatus.HISTORICAL);
+        assertThat(template.getValidTo()).isEqualTo(now.plusSeconds(1));
+    }
+
+    @Test
+    @DisplayName("updateDraft는 초안의 필드를 수정한다")
+    void updateDraftModifiesFields() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+
+        DraftFormTemplate template = DraftFormTemplate.createDraft(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                null, "user", "User", now);
+
+        OffsetDateTime later = now.plusSeconds(10);
+        template.updateDraft("New Name", WorkType.HR_UPDATE, "{\"updated\":true}", false, "변경 사유", later);
+
+        assertThat(template.getName()).isEqualTo("New Name");
+        assertThat(template.getWorkType()).isEqualTo(WorkType.HR_UPDATE);
+        assertThat(template.getSchemaJson()).isEqualTo("{\"updated\":true}");
+        assertThat(template.isActive()).isFalse();
+        assertThat(template.getChangeReason()).isEqualTo("변경 사유");
+        assertThat(template.getUpdatedAt()).isEqualTo(later);
+    }
+
+    @Test
+    @DisplayName("updateDraft는 DRAFT가 아닌 상태에서 예외를 던진다")
+    void updateDraftThrowsWhenNotDraft() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "user", "User", now);
+
+        assertThatThrownBy(() -> template.updateDraft("New", WorkType.GENERAL, "{}", true, null, now))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("초안 상태에서만 수정할 수 있습니다");
+    }
+
+    @Test
+    @DisplayName("getTemplateCode는 루트의 templateCode를 반환한다")
+    void getTemplateCodeReturnsRootTemplateCode() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "user", "User", now);
+
+        // root.getTemplateCode()는 UUID 문자열을 반환
+        assertThat(template.getTemplateCode()).isEqualTo(root.getTemplateCode());
+        assertThat(template.getTemplateCode()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("isCurrent는 validTo가 null이고 PUBLISHED일 때만 true를 반환한다")
+    void isCurrentReturnsTrueOnlyWhenValidToIsNullAndPublished() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+
+        DraftFormTemplate published = DraftFormTemplate.create(
+                root, 1, "Name", WorkType.GENERAL, "{}", true,
+                ChangeAction.CREATE, null, "user", "User", now);
+
+        assertThat(published.isCurrent()).isTrue();
+
+        published.close(now.plusSeconds(1));
+        assertThat(published.isCurrent()).isFalse();
+    }
+
+    @Test
+    @DisplayName("createFromRollback은 롤백 버전을 생성한다")
+    void createFromRollbackCreatesRollbackVersion() {
+        OffsetDateTime now = OffsetDateTime.now();
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+
+        DraftFormTemplate rollback = DraftFormTemplate.createFromRollback(
+                root, 2, "Name", WorkType.GENERAL, "{}", true,
+                "버전 1로 롤백", "user", "User", now, 1);
+
+        assertThat(rollback.getChangeAction()).isEqualTo(ChangeAction.ROLLBACK);
+        assertThat(rollback.getRollbackFromVersion()).isEqualTo(1);
+        assertThat(rollback.getStatus()).isEqualTo(VersionStatus.PUBLISHED);
     }
 }

@@ -11,8 +11,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.domain.ApprovalTemplateRoot;
-import com.example.admin.draft.domain.DraftFormTemplate;
-import com.example.admin.draft.domain.DraftTemplatePreset;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.common.orggroup.WorkType;
 
 @DisplayName("OrgGroupApprovalMapping 엔티티")
@@ -31,23 +30,8 @@ class OrgGroupApprovalMappingTest {
         return ApprovalTemplateRoot.create(NOW);
     }
 
-    private DraftFormTemplate createFormTemplate() {
-        return DraftFormTemplate.create("테스트 양식", "GENERAL", "ORG1", "{}", NOW);
-    }
-
-    private DraftTemplatePreset createDraftPreset() {
-        return DraftTemplatePreset.create(
-                "테스트 프리셋",
-                "GENERAL",
-                "ORG1",
-                "제목 템플릿",
-                "내용 템플릿",
-                createFormTemplate(),
-                createTemplateRoot(),
-                "{}",
-                null,
-                true,
-                NOW);
+    private DraftFormTemplateRoot createDraftFormTemplateRoot() {
+        return DraftFormTemplateRoot.create(NOW);
     }
 
     @Nested
@@ -157,68 +141,68 @@ class OrgGroupApprovalMappingTest {
     }
 
     @Nested
-    @DisplayName("기안 템플릿 프리셋")
-    class DraftTemplatePresetManagement {
+    @DisplayName("기안 양식 템플릿 루트 관리")
+    class DraftFormTemplateRootManagement {
 
         @Test
-        @DisplayName("Given: 프리셋과 함께 생성하면 When: getDraftTemplatePreset Then: 프리셋 반환")
-        void createsWithDraftPreset() {
+        @DisplayName("Given: 양식 템플릿 루트와 함께 생성하면 When: getDraftFormTemplateRoot Then: 루트 반환")
+        void createsWithDraftFormTemplateRoot() {
             OrgGroup orgGroup = createOrgGroup();
             ApprovalTemplateRoot template = createTemplateRoot();
-            DraftTemplatePreset preset = createDraftPreset();
+            DraftFormTemplateRoot formTemplateRoot = createDraftFormTemplateRoot();
 
             OrgGroupApprovalMapping mapping = OrgGroupApprovalMapping.create(
-                    orgGroup, WorkType.GENERAL, template, preset, NOW);
+                    orgGroup, WorkType.GENERAL, template, formTemplateRoot, NOW);
 
-            assertThat(mapping.getDraftTemplatePreset()).isEqualTo(preset);
-            assertThat(mapping.hasDraftTemplatePreset()).isTrue();
+            assertThat(mapping.getDraftFormTemplateRoot()).isEqualTo(formTemplateRoot);
+            assertThat(mapping.hasDraftFormTemplateRoot()).isTrue();
         }
 
         @Test
-        @DisplayName("Given: 프리셋 없이 생성하면 When: hasDraftTemplatePreset Then: false 반환")
-        void createsWithoutDraftPreset() {
+        @DisplayName("Given: 양식 템플릿 루트 없이 생성하면 When: hasDraftFormTemplateRoot Then: false 반환")
+        void createsWithoutDraftFormTemplateRoot() {
             OrgGroup orgGroup = createOrgGroup();
             ApprovalTemplateRoot template = createTemplateRoot();
 
             OrgGroupApprovalMapping mapping = OrgGroupApprovalMapping.create(
                     orgGroup, WorkType.GENERAL, template, NOW);
 
-            assertThat(mapping.getDraftTemplatePreset()).isNull();
-            assertThat(mapping.hasDraftTemplatePreset()).isFalse();
+            assertThat(mapping.getDraftFormTemplateRoot()).isNull();
+            assertThat(mapping.hasDraftFormTemplateRoot()).isFalse();
         }
 
         @Test
-        @DisplayName("Given: 매핑이 있으면 When: changeDraftTemplatePreset Then: 프리셋 변경됨")
-        void changesDraftPreset() {
+        @DisplayName("Given: 매핑이 있으면 When: changeDraftFormTemplateRoot Then: 루트 변경됨")
+        void changesDraftFormTemplateRoot() {
             OrgGroup orgGroup = createOrgGroup();
             ApprovalTemplateRoot template = createTemplateRoot();
             OrgGroupApprovalMapping mapping = OrgGroupApprovalMapping.create(
                     orgGroup, WorkType.GENERAL, template, NOW);
 
             OffsetDateTime later = NOW.plusHours(1);
-            DraftTemplatePreset newPreset = createDraftPreset();
+            DraftFormTemplateRoot newRoot = createDraftFormTemplateRoot();
 
-            mapping.changeDraftTemplatePreset(newPreset, later);
+            mapping.changeDraftFormTemplateRoot(newRoot, later);
 
-            assertThat(mapping.getDraftTemplatePreset()).isEqualTo(newPreset);
-            assertThat(mapping.hasDraftTemplatePreset()).isTrue();
+            assertThat(mapping.getDraftFormTemplateRoot()).isEqualTo(newRoot);
+            assertThat(mapping.hasDraftFormTemplateRoot()).isTrue();
             assertThat(mapping.getUpdatedAt()).isEqualTo(later);
         }
 
         @Test
-        @DisplayName("Given: 프리셋이 있으면 When: changeDraftTemplatePreset(null) Then: 프리셋 제거됨")
-        void removesDraftPreset() {
+        @DisplayName("Given: 양식 템플릿 루트가 있으면 When: changeDraftFormTemplateRoot(null) Then: 루트 제거됨")
+        void removesDraftFormTemplateRoot() {
             OrgGroup orgGroup = createOrgGroup();
             ApprovalTemplateRoot template = createTemplateRoot();
-            DraftTemplatePreset preset = createDraftPreset();
+            DraftFormTemplateRoot formTemplateRoot = createDraftFormTemplateRoot();
             OrgGroupApprovalMapping mapping = OrgGroupApprovalMapping.create(
-                    orgGroup, WorkType.GENERAL, template, preset, NOW);
+                    orgGroup, WorkType.GENERAL, template, formTemplateRoot, NOW);
 
             OffsetDateTime later = NOW.plusHours(1);
-            mapping.changeDraftTemplatePreset(null, later);
+            mapping.changeDraftFormTemplateRoot(null, later);
 
-            assertThat(mapping.getDraftTemplatePreset()).isNull();
-            assertThat(mapping.hasDraftTemplatePreset()).isFalse();
+            assertThat(mapping.getDraftFormTemplateRoot()).isNull();
+            assertThat(mapping.hasDraftFormTemplateRoot()).isFalse();
             assertThat(mapping.getUpdatedAt()).isEqualTo(later);
         }
     }

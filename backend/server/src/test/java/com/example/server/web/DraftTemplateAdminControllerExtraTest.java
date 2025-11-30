@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
+import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
 import com.example.draft.application.TemplateAdminService;
 import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
@@ -74,17 +75,24 @@ class DraftTemplateAdminControllerExtraTest {
     }
 
     @Test
-    @DisplayName("서식 템플릿 목록 조회 시 파라미터와 컨텍스트를 그대로 전달한다")
+    @DisplayName("서식 템플릿 목록 조회 시 workType과 activeOnly, 컨텍스트를 전달한다")
     void listDraftFormTemplatesPassesArguments() {
         AuthContext ctx = AuthContext.of("user", "ORG", "PG", null, null, RowScope.ALL);
         AuthContextHolder.set(ctx);
 
-        DraftFormTemplateResponse resp = mock(DraftFormTemplateResponse.class);
-        when(service.listDraftFormTemplates(eq("BT"), eq("ORG"), eq(false), eq(ctx), eq(true))).thenReturn(List.of(resp));
+        DraftFormTemplateResponse resp = new DraftFormTemplateResponse(
+                UUID.randomUUID(), "CODE", "이름", WorkType.HR_UPDATE, "{}", 1, true,
+                com.example.common.version.VersionStatus.PUBLISHED,
+                com.example.common.version.ChangeAction.CREATE, null,
+                "user", "User", OffsetDateTime.now(), OffsetDateTime.now(), null,
+                OffsetDateTime.now(), OffsetDateTime.now());
+        when(service.listDraftFormTemplates(eq(WorkType.HR_UPDATE), eq(false), eq(ctx), eq(true))).thenReturn(List.of(resp));
 
-        List<DraftFormTemplateResponse> result = controller.listDraftFormTemplates("BT", "ORG", false);
+        List<DraftFormTemplateResponse> result = controller.listDraftFormTemplates(WorkType.HR_UPDATE, false);
 
-        assertThat(result).containsExactly(resp);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).templateCode()).isEqualTo("CODE");
+        verify(service).listDraftFormTemplates(eq(WorkType.HR_UPDATE), eq(false), eq(ctx), eq(true));
     }
 
     @Test

@@ -14,15 +14,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
+import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
+import com.example.common.version.ChangeAction;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.draft.domain.DraftFormTemplate;
-import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 
 class TemplateAdminServiceFilterTest {
 
@@ -30,14 +31,12 @@ class TemplateAdminServiceFilterTest {
     DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
     TemplateAdminService service = new TemplateAdminService(
             rootService,
-            mock(ApprovalTemplateRootRepository.class),
             formRepo,
-            mock(DraftTemplatePresetRepository.class),
-            new ObjectMapper());
+            mock(DraftFormTemplateRootRepository.class));
     AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
     @Test
-    @DisplayName("라인 템플릿은 businessType, org, activeOnly 필터를 모두 적용한다")
+    @DisplayName("라인 템플릿은 activeOnly 필터를 적용한다")
     void filtersApprovalTemplateRoots() {
         OffsetDateTime now = OffsetDateTime.now();
         List<ApprovalTemplateRootResponse> expectedList = List.of(
@@ -53,16 +52,16 @@ class TemplateAdminServiceFilterTest {
     }
 
     @Test
-    @DisplayName("양식 템플릿은 businessType, org, activeOnly 필터를 모두 적용한다")
+    @DisplayName("양식 템플릿은 workType, activeOnly 필터를 적용한다")
     void filtersFormTemplates() {
         OffsetDateTime now = OffsetDateTime.now();
-        DraftFormTemplate org1Active = DraftFormTemplate.create("f1", "HR", "ORG1", "{}", now);
-        DraftFormTemplate org1Inactive = DraftFormTemplate.create("f2", "HR", "ORG1", "{}", now);
-        org1Inactive.update("f2", "{}", false, now);
-        DraftFormTemplate otherOrg = DraftFormTemplate.create("f3", "HR", "ORG2", "{}", now);
-        given(formRepo.findAll()).willReturn(List.of(org1Active, org1Inactive, otherOrg));
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+        DraftFormTemplate active = createPublishedTemplate(root, "f1", WorkType.GENERAL, true, now);
+        DraftFormTemplate inactive = createPublishedTemplate(root, "f2", WorkType.GENERAL, false, now);
 
-        List<DraftFormTemplateResponse> filtered = service.listDraftFormTemplates("HR", null, true, ctx, false);
+        given(formRepo.findCurrentByWorkType(WorkType.GENERAL)).willReturn(List.of(active, inactive));
+
+        List<DraftFormTemplateResponse> filtered = service.listDraftFormTemplates(WorkType.GENERAL, true, ctx, false);
 
         assertThat(filtered).extracting(DraftFormTemplateResponse::name).containsExactly("f1");
     }
@@ -80,5 +79,13 @@ class TemplateAdminServiceFilterTest {
         List<ApprovalTemplateRootResponse> filtered = service.listApprovalTemplateRoots(null, null, true, ctx, true);
 
         assertThat(filtered).extracting(ApprovalTemplateRootResponse::name).containsExactly("active");
+    }
+
+    private DraftFormTemplate createPublishedTemplate(DraftFormTemplateRoot root, String name, WorkType workType, boolean active, OffsetDateTime now) {
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, name, workType, "{}", active,
+                ChangeAction.CREATE, null, "user", "user", now);
+        // create()는 이미 PUBLISHED 상태로 생성됨
+        return template;
     }
 }

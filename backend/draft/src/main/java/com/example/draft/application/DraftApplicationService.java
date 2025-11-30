@@ -3,7 +3,6 @@ package com.example.draft.application;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,27 +37,25 @@ import com.example.admin.approval.domain.ApprovalTemplateRoot;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
 import com.example.draft.domain.DraftAttachment;
-import com.example.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.draft.domain.exception.DraftAccessDeniedException;
 import com.example.draft.domain.exception.DraftNotFoundException;
 import com.example.draft.domain.exception.DraftTemplateNotFoundException;
 import com.example.draft.domain.DraftAction;
 import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 import com.example.draft.domain.repository.DraftRepository;
 import com.example.common.security.RowScope;
 import com.example.common.security.RowScopeSpecifications;
 import com.example.draft.application.dto.DraftTemplateSuggestionResponse;
-import com.example.draft.application.dto.DraftTemplatePresetResponse;
 import com.example.draft.domain.BusinessTemplateMapping;
-import com.example.draft.domain.DraftTemplatePreset;
 import com.example.draft.domain.repository.BusinessTemplateMappingRepository;
 import com.example.draft.domain.repository.DraftHistoryRepository;
 import com.example.draft.domain.repository.DraftReferenceRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
 import com.example.draft.domain.DraftStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -69,10 +66,10 @@ public class DraftApplicationService {
     private final DraftRepository draftRepository;
     private final ApprovalTemplateRootRepository templateRepository;
     private final DraftFormTemplateRepository formTemplateRepository;
+    private final DraftFormTemplateRootRepository formTemplateRootRepository;
     private final BusinessTemplateMappingRepository mappingRepository;
     private final DraftHistoryRepository draftHistoryRepository;
     private final DraftReferenceRepository draftReferenceRepository;
-    private final DraftTemplatePresetRepository presetRepository;
     private final DraftNotificationService notificationService;
     private final DraftAuditPublisher auditPublisher;
     private final com.example.draft.application.business.DraftBusinessPolicy businessPolicy;
@@ -84,10 +81,10 @@ public class DraftApplicationService {
     public DraftApplicationService(DraftRepository draftRepository,
                                    ApprovalTemplateRootRepository templateRepository,
                                    DraftFormTemplateRepository formTemplateRepository,
+                                   DraftFormTemplateRootRepository formTemplateRootRepository,
                                    BusinessTemplateMappingRepository mappingRepository,
                                    DraftHistoryRepository draftHistoryRepository,
                                    DraftReferenceRepository draftReferenceRepository,
-                                   DraftTemplatePresetRepository presetRepository,
                                    DraftNotificationService notificationService,
                                    DraftAuditPublisher auditPublisher,
                                    com.example.draft.application.business.DraftBusinessPolicy businessPolicy,
@@ -98,10 +95,10 @@ public class DraftApplicationService {
         this.draftRepository = draftRepository;
         this.templateRepository = templateRepository;
         this.formTemplateRepository = formTemplateRepository;
+        this.formTemplateRootRepository = formTemplateRootRepository;
         this.mappingRepository = mappingRepository;
         this.draftHistoryRepository = draftHistoryRepository;
         this.draftReferenceRepository = draftReferenceRepository;
-        this.presetRepository = presetRepository;
         this.notificationService = notificationService;
         this.auditPublisher = auditPublisher;
         this.businessPolicy = businessPolicy;
@@ -115,19 +112,20 @@ public class DraftApplicationService {
     public DraftResponse createDraft(DraftCreateRequest request, String actor, String organizationCode) {
         OffsetDateTime now = now();
         businessPolicy.assertCreatable(request.businessFeatureCode(), organizationCode, actor);
-        DraftTemplatePreset preset = resolvePreset(request, organizationCode);
-        TemplateSelection selection = selectTemplates(request, organizationCode, preset);
+        TemplateSelection selection = selectTemplates(request, organizationCode);
         ApprovalTemplateRoot template = selection.approvalTemplate();
         DraftFormTemplate formTemplate = selection.formTemplate();
-        Set<String> allowedVariables = allowedVariables(preset);
-        String title = resolveTemplateValue(request.title(), preset == null ? null : preset.getTitleTemplate(),
-                request.templateVariables(), allowedVariables, actor, organizationCode, now);
-        String content = resolveTemplateValue(request.content(), preset == null ? null : preset.getContentTemplate(),
-                request.templateVariables(), allowedVariables, actor, organizationCode, now);
-        String formPayload = mergeFormPayload(request.formPayload(), preset);
+        
+        String title = resolveTemplateValue(request.title(), null,
+                request.templateVariables(), Set.of(), actor, organizationCode, now);
+        String content = resolveTemplateValue(request.content(), null,
+                request.templateVariables(), Set.of(), actor, organizationCode, now);
+        String formPayload = request.formPayload();
+        
         requireValue(title, "제목은 비어 있을 수 없습니다.");
         requireValue(content, "내용은 비어 있을 수 없습니다.");
         requireValue(formPayload, "폼 데이터는 비어 있을 수 없습니다.");
+        
         Draft draft = Draft.create(title,
                 content,
                 request.businessFeatureCode(),
@@ -135,10 +133,8 @@ public class DraftApplicationService {
                 template.getTemplateCode(),
                 actor,
                 now);
-        if (preset != null) {
-            draft.useTemplatePreset(preset.getId());
-        }
         draft.attachFormTemplate(formTemplate, formPayload);
+        
         // 현재 활성 버전의 Steps 사용 (SCD Type 2)
         if (template.getCurrentVersion() != null) {
             template.getCurrentVersion().getSteps().stream()
@@ -328,50 +324,29 @@ public class DraftApplicationService {
         return DraftTemplateSuggestionResponse.from(mapping);
     }
 
+    /**
+     * 기안 양식 템플릿 목록을 조회한다.
+     */
     @Transactional(readOnly = true)
-    public List<DraftTemplatePresetResponse> listTemplatePresets(String businessFeatureCode,
-                                                                 String organizationCode,
-                                                                 boolean auditAccess) {
-        List<DraftTemplatePreset> presets = new java.util.ArrayList<>();
-        presets.addAll(presetRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(businessFeatureCode));
-        presets.addAll(presetRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(businessFeatureCode, organizationCode));
-        return presets.stream()
-                .filter(p -> auditAccess || p.isGlobal() || organizationCode.equals(p.getOrganizationCode()))
-                .map(this::toPresetResponse)
+    public List<com.example.draft.application.dto.DraftFormTemplateResponse> listFormTemplates(String businessFeatureCode, String organizationCode) {
+        // businessFeatureCode를 기반으로 적절한 템플릿 목록 조회
+        List<DraftFormTemplate> templates = formTemplateRepository.findAllCurrent();
+        return templates.stream()
+                .filter(DraftFormTemplate::isActive)
+                .map(com.example.draft.application.dto.DraftFormTemplateResponse::from)
                 .toList();
     }
 
+    /**
+     * 추천 기안 양식 템플릿 목록을 조회한다.
+     */
     @Transactional(readOnly = true)
-    public List<DraftTemplatePresetResponse> recommendTemplatePresets(String businessFeatureCode,
-                                                                      String organizationCode,
-                                                                      String actor) {
-        List<DraftTemplatePreset> orgPresets = presetRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(businessFeatureCode, organizationCode);
-        List<DraftTemplatePreset> globalPresets = presetRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(businessFeatureCode);
-        java.util.Map<UUID, DraftTemplatePreset> presetMap = java.util.stream.Stream.concat(orgPresets.stream(), globalPresets.stream())
-                .collect(java.util.stream.Collectors.toMap(DraftTemplatePreset::getId, java.util.function.Function.identity()));
-        java.util.List<DraftTemplatePreset> ordered = new java.util.ArrayList<>();
-        java.util.Set<UUID> seen = new java.util.HashSet<>();
-
-        draftRepository.findTop5ByCreatedByAndBusinessFeatureCodeOrderByCreatedAtDesc(actor, businessFeatureCode).stream()
-                .map(Draft::getTemplatePresetId)
-                .filter(java.util.Objects::nonNull)
-                .map(presetMap::get)
-                .filter(java.util.Objects::nonNull)
-                .forEach(preset -> {
-                    if (seen.add(preset.getId())) {
-                        ordered.add(preset);
-                    }
-                });
-
-        orgPresets.stream()
-                .filter(p -> seen.add(p.getId()))
-                .forEach(ordered::add);
-        globalPresets.stream()
-                .filter(p -> seen.add(p.getId()))
-                .forEach(ordered::add);
-
-        return ordered.stream()
-                .map(this::toPresetResponse)
+    public List<com.example.draft.application.dto.DraftFormTemplateResponse> recommendFormTemplates(String businessFeatureCode, String organizationCode, String username) {
+        // 사용자의 조직과 기능에 맞는 추천 템플릿 조회
+        List<DraftFormTemplate> templates = formTemplateRepository.findAllCurrent();
+        return templates.stream()
+                .filter(DraftFormTemplate::isActive)
+                .map(com.example.draft.application.dto.DraftFormTemplateResponse::from)
                 .toList();
     }
 
@@ -463,7 +438,6 @@ public class DraftApplicationService {
                 draft.getApprovalSteps().stream().map(DraftApprovalStep::getApprovalGroupCode).toList()
         );
         eventPublisher.publishEvent(event);
-        // Kafka 퍼블리셔는 EventListener(DraftSubmittedEventBridge)에서 전송
     }
 
     private OffsetDateTime now() {
@@ -472,7 +446,7 @@ public class DraftApplicationService {
 
     private void syncApproval(Draft draft, ApprovalActionCommand command) {
         if (draft.getApprovalRequestId() == null) {
-            return; // 아직 approval 요청을 만들지 않은 초안 상태일 수 있음
+            return;
         }
         approvalFacade.actOnApproval(draft.getApprovalRequestId(), command);
     }
@@ -527,76 +501,35 @@ public class DraftApplicationService {
         }
     }
 
-    private TemplateSelection selectTemplates(DraftCreateRequest request, String organizationCode, DraftTemplatePreset preset) {
+    private TemplateSelection selectTemplates(DraftCreateRequest request, String organizationCode) {
         if (request.templateId() != null && request.formTemplateId() != null) {
             ApprovalTemplateRoot template = templateRepository.findByIdAndActiveVersion(request.templateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("결재선 템플릿을 찾을 수 없습니다."));
-            DraftFormTemplate formTemplate = formTemplateRepository.findByIdAndActiveTrue(request.formTemplateId())
+            // formTemplateId는 이제 Root의 ID를 의미함
+            DraftFormTemplateRoot formTemplateRoot = formTemplateRootRepository.findById(request.formTemplateId())
                     .orElseThrow(() -> new DraftTemplateNotFoundException("기안 양식을 찾을 수 없습니다."));
-            formTemplate.assertOrganization(organizationCode);
-            ensureBusinessMatches(formTemplate, request.businessFeatureCode());
+            DraftFormTemplate formTemplate = formTemplateRoot.getCurrentVersion();
+            if (formTemplate == null || !formTemplate.isActive()) {
+                throw new DraftTemplateNotFoundException("활성화된 기안 양식 버전이 없습니다.");
+            }
             return new TemplateSelection(template, formTemplate);
         }
 
-        ApprovalTemplateRoot approvalTemplate = null;
-        DraftFormTemplate formTemplate = null;
+        BusinessTemplateMapping mapping = mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(request.businessFeatureCode(), organizationCode)
+                .or(() -> mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(request.businessFeatureCode()))
+                .orElseThrow(() -> new DraftTemplateNotFoundException("기본 매핑된 템플릿을 찾을 수 없습니다."));
 
-        if (preset != null) {
-            approvalTemplate = preset.getDefaultApprovalTemplate();
-            formTemplate = preset.getFormTemplate();
-            formTemplate.assertOrganization(organizationCode);
-            ensureBusinessMatches(formTemplate, request.businessFeatureCode());
-        }
-
-        BusinessTemplateMapping mapping = null;
-        if (approvalTemplate == null || formTemplate == null) {
-            mapping = mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeAndActiveTrue(request.businessFeatureCode(), organizationCode)
-                    .or(() -> mappingRepository.findByBusinessFeatureCodeAndOrganizationCodeIsNullAndActiveTrue(request.businessFeatureCode()))
-                    .orElseThrow(() -> new DraftTemplateNotFoundException("기본 매핑된 템플릿을 찾을 수 없습니다."));
-        }
-
-        if (approvalTemplate == null && mapping != null) {
-            approvalTemplate = mapping.getApprovalTemplateRoot();
-        }
-        if (formTemplate == null && mapping != null) {
-            mapping.getDraftFormTemplate().assertOrganization(organizationCode);
-            formTemplate = mapping.getDraftFormTemplate();
-        }
+        ApprovalTemplateRoot approvalTemplate = mapping.getApprovalTemplateRoot();
+        DraftFormTemplate formTemplate = mapping.getDraftFormTemplate();
 
         if (approvalTemplate == null || formTemplate == null) {
             throw new DraftTemplateNotFoundException("적용 가능한 결재선/양식 템플릿을 찾을 수 없습니다.");
         }
-        ensureBusinessMatches(formTemplate, request.businessFeatureCode());
+        
         return new TemplateSelection(approvalTemplate, formTemplate);
     }
 
     private record TemplateSelection(ApprovalTemplateRoot approvalTemplate, DraftFormTemplate formTemplate) {
-    }
-
-    private DraftTemplatePreset resolvePreset(DraftCreateRequest request, String organizationCode) {
-        if (request.templatePresetId() == null) {
-            return null;
-        }
-        DraftTemplatePreset preset = presetRepository.findByIdAndActiveTrue(request.templatePresetId())
-                .orElseThrow(() -> new DraftTemplateNotFoundException("템플릿 프리셋을 찾을 수 없습니다."));
-        preset.assertOrganization(organizationCode);
-        if (!preset.matchesBusiness(request.businessFeatureCode())) {
-            throw new DraftTemplateNotFoundException("비즈니스 유형에 맞는 템플릿 프리셋이 아닙니다.");
-        }
-        return preset;
-    }
-
-    private Set<String> allowedVariables(DraftTemplatePreset preset) {
-        if (preset == null || preset.getVariablesJson() == null || preset.getVariablesJson().isBlank()) {
-            return Set.of();
-        }
-        try {
-            List<String> variables = objectMapper.readValue(preset.getVariablesJson(), new TypeReference<List<String>>() {
-            });
-            return new HashSet<>(variables);
-        } catch (Exception ex) {
-            return Set.of();
-        }
     }
 
     private String resolveTemplateValue(String requestValue,
@@ -634,22 +567,6 @@ public class DraftApplicationService {
         return map;
     }
 
-    private DraftTemplatePresetResponse toPresetResponse(DraftTemplatePreset preset) {
-        return DraftTemplatePresetResponse.from(preset, variablesFromPreset(preset), UnaryOperator.identity());
-    }
-
-    private List<String> variablesFromPreset(DraftTemplatePreset preset) {
-        if (preset == null || preset.getVariablesJson() == null || preset.getVariablesJson().isBlank()) {
-            return List.of();
-        }
-        try {
-            return objectMapper.readValue(preset.getVariablesJson(), new TypeReference<List<String>>() {
-            });
-        } catch (Exception e) {
-            return List.of();
-        }
-    }
-
     private String replacePlaceholders(String template, Map<String, String> values, String fallback) {
         Pattern pattern = Pattern.compile("\\{([^}]+)}");
         Matcher matcher = pattern.matcher(template);
@@ -665,53 +582,6 @@ public class DraftApplicationService {
             return fallback;
         }
         return result;
-    }
-
-    private String mergeFormPayload(String userPayload, DraftTemplatePreset preset) {
-        if (preset == null) {
-            return userPayload;
-        }
-        JsonNode base = readJsonOrEmpty(preset.getDefaultFormPayload());
-        JsonNode user = readJsonOrEmpty(userPayload);
-        if (!(base instanceof ObjectNode baseObj) || !(user instanceof ObjectNode userObj)) {
-            return userPayload == null || userPayload.isBlank() ? preset.getDefaultFormPayload() : userPayload;
-        }
-        ObjectNode merged = baseObj.deepCopy();
-        deepMerge(merged, userObj);
-        try {
-            return objectMapper.writeValueAsString(merged);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("폼 데이터를 직렬화할 수 없습니다.", e);
-        }
-    }
-
-    private JsonNode readJsonOrEmpty(String payload) {
-        if (payload == null || payload.isBlank()) {
-            return objectMapper.createObjectNode();
-        }
-        try {
-            return objectMapper.readTree(payload);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("formPayload는 JSON 형식이어야 합니다.", e);
-        }
-    }
-
-    private void deepMerge(ObjectNode target, JsonNode update) {
-        update.fields().forEachRemaining(entry -> {
-            String field = entry.getKey();
-            JsonNode value = entry.getValue();
-            if (value.isObject() && target.get(field) != null && target.get(field).isObject()) {
-                deepMerge((ObjectNode) target.get(field), value);
-            } else {
-                target.set(field, value);
-            }
-        });
-    }
-
-    private void ensureBusinessMatches(DraftFormTemplate formTemplate, String businessFeatureCode) {
-        if (!formTemplate.matchesBusiness(businessFeatureCode)) {
-            throw new DraftTemplateNotFoundException("비즈니스 유형에 맞는 기안 양식이 아닙니다.");
-        }
     }
 
     private void requireValue(String value, String message) {

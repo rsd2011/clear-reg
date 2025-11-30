@@ -19,11 +19,9 @@ import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepResponse;
 import com.example.admin.approval.dto.ApprovalTemplateRootResponse;
-import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 
 class TemplateAdminServiceCreateLineTemplateAuditTest {
 
@@ -33,10 +31,8 @@ class TemplateAdminServiceCreateLineTemplateAuditTest {
         ApprovalTemplateRootService rootService = mock(ApprovalTemplateRootService.class);
         TemplateAdminService service = new TemplateAdminService(
                 rootService,
-                mock(ApprovalTemplateRootRepository.class),
                 mock(DraftFormTemplateRepository.class),
-                mock(DraftTemplatePresetRepository.class),
-                new ObjectMapper());
+                mock(DraftFormTemplateRootRepository.class));
 
         ApprovalTemplateRootRequest req = new ApprovalTemplateRootRequest(
                 "line",

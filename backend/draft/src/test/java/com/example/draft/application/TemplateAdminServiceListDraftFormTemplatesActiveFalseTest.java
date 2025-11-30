@@ -11,40 +11,47 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.permission.context.AuthContext;
+import com.example.common.orggroup.WorkType;
 import com.example.common.security.RowScope;
+import com.example.common.version.ChangeAction;
 import com.example.draft.application.dto.DraftFormTemplateResponse;
-import com.example.draft.domain.DraftFormTemplate;
-import com.example.admin.approval.repository.ApprovalTemplateRootRepository;
+import com.example.admin.draft.domain.DraftFormTemplate;
+import com.example.admin.draft.domain.DraftFormTemplateRoot;
 import com.example.admin.approval.service.ApprovalTemplateRootService;
 import com.example.draft.domain.repository.DraftFormTemplateRepository;
-import com.example.draft.domain.repository.DraftTemplatePresetRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.draft.domain.repository.DraftFormTemplateRootRepository;
 
 class TemplateAdminServiceListDraftFormTemplatesActiveFalseTest {
 
     @Test
-    @DisplayName("activeOnly=false이고 businessType+org를 지정하면 해당 조직의 모든 활성/비활성 템플릿을 반환한다")
-    void returnsAllTemplatesOfOrgWhenActiveOnlyIsFalse() {
+    @DisplayName("activeOnly=false이면 모든 활성/비활성 템플릿을 반환한다")
+    void returnsAllTemplatesWhenActiveOnlyIsFalse() {
         DraftFormTemplateRepository formRepo = mock(DraftFormTemplateRepository.class);
         TemplateAdminService service = new TemplateAdminService(
                 mock(ApprovalTemplateRootService.class),
-                mock(ApprovalTemplateRootRepository.class),
                 formRepo,
-                mock(DraftTemplatePresetRepository.class),
-                new ObjectMapper());
+                mock(DraftFormTemplateRootRepository.class));
 
         OffsetDateTime now = OffsetDateTime.now();
-        DraftFormTemplate active = DraftFormTemplate.create("f1", "HR", "ORG1", "{}", now);
-        DraftFormTemplate inactive = DraftFormTemplate.create("f2", "HR", "ORG1", "{}", now);
-        inactive.update("f2", "{}", false, now);
-        DraftFormTemplate otherOrg = DraftFormTemplate.create("f3", "HR", "ORG2", "{}", now);
-        given(formRepo.findAll()).willReturn(List.of(active, inactive, otherOrg));
+        DraftFormTemplateRoot root = DraftFormTemplateRoot.create(now);
+        DraftFormTemplate active = createPublishedTemplate(root, "f1", WorkType.GENERAL, true, now);
+        DraftFormTemplate inactive = createPublishedTemplate(root, "f2", WorkType.GENERAL, false, now);
+
+        given(formRepo.findCurrentByWorkType(WorkType.GENERAL)).willReturn(List.of(active, inactive));
 
         AuthContext ctx = AuthContext.of("u", "ORG1", null, null, null, RowScope.ORG);
 
-        List<DraftFormTemplateResponse> result = service.listDraftFormTemplates("HR", "ORG1", false, ctx, false);
+        List<DraftFormTemplateResponse> result = service.listDraftFormTemplates(WorkType.GENERAL, false, ctx, false);
 
         assertThat(result).extracting(DraftFormTemplateResponse::name)
                 .containsExactlyInAnyOrder("f1", "f2");
+    }
+
+    private DraftFormTemplate createPublishedTemplate(DraftFormTemplateRoot root, String name, WorkType workType, boolean active, OffsetDateTime now) {
+        DraftFormTemplate template = DraftFormTemplate.create(
+                root, 1, name, workType, "{}", active,
+                ChangeAction.CREATE, null, "user", "user", now);
+        // create()는 이미 PUBLISHED 상태로 생성됨
+        return template;
     }
 }

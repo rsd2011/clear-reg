@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.dto.ApprovalTemplateRootRequest;
 import com.example.admin.approval.dto.ApprovalTemplateStepRequest;
+import com.example.common.orggroup.WorkType;
 
 @DisplayName("Draft 요청 DTO 값 보존")
 class DraftRequestValueTest {
@@ -35,8 +36,10 @@ class DraftRequestValueTest {
     @Test
     @DisplayName("DraftFormTemplateRequest는 활성 여부와 스키마를 보존한다")
     void draftFormTemplateRequestPreserves() {
-        DraftFormTemplateRequest req = new DraftFormTemplateRequest("form", "HR", "ORG", "{}", true);
+        DraftFormTemplateRequest req = new DraftFormTemplateRequest(
+                "form", WorkType.HR_UPDATE, "{}", true, null);
         assertThat(req.name()).isEqualTo("form");
+        assertThat(req.workType()).isEqualTo(WorkType.HR_UPDATE);
         assertThat(req.schemaJson()).isEqualTo("{}");
         assertThat(req.active()).isTrue();
     }
