@@ -19,7 +19,7 @@ public interface OrgGroupRepository extends JpaRepository<OrgGroup, UUID> {
      */
     @Query("""
         select distinct g from OrgGroup g
-        join OrgGroupMember m on m.groupCode = g.code
+        join OrgGroupMember m on m.orgGroup = g
         where m.orgId in :orgIds
         order by g.sort asc nulls last
         """)
@@ -29,8 +29,8 @@ public interface OrgGroupRepository extends JpaRepository<OrgGroup, UUID> {
      * 주어진 orgId 목록에 해당하는 그룹 코드들을 sort 순으로 조회.
      */
     @Query("""
-        select distinct m.groupCode from OrgGroupMember m
-        join OrgGroup g on g.code = m.groupCode
+        select distinct g.code from OrgGroupMember m
+        join m.orgGroup g
         where m.orgId in :orgIds
         order by g.sort asc nulls last
         """)
