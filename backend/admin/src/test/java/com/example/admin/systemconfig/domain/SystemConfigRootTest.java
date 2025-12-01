@@ -148,6 +148,139 @@ class SystemConfigRootTest {
     }
   }
 
+
+  @Nested
+  @DisplayName("기본 정보 수정 테스트")
+  class UpdateInfoTest {
+
+    @Test
+    @DisplayName("Given: 루트 엔티티, When: touch 호출, Then: updatedAt만 갱신됨")
+    void shouldUpdateTimestampOnTouch() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("test.settings", "테스트", "설명", now);
+      OffsetDateTime later = now.plusHours(1);
+
+      // When
+      root.touch(later);
+
+      // Then
+      assertThat(root.getUpdatedAt()).isEqualTo(later);
+      assertThat(root.getCreatedAt()).isEqualTo(now); // 생성일은 변경 안됨
+    }
+
+    @Test
+    @DisplayName("Given: 루트 엔티티, When: updateInfo 호출, Then: 이름, 설명, updatedAt 갱신됨")
+    void shouldUpdateInfoFields() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("test.settings", "원래이름", "원래설명", now);
+      OffsetDateTime later = now.plusHours(1);
+
+      // When
+      root.updateInfo("새이름", "새설명", later);
+
+      // Then
+      assertThat(root.getName()).isEqualTo("새이름");
+      assertThat(root.getDescription()).isEqualTo("새설명");
+      assertThat(root.getUpdatedAt()).isEqualTo(later);
+      assertThat(root.getConfigCode()).isEqualTo("test.settings"); // 코드는 변경 안됨
+    }
+  }
+
+  @Nested
+  @DisplayName("publishDraft 성공 시나리오 테스트")
+  class PublishDraftSuccessTest {
+
+    @Test
+    @DisplayName("Given: 현재 버전 없이 초안만 있는 상태, When: publishDraft 호출, Then: 초안이 현재 버전이 됨")
+    void shouldPublishDraftWithoutCurrentVersion() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("test.settings", "테스트", null, now);
+
+      SystemConfigRevision draft = SystemConfigRevision.createDraft(
+          root, 1, "yaml: draft", true, "초안 생성", "admin", "관리자", now);
+      root.setDraftVersion(draft);
+
+      OffsetDateTime publishTime = now.plusMinutes(10);
+
+      // When
+      root.publishDraft(publishTime);
+
+      // Then
+      assertThat(root.getCurrentVersion()).isEqualTo(draft);
+      assertThat(root.getPreviousVersion()).isNull();
+      assertThat(root.getNextVersion()).isNull();
+      assertThat(root.hasDraft()).isFalse();
+      assertThat(root.getUpdatedAt()).isEqualTo(publishTime);
+    }
+
+    @Test
+    @DisplayName("Given: 현재 버전이 있고 초안도 있는 상태, When: publishDraft 호출, Then: 이전 버전으로 이동하고 초안이 현재 버전이 됨")
+    void shouldPublishDraftWithCurrentVersion() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("test.settings", "테스트", null, now);
+
+      // 현재 버전 설정
+      SystemConfigRevision version1 = SystemConfigRevision.create(
+          root, 1, "yaml: v1", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+      root.activateNewVersion(version1, now);
+
+      // 초안 설정
+      SystemConfigRevision draft = SystemConfigRevision.createDraft(
+          root, 2, "yaml: v2", true, "업데이트", "admin", "관리자", now.plusMinutes(5));
+      root.setDraftVersion(draft);
+
+      OffsetDateTime publishTime = now.plusMinutes(10);
+
+      // When
+      root.publishDraft(publishTime);
+
+      // Then
+      assertThat(root.getCurrentVersion()).isEqualTo(draft);
+      assertThat(root.getPreviousVersion()).isEqualTo(version1);
+      assertThat(root.getNextVersion()).isNull();
+      assertThat(root.hasDraft()).isFalse();
+    }
+  }
+
+  @Nested
+  @DisplayName("canRollback 테스트")
+  class CanRollbackTest {
+
+    @Test
+    @DisplayName("Given: 이전 버전이 없는 상태, When: canRollback 호출, Then: false 반환")
+    void shouldReturnFalseWhenNoPreviousVersion() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("test.settings", "테스트", null, now);
+
+      // When & Then
+      assertThat(root.canRollback()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Given: 이전 버전이 있는 상태, When: canRollback 호출, Then: true 반환")
+    void shouldReturnTrueWhenHasPreviousVersion() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("test.settings", "테스트", null, now);
+
+      SystemConfigRevision version1 = SystemConfigRevision.create(
+          root, 1, "yaml: v1", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+      root.activateNewVersion(version1, now);
+
+      SystemConfigRevision version2 = SystemConfigRevision.create(
+          root, 2, "yaml: v2", true, ChangeAction.UPDATE, null, "admin", "관리자", now.plusMinutes(1));
+      root.activateNewVersion(version2, now.plusMinutes(1));
+
+      // When & Then
+      assertThat(root.canRollback()).isTrue();
+    }
+  }
+
   @Nested
   @DisplayName("편의 메서드 테스트")
   class ConvenienceMethodsTest {
