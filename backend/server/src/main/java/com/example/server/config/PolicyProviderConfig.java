@@ -7,19 +7,12 @@ import java.util.stream.Collectors;
 
 import com.example.auth.LoginType;
 import com.example.auth.config.PolicyToggleProperties;
-import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
-import com.example.admin.policy.service.PolicyAdminService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 @Configuration
 public class PolicyProviderConfig {
-
-    @Bean
-    public PolicySettingsProvider policySettingsProvider(PolicyAdminService policyAdminService) {
-        return new PolicyAdminService.DatabasePolicySettingsProvider(policyAdminService);
-    }
 
     @Bean(name = "yamlObjectMapper")
     public ObjectMapper yamlObjectMapper() {

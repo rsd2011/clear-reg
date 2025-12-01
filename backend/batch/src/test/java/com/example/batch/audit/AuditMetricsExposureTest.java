@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import io.micrometer.core.instrument.MeterRegistry;
 
-import com.example.admin.policy.repository.PolicyDocumentRepository;
 import com.example.dw.infrastructure.persistence.HrExternalFeedRepository;
 import com.example.dw.config.DwIngestionProperties;
 import com.example.dw.infrastructure.persistence.DwCommonCodeRepository;
@@ -75,7 +74,6 @@ import com.example.admin.draft.repository.DraftFormTemplateRepository;
 import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 import com.example.admin.orggroup.repository.OrgGroupApprovalMappingRepository;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -92,9 +90,6 @@ class AuditMetricsExposureTest {
 
     @Autowired
     MeterRegistry meterRegistry;
-
-    @MockBean
-    PolicyDocumentRepository policyDocumentRepository;
 
     @MockBean
     HrExternalFeedRepository hrExternalFeedRepository;
@@ -280,8 +275,7 @@ class AuditMetricsExposureTest {
     OrgGroupApprovalMappingRepository orgGroupApprovalMappingRepository;
 
     @org.junit.jupiter.api.BeforeEach
-    void setUpPolicyRepository() {
-        given(policyDocumentRepository.findByCode(anyString())).willReturn(java.util.Optional.empty());
+    void setUpMocks() {
         var database = new DwIngestionProperties.DatabaseProperties();
         database.setEnabled(false);
         given(dwIngestionProperties.getDatabase()).willReturn(database);

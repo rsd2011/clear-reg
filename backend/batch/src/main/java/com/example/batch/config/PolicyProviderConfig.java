@@ -4,26 +4,24 @@ import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 
 import com.example.auth.LoginType;
 import com.example.auth.config.PolicyToggleProperties;
 import com.example.common.policy.PolicySettingsProvider;
 import com.example.common.policy.PolicyToggleSettings;
-import com.example.admin.policy.service.PolicyAdminService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 @Configuration
 public class PolicyProviderConfig {
 
-    @Bean
-    @ConditionalOnBean(PolicyAdminService.class)
-    public PolicySettingsProvider policySettingsProvider(PolicyAdminService policyAdminService) {
-        return new PolicyAdminService.DatabasePolicySettingsProvider(policyAdminService);
-    }
-
+    /**
+     * Fallback no-op PolicySettingsProvider.
+     * <p>
+     * 다른 provider가 활성화되지 않을 경우에만 등록됩니다.
+     * </p>
+     */
     @Bean
     @ConditionalOnMissingBean(PolicySettingsProvider.class)
     public PolicySettingsProvider noopPolicySettingsProvider() {
