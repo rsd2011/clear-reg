@@ -27,7 +27,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.example.common.policy.PolicyChangedEvent;
 import com.example.common.policy.PolicySettingsProvider;
-import com.example.admin.policy.repository.PolicyDocumentRepository;
 import com.example.dw.infrastructure.persistence.HrExternalFeedRepository;
 import com.example.dw.config.DwIngestionProperties;
 import com.example.dw.infrastructure.persistence.DwCommonCodeRepository;
@@ -90,7 +89,6 @@ import com.example.admin.draft.repository.DraftFormTemplateRepository;
 import com.example.admin.draft.repository.DraftFormTemplateRootRepository;
 import com.example.admin.orggroup.repository.OrgGroupApprovalMappingRepository;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.ArgumentMatchers.any;
 
@@ -132,9 +130,6 @@ class AuditPartitionSchedulerPolicyApiE2eTest {
 
     @Autowired
     PolicySettingsProvider policySettingsProvider;
-
-    @MockBean
-    PolicyDocumentRepository policyDocumentRepository;
 
     @MockBean
     HrExternalFeedRepository hrExternalFeedRepository;
@@ -320,8 +315,7 @@ class AuditPartitionSchedulerPolicyApiE2eTest {
     OrgGroupApprovalMappingRepository orgGroupApprovalMappingRepository;
 
     @org.junit.jupiter.api.BeforeEach
-    void setUpPolicyRepository() {
-        given(policyDocumentRepository.findByCode(anyString())).willReturn(java.util.Optional.empty());
+    void setUpMocks() {
         var database = new DwIngestionProperties.DatabaseProperties();
         database.setEnabled(false);
         given(dwIngestionProperties.getDatabase()).willReturn(database);

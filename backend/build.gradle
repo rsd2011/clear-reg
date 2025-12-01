@@ -30,7 +30,7 @@ ext {
             checkstyleClasspath : 'google_checks.xml',             // Checkstyle 기본 제공 Google 규칙
             spotbugsExclude     : 'config/spotbugs/exclude.xml'    // 선택: SpotBugs 제외 필터
     ]
-    jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**', '**/registry/StaticCodeRegistry.class']
+    jacocoExclusions = ['**/*Application*.class', '**/config/**', '**/dto/**', '**/registry/StaticCodeRegistry.class', '**/*$CachedSettings*.class']
     jacocoGlobalExcludes = (jacocoExclusions + ['**/generated/**']).unique()
     qualityGlobalExcludes = ['**/generated/**', '**/build/**']
 }
