@@ -341,6 +341,118 @@ class SystemConfigPolicySettingsProviderTest {
       // Then
       assertThat(result).isNotNull();
     }
+
+    @Test
+    @DisplayName("Given: 캐시에 batchJobs가 없을 때, When: batchJobSchedule 호출, Then: 기본 스케줄 반환")
+    void shouldReturnDefaultScheduleWhenNoBatchJobsInCache() {
+      // Given - 비활성 revision으로 설정 (batchJobs가 null이 되도록)
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("audit.settings", "audit name", null, now);
+      SystemConfigRevision revision = SystemConfigRevision.create(
+          root, 1, createAuditYaml(), false, ChangeAction.CREATE, null,
+          "system", "system", now);
+      root.activateNewVersion(revision, now);
+
+      when(rootRepository.findByConfigCode("audit.settings")).thenReturn(Optional.of(root));
+      when(rootRepository.findByConfigCode("auth.settings")).thenReturn(Optional.empty());
+      when(rootRepository.findByConfigCode("file.settings")).thenReturn(Optional.empty());
+      provider.refreshCache();
+
+      // When
+      BatchJobSchedule result = provider.batchJobSchedule(BatchJobCode.AUDIT_MONTHLY_REPORT);
+
+      // Then
+      assertThat(result).isNotNull();
+    }
+  }
+
+  @Nested
+  @DisplayName("파싱 실패 케이스 테스트")
+  class ParsingFailureTest {
+
+    @Test
+    @DisplayName("Given: 잘못된 YAML 포맷, When: refreshCache 호출, Then: 기본값 사용")
+    void shouldUseDefaultsOnInvalidYaml() {
+      // Given
+      setupMockConfig("auth.settings", "invalid: yaml: content: {{{{");
+      setupMockConfig("file.settings", createFileYaml());
+      setupMockConfig("audit.settings", createAuditYaml());
+
+      // When
+      provider.refreshCache();
+
+      // Then - 파싱 실패해도 기본값으로 동작
+      PolicyToggleSettings result = provider.currentSettings();
+      assertThat(result).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Given: 비활성 버전만 존재, When: currentSettings 호출, Then: 기본값 반환")
+    void shouldReturnDefaultsWhenOnlyInactiveVersion() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "auth name", null, now);
+      SystemConfigRevision inactiveRevision = SystemConfigRevision.create(
+          root, 1, createAuthYaml(), false, ChangeAction.CREATE, null,
+          "system", "system", now);
+      root.activateNewVersion(inactiveRevision, now);
+
+      when(rootRepository.findByConfigCode("auth.settings")).thenReturn(Optional.of(root));
+      when(rootRepository.findByConfigCode("file.settings")).thenReturn(Optional.empty());
+      when(rootRepository.findByConfigCode("audit.settings")).thenReturn(Optional.empty());
+
+      // When
+      PolicyToggleSettings result = provider.currentSettings();
+
+      // Then
+      assertThat(result).isNotNull();
+      assertThat(result.passwordPolicyEnabled()).isTrue(); // 기본값
+    }
+  }
+
+  @Nested
+  @DisplayName("notifySettingsChanged eventPublisher null 케이스 테스트")
+  class NotifySettingsChangedNullPublisherTest {
+
+    @Test
+    @DisplayName("Given: eventPublisher가 null일 때, When: notifySettingsChanged 호출, Then: 예외 없이 완료")
+    void shouldHandleNullEventPublisher() {
+      // Given - eventPublisher가 null인 provider 생성
+      SystemConfigPolicySettingsProvider providerWithNullPublisher =
+          new SystemConfigPolicySettingsProvider(rootRepository, parser, null);
+
+      setupMockConfig("auth.settings", createAuthYaml());
+      setupMockConfig("file.settings", createFileYaml());
+      setupMockConfig("audit.settings", createAuditYaml());
+
+      // When & Then - 예외 없이 완료되어야 함
+      providerWithNullPublisher.notifySettingsChanged("auth.settings", createAuthYaml());
+    }
+  }
+
+  @Nested
+  @DisplayName("getFileSettings 및 getAuditSettings 캐시 미스 테스트")
+  class CacheMissTest {
+
+    @Test
+    @DisplayName("Given: 캐시가 비어 있을 때, When: getFileSettings 호출, Then: empty 반환")
+    void shouldReturnEmptyForFileSettingsWhenCacheEmpty() {
+      // When
+      Optional<FileUploadSettings> result = provider.getFileSettings();
+
+      // Then
+      assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Given: 캐시가 비어 있을 때, When: getAuditSettings 호출, Then: empty 반환")
+    void shouldReturnEmptyForAuditSettingsWhenCacheEmpty() {
+      // When
+      Optional<AuditSettings> result = provider.getAuditSettings();
+
+      // Then
+      assertThat(result).isEmpty();
+    }
   }
 
   // === Helper Methods ===

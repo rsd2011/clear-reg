@@ -1,4 +1,4 @@
-package com.example.admin.systemconfig.web;
+package com.example.server.web;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,6 +27,7 @@ import com.example.admin.systemconfig.dto.SystemConfigRevisionResponse;
 import com.example.admin.systemconfig.dto.SystemConfigRootRequest;
 import com.example.admin.systemconfig.dto.SystemConfigRootResponse;
 import com.example.admin.systemconfig.service.SystemConfigVersioningService;
+import com.example.server.web.dto.SystemConfigInfoUpdateRequest;
 
 import jakarta.validation.Valid;
 
@@ -59,6 +61,14 @@ public class SystemConfigController {
   }
 
   /**
+   * ID로 시스템 설정 조회.
+   */
+  @GetMapping("/{configId}")
+  public ResponseEntity<SystemConfigRootResponse> getConfig(@PathVariable UUID configId) {
+    return ResponseEntity.ok(versioningService.getConfig(configId));
+  }
+
+  /**
    * 설정 코드로 시스템 설정 조회.
    */
   @GetMapping("/by-code/{configCode}")
@@ -75,6 +85,17 @@ public class SystemConfigController {
     AuthContext context = getAuthContext();
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(versioningService.createConfig(request, context));
+  }
+
+  /**
+   * 시스템 설정 메타정보(이름, 설명) 수정.
+   */
+  @PatchMapping("/{configId}")
+  public ResponseEntity<SystemConfigRootResponse> updateConfigInfo(
+      @PathVariable UUID configId,
+      @Valid @RequestBody SystemConfigInfoUpdateRequest request) {
+    return ResponseEntity.ok(
+        versioningService.updateConfigInfo(configId, request.name(), request.description()));
   }
 
   /**
@@ -187,6 +208,15 @@ public class SystemConfigController {
       @Valid @RequestBody SystemConfigDraftRequest request) {
     AuthContext context = getAuthContext();
     return ResponseEntity.ok(versioningService.saveDraft(configId, request, context));
+  }
+
+  /**
+   * 초안과 현재 버전 비교.
+   */
+  @GetMapping("/{configId}/draft/compare")
+  public ResponseEntity<SystemConfigCompareResponse> compareDraftWithCurrent(
+      @PathVariable UUID configId) {
+    return ResponseEntity.ok(versioningService.compareDraftWithCurrent(configId));
   }
 
   /**

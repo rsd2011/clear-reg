@@ -290,6 +290,23 @@ class SystemConfigVersioningServiceTest {
       assertThat(result.yamlContent()).isEqualTo("yaml: v1");
       assertThat(result.changeAction()).isEqualTo(ChangeAction.ROLLBACK);
     }
+
+    @Test
+    @DisplayName("Given: 롤백 대상 버전이 없을 때, When: rollbackToVersion 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenTargetVersionNotFound() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+      when(revisionRepository.findByRootIdAndVersion(configId, 99)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.rollbackToVersion(configId, 99, "버전 99로 롤백", authContext))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("롤백할 버전을 찾을 수 없습니다: 99");
+    }
   }
 
   @Nested
@@ -379,6 +396,23 @@ class SystemConfigVersioningServiceTest {
     }
 
     @Test
+    @DisplayName("Given: 게시할 초안이 없을 때, When: publishDraft 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenNoDraftToPublish() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+      when(revisionRepository.findDraftByRootId(configId)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.publishDraft(configId, authContext))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("게시할 초안이 없습니다");
+    }
+
+    @Test
     @DisplayName("Given: 초안이 있을 때, When: discardDraft 호출, Then: 초안 삭제")
     void shouldDiscardDraft() {
       // Given
@@ -461,6 +495,389 @@ class SystemConfigVersioningServiceTest {
       assertThat(result.version()).isEqualTo(2);
       assertThat(result.active()).isFalse();
       assertThat(result.changeAction()).isEqualTo(ChangeAction.DELETE);
+    }
+  }
+
+  // ==================== Phase 1: 신규 API 메서드 테스트 ====================
+
+  @Nested
+  @DisplayName("getConfig 테스트")
+  class GetConfigTest {
+
+    @Test
+    @DisplayName("Given: 존재하는 설정 ID, When: getConfig 호출, Then: 설정 정보 반환")
+    void shouldReturnConfigById() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", "인증 관련 설정", now);
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+
+      // When
+      SystemConfigRootResponse result = service.getConfig(configId);
+
+      // Then
+      assertThat(result.configCode()).isEqualTo("auth.settings");
+      assertThat(result.name()).isEqualTo("인증 설정");
+      assertThat(result.description()).isEqualTo("인증 관련 설정");
+    }
+
+    @Test
+    @DisplayName("Given: 존재하지 않는 설정 ID, When: getConfig 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenConfigNotFoundById() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      when(rootRepository.findById(configId)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.getConfig(configId))
+          .isInstanceOf(SystemConfigNotFoundException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("updateConfigInfo 테스트")
+  class UpdateConfigInfoTest {
+
+    @Test
+    @DisplayName("Given: 존재하는 설정, When: 메타정보 수정, Then: 수정된 정보 반환")
+    void shouldUpdateConfigInfo() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", "기존 설명", now);
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+
+      // When
+      SystemConfigRootResponse result = service.updateConfigInfo(configId, "새 인증 설정", "새 설명");
+
+      // Then
+      assertThat(result.name()).isEqualTo("새 인증 설정");
+      assertThat(result.description()).isEqualTo("새 설명");
+    }
+
+    @Test
+    @DisplayName("Given: 존재하지 않는 설정, When: 메타정보 수정, Then: 예외 발생")
+    void shouldThrowExceptionWhenConfigNotFoundForUpdate() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      when(rootRepository.findById(configId)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.updateConfigInfo(configId, "새 이름", "새 설명"))
+          .isInstanceOf(SystemConfigNotFoundException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("compareDraftWithCurrent 테스트")
+  class CompareDraftWithCurrentTest {
+
+    @Test
+    @DisplayName("Given: 초안과 현재버전 모두 존재, When: 비교 요청, Then: 비교 결과 반환")
+    void shouldCompareDraftWithCurrent() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision currentVersion = SystemConfigRevision.create(
+          root, 1, "yaml: current", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+      root.activateNewVersion(currentVersion, now);
+
+      SystemConfigRevision draft = SystemConfigRevision.createDraft(
+          root, 2, "yaml: draft", true, "초안", "admin", "관리자", now);
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+      when(revisionRepository.findDraftByRootId(configId)).thenReturn(Optional.of(draft));
+
+      // When
+      var result = service.compareDraftWithCurrent(configId);
+
+      // Then
+      assertThat(result.version1().version()).isEqualTo(1);
+      assertThat(result.version2().version()).isEqualTo(2);
+      assertThat(result.version1().yamlContent()).isEqualTo("yaml: current");
+      assertThat(result.version2().yamlContent()).isEqualTo("yaml: draft");
+    }
+
+    @Test
+    @DisplayName("Given: 현재버전 없음, When: 비교 요청, Then: 예외 발생")
+    void shouldThrowExceptionWhenNoCurrentVersion() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+      // currentVersion을 설정하지 않음
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+
+      // When & Then
+      assertThatThrownBy(() -> service.compareDraftWithCurrent(configId))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("현재 버전이 없습니다");
+    }
+
+    @Test
+    @DisplayName("Given: 초안 없음, When: 비교 요청, Then: 예외 발생")
+    void shouldThrowExceptionWhenNoDraft() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision currentVersion = SystemConfigRevision.create(
+          root, 1, "yaml: current", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+      root.activateNewVersion(currentVersion, now);
+
+      when(rootRepository.findById(configId)).thenReturn(Optional.of(root));
+      when(revisionRepository.findDraftByRootId(configId)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.compareDraftWithCurrent(configId))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("비교할 초안이 없습니다");
+    }
+  }
+
+  // ==================== Phase 2: 기존 미커버 메서드 테스트 ====================
+
+  @Nested
+  @DisplayName("compareVersions 테스트")
+  class CompareVersionsTest {
+
+    @Test
+    @DisplayName("Given: 두 버전 모두 존재, When: 비교 요청, Then: 비교 결과 반환")
+    void shouldCompareVersions() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision v1 = SystemConfigRevision.create(
+          root, 1, "yaml: v1", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+      SystemConfigRevision v2 = SystemConfigRevision.create(
+          root, 2, "yaml: v2", true, ChangeAction.UPDATE, null, "admin", "관리자", now.plusMinutes(10));
+
+      when(revisionRepository.findVersionsForComparison(configId, 1, 2))
+          .thenReturn(List.of(v1, v2));
+
+      // When
+      var result = service.compareVersions(configId, 1, 2);
+
+      // Then
+      assertThat(result.version1().version()).isEqualTo(1);
+      assertThat(result.version2().version()).isEqualTo(2);
+      assertThat(result.version1().yamlContent()).isEqualTo("yaml: v1");
+      assertThat(result.version2().yamlContent()).isEqualTo("yaml: v2");
+    }
+
+    @Test
+    @DisplayName("Given: 버전이 부족함, When: 비교 요청, Then: 예외 발생")
+    void shouldThrowExceptionWhenVersionsNotFound() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision v1 = SystemConfigRevision.create(
+          root, 1, "yaml: v1", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+
+      when(revisionRepository.findVersionsForComparison(configId, 1, 99))
+          .thenReturn(List.of(v1)); // 1개만 반환
+
+      // When & Then
+      assertThatThrownBy(() -> service.compareVersions(configId, 1, 99))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("비교할 버전을 찾을 수 없습니다");
+    }
+  }
+
+  @Nested
+  @DisplayName("getVersion 테스트")
+  class GetVersionTest {
+
+    @Test
+    @DisplayName("Given: 특정 버전 존재, When: getVersion 호출, Then: 버전 정보 반환")
+    void shouldReturnVersion() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision version = SystemConfigRevision.create(
+          root, 2, "yaml: v2", true, ChangeAction.UPDATE, null, "admin", "관리자", now);
+
+      when(revisionRepository.findByRootIdAndVersion(configId, 2)).thenReturn(Optional.of(version));
+
+      // When
+      SystemConfigRevisionResponse result = service.getVersion(configId, 2);
+
+      // Then
+      assertThat(result.version()).isEqualTo(2);
+      assertThat(result.yamlContent()).isEqualTo("yaml: v2");
+    }
+
+    @Test
+    @DisplayName("Given: 버전 미존재, When: getVersion 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenVersionNotFound() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      when(revisionRepository.findByRootIdAndVersion(configId, 99)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.getVersion(configId, 99))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("버전을 찾을 수 없습니다: 99");
+    }
+  }
+
+  @Nested
+  @DisplayName("getDraft 테스트")
+  class GetDraftTest {
+
+    @Test
+    @DisplayName("Given: 초안 존재, When: getDraft 호출, Then: 초안 정보 반환")
+    void shouldReturnDraft() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision draft = SystemConfigRevision.createDraft(
+          root, 2, "yaml: draft content", true, "초안 작성", "admin", "관리자", now);
+
+      when(revisionRepository.findDraftByRootId(configId)).thenReturn(Optional.of(draft));
+
+      // When
+      SystemConfigRevisionResponse result = service.getDraft(configId);
+
+      // Then
+      assertThat(result.version()).isEqualTo(2);
+      assertThat(result.yamlContent()).isEqualTo("yaml: draft content");
+      assertThat(result.status()).isEqualTo(VersionStatus.DRAFT);
+    }
+
+    @Test
+    @DisplayName("Given: 초안 미존재, When: getDraft 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenDraftNotFound() {
+      // Given
+      UUID configId = UUID.randomUUID();
+      when(revisionRepository.findDraftByRootId(configId)).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.getDraft(configId))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("초안이 없습니다");
+    }
+  }
+
+  @Nested
+  @DisplayName("findByConfigCode 테스트")
+  class FindByConfigCodeTest {
+
+    @Test
+    @DisplayName("Given: 설정 존재, When: findByConfigCode 호출, Then: Optional에 설정 반환")
+    void shouldReturnOptionalWithConfig() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", "설명", now);
+
+      when(rootRepository.findByConfigCode("auth.settings")).thenReturn(Optional.of(root));
+
+      // When
+      var result = service.findByConfigCode("auth.settings");
+
+      // Then
+      assertThat(result).isPresent();
+      assertThat(result.get().configCode()).isEqualTo("auth.settings");
+    }
+
+    @Test
+    @DisplayName("Given: 설정 미존재, When: findByConfigCode 호출, Then: 빈 Optional 반환")
+    void shouldReturnEmptyOptionalWhenNotFound() {
+      // Given
+      when(rootRepository.findByConfigCode("unknown.settings")).thenReturn(Optional.empty());
+
+      // When
+      var result = service.findByConfigCode("unknown.settings");
+
+      // Then
+      assertThat(result).isEmpty();
+    }
+  }
+
+  @Nested
+  @DisplayName("getActiveYamlContent 테스트")
+  class GetActiveYamlContentTest {
+
+    @Test
+    @DisplayName("Given: 활성 YAML 존재, When: getActiveYamlContent 호출, Then: YAML 내용 반환")
+    void shouldReturnActiveYamlContent() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision currentVersion = SystemConfigRevision.create(
+          root, 1, "yaml:\n  key: value", true, ChangeAction.CREATE, null, "admin", "관리자", now);
+      root.activateNewVersion(currentVersion, now);
+
+      when(rootRepository.findByConfigCode("auth.settings")).thenReturn(Optional.of(root));
+
+      // When
+      String result = service.getActiveYamlContent("auth.settings");
+
+      // Then
+      assertThat(result).isEqualTo("yaml:\n  key: value");
+    }
+
+    @Test
+    @DisplayName("Given: 설정 미존재, When: getActiveYamlContent 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenConfigNotFoundForYaml() {
+      // Given
+      when(rootRepository.findByConfigCode("unknown.settings")).thenReturn(Optional.empty());
+
+      // When & Then
+      assertThatThrownBy(() -> service.getActiveYamlContent("unknown.settings"))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("설정을 찾을 수 없습니다: unknown.settings");
+    }
+
+    @Test
+    @DisplayName("Given: 현재 버전 없음, When: getActiveYamlContent 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenNoActiveVersion() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+      // currentVersion을 설정하지 않음
+
+      when(rootRepository.findByConfigCode("auth.settings")).thenReturn(Optional.of(root));
+
+      // When & Then
+      assertThatThrownBy(() -> service.getActiveYamlContent("auth.settings"))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("활성화된 설정이 없습니다");
+    }
+
+    @Test
+    @DisplayName("Given: 비활성 버전만 존재, When: getActiveYamlContent 호출, Then: 예외 발생")
+    void shouldThrowExceptionWhenVersionIsNotActive() {
+      // Given
+      OffsetDateTime now = OffsetDateTime.now();
+      SystemConfigRoot root = SystemConfigRoot.create("auth.settings", "인증 설정", null, now);
+
+      SystemConfigRevision inactiveVersion = SystemConfigRevision.create(
+          root, 1, "yaml: inactive", false, ChangeAction.CREATE, null, "admin", "관리자", now);
+      root.activateNewVersion(inactiveVersion, now);
+
+      when(rootRepository.findByConfigCode("auth.settings")).thenReturn(Optional.of(root));
+
+      // When & Then
+      assertThatThrownBy(() -> service.getActiveYamlContent("auth.settings"))
+          .isInstanceOf(SystemConfigNotFoundException.class)
+          .hasMessageContaining("활성화된 설정이 없습니다");
     }
   }
 }
