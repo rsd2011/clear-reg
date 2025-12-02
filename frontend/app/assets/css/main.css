@@ -1,0 +1,128 @@
+@layer tailwind-base, primevue, tailwind-utilities;
+
+@import 'tailwindcss/base' layer(tailwind-base);
+@import 'tailwindcss/utilities' layer(tailwind-utilities);
+
+/* DockView CSS */
+@import 'dockview-vue/dist/styles/dockview.css';
+
+/* 다크모드 전환 트랜지션 */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.app-dark {
+  color-scheme: dark;
+}
+
+/* PrimeVue Surface 색상을 Tailwind에서 사용할 수 있도록 설정 */
+:root {
+  --app-bg: var(--p-surface-0);
+  --app-text: var(--p-surface-900);
+}
+
+.app-dark {
+  --app-bg: var(--p-surface-900);
+  --app-text: var(--p-surface-0);
+}
+
+/* ===== 테마별 CSS 변수 스코핑 ===== */
+/*
+ * 🎨 테마 아키텍처 (Single Source of Truth)
+ *
+ * PrimeVue 관련 (themes/*.ts에서 관리):
+ *   - primary 색상 (--p-primary-*)
+ *   - semantic colors (success, warn, danger, info)
+ *   - surface colors
+ *   - 컴포넌트 borderRadius
+ *   - typography (extend 토큰)
+ *
+ * CSS에서만 관리 (이 파일):
+ *   - 제3자 라이브러리 스타일 (DockView --dv-*)
+ *   - 스크롤바, 그라데이션 등 CSS-only 효과
+ *   - 앱 전역 변수 (--app-bg, --app-text)
+ *
+ * ⚠️ --p-primary-*, --p-border-radius는 프리셋에서 관리하므로
+ *    여기서 재정의하지 않습니다.
+ */
+
+/* Linear Dark Theme - CSS-only 변수 */
+.theme-linear-dark {
+  /* Effects - 그라데이션 & 스크롤바 (CSS-only) */
+  --gradient-card-shine: linear-gradient(134deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02), transparent 55%);
+  --gradient-subtle-overlay: linear-gradient(rgba(255, 255, 255, 0.05), transparent 20%);
+  --scrollbar-color: rgba(255, 255, 255, 0.1);
+  --scrollbar-color-hover: rgba(255, 255, 255, 0.2);
+  --scrollbar-color-active: rgba(255, 255, 255, 0.4);
+  --scrollbar-size: 6px;
+}
+
+/* Koscom Light Theme - CSS-only 변수 */
+.theme-koscom-light {
+  /* Effects - 그림자 (CSS-only) */
+  --shadow-none: none;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== DockView 커스텀 테마 ===== */
+
+/* Linear Dark Theme */
+.theme-linear-dark .dockview-theme-enterman {
+  /* Background colors */
+  --dv-background-color: var(--p-surface-800);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--p-primary-500);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--p-surface-700);
+
+  /* Text colors */
+  --dv-tabs-and-actions-container-font-size: var(--text-regular);
+  --dv-tabs-and-actions-container-height: 35px;
+  --dv-drag-over-background-color: rgba(94, 106, 210, 0.3);
+
+  /* Border */
+  --dv-separator-border: 1px solid var(--p-surface-600);
+  --dv-paneview-header-border-color: var(--p-surface-600);
+
+  /* Border Radius - 둥근 */
+  --dv-group-view-background-color: var(--p-surface-900);
+  border-radius: 8px;
+
+  /* Typography */
+  font-family: var(--font-sans);
+
+  /* Effects - Gradients */
+  --dv-overlay-background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Dark mode adjustments */
+.theme-linear-dark.app-dark .dockview-theme-enterman {
+  --dv-background-color: var(--p-surface-900);
+  --dv-group-view-background-color: var(--p-surface-800);
+}
+
+/* Koscom Light Theme */
+.theme-koscom-light .dockview-theme-enterman {
+  /* Background colors */
+  --dv-background-color: var(--p-surface-0);
+  --dv-activegroup-visiblepanel-tab-background-color: var(--p-primary-500);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--p-surface-100);
+
+  /* Text colors */
+  --dv-tabs-and-actions-container-font-size: var(--text-base);
+  --dv-tabs-and-actions-container-height: 35px;
+  --dv-drag-over-background-color: rgba(240, 110, 30, 0.3);
+
+  /* Border */
+  --dv-separator-border: 1px solid var(--p-surface-200);
+  --dv-paneview-header-border-color: var(--p-surface-200);
+
+  /* Border Radius - 각진 */
+  --dv-group-view-background-color: var(--p-surface-50);
+  border-radius: 0px;
+
+  /* Typography */
+  font-family: var(--font-primary);
+
+  /* Effects - Shadows */
+  --dv-overlay-background-color: rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-card);
+}

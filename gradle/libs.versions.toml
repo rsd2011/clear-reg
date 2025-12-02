@@ -24,6 +24,9 @@ spotbugs-tool = "4.8.6"
 checkstyle-tool = "10.17.0"
 pmd-tool = "6.55.0"
 jacoco-tool = "0.8.11"
+# Frontend 빌드 도구
+node-gradle = "7.1.0"
+nodejs = "22.16.0"
 # 추가 라이브러리 버전
 jakarta-el = "4.0.2"
 findbugs-jsr305 = "3.0.2"
@@ -111,3 +114,4 @@ spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
 spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }
 sonarqube = { id = "org.sonarqube", version.ref = "sonarqube-plugin" }
 spotbugs = { id = "com.github.spotbugs", version.ref = "spotbugs-plugin" }
+node-gradle = { id = "com.github.node-gradle.node", version.ref = "node-gradle" }

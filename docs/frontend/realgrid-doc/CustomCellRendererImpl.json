@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "class",
+  "name": "CustomCellRendererImpl",
+  "signature": "export declare abstract class CustomCellRendererImpl extends DataCellRenderer",
+  "description": "사용자 정의 Renderer의 상위 class이다.",
+  "remarks": "get styleName, _doInitContent, _doClearContent, render는 반드시 구현해야 한다.",
+  "extends": "DataCellRenderer",
+  "properties": [
+    {
+      "name": "clickOnlyFocusedCell",
+      "type": "boolean",
+      "description": "focusedCell이 아닌 cell에서의 clickEvent 발생을 막는다. 기본값은 false이다."
+    },
+    {
+      "name": "dom",
+      "type": "HTMLElement",
+      "description": "cell에 표시되는 dom element를 반환한다."
+    },
+    {
+      "name": "grid",
+      "type": "GridBase",
+      "description": "현재 그리드를 반환한다."
+    },
+    {
+      "name": "index",
+      "type": "CellIndex",
+      "description": "cell의 위치 정보를 반환한다."
+    },
+    {
+      "name": "inputFocusable",
+      "type": "boolean",
+      "description": "셀 내에 input element가 focus를 받을 수 있는지 여부를 나타낸다. 기본값은 false이다."
+    },
+    {
+      "name": "itemClickable",
+      "type": "boolean",
+      "description": "셀 내의 아이템 클릭 가능 여부를 나타낸다. 기본값은 false이다."
+    },
+    {
+      "name": "refreshFocusChanged",
+      "type": "boolean",
+      "description": "focus가 변경될 때 셀을 다시 렌더링할지 여부를 나타낸다. 기본값은 false이다."
+    },
+    {
+      "name": "showTooltip",
+      "type": "boolean",
+      "description": "tooltip을 표시할지 여부를 나타낸다. 기본값은 true이다."
+    },
+    {
+      "name": "styleName",
+      "type": "string",
+      "description": "renderer의 스타일 이름을 반환한다. 이 속성은 반드시 구현해야 한다."
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "description": "renderer의 타입을 반환한다."
+    }
+  ],
+  "methods": [
+    {
+      "name": "_doClearContent",
+      "signature": "protected abstract _doClearContent(dom: HTMLElement): void;",
+      "description": "셀의 내용을 지운다. 이 메서드는 반드시 구현해야 한다."
+    },
+    {
+      "name": "_doEditClick",
+      "signature": "protected _doEditClick(index: CellIndex, event: any, result: any): void;",
+      "description": "편집 클릭 시 실행되는 메서드이다."
+    },
+    {
+      "name": "_doInitContent",
+      "signature": "protected abstract _doInitContent(dom: HTMLElement): void;",
+      "description": "셀의 내용을 초기화한다. 이 메서드는 반드시 구현해야 한다."
+    },
+    {
+      "name": "canClick",
+      "signature": "canClick(event: any): boolean;",
+      "description": "클릭 가능 여부를 반환한다."
+    },
+    {
+      "name": "canClickSpaceKey",
+      "signature": "canClickSpaceKey(event: any): boolean;",
+      "description": "스페이스 키로 클릭 가능 여부를 반환한다."
+    },
+    {
+      "name": "canEdit",
+      "signature": "canEdit(): boolean;",
+      "description": "편집 가능 여부를 반환한다."
+    },
+    {
+      "name": "canEditClickAt",
+      "signature": "canEditClickAt(event: any): boolean;",
+      "description": "특정 위치에서 편집 클릭 가능 여부를 반환한다."
+    },
+    {
+      "name": "click",
+      "signature": "click(index: CellIndex, event: any, target: any): void;",
+      "description": "셀 클릭 시 실행되는 메서드이다."
+    },
+    {
+      "name": "itemClick",
+      "signature": "itemClick(event: any): void;",
+      "description": "아이템 클릭 시 실행되는 메서드이다."
+    },
+    {
+      "name": "preventDefaultClick",
+      "signature": "preventDefaultClick(event: any): boolean;",
+      "description": "기본 클릭 동작을 막을지 여부를 반환한다."
+    },
+    {
+      "name": "preventDefaultEditClick",
+      "signature": "preventDefaultEditClick(event: any): boolean;",
+      "description": "기본 편집 클릭 동작을 막을지 여부를 반환한다."
+    },
+    {
+      "name": "render",
+      "signature": "protected abstract render(grid: GridBase, model: any, w: number, h: number, info: any): void;",
+      "description": "셀을 렌더링한다. 이 메서드는 반드시 구현해야 한다."
+    },
+    {
+      "name": "tooltip",
+      "signature": "tooltip(model: any, index: CellIndex): string;",
+      "description": "툴팁 텍스트를 반환한다."
+    }
+  ]
+}

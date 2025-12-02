@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "class",
+  "name": "RealGrid",
+  "signature": "export default class RealGrid",
+  "description": "RealGrid 메인 클래스",
+  "remarks": "",
+  "extends": "",
+  "properties": [
+    {
+      "name": "CustomCellRendererImpl",
+      "type": "typeof CustomCellRendererImpl",
+      "description": ""
+    },
+    {
+      "name": "GridView",
+      "type": "typeof GridView",
+      "description": "GridView Class를 반환한다. GridView 참조"
+    },
+    {
+      "name": "LocalDataProvider",
+      "type": "typeof LocalDataProvider",
+      "description": "LocalDataProvider Class를 반환한다. LocalDataProvider 참조"
+    },
+    {
+      "name": "LocalTreeDataProvider",
+      "type": "typeof LocalTreeDataProvider",
+      "description": "LocalTreeDataProvider Class를 반환한다. LocalTreeDataProvider 참조"
+    },
+    {
+      "name": "TreeView",
+      "type": "typeof TreeView",
+      "description": "TreeView Class를 반환한다. TreeView 참조"
+    }
+  ],
+  "methods": [
+    {
+      "name": "createGrid",
+      "signature": "static createGrid(container: string | HTMLDivElement, viewConfig?: GridViewConfig, dataConfig?: LocalDataProviderConfig): { gridView: GridView; dataProvider: LocalDataProvider; };",
+      "description": "container와 설정정보를 입력해서 그리드를 생성한다."
+    },
+    {
+      "name": "createTree",
+      "signature": "static createTree(container: string | HTMLDivElement, viewConfig: TreeViewConfig, dataConfig?: LocalTreeDataProviderConfig): { treeView: TreeView; dataProvider: LocalTreeDataProvider; };",
+      "description": "container와 설정정보를 입력해서 트리그리드를 생성한다."
+    },
+    {
+      "name": "getActiveGrid",
+      "signature": "static getActiveGrid(): any;",
+      "description": "마지막으로 선택된 그리드를 반환한다."
+    },
+    {
+      "name": "getGridInstance",
+      "signature": "static getGridInstance(container: string | HTMLDivElement): any;",
+      "description": "입력한 element가 가지고 있는 그리드를 반환한다."
+    },
+    {
+      "name": "getLocale",
+      "signature": "static getLocale(): RealGridLocale;",
+      "description": "등록되어있는 locale정보를 가져온다."
+    },
+    {
+      "name": "getVersion",
+      "signature": "static getVersion(): string;",
+      "description": "설치된 RealGrid 모듈의 version을 확인한다."
+    },
+    {
+      "name": "registerCustomRenderer",
+      "signature": "static registerCustomRenderer(type: string, renderer: any, overwrite?: boolean): void;",
+      "description": "사용자 지정의 렌더러를 등록한다."
+    },
+    {
+      "name": "setDefault",
+      "signature": "static setDefault(options: ViewOptions, dataOptions?: DataOptions): void;",
+      "description": "그리드 기본설정을 지정한다."
+    },
+    {
+      "name": "setIECompatMode",
+      "signature": "static setIECompatMode(value: boolean): void;",
+      "description": "브라우저의 확장 프로그램을 이용해서 IE모드로 그리드를 사용하는 경우 사용한다."
+    },
+    {
+      "name": "setLicenseKey",
+      "signature": "static setLicenseKey(key: string): void;",
+      "description": "그리드 licenseKey를 입력한다."
+    },
+    {
+      "name": "setLocale",
+      "signature": "static setLocale(locale: RealGridLocale): void;",
+      "description": "그리드에서 사용하는 메시지와 numberFormat등을 등록한다."
+    },
+    {
+      "name": "setMobile",
+      "signature": "static setMobile(value: boolean): void;",
+      "description": "그리드가 mobile모드로 생성되도록 한다."
+    },
+    {
+      "name": "setSlotMode",
+      "signature": "static setSlotMode(value: boolean): void;",
+      "description": "shadowDom 또는 slot의 하위로 생성하는 경우 설정한다."
+    },
+    {
+      "name": "setTablet",
+      "signature": "static setTablet(value: boolean): void;",
+      "description": "그리드가 tablet모드로 생성되도록 한다."
+    }
+  ]
+}

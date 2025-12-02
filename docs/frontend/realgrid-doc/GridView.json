@@ -1,0 +1,502 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "class",
+  "name": "GridView",
+  "signature": "export declare class GridView extends GridBase",
+  "description": "GridView는 RealGrid의 그리드 뷰 클래스입니다.",
+  "remarks": "[상위 클래스]\nGridBase\nThe constructor for this class is marked as internal. Third-party code should not call the constructor directly or create subclasses that extend the GridView class.",
+  "extends": "GridBase",
+  "events": [
+    {
+      "name": "onCollapsed",
+      "signature": "(grid: GridView, itemIndex: number) => void",
+      "description": "그룹핑 된 행이 접힘을 알리는 콜백"
+    },
+    {
+      "name": "onExpanded",
+      "signature": "(grid: GridView, itemIndex: number) => void",
+      "description": "그룹핑 된 행이 펼쳐짐을 알리는 콜백"
+    },
+    {
+      "name": "onExpanding",
+      "signature": "(grid: GridView, itemIndex: number) => boolean",
+      "description": "그룹핑 된 행이 펼쳐지기 전에 호출되는 콜백"
+    },
+    {
+      "name": "onFilteringChanged",
+      "signature": "(grid: GridView, filtering: boolean) => void",
+      "description": "필터링 모드가 설정/해제 될 때 호출"
+    },
+    {
+      "name": "onGroupingChanged",
+      "signature": "(grid: GridView, grouping: boolean) => void",
+      "description": "그룹핑 모드가 설정/해제 될 때 호출"
+    },
+    {
+      "name": "onGroupingComplete",
+      "signature": "(grid: GridView, grouping: boolean) => void",
+      "description": "그룹핑이 완료될 때 호출"
+    },
+    {
+      "name": "onSortingChanged",
+      "signature": "(grid: GridView, sortFields: SortField[]) => void",
+      "description": "정렬 상태가 변경될 때 호출"
+    },
+    {
+      "name": "onTopItemIndexChanged",
+      "signature": "(grid: GridView, itemIndex: number) => void",
+      "description": "최상단에 보이는 행이 변경될 때 호출"
+    },
+    {
+      "name": "onTopRowChanged",
+      "signature": "(grid: GridView, row: number) => void",
+      "description": "최상단에 보이는 dataRow가 변경될 때 호출"
+    }
+  ],
+  "properties": [
+    {
+      "name": "filterMode",
+      "type": "FilterMode",
+      "description": "데이터 수정 이후 필터의 동작 모드"
+    },
+    {
+      "name": "filtering",
+      "type": "boolean",
+      "description": "필터링 여부를 확인하는 속성"
+    },
+    {
+      "name": "grouping",
+      "type": "boolean",
+      "description": "그룹핑 여부를 확인하는 속성"
+    },
+    {
+      "name": "groupingOptions",
+      "type": "GroupingOptions",
+      "description": "그룹핑 옵션을 설정하는 속성"
+    },
+    {
+      "name": "sorting",
+      "type": "boolean",
+      "description": "정렬 여부를 확인하는 속성"
+    },
+    {
+      "name": "topItemIndex",
+      "type": "number",
+      "description": "최상단에 보이는 아이템의 인덱스"
+    }
+  ],
+  "methods": [
+    {
+      "name": "beginAppendRow",
+      "signature": "beginAppendRow(data?: DataValues): number;",
+      "description": "그리드 마지막 데이터행 이후에 새로운 데이터행을 추가한다.",
+      "params": [
+        {
+          "name": "data",
+          "type": "DataValues",
+          "optional": true,
+          "description": "추가될 데이터 값"
+        }
+      ],
+      "returns": {
+        "type": "number",
+        "description": "추가된 행의 아이템 인덱스"
+      }
+    },
+    {
+      "name": "beginInsertRow",
+      "signature": "beginInsertRow(itemIndex: number, data?: DataValues): number;",
+      "description": "지정한 아이템 인덱스에 새로운 데이터행을 삽입한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "삽입할 위치의 아이템 인덱스"
+        },
+        {
+          "name": "data",
+          "type": "DataValues",
+          "optional": true,
+          "description": "삽입될 데이터 값"
+        }
+      ],
+      "returns": {
+        "type": "number",
+        "description": "삽입된 행의 아이템 인덱스"
+      }
+    },
+    {
+      "name": "beginUpdateRow",
+      "signature": "beginUpdateRow(itemIndex: number): boolean;",
+      "description": "지정한 아이템 인덱스의 행을 수정 모드로 전환한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "수정할 행의 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "boolean",
+        "description": "수정 모드 전환 성공 여부"
+      }
+    },
+    {
+      "name": "clearGrouping",
+      "signature": "clearGrouping(): void;",
+      "description": "그룹핑을 해제한다.",
+      "params": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "clearSorting",
+      "signature": "clearSorting(): void;",
+      "description": "정렬을 해제한다.",
+      "params": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "collapseAll",
+      "signature": "collapseAll(): void;",
+      "description": "모든 그룹을 접는다.",
+      "params": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "collapseGroup",
+      "signature": "collapseGroup(itemIndex: number): void;",
+      "description": "지정한 아이템 인덱스의 그룹을 접는다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "접을 그룹의 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "expandAll",
+      "signature": "expandAll(): void;",
+      "description": "모든 그룹을 펼친다.",
+      "params": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "expandGroup",
+      "signature": "expandGroup(itemIndex: number): void;",
+      "description": "지정한 아이템 인덱스의 그룹을 펼친다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "펼칠 그룹의 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "getFilters",
+      "signature": "getFilters(): ColumnFilter[];",
+      "description": "현재 적용된 컬럼 필터들을 반환한다.",
+      "params": [],
+      "returns": {
+        "type": "ColumnFilter[]",
+        "description": "적용된 컬럼 필터 배열"
+      }
+    },
+    {
+      "name": "getGroupByColumn",
+      "signature": "getGroupByColumn(name: string): GroupByColumn | undefined;",
+      "description": "지정한 이름의 그룹 컬럼 정보를 반환한다.",
+      "params": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "그룹 컬럼 이름"
+        }
+      ],
+      "returns": {
+        "type": "GroupByColumn | undefined",
+        "description": "그룹 컬럼 정보 또는 undefined"
+      }
+    },
+    {
+      "name": "getGroupingOptions",
+      "signature": "getGroupingOptions(): GroupingOptions;",
+      "description": "그룹핑 옵션을 반환한다.",
+      "params": [],
+      "returns": {
+        "type": "GroupingOptions",
+        "description": "그룹핑 옵션 객체"
+      }
+    },
+    {
+      "name": "getSortedFields",
+      "signature": "getSortedFields(): SortField[];",
+      "description": "현재 정렬 상태를 반환한다.",
+      "params": [],
+      "returns": {
+        "type": "SortField[]",
+        "description": "정렬 필드 배열"
+      }
+    },
+    {
+      "name": "getValues",
+      "signature": "getValues(itemIndex: number): DataValues;",
+      "description": "지정한 아이템 인덱스의 데이터 값들을 반환한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "데이터를 가져올 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "DataValues",
+        "description": "데이터 값 객체"
+      }
+    },
+    {
+      "name": "groupBy",
+      "signature": "groupBy(fields: string[], sortDirs?: SortDirection[]): void;",
+      "description": "지정한 필드들로 그룹핑을 수행한다.",
+      "params": [
+        {
+          "name": "fields",
+          "type": "string[]",
+          "description": "그룹핑할 필드명 배열"
+        },
+        {
+          "name": "sortDirs",
+          "type": "SortDirection[]",
+          "optional": true,
+          "description": "정렬 방향 배열"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "isFiltering",
+      "signature": "isFiltering(): boolean;",
+      "description": "현재 필터링 상태인지 확인한다.",
+      "params": [],
+      "returns": {
+        "type": "boolean",
+        "description": "필터링 여부"
+      }
+    },
+    {
+      "name": "isGroupExpanded",
+      "signature": "isGroupExpanded(itemIndex: number): boolean;",
+      "description": "지정한 아이템 인덱스의 그룹이 펼쳐져 있는지 확인한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "확인할 그룹의 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "boolean",
+        "description": "그룹 펼침 여부"
+      }
+    },
+    {
+      "name": "isGrouping",
+      "signature": "isGrouping(): boolean;",
+      "description": "현재 그룹핑 상태인지 확인한다.",
+      "params": [],
+      "returns": {
+        "type": "boolean",
+        "description": "그룹핑 여부"
+      }
+    },
+    {
+      "name": "isGroupItem",
+      "signature": "isGroupItem(itemIndex: number): boolean;",
+      "description": "지정한 아이템 인덱스가 그룹 아이템인지 확인한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "확인할 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "boolean",
+        "description": "그룹 아이템 여부"
+      }
+    },
+    {
+      "name": "isSorting",
+      "signature": "isSorting(): boolean;",
+      "description": "현재 정렬 상태인지 확인한다.",
+      "params": [],
+      "returns": {
+        "type": "boolean",
+        "description": "정렬 여부"
+      }
+    },
+    {
+      "name": "orderBy",
+      "signature": "orderBy(fieldNames: string[], sortDirs: SortDirection[], textCase?: TextCase): void;",
+      "description": "지정한 필드들로 정렬을 수행한다.",
+      "params": [
+        {
+          "name": "fieldNames",
+          "type": "string[]",
+          "description": "정렬할 필드명 배열"
+        },
+        {
+          "name": "sortDirs",
+          "type": "SortDirection[]",
+          "description": "정렬 방향 배열"
+        },
+        {
+          "name": "textCase",
+          "type": "TextCase",
+          "optional": true,
+          "description": "텍스트 대소문자 구분 옵션"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "refresh",
+      "signature": "refresh(): void;",
+      "description": "그리드를 다시 그린다.",
+      "params": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "setColumnFilters",
+      "signature": "setColumnFilters(column: string | DataColumn, filters: ColumnFilterDescriptor[]): void;",
+      "description": "컬럼에 필터를 설정한다.",
+      "params": [
+        {
+          "name": "column",
+          "type": "string | DataColumn",
+          "description": "필터를 설정할 컬럼"
+        },
+        {
+          "name": "filters",
+          "type": "ColumnFilterDescriptor[]",
+          "description": "설정할 필터 정보 배열"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "setFiltering",
+      "signature": "setFiltering(enabled: boolean, refresh?: boolean): void;",
+      "description": "필터링을 활성화/비활성화한다.",
+      "params": [
+        {
+          "name": "enabled",
+          "type": "boolean",
+          "description": "필터링 활성화 여부"
+        },
+        {
+          "name": "refresh",
+          "type": "boolean",
+          "optional": true,
+          "description": "그리드 새로고침 여부"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "setGroupingOptions",
+      "signature": "setGroupingOptions(options: GroupingOptions): void;",
+      "description": "그룹핑 옵션을 설정한다.",
+      "params": [
+        {
+          "name": "options",
+          "type": "GroupingOptions",
+          "description": "설정할 그룹핑 옵션"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "setTopItemIndex",
+      "signature": "setTopItemIndex(itemIndex: number): void;",
+      "description": "최상단에 표시할 아이템 인덱스를 설정한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "최상단에 표시할 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "showEditor",
+      "signature": "showEditor(): void;",
+      "description": "현재 셀의 편집기를 표시한다.",
+      "params": [],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "toggleCheckAll",
+      "signature": "toggleCheckAll(checked?: boolean): void;",
+      "description": "모든 행의 체크 상태를 토글한다.",
+      "params": [
+        {
+          "name": "checked",
+          "type": "boolean",
+          "optional": true,
+          "description": "체크 상태 (true: 체크, false: 체크 해제, undefined: 토글)"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "toggleGroupExpanded",
+      "signature": "toggleGroupExpanded(itemIndex: number): void;",
+      "description": "지정한 아이템 인덱스의 그룹 펼침 상태를 토글한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number",
+          "description": "토글할 그룹의 아이템 인덱스"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ]
+}

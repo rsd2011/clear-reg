@@ -1,0 +1,417 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "class",
+  "name": "GridBase",
+  "signature": "export declare abstract class GridBase",
+  "description": "GridBase는 RealGrid의 추상 기본 클래스입니다. 모든 속성과 method는 이를 상속한 하위 클래스(GridView, TreeView)에서만 호출할 수 있습니다.",
+  "remarks": "GridBase 의 모든 속성과 method 는 이를 상속한 하위 클래스들에서만 호출할 수 있다.\n[하위 클래스]\nGridView\nTreeView",
+  "events": [
+    {
+      "name": "onCellButtonClicked",
+      "signature": "(grid: GridBase, index: CellIndex, column: GridColumn) => void",
+      "description": "사용자가 데이터 셀 내부의 action 버튼을 클릭했을 때 호출한다.",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase",
+          "description": "GridBase 컨트롤"
+        },
+        {
+          "name": "index",
+          "type": "CellIndex",
+          "description": "클릭된 셀의 인덱스"
+        },
+        {
+          "name": "column",
+          "type": "GridColumn",
+          "description": "클릭된 셀의 컬럼"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onCellClicked",
+      "signature": "(grid: GridBase, clickData: ClickData) => void",
+      "description": "그리드 셀이 클릭되었음을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase",
+          "description": "GridBase 컨트롤"
+        },
+        {
+          "name": "clickData",
+          "type": "ClickData",
+          "description": "클릭 데이터 정보"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onCellDblClicked",
+      "signature": "(grid: GridBase, clickData: ClickData) => void",
+      "description": "그리드 셀이 더블 클릭되었음을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "clickData",
+          "type": "ClickData"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onCellEdited",
+      "signature": "(grid: GridBase, itemIndex: number, row: number, field: number) => void",
+      "description": "수정이나 추가 중인 편집 아이템의 한 필드값이 편집 완료되었음을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "itemIndex",
+          "type": "number"
+        },
+        {
+          "name": "row",
+          "type": "number"
+        },
+        {
+          "name": "field",
+          "type": "number"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onCellItemClicked",
+      "signature": "(grid: GridBase, index: CellIndex, clickData: ClickData) => boolean",
+      "description": "그리드 셀에 포함된 엘리먼트가 클릭되었음을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "index",
+          "type": "CellIndex"
+        },
+        {
+          "name": "clickData",
+          "type": "ClickData"
+        }
+      ],
+      "returns": {
+        "type": "boolean"
+      }
+    },
+    {
+      "name": "onCellPasting",
+      "signature": "(grid: GridBase, index: CellIndex, value: any, editResult: EditResult) => boolean",
+      "description": "셀에 붙여넣기를 결정하는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "index",
+          "type": "CellIndex"
+        },
+        {
+          "name": "value",
+          "type": "any"
+        },
+        {
+          "name": "editResult",
+          "type": "EditResult"
+        }
+      ],
+      "returns": {
+        "type": "boolean"
+      }
+    },
+    {
+      "name": "onColumnCheckedChanged",
+      "signature": "(grid: GridBase, column: GridColumn, checked: boolean) => void",
+      "description": "사용자의 컬럼 헤더 체크박스를 클릭을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "column",
+          "type": "GridColumn"
+        },
+        {
+          "name": "checked",
+          "type": "boolean"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onColumnPropertyChanged",
+      "signature": "(grid: GridBase, column: GridColumn, property: string, newValue: any, oldValue: any) => void",
+      "description": "",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "column",
+          "type": "GridColumn"
+        },
+        {
+          "name": "property",
+          "type": "string"
+        },
+        {
+          "name": "newValue",
+          "type": "any"
+        },
+        {
+          "name": "oldValue",
+          "type": "any"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onCommandStackChanged",
+      "signature": "(grid: GridBase, undoable: boolean, redoable: boolean) => void",
+      "description": "CommandStack이 바뀌었음을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "undoable",
+          "type": "boolean"
+        },
+        {
+          "name": "redoable",
+          "type": "boolean"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "onContextMenuItemClicked",
+      "signature": "(grid: GridBase, item: PopupMenuItem, clickData: ClickData) => void",
+      "description": "setContextMenu() 를 통해 추가한 컨텍스트 메뉴 항목 클릭을 알리는 콜백",
+      "params": [
+        {
+          "name": "grid",
+          "type": "GridBase"
+        },
+        {
+          "name": "item",
+          "type": "PopupMenuItem"
+        },
+        {
+          "name": "clickData",
+          "type": "ClickData"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ],
+  "properties": [
+    {
+      "name": "checkBar",
+      "type": "CheckBar",
+      "description": "그리드의 체크바에 관한 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "copyOptions",
+      "type": "CopyOptions",
+      "description": "클립보드에 복사하는 것에 대한 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "dataDropOptions",
+      "type": "DataDropOptions",
+      "description": "데이터 drag and drop 과 관련 된 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "disabled",
+      "type": "boolean",
+      "description": "그리드가 마우스/키보드 이벤트에 대하여 반응안함 상태",
+      "readonly": false
+    },
+    {
+      "name": "displayOptions",
+      "type": "DisplayOptions",
+      "description": "그리드 수준에서 관리되는 표시 정보들에 대한 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "editOptions",
+      "type": "EditOptions",
+      "description": "데이터 편집에 대한 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "editorOptions",
+      "type": "EditorOptions",
+      "description": "편집기에 대한 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "filteringOptions",
+      "type": "FilteringOptions",
+      "description": "데이터 필터링에 대한 설정 모델",
+      "readonly": false
+    },
+    {
+      "name": "filterPanel",
+      "type": "FilterPanel",
+      "description": "",
+      "readonly": false
+    },
+    {
+      "name": "fixedOptions",
+      "type": "FixedOptions",
+      "description": "그리드의 고정 행 및 컬럼에 대한 설정 모델",
+      "readonly": false
+    }
+  ],
+  "methods": [
+    {
+      "name": "activateAllColumnFilters",
+      "signature": "activateAllColumnFilters(column: string | DataColumn, active: boolean): void;",
+      "description": "컬럼에 등록된 모든 필터들을 적용 또는 해제한다.",
+      "params": [
+        {
+          "name": "column",
+          "type": "string | DataColumn",
+          "description": "대상 컬럼"
+        },
+        {
+          "name": "active",
+          "type": "boolean",
+          "description": "활성화 여부"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "activateColumnFilters",
+      "signature": "activateColumnFilters(column: string | DataColumn, filterNames: string | string[], active: boolean): void;",
+      "description": "컬럼에 등록된 필터들 중, filterNames 에 포함된 필터명을 갖는 필터들을 적용시키거나 해제한다.",
+      "params": [
+        {
+          "name": "column",
+          "type": "string | DataColumn"
+        },
+        {
+          "name": "filterNames",
+          "type": "string | string[]"
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "addColumn",
+      "signature": "addColumn(column: ConfigObject | string, index?: number): GridColumn;",
+      "description": "설정된 컬럼들 외에 추가로 컬럼을 설정한다.",
+      "params": [
+        {
+          "name": "column",
+          "type": "ConfigObject | string"
+        },
+        {
+          "name": "index",
+          "type": "number",
+          "optional": true
+        }
+      ],
+      "returns": {
+        "type": "GridColumn"
+      }
+    },
+    {
+      "name": "addColumnFilters",
+      "signature": "addColumnFilters(column: string | DataColumn, filters: ColumnFilter[], overwrite?: boolean): void;",
+      "description": "컬럼에 하나 이상의 필터를 등록한다. column.autoFilter가 true인 경우 적용되지 않는다.",
+      "params": [
+        {
+          "name": "column",
+          "type": "string | DataColumn"
+        },
+        {
+          "name": "filters",
+          "type": "ColumnFilter[]"
+        },
+        {
+          "name": "overwrite",
+          "type": "boolean",
+          "optional": true
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "addInvalidCell",
+      "signature": "addInvalidCell(itemIndex: number, fieldName: string | number, level: ValidationLevel, message: string): void;",
+      "description": "값을 검증한 결과값을 사용자가 그리드에 추가한다.",
+      "params": [
+        {
+          "name": "itemIndex",
+          "type": "number"
+        },
+        {
+          "name": "fieldName",
+          "type": "string | number"
+        },
+        {
+          "name": "level",
+          "type": "ValidationLevel"
+        },
+        {
+          "name": "message",
+          "type": "string"
+        }
+      ],
+      "returns": {
+        "type": "void"
+      }
+    }
+  ]
+}

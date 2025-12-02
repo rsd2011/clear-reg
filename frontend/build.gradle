@@ -1,0 +1,175 @@
+plugins {
+    id 'base'
+    alias(libs.plugins.node.gradle)
+}
+
+// Version Catalog에서 Node.js 버전 가져오기
+def nodeVersion = libs.versions.nodejs.get()
+
+// ========================================
+// Node.js 환경 설정
+// ========================================
+node {
+    // Node.js 버전 관리 (다운로드 모드)
+    download = true
+    version = nodeVersion
+
+    // settings.gradle에 Node.js 저장소가 정의되어 있으므로 플러그인의 저장소 추가 비활성화
+    distBaseUrl = null
+
+    // 작업 디렉토리 설정 (프로젝트 간 공유)
+    workDir = file("${rootProject.projectDir}/.gradle/nodejs")
+    npmWorkDir = file("${rootProject.projectDir}/.gradle/npm")
+
+    // npm ci 사용 (CI/CD 환경에서 더 안정적)
+    npmInstallCommand = "ci"
+
+    // 프로젝트 디렉토리
+    nodeProjectDir = file(projectDir)
+}
+
+// ========================================
+// Application Tasks
+// ========================================
+tasks.register('dev', NpmTask) {
+    description = 'Start Nuxt development server'
+    group = 'application'
+    dependsOn npmInstall
+    args = ['run', 'dev']
+}
+
+tasks.register('preview', NpmTask) {
+    description = 'Preview production build'
+    group = 'application'
+    dependsOn 'buildFrontend'
+    args = ['run', 'preview']
+}
+
+// ========================================
+// Build Tasks
+// ========================================
+tasks.register('buildFrontend', NpmTask) {
+    description = 'Build Nuxt application for production'
+    group = 'build'
+    dependsOn npmInstall
+    args = ['run', 'build']
+
+    inputs.dir 'app'
+    inputs.file 'nuxt.config.ts'
+    inputs.file 'package.json'
+    inputs.file 'package-lock.json'
+    outputs.dir '.output'
+}
+
+tasks.register('generate', NpmTask) {
+    description = 'Generate static site'
+    group = 'build'
+    dependsOn npmInstall
+    args = ['run', 'generate']
+
+    inputs.dir 'app'
+    inputs.file 'nuxt.config.ts'
+    inputs.file 'package.json'
+    outputs.dir '.output/public'
+}
+
+// ========================================
+// Code Quality Tasks
+// ========================================
+tasks.register('lint', NpmTask) {
+    description = 'Run ESLint'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'lint']
+}
+
+tasks.register('lintFix', NpmTask) {
+    description = 'Run ESLint with auto-fix'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'lint:fix']
+}
+
+tasks.register('typeCheck', NpmTask) {
+    description = 'Run TypeScript type checking'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'type:check']
+}
+
+// ========================================
+// Test Tasks
+// ========================================
+tasks.register('test', NpmTask) {
+    description = 'Run all tests'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'test']
+}
+
+tasks.register('testWatch', NpmTask) {
+    description = 'Run tests in watch mode'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'test:watch']
+}
+
+tasks.register('testUnit', NpmTask) {
+    description = 'Run unit tests only'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'test:unit']
+}
+
+tasks.register('testNuxt', NpmTask) {
+    description = 'Run Nuxt integration tests'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'test:nuxt']
+}
+
+tasks.register('testCoverage', NpmTask) {
+    description = 'Run tests with coverage'
+    group = 'verification'
+    dependsOn npmInstall
+    args = ['run', 'test:coverage']
+}
+
+// ========================================
+// Backend Integration
+// ========================================
+tasks.register('copyToBackend', Copy) {
+    description = 'Copy built assets to backend static resources'
+    group = 'build'
+    dependsOn 'buildFrontend'
+
+    from '.output/public'
+    into "${rootProject.projectDir}/backend/server/src/main/resources/static"
+
+    doFirst {
+        delete "${rootProject.projectDir}/backend/server/src/main/resources/static/_nuxt"
+    }
+}
+
+// ========================================
+// Lifecycle Hooks
+// ========================================
+tasks.named('clean') {
+    delete '.nuxt'
+    delete '.output'
+}
+
+tasks.register('cleanAll', Delete) {
+    description = 'Clean all including node_modules'
+    group = 'build'
+    dependsOn 'clean'
+    delete 'node_modules'
+}
+
+tasks.named('build') {
+    dependsOn 'buildFrontend'
+}
+
+tasks.named('check') {
+    dependsOn 'lint', 'typeCheck'
+}

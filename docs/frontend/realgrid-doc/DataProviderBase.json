@@ -1,0 +1,237 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "class",
+  "name": "DataProviderBase",
+  "signature": "export declare abstract class DataProviderBase",
+  "description": "DataProviderBase는 RealGrid의 데이터 제공자 추상 기본 클래스입니다.",
+  "remarks": "DataProviderBase 의 모든 속성과 method 는 이를 상속한 하위 클래스들에서만 호출할 수 있다.\n[하위 클래스]\nLocalDataProvider\nLocalTreeDataProvider",
+  "properties": [
+    {
+      "name": "amText",
+      "type": "string",
+      "description": "데이터에서 오전에 해당하는 문자열",
+      "readonly": false
+    },
+    {
+      "name": "baseYear",
+      "type": "number",
+      "description": "기준 연도. 2자리 년도를 4자리로 변환할 때 기준이 되는 년도",
+      "readonly": false
+    },
+    {
+      "name": "booleanFormat",
+      "type": "string",
+      "description": "boolean 값을 문자열로 표시할 때 사용할 포맷",
+      "readonly": false
+    },
+    {
+      "name": "checkStates",
+      "type": "string[]",
+      "description": "체크 상태를 나타내는 문자열 배열",
+      "readonly": true
+    },
+    {
+      "name": "commitBeforeDataEdit",
+      "type": "boolean",
+      "description": "데이터 수정 전 자동 커밋 여부",
+      "readonly": false
+    },
+    {
+      "name": "datetimeFormat",
+      "type": "string",
+      "description": "날짜/시간 데이터의 기본 포맷",
+      "readonly": false
+    },
+    {
+      "name": "deletable",
+      "type": "boolean",
+      "description": "데이터 행 삭제 가능 여부",
+      "readonly": false
+    },
+    {
+      "name": "deleteCreated",
+      "type": "boolean",
+      "description": "생성된 행을 삭제할 때 완전히 제거할지 여부",
+      "readonly": false
+    },
+    {
+      "name": "insertable",
+      "type": "boolean",
+      "description": "데이터 행 삽입 가능 여부",
+      "readonly": false
+    },
+    {
+      "name": "pmText",
+      "type": "string",
+      "description": "데이터에서 오후에 해당하는 문자열",
+      "readonly": false
+    },
+    {
+      "name": "restoreMode",
+      "type": "string",
+      "description": "복원 모드 설정",
+      "readonly": false
+    },
+    {
+      "name": "softDeleting",
+      "type": "boolean",
+      "description": "소프트 삭제 모드 사용 여부",
+      "readonly": false
+    },
+    {
+      "name": "strictRestore",
+      "type": "boolean",
+      "description": "엄격한 복원 모드 사용 여부",
+      "readonly": false
+    },
+    {
+      "name": "subTypeEnabled",
+      "type": "boolean",
+      "description": "하위 타입 사용 여부",
+      "readonly": false
+    },
+    {
+      "name": "undoable",
+      "type": "boolean",
+      "description": "실행 취소 가능 여부",
+      "readonly": false
+    },
+    {
+      "name": "updatable",
+      "type": "boolean",
+      "description": "데이터 행 수정 가능 여부",
+      "readonly": false
+    },
+    {
+      "name": "valuesCallback",
+      "type": "Function",
+      "description": "값 변환 콜백 함수",
+      "readonly": false
+    }
+  ],
+  "methods": [
+    {
+      "name": "addField",
+      "signature": "addField(field: DataFieldInput, resetFields?: boolean, calculateData?: boolean): DataField;",
+      "description": "필드를 추가로 생성한다.",
+      "params": [
+        {
+          "name": "field",
+          "type": "DataFieldInput",
+          "description": "추가할 필드 정보"
+        },
+        {
+          "name": "resetFields",
+          "type": "boolean",
+          "optional": true,
+          "description": "기존 필드 리셋 여부"
+        },
+        {
+          "name": "calculateData",
+          "type": "boolean",
+          "optional": true,
+          "description": "데이터 재계산 여부"
+        }
+      ],
+      "returns": {
+        "type": "DataField",
+        "description": "추가된 필드 객체"
+      }
+    },
+    {
+      "name": "beginUpdate",
+      "signature": "beginUpdate(): void;",
+      "description": "데이터 업데이트를 시작한다. endUpdate와 쌍으로 사용"
+    },
+    {
+      "name": "checkRowStates",
+      "signature": "checkRowStates(states: RowState | RowState[]): number[];",
+      "description": "지정한 상태에 해당하는 데이터 행들의 인덱스를 반환한다."
+    },
+    {
+      "name": "clearCommandStack",
+      "signature": "clearCommandStack(): void;",
+      "description": "실행 취소/재실행 명령 스택을 모두 지운다."
+    },
+    {
+      "name": "clearRowStates",
+      "signature": "clearRowStates(deleteRows?: boolean, rowEvents?: boolean): void;",
+      "description": "모든 행의 상태를 초기화한다."
+    },
+    {
+      "name": "clearSavePoints",
+      "signature": "clearSavePoints(): void;",
+      "description": "저장 지점을 모두 제거한다."
+    },
+    {
+      "name": "destroy",
+      "signature": "destroy(): void;",
+      "description": "DataProvider 객체를 소멸시킨다."
+    },
+    {
+      "name": "endUpdate",
+      "signature": "endUpdate(refresh?: boolean): void;",
+      "description": "데이터 업데이트를 종료한다."
+    },
+    {
+      "name": "exportToCsv",
+      "signature": "exportToCsv(options?: DataExportOptions): string;",
+      "description": "데이터를 CSV 형식으로 내보낸다."
+    },
+    {
+      "name": "fieldByName",
+      "signature": "fieldByName(fieldName: string): DataField;",
+      "description": "필드 이름으로 DataField 객체를 가져온다."
+    },
+    {
+      "name": "getAllStateRows",
+      "signature": "getAllStateRows(): object;",
+      "description": "모든 상태 행들의 정보를 객체로 반환한다."
+    },
+    {
+      "name": "getDataRowId",
+      "signature": "getDataRowId(dataRow: number): any;",
+      "description": "데이터 행의 ID를 반환한다."
+    },
+    {
+      "name": "getDistinctValues",
+      "signature": "getDistinctValues(field: string, maxCount?: number): any[];",
+      "description": "지정한 필드의 고유한 값들을 배열로 반환한다."
+    },
+    {
+      "name": "getFieldCount",
+      "signature": "getFieldCount(): number;",
+      "description": "필드의 개수를 반환한다."
+    },
+    {
+      "name": "getFieldIndex",
+      "signature": "getFieldIndex(fieldName: string): number;",
+      "description": "필드 이름으로 필드 인덱스를 반환한다."
+    },
+    {
+      "name": "getFieldName",
+      "signature": "getFieldName(fieldIndex: number): string;",
+      "description": "필드 인덱스로 필드 이름을 반환한다."
+    },
+    {
+      "name": "getFieldNames",
+      "signature": "getFieldNames(): string[];",
+      "description": "모든 필드 이름을 배열로 반환한다."
+    },
+    {
+      "name": "getFields",
+      "signature": "getFields(): DataField[];",
+      "description": "모든 DataField 객체를 배열로 반환한다."
+    },
+    {
+      "name": "getOptions",
+      "signature": "getOptions(): DataProviderOptions;",
+      "description": "DataProvider의 옵션 객체를 반환한다."
+    },
+    {
+      "name": "getOrgFieldName",
+      "signature": "getOrgFieldName(fieldName: string): string;",
+      "description": "필드의 원본 이름을 반환한다."
+    }
+  ]
+}

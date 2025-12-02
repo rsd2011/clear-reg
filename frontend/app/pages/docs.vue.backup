@@ -1,0 +1,195 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useThemeStore } from '~/stores/theme'
+import { useAppToast } from '~/composables/useAppToast'
+import type { ThemeName, ThemeMode } from '~/themes'
+
+const themeStore = useThemeStore()
+const toast = useAppToast()
+
+// Form 상태
+const inputValue = ref('')
+const searchQuery = ref('')
+const checkboxValue = ref(false)
+const numberValue = ref(10)
+
+// Data 상태
+const tableData = ref([
+  { id: 1, name: '홍길동', email: 'hong@example.com' },
+  { id: 2, name: '김철수', email: 'kim@example.com' },
+  { id: 3, name: '이영희', email: 'lee@example.com' },
+])
+const tableColumns = [
+  { field: 'name', header: '이름', sortable: true },
+  { field: 'email', header: '이메일', sortable: true },
+]
+
+// Panel 상태
+const activeTab = ref('form')
+
+// Overlay 상태
+const dialogVisible = ref(false)
+const drawerVisible = ref(false)
+
+// Handlers
+function handleThemeChange(name: ThemeName) {
+  themeStore.setTheme(name)
+  toast.success(`테마 변경: ${name}`)
+}
+
+function handleSearch(query: string) {
+  toast.info(`검색: ${query}`)
+}
+
+function handleConfirm() {
+  toast.success('확인되었습니다')
+}
+</script>
+
+<template>
+  <NuxtLayout>
+    <div class="max-w-7xl mx-auto p-8 space-y-8">
+      <!-- 헤더 -->
+      <header class="text-center space-y-4">
+        <h1 class="text-4xl font-bold">컴포넌트 라이브러리</h1>
+        <p class="text-lg opacity-70">33개의 PrimeVue 기반 컴포넌트</p>
+      </header>
+
+      <!-- 테마 설정 -->
+      <section>
+        <h2 class="text-2xl font-semibold mb-4">테마 설정</h2>
+        <PanelCard title="테마 선택">
+          <div class="flex gap-2 flex-wrap">
+            <ActionButton
+              v-for="theme in themeStore.availableThemes"
+              :key="theme.value"
+              :label="theme.label"
+              :severity="themeStore.themeName === theme.value ? 'info' : 'secondary'"
+              @click="handleThemeChange(theme.value)"
+            />
+          </div>
+        </PanelCard>
+      </section>
+
+      <!-- 탭 네비게이션 -->
+      <PanelTabs
+        v-model:value="activeTab"
+        :items="[
+          { value: 'form', label: '📝 Form', icon: 'pi pi-pencil' },
+          { value: 'action', label: '🔘 Action', icon: 'pi pi-bolt' },
+          { value: 'data', label: '📊 Data', icon: 'pi pi-table' },
+          { value: 'panel', label: '📦 Panel', icon: 'pi pi-box' },
+          { value: 'overlay', label: '🪟 Overlay', icon: 'pi pi-window-maximize' },
+          { value: 'feedback', label: '💬 Feedback', icon: 'pi pi-comment' },
+          { value: 'composite', label: '🔗 Composite', icon: 'pi pi-link' },
+        ]"
+      >
+        <!-- Form 탭 -->
+        <template #form>
+          <div class="space-y-6">
+            <PanelCard title="Form 컴포넌트">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField label="Input" required>
+                  <FormInput v-model="inputValue" placeholder="텍스트 입력" fluid />
+                </FormField>
+                <FormField label="Checkbox">
+                  <FormCheckbox v-model="checkboxValue" label="동의합니다" />
+                </FormField>
+                <FormField label="Number">
+                  <FormNumber v-model="numberValue" :min="0" :max="100" fluid />
+                </FormField>
+              </div>
+            </PanelCard>
+          </div>
+        </template>
+
+        <!-- Action 탭 -->
+        <template #action>
+          <PanelCard title="Action 컴포넌트">
+            <div class="flex gap-2 flex-wrap">
+              <ActionButton label="Primary" />
+              <ActionButton label="Success" severity="success" />
+              <ActionButton label="Icon" icon="pi pi-check" />
+              <ActionButton label="Loading" loading />
+              <ConfirmButton label="Confirm" @confirm="handleConfirm" />
+            </div>
+          </PanelCard>
+        </template>
+
+        <!-- Data 탭 -->
+        <template #data>
+          <PanelCard title="Data 컴포넌트">
+            <DataTable :value="tableData" :columns="tableColumns" paginator :rows="5" />
+          </PanelCard>
+        </template>
+
+        <!-- Panel 탭 -->
+        <template #panel>
+          <div class="space-y-6">
+            <PanelCard title="Card 컴포넌트">
+              <p>기본 카드입니다</p>
+            </PanelCard>
+            <PanelToolbar>
+              <template #start>
+                <span class="font-semibold">Toolbar</span>
+              </template>
+              <template #end>
+                <ActionButton label="액션" size="small" />
+              </template>
+            </PanelToolbar>
+          </div>
+        </template>
+
+        <!-- Overlay 탭 -->
+        <template #overlay>
+          <PanelCard title="Overlay 컴포넌트">
+            <div class="flex gap-2">
+              <ActionButton label="Dialog 열기" @click="dialogVisible = true" />
+              <ActionButton label="Drawer 열기" @click="drawerVisible = true" />
+            </div>
+            
+            <OverlayDialog v-model:visible="dialogVisible" header="샘플 Dialog">
+              <p>Dialog 내용입니다</p>
+            </OverlayDialog>
+            
+            <OverlayDrawer v-model:visible="drawerVisible" header="샘플 Drawer">
+              <p>Drawer 내용입니다</p>
+            </OverlayDrawer>
+          </PanelCard>
+        </template>
+
+        <!-- Feedback 탭 -->
+        <template #feedback>
+          <PanelCard title="Feedback 컴포넌트">
+            <div class="space-y-4">
+              <div class="flex gap-2 items-center">
+                <FeedbackBadge value="New" severity="success" />
+                <FeedbackTag value="Important" severity="warn" />
+                <StatusBadge status="active" />
+              </div>
+              <FeedbackProgress :value="60" />
+            </div>
+          </PanelCard>
+        </template>
+
+        <!-- Composite 탭 -->
+        <template #composite>
+          <div class="space-y-6">
+            <PanelCard title="Composite 컴포넌트">
+              <div class="space-y-4">
+                <SearchBar v-model="searchQuery" @search="handleSearch" />
+                <DataTableToolbar title="데이터 테이블" show-refresh show-add />
+              </div>
+            </PanelCard>
+          </div>
+        </template>
+      </PanelTabs>
+
+      <!-- 푸터 -->
+      <footer class="text-center py-8 opacity-50 text-sm">
+        <p>Enterman Component Library</p>
+        <p>33 Components • Base + Composite + Common</p>
+      </footer>
+    </div>
+  </NuxtLayout>
+</template>

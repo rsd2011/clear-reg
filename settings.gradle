@@ -12,6 +12,20 @@ dependencyResolutionManagement {
     repositories {
         mavenCentral()
         maven { url "https://jitpack.io" }
+        // Node.js 배포 저장소 (node-gradle 플러그인용)
+        ivy {
+            name = "Node.js"
+            setUrl("https://nodejs.org/dist/")
+            patternLayout {
+                artifact("v[revision]/[artifact](-v[revision]-[classifier]).[ext]")
+            }
+            metadataSources {
+                artifact()
+            }
+            content {
+                includeModule("org.nodejs", "node")
+            }
+        }
     }
 }
 
@@ -34,3 +48,6 @@ include('backend:dw-worker')
 include('backend:dw-gateway-client')
 include('backend:audit')
 include('backend:approval')
+
+// Frontend module (Nuxt.js)
+include('frontend')

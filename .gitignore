@@ -149,3 +149,12 @@ src/main/resources/upload
 src/main/resources/manual
 
 .vscode
+
+# Nuxt.js (frontend/)
+frontend/.nuxt/
+frontend/.output/
+frontend/.data/
+frontend/.gradle/
+
+# hysky
+frontend/.husky/

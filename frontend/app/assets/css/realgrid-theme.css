@@ -1,0 +1,169 @@
+/* ===================================
+   RealGrid 프로젝트 테마 - 색상 덮어쓰기
+   기본 스타일(realgrid-style.css) 위에 적용
+   =================================== */
+
+/*
+  전략: CSS specificity를 높여 RealGrid 기본 스타일 덮어쓰기
+  .theme-* .realgrid-wrapper ... (3개 클래스) > .rg-* (1개 클래스)
+*/
+
+/* Linear Dark 테마 - 다크 모드 (기본) */
+.theme-linear-dark .realgrid-wrapper .rg-root,
+.theme-linear-dark .realgrid-wrapper .rg-body {
+  --rg-background: #1e1e1e;
+  --rg-text-color: #e0e0e0;
+  background-color: var(--rg-background) !important;
+  color: var(--rg-text-color) !important;
+}
+
+.theme-linear-dark .realgrid-wrapper .rg-header,
+.theme-linear-dark .realgrid-wrapper .rg-header-cell {
+  --rg-header-background: #2d2d2d;
+  --rg-header-text-color: #ffffff;
+  background-color: var(--rg-header-background) !important;
+  color: var(--rg-header-text-color) !important;
+}
+
+.theme-linear-dark .realgrid-wrapper .rg-data-cell {
+  --rg-primary: #5e6ad2;              /* Linear Indigo */
+  --rg-border-color: #444444;
+  border-color: var(--rg-border-color) !important;
+}
+
+.theme-linear-dark .realgrid-wrapper .rg-data-row:nth-child(even),
+.theme-linear-dark .realgrid-wrapper .rg-alternate-row {
+  --rg-row-alt-background: #252525;
+  background-color: var(--rg-row-alt-background) !important;
+}
+
+.theme-linear-dark .realgrid-wrapper .rg-data-row[aria-selected="true"] {
+  --rg-selection-background: #264f78;
+  background-color: var(--rg-selection-background) !important;
+}
+
+.theme-linear-dark .realgrid-wrapper .rg-data-row:hover {
+  --rg-hover-background: #2a2a2a;
+  background-color: var(--rg-hover-background) !important;
+}
+
+/* Linear Dark + 라이트 모드 */
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-root,
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-body {
+  --rg-background: #ffffff;
+  --rg-text-color: #16171a;
+  background-color: var(--rg-background) !important;
+  color: var(--rg-text-color) !important;
+}
+
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-header,
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-header-cell {
+  --rg-header-background: #f7f8f9;
+  --rg-header-text-color: #16171a;
+  background-color: var(--rg-header-background) !important;
+  color: var(--rg-header-text-color) !important;
+}
+
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-data-cell {
+  --rg-border-color: #e3e4e8;
+  border-color: var(--rg-border-color) !important;
+}
+
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-data-row:nth-child(even),
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-alternate-row {
+  --rg-row-alt-background: #fafbfc;
+  background-color: var(--rg-row-alt-background) !important;
+}
+
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-data-row[aria-selected="true"] {
+  --rg-selection-background: #eef0ff;
+  background-color: var(--rg-selection-background) !important;
+}
+
+.theme-linear-dark:not(.app-dark) .realgrid-wrapper .rg-data-row:hover {
+  --rg-hover-background: #f5f6f7;
+  background-color: var(--rg-hover-background) !important;
+}
+
+/* Koscom Light 테마 - 라이트 모드 (기본) */
+.theme-koscom-light .realgrid-wrapper .rg-root,
+.theme-koscom-light .realgrid-wrapper .rg-body {
+  --rg-background: #f8f9fa;
+  --rg-text-color: #212529;
+  background-color: var(--rg-background) !important;
+  color: var(--rg-text-color) !important;
+}
+
+.theme-koscom-light .realgrid-wrapper .rg-header,
+.theme-koscom-light .realgrid-wrapper .rg-header-cell {
+  --rg-header-background: #004c99;
+  --rg-header-text-color: #ffffff;
+  background-color: var(--rg-header-background) !important;
+  color: var(--rg-header-text-color) !important;
+}
+
+.theme-koscom-light .realgrid-wrapper .rg-data-cell {
+  --rg-primary: #f06e1e;
+  --rg-border-color: #cbd5e0;
+  border-color: var(--rg-border-color) !important;
+}
+
+.theme-koscom-light .realgrid-wrapper .rg-data-row:nth-child(even),
+.theme-koscom-light .realgrid-wrapper .rg-alternate-row {
+  --rg-row-alt-background: #f1f5f9;
+  background-color: var(--rg-row-alt-background) !important;
+}
+
+.theme-koscom-light .realgrid-wrapper .rg-data-row[aria-selected="true"] {
+  --rg-selection-background: #cce5ff;
+  background-color: var(--rg-selection-background) !important;
+}
+
+.theme-koscom-light .realgrid-wrapper .rg-data-row:hover {
+  --rg-hover-background: #e2e8f0;
+  background-color: var(--rg-hover-background) !important;
+}
+
+/* Koscom Light + 다크 모드 */
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-root,
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-body {
+  --rg-background: #1e1e1e;
+  --rg-text-color: #e0e0e0;
+  background-color: var(--rg-background) !important;
+  color: var(--rg-text-color) !important;
+}
+
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-header,
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-header-cell {
+  --rg-header-background: #d45a0f;    /* 약간 어두운 Orange */
+  --rg-header-text-color: #ffffff;
+  background-color: var(--rg-header-background) !important;
+  color: var(--rg-header-text-color) !important;
+}
+
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-data-cell {
+  --rg-border-color: #444444;
+  border-color: var(--rg-border-color) !important;
+}
+
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-data-row:nth-child(even),
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-alternate-row {
+  --rg-row-alt-background: #252525;
+  background-color: var(--rg-row-alt-background) !important;
+}
+
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-data-row[aria-selected="true"] {
+  --rg-selection-background: #264f78;
+  background-color: var(--rg-selection-background) !important;
+}
+
+.theme-koscom-light.app-dark .realgrid-wrapper .rg-data-row:hover {
+  --rg-hover-background: #2a2a2a;
+  background-color: var(--rg-hover-background) !important;
+}
+
+/* 참고:
+   - 기본 레이아웃(padding, font-size, height 등)은 realgrid-style.css 유지
+   - 색상만 CSS 변수와 !important로 덮어쓰기
+   - CSS specificity: .theme-* .realgrid-wrapper .rg-* (3개 클래스) > .rg-* (1개 클래스)
+*/

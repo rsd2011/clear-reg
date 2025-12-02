@@ -1,0 +1,251 @@
+{
+  "name": "Koscom Theme",
+  "description": "코스콤(KOSCOM) 웹사이트에서 추출한 테마 디자인 시스템",
+  "source": "https://www.koscom.co.kr/",
+  "extractedAt": "2025-01-25",
+
+  "colors": {
+    "semantic": {
+      "background": {
+        "primary": "#ffffff",
+        "secondary": "#f5f5f5",
+        "tertiary": "#f6f6f6",
+        "footer": "#f5f5f5",
+        "dark": "#000000"
+      },
+      "text": {
+        "primary": "#3c3c3c",
+        "secondary": "#5d6060",
+        "tertiary": "#333333",
+        "muted": "#494949",
+        "inverse": "#ffffff"
+      },
+      "border": {
+        "default": "rgba(200, 200, 200, 0.25)",
+        "subtle": "#d6d6d6",
+        "strong": "#5d6060"
+      },
+      "accent": {
+        "primary": "#f06e1e",
+        "hover": "#e96717"
+      }
+    },
+    "palette": {
+      "white": "#ffffff",
+      "black": "#000000",
+      "gray": {
+        "50": "#f6f6f6",
+        "100": "#f5f5f5",
+        "200": "#f0f0f0",
+        "300": "#efefef",
+        "400": "#d6d6d6",
+        "500": "#aaaaaa",
+        "600": "#999999",
+        "700": "#797575",
+        "800": "#5d6060",
+        "900": "#3c3c3c"
+      },
+      "orange": {
+        "primary": "#f06e1e",
+        "dark": "#ed6d1e",
+        "darker": "#e96717"
+      },
+      "blue": "#3366cc",
+      "blueAccent": "#4368f2",
+      "red": "#ff2a2a",
+      "redBright": "#ff1e1e",
+      "status": {
+        "up": "#ff1e1e",
+        "down": "#3366cc",
+        "success": "#68cc58",
+        "warning": "#f06e1e",
+        "error": "#ff2a2a",
+        "info": "#4368f2"
+      }
+    },
+    "brand": {
+      "koscomOrange": "#f06e1e",
+      "koscomDark": "#373939"
+    }
+  },
+
+  "typography": {
+    "fontFamily": {
+      "primary": "\"Noto Sans KR\", sans-serif",
+      "secondary": "\"Nanum Gothic\", 나눔고딕, 맑은고딕, \"malgun gothic\", AppleGothic, 돋움, dotum, Helvetica, Arial, sans-serif",
+      "mono": "monospace"
+    },
+    "fontWeight": {
+      "normal": 400,
+      "bold": 700,
+      "extraBold": 800
+    },
+    "fontSize": {
+      "xs": "13px",
+      "sm": "14px",
+      "base": "15px",
+      "md": "17px",
+      "lg": "20px",
+      "xl": "26px",
+      "2xl": "38px"
+    },
+    "lineHeight": {
+      "tight": 1.1,
+      "snug": 1.25,
+      "normal": 1.5,
+      "relaxed": 1.53,
+      "loose": 1.6
+    },
+    "letterSpacing": {
+      "tight": "-0.75px",
+      "normal": "-0.25px",
+      "wide": "0"
+    }
+  },
+
+  "spacing": {
+    "layout": {
+      "headerHeight": "90px",
+      "pagePaddingInline": "24px",
+      "pagePaddingBlock": "40px",
+      "pageMaxWidth": "1200px"
+    }
+  },
+
+  "borderRadius": {
+    "none": "0px",
+    "sm": "4px",
+    "md": "8px",
+    "lg": "12px"
+  },
+
+  "effects": {
+    "shadows": {
+      "none": "none",
+      "card": "0 2px 8px rgba(0, 0, 0, 0.1)"
+    }
+  },
+
+  "components": {
+    "header": {
+      "height": "90px",
+      "backgroundColor": "transparent",
+      "borderBottom": "2px solid #f06e1e",
+      "color": "#5d6060"
+    },
+    "navigation": {
+      "backgroundColor": "transparent",
+      "color": "#5d6060",
+      "fontFamily": "\"Noto Sans KR\", sans-serif",
+      "fontSize": "13px"
+    },
+    "footer": {
+      "backgroundColor": "#f5f5f5",
+      "color": "#5d6060"
+    },
+    "button": {
+      "primary": {
+        "backgroundColor": "#f06e1e",
+        "color": "#ffffff",
+        "borderRadius": "0px"
+      },
+      "secondary": {
+        "backgroundColor": "#efefef",
+        "color": "#000000",
+        "borderRadius": "0px"
+      }
+    },
+    "stockTicker": {
+      "upColor": "#ff1e1e",
+      "downColor": "#3366cc",
+      "backgroundColor": "transparent"
+    },
+    "headings": {
+      "h1": {
+        "color": "#3c3c3c",
+        "fontFamily": "\"Noto Sans KR\", sans-serif",
+        "fontSize": "13px",
+        "fontWeight": 700,
+        "letterSpacing": "-0.25px"
+      },
+      "h2": {
+        "color": "#f06e1e",
+        "fontFamily": "\"Noto Sans KR\", sans-serif",
+        "fontSize": "38px",
+        "fontWeight": 700
+      },
+      "h3": {
+        "color": "#3c3c3c",
+        "fontFamily": "\"Noto Sans KR\", sans-serif",
+        "fontSize": "20px",
+        "fontWeight": 700,
+        "lineHeight": "50px",
+        "letterSpacing": "-0.25px"
+      },
+      "h4": {
+        "color": "#333333",
+        "fontFamily": "\"Noto Sans KR\", sans-serif",
+        "fontSize": "17px",
+        "fontWeight": 700
+      },
+      "h5": {
+        "color": "#373939",
+        "fontFamily": "\"Noto Sans KR\", sans-serif",
+        "fontSize": "14px",
+        "fontWeight": 800
+      }
+    },
+    "paragraph": {
+      "color": "#3c3c3c",
+      "fontFamily": "\"Noto Sans KR\", sans-serif",
+      "fontSize": "17px",
+      "fontWeight": 400,
+      "lineHeight": "26px",
+      "letterSpacing": "-0.75px"
+    },
+    "link": {
+      "color": "#3c3c3c",
+      "textDecoration": "none",
+      "fontWeight": 400
+    }
+  },
+
+  "tailwindConfig": {
+    "extend": {
+      "colors": {
+        "koscom": {
+          "bg": {
+            "primary": "#ffffff",
+            "secondary": "#f5f5f5",
+            "tertiary": "#f6f6f6",
+            "dark": "#000000"
+          },
+          "text": {
+            "primary": "#3c3c3c",
+            "secondary": "#5d6060",
+            "tertiary": "#333333"
+          },
+          "border": {
+            "DEFAULT": "rgba(200, 200, 200, 0.25)",
+            "subtle": "#d6d6d6",
+            "strong": "#5d6060"
+          },
+          "orange": "#f06e1e",
+          "blue": "#3366cc",
+          "red": "#ff1e1e",
+          "stock": {
+            "up": "#ff1e1e",
+            "down": "#3366cc"
+          }
+        }
+      },
+      "fontFamily": {
+        "noto": ["Noto Sans KR", "sans-serif"],
+        "nanum": ["Nanum Gothic", "나눔고딕", "맑은고딕", "malgun gothic", "sans-serif"]
+      },
+      "borderRadius": {
+        "koscom": "0px"
+      }
+    }
+  }
+}

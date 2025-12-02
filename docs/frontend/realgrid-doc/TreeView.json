@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "class",
+  "name": "TreeView",
+  "signature": "export declare class TreeView extends GridBase",
+  "description": "TreeView는 RealGrid의 트리 뷰 클래스입니다.",
+  "remarks": "[상위 클래스]\nGridBase",
+  "extends": "GridBase",
+  "events": [
+    {
+      "name": "onTreeItemChanged",
+      "signature": "(tree: TreeView, itemIndex: number, rowId: number) => void",
+      "description": "TreeView의 값이 변경되었음을 알리는 콜백"
+    },
+    {
+      "name": "onTreeItemCollapsed",
+      "signature": "(tree: TreeView, itemIndex: number, rowId: number) => void",
+      "description": "TreeView의 아이템 노드가 졉혔음을 알리는 콜백"
+    },
+    {
+      "name": "onTreeItemCollapsing",
+      "signature": "(tree: TreeView, itemIndex: number, rowId: number) => void",
+      "description": "TreeView의 아이템 노드 접힘을 결정하는 콜백"
+    },
+    {
+      "name": "onTreeItemExpanded",
+      "signature": "(tree: TreeView, itemIndex: number, rowId: number) => void",
+      "description": "TreeView의 아이템 노드가 펼쳐졌음을 알리는 콜백"
+    },
+    {
+      "name": "onTreeItemExpanding",
+      "signature": "(tree: TreeView, itemIndex: number, rowId: number) => boolean",
+      "description": "TreeView의 아이템 노드 펼치기를 결정하는 콜백"
+    }
+  ],
+  "properties": [
+    {
+      "name": "treeOptions",
+      "type": "TreeOptions",
+      "description": "TreeView 만이 고유로 가지는 설정 모델"
+    }
+  ],
+  "methods": [
+    {
+      "name": "checkChildren",
+      "signature": "checkChildren(itemIndex: number, checked: boolean, recursive: boolean, visibleOnly: boolean, checkableOnly: boolean, checkEvent?: boolean): void;",
+      "description": "입력된 행의 자식 행들을 체크하거나 해제한다."
+    },
+    {
+      "name": "collapse",
+      "signature": "collapse(itemIndex: number, recursive?: boolean): void;",
+      "description": "행을 접는다."
+    },
+    {
+      "name": "collapseAll",
+      "signature": "collapseAll(): void;",
+      "description": "모든 행을 접는다."
+    },
+    {
+      "name": "collapseModel",
+      "signature": "collapseModel(model: GridItem, recursive: boolean): void;",
+      "description": "아이템(행)을 접는다."
+    },
+    {
+      "name": "expand",
+      "signature": "expand(itemIndex: number, recursive?: boolean, force?: boolean, level?: number): void;",
+      "description": "행을 펼친다."
+    },
+    {
+      "name": "expandAll",
+      "signature": "expandAll(level?: number, renewHasChildren?: boolean): void;",
+      "description": "모든 행을 펼친다."
+    },
+    {
+      "name": "expandModel",
+      "signature": "expandModel(model: GridItem, recursive?: boolean, force?: boolean, level?: number): void;",
+      "description": "아이템(행)을 펼친다."
+    },
+    {
+      "name": "getAncestors",
+      "signature": "getAncestors(itemIndex: number, includeRoot?: boolean): number[];",
+      "description": "조상 행들의 인덱스들을 반환한다."
+    },
+    {
+      "name": "getCheckedItems",
+      "signature": "getCheckedItems(): number[];",
+      "description": "Check된 아이템들의 index 목록을 배열로 반환한다."
+    },
+    {
+      "name": "getCheckedRows",
+      "signature": "getCheckedRows(visibleOnly: boolean): number[];",
+      "description": "Check된 데이터 행들의 index 목록을 반환한다."
+    },
+    {
+      "name": "getChildren",
+      "signature": "getChildren(itemIndex: number): number[];",
+      "description": "자식 행들의 인덱스들을 반환한다."
+    },
+    {
+      "name": "getDataSource",
+      "signature": "getDataSource(): LocalTreeDataProvider;",
+      "description": "트리에 연결되어 있는 DataProvider를 반환한다."
+    },
+    {
+      "name": "getDescendants",
+      "signature": "getDescendants(itemIndex: number): number[];",
+      "description": "자손 행들의 인덱스들을 반환한다."
+    },
+    {
+      "name": "getParent",
+      "signature": "getParent(itemIndex: number): number;",
+      "description": "부모 행의 인덱스를 반환한다."
+    },
+    {
+      "name": "getTreeOptions",
+      "signature": "getTreeOptions(): TreeOptions;",
+      "description": "트리 그리드 선택 표시 등, 관련된 설정 정보들을 가져온다."
+    },
+    {
+      "name": "setOptions",
+      "signature": "setOptions(options: TreeViewOptions): void;",
+      "description": ""
+    },
+    {
+      "name": "setTreeOptions",
+      "signature": "setTreeOptions(options: TreeOptions): void;",
+      "description": "트리뷰 표시 및 동작과 관련된 설정을 한다."
+    }
+  ]
+}
