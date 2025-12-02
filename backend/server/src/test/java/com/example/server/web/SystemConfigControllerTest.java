@@ -1,4 +1,4 @@
-package com.example.admin.systemconfig.web;
+package com.example.server.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +32,7 @@ import com.example.common.security.ActionCode;
 import com.example.common.security.FeatureCode;
 import com.example.common.version.ChangeAction;
 import com.example.common.version.VersionStatus;
+import com.example.server.web.dto.SystemConfigInfoUpdateRequest;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SystemConfigController 테스트")
@@ -72,6 +73,22 @@ class SystemConfigControllerTest {
         }
 
         @Test
+        @DisplayName("ID로 설정을 조회할 수 있다")
+        void getConfig() {
+            // given
+            var response = createRootResponse();
+            given(versioningService.getConfig(CONFIG_ID)).willReturn(response);
+
+            // when
+            var result = controller.getConfig(CONFIG_ID);
+
+            // then
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(result.getBody().id()).isEqualTo(CONFIG_ID);
+            assertThat(result.getBody().configCode()).isEqualTo(CONFIG_CODE);
+        }
+
+        @Test
         @DisplayName("설정 코드로 설정을 조회할 수 있다")
         void getConfigByCode() {
             // given
@@ -101,6 +118,28 @@ class SystemConfigControllerTest {
             // then
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.CREATED);
             assertThat(result.getBody().configCode()).isEqualTo(CONFIG_CODE);
+        }
+
+        @Test
+        @DisplayName("설정 메타정보(이름, 설명)를 수정할 수 있다")
+        void updateConfigInfo() {
+            // given
+            var request = new SystemConfigInfoUpdateRequest("수정된 이름", "수정된 설명");
+            var response = new SystemConfigRootResponse(
+                    CONFIG_ID, CONFIG_CODE, "수정된 이름", "수정된 설명",
+                    OffsetDateTime.now(), OffsetDateTime.now(),
+                    1, false, true
+            );
+            given(versioningService.updateConfigInfo(CONFIG_ID, "수정된 이름", "수정된 설명"))
+                    .willReturn(response);
+
+            // when
+            var result = controller.updateConfigInfo(CONFIG_ID, request);
+
+            // then
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(result.getBody().name()).isEqualTo("수정된 이름");
+            assertThat(result.getBody().description()).isEqualTo("수정된 설명");
         }
 
         @Test
@@ -289,6 +328,24 @@ class SystemConfigControllerTest {
 
             // then
             assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+        }
+
+        @Test
+        @DisplayName("초안과 현재 버전을 비교할 수 있다")
+        void compareDraftWithCurrent() {
+            // given
+            var current = createRevisionResponse(2);
+            var draft = createRevisionResponse(3);
+            var response = new SystemConfigCompareResponse(current, draft, "Content changed");
+            given(versioningService.compareDraftWithCurrent(CONFIG_ID)).willReturn(response);
+
+            // when
+            var result = controller.compareDraftWithCurrent(CONFIG_ID);
+
+            // then
+            assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
+            assertThat(result.getBody().version1().version()).isEqualTo(2);
+            assertThat(result.getBody().version2().version()).isEqualTo(3);
         }
 
         @Test

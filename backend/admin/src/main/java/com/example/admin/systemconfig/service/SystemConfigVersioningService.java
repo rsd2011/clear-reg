@@ -412,6 +412,44 @@ public class SystemConfigVersioningService {
     revisionRepository.delete(draft);
   }
 
+
+  /**
+   * ID로 설정 조회.
+   */
+  @Transactional(readOnly = true)
+  public SystemConfigRootResponse getConfig(UUID configId) {
+    SystemConfigRoot root = findRootOrThrow(configId);
+    return SystemConfigRootResponse.from(root);
+  }
+
+  /**
+   * 설정 메타정보(이름, 설명)만 수정.
+   */
+  @Transactional
+  public SystemConfigRootResponse updateConfigInfo(UUID configId, String name, String description) {
+    SystemConfigRoot root = findRootOrThrow(configId);
+    root.updateInfo(name, description, OffsetDateTime.now());
+    return SystemConfigRootResponse.from(root);
+  }
+
+  /**
+   * 초안과 현재 버전 비교.
+   */
+  @Transactional(readOnly = true)
+  public SystemConfigCompareResponse compareDraftWithCurrent(UUID configId) {
+    SystemConfigRoot root = findRootOrThrow(configId);
+
+    SystemConfigRevision current = root.getCurrentVersion();
+    if (current == null) {
+      throw new SystemConfigNotFoundException("현재 버전이 없습니다.");
+    }
+
+    SystemConfigRevision draft = revisionRepository.findDraftByRootId(configId)
+        .orElseThrow(() -> new SystemConfigNotFoundException("비교할 초안이 없습니다."));
+
+    return SystemConfigCompareResponse.from(current, draft);
+  }
+
   // ==========================================================================
   // 헬퍼 메서드
   // ==========================================================================

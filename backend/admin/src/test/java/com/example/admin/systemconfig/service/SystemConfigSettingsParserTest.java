@@ -393,4 +393,129 @@ class SystemConfigSettingsParserTest {
           .hasMessageContaining("감사 설정 YAML 파싱 실패");
     }
   }
+
+  @Nested
+  @DisplayName("parseBatchJobs 추가 테스트")
+  class ParseBatchJobsAdditionalTest {
+
+    @Test
+    @DisplayName("Given: 잘못된 YAML 형식, When: parseBatchJobs 호출, Then: 기본값 반환")
+    void shouldReturnDefaultsForInvalidYaml() {
+      // Given - JsonProcessingException을 발생시키는 잘못된 YAML
+      String invalidYaml = "invalid: [\nbroken";
+
+      // When
+      var result = parser.parseBatchJobs(invalidYaml);
+
+      // Then - 예외 없이 기본값 반환
+      assertThat(result).isNotNull();
+      assertThat(result).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Given: 유효한 BatchJob 코드가 포함된 YAML, When: parseBatchJobs 호출, Then: 파싱된 스케줄 반환")
+    void shouldParseValidBatchJobCodes() {
+      // Given
+      String yaml = """
+          batchJobs:
+            AUDIT_MONTHLY_REPORT:
+              cron: "0 0 1 * * ?"
+              enabled: true
+              description: "월간 감사 보고서"
+          """;
+
+      // When
+      var result = parser.parseBatchJobs(yaml);
+
+      // Then
+      assertThat(result).isNotNull();
+      assertThat(result).containsKey(com.example.common.schedule.BatchJobCode.AUDIT_MONTHLY_REPORT);
+    }
+
+    @Test
+    @DisplayName("Given: 알 수 없는 BatchJob 코드만 있는 YAML, When: parseBatchJobs 호출, Then: 기본값 반환")
+    void shouldReturnDefaultsWhenOnlyUnknownBatchJobCodes() {
+      // Given - 유효하지 않은 BatchJobCode만 포함
+      String yaml = """
+          batchJobs:
+            UNKNOWN_JOB_CODE_1:
+              cron: "0 0 * * * ?"
+              enabled: true
+            ANOTHER_UNKNOWN_CODE:
+              cron: "0 30 * * * ?"
+              enabled: false
+          """;
+
+      // When
+      var result = parser.parseBatchJobs(yaml);
+
+      // Then - 알 수 없는 코드는 무시되고 결과가 비어있으므로 기본값 반환
+      assertThat(result).isNotNull();
+      assertThat(result).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Given: 혼합된 유효/무효 BatchJob 코드, When: parseBatchJobs 호출, Then: 유효한 것만 파싱")
+    void shouldParseOnlyValidBatchJobCodes() {
+      // Given
+      String yaml = """
+          batchJobs:
+            AUDIT_MONTHLY_REPORT:
+              expression: "0 0 1 * * ?"
+              enabled: true
+              triggerType: CRON
+            INVALID_CODE:
+              expression: "0 0 * * * ?"
+              enabled: false
+            AUDIT_LOG_RETENTION:
+              expression: "0 0 2 * * ?"
+              enabled: true
+              triggerType: CRON
+          """;
+
+      // When
+      var result = parser.parseBatchJobs(yaml);
+
+      // Then
+      assertThat(result).isNotNull();
+      assertThat(result).containsKey(com.example.common.schedule.BatchJobCode.AUDIT_MONTHLY_REPORT);
+      assertThat(result).containsKey(com.example.common.schedule.BatchJobCode.AUDIT_LOG_RETENTION);
+      // 유효한 코드만 파싱됨 (INVALID_CODE는 무시됨)
+      // 파싱된 스케줄의 expression 값 검증
+      assertThat(result.get(com.example.common.schedule.BatchJobCode.AUDIT_MONTHLY_REPORT).expression())
+          .isEqualTo("0 0 1 * * ?");
+    }
+  }
+
+  @Nested
+  @DisplayName("parseFileSettings 빈 YAML 테스트")
+  class ParseFileSettingsBlankTest {
+
+    @Test
+    @DisplayName("Given: 빈 YAML, When: parseFileSettings 호출, Then: 기본값 반환")
+    void shouldReturnDefaultsForBlank() {
+      // When
+      FileUploadSettings result = parser.parseFileSettings("   ");
+
+      // Then
+      assertThat(result).isNotNull();
+      assertThat(result.maxFileSizeBytes()).isGreaterThan(0);
+    }
+  }
+
+  @Nested
+  @DisplayName("parseAuditSettings 빈 YAML 테스트")
+  class ParseAuditSettingsBlankTest {
+
+    @Test
+    @DisplayName("Given: 빈 YAML, When: parseAuditSettings 호출, Then: 기본값 반환")
+    void shouldReturnDefaultsForBlank() {
+      // When
+      AuditSettings result = parser.parseAuditSettings("   ");
+
+      // Then
+      assertThat(result).isNotNull();
+      assertThat(result.auditEnabled()).isTrue();
+    }
+  }
 }
