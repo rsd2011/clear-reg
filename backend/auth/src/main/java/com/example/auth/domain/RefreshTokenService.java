@@ -1,8 +1,11 @@
 package com.example.auth.domain;
 
+import com.example.admin.user.domain.UserAccount;
+import com.example.admin.user.repository.UserAccountRepository;
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.config.SessionPolicyProperties;
 import com.example.auth.security.JwtProperties;
+import com.example.common.user.spi.UserAccountInfo;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -20,26 +23,30 @@ import org.springframework.transaction.annotation.Transactional;
 public class RefreshTokenService {
 
   private final RefreshTokenRepository repository;
+  private final UserAccountRepository userAccountRepository;
   private final JwtProperties properties;
   private final SessionPolicyProperties sessionPolicyProperties;
   private final SecureRandom secureRandom = new SecureRandom();
 
   public RefreshTokenService(
       RefreshTokenRepository repository,
+      UserAccountRepository userAccountRepository,
       JwtProperties properties,
       SessionPolicyProperties sessionPolicyProperties) {
     this.repository = repository;
+    this.userAccountRepository = userAccountRepository;
     this.properties = properties;
     this.sessionPolicyProperties = sessionPolicyProperties;
   }
 
   @Transactional
-  public IssuedRefreshToken issue(UserAccount userAccount) {
-    return issue(userAccount, false);
+  public IssuedRefreshToken issue(UserAccountInfo accountInfo) {
+    return issue(accountInfo, false);
   }
 
   @Transactional
-  public IssuedRefreshToken issue(UserAccount userAccount, boolean rememberMe) {
+  public IssuedRefreshToken issue(UserAccountInfo accountInfo, boolean rememberMe) {
+    UserAccount userAccount = resolveUserAccount(accountInfo);
     String rawToken = generateTokenValue();
     long lifetimeSeconds =
         rememberMe
@@ -49,7 +56,7 @@ public class RefreshTokenService {
     RefreshToken refreshToken = new RefreshToken(hash(rawToken), expiresAt, userAccount);
     repository.save(refreshToken);
     enforceSessionLimit(userAccount);
-    return new IssuedRefreshToken(rawToken, expiresAt, userAccount);
+    return new IssuedRefreshToken(rawToken, expiresAt, accountInfo);
   }
 
   @Transactional
@@ -68,8 +75,17 @@ public class RefreshTokenService {
   }
 
   @Transactional
-  public void revokeAll(UserAccount userAccount) {
+  public void revokeAll(UserAccountInfo accountInfo) {
+    UserAccount userAccount = resolveUserAccount(accountInfo);
     repository.deleteByUser(userAccount);
+  }
+
+  private UserAccount resolveUserAccount(UserAccountInfo accountInfo) {
+    if (accountInfo instanceof UserAccount ua) {
+      return ua;
+    }
+    return userAccountRepository.findByUsername(accountInfo.getUsername())
+        .orElseThrow(InvalidCredentialsException::new);
   }
 
   private void enforceSessionLimit(UserAccount userAccount) {
@@ -125,5 +141,5 @@ public class RefreshTokenService {
   @SuppressFBWarnings(
       value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
       justification = "Value object holds domain reference for downstream usage")
-  public record IssuedRefreshToken(String value, Instant expiresAt, UserAccount user) {}
+  public record IssuedRefreshToken(String value, Instant expiresAt, UserAccountInfo user) {}
 }

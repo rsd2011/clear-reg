@@ -27,6 +27,8 @@ public final class CacheNames {
     public static final String SYSTEM_COMMON_CODES = "systemCommonCodes";
     /** Cache for aggregated common code responses served to clients. */
     public static final String COMMON_CODE_AGGREGATES = "commonCodeAggregates";
+    /** Cache for DW holiday lookups by date and country. */
+    public static final String DW_HOLIDAYS = "dwHolidays";
 
     private CacheNames() {
     }

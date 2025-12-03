@@ -2,29 +2,25 @@ package com.example.auth.strategy;
 
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.LoginType;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.LoginRequest;
 import com.example.auth.security.AccountStatusPolicy;
 import com.example.auth.security.PasswordPolicyValidator;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PasswordAuthenticationStrategy implements AuthenticationStrategy {
 
-  private final UserAccountService userAccountService;
-  private final PasswordEncoder passwordEncoder;
+  private final UserAccountProvider userAccountProvider;
   private final PasswordPolicyValidator passwordPolicyValidator;
   private final AccountStatusPolicy accountStatusPolicy;
 
   public PasswordAuthenticationStrategy(
-      UserAccountService userAccountService,
-      PasswordEncoder passwordEncoder,
+      UserAccountProvider userAccountProvider,
       PasswordPolicyValidator passwordPolicyValidator,
       AccountStatusPolicy accountStatusPolicy) {
-    this.userAccountService = userAccountService;
-    this.passwordEncoder = passwordEncoder;
+    this.userAccountProvider = userAccountProvider;
     this.passwordPolicyValidator = passwordPolicyValidator;
     this.accountStatusPolicy = accountStatusPolicy;
   }
@@ -35,14 +31,14 @@ public class PasswordAuthenticationStrategy implements AuthenticationStrategy {
   }
 
   @Override
-  public UserAccount authenticate(LoginRequest request) {
+  public UserAccountInfo authenticate(LoginRequest request) {
     if (request.username() == null || request.password() == null) {
       throw new InvalidCredentialsException();
     }
     passwordPolicyValidator.validate(request.password());
-    UserAccount account = userAccountService.getByUsernameOrThrow(request.username());
+    UserAccountInfo account = userAccountProvider.getByUsernameOrThrow(request.username());
     accountStatusPolicy.ensureLoginAllowed(account);
-    if (!passwordEncoder.matches(request.password(), account.getPassword())) {
+    if (!userAccountProvider.passwordMatches(request.username(), request.password())) {
       accountStatusPolicy.onFailedLogin(account);
     }
     accountStatusPolicy.onSuccessfulLogin(account);

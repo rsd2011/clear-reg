@@ -19,7 +19,8 @@ import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.exception.PermissionDeniedException;
 import com.example.admin.permission.service.PermissionEvaluator;
-import com.example.admin.permission.spi.UserInfo;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.admin.permission.TestUserInfo;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.AfterEach;
@@ -88,7 +89,7 @@ class RequirePermissionAspectTest {
             given(joinPoint.getTarget()).willReturn(new AnnotatedClass());
             given(joinPoint.proceed()).willReturn("success");
 
-            UserInfo userInfo = createUserInfo();
+            UserAccountInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
             PermissionGroup group = createMockGroup("TEST_GROUP", "테스트그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
@@ -111,7 +112,7 @@ class RequirePermissionAspectTest {
             given(joinPoint.getTarget()).willReturn(new NoAuditClass());
             given(joinPoint.proceed()).willReturn("result");
 
-            UserInfo userInfo = createUserInfo();
+            UserAccountInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
             PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
@@ -132,7 +133,7 @@ class RequirePermissionAspectTest {
             given(joinPoint.getTarget()).willReturn(new ClassAnnotatedClass());
             given(joinPoint.proceed()).willReturn("result");
 
-            UserInfo userInfo = createUserInfo();
+            UserAccountInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignmentForOrg();
             PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
@@ -186,7 +187,7 @@ class RequirePermissionAspectTest {
             given(methodSignature.getMethod()).willReturn(method);
             given(joinPoint.getTarget()).willReturn(new AnnotatedClass());
 
-            UserInfo userInfo = createUserInfo();
+            UserAccountInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
             PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
@@ -211,7 +212,7 @@ class RequirePermissionAspectTest {
             given(methodSignature.getMethod()).willReturn(method);
             given(joinPoint.getTarget()).willReturn(new NoAuditClass());
 
-            UserInfo userInfo = createUserInfo();
+            UserAccountInfo userInfo = createUserInfo();
             PermissionAssignment assignment = createAssignment();
             PermissionGroup group = createMockGroup("GROUP", "그룹");
             PermissionDecision decision = new PermissionDecision(userInfo, assignment, group);
@@ -233,28 +234,8 @@ class RequirePermissionAspectTest {
         return group;
     }
 
-    private UserInfo createUserInfo() {
-        return new UserInfo() {
-            @Override
-            public String getUsername() {
-                return "testuser";
-            }
-
-            @Override
-            public String getOrganizationCode() {
-                return "ORG001";
-            }
-
-            @Override
-            public String getPermissionGroupCode() {
-                return "PERM_GROUP";
-            }
-
-            @Override
-            public Set<String> getRoles() {
-                return Set.of("ROLE_USER");
-            }
-        };
+    private UserAccountInfo createUserInfo() {
+        return new TestUserInfo("testuser", "ORG001", "PERM_GROUP", Set.of("ROLE_USER"));
     }
 
     private PermissionAssignment createAssignment() {

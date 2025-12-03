@@ -1,8 +1,8 @@
 package com.example.auth.config;
 
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
-import com.example.auth.domain.UserAccountService;
+import com.example.admin.user.domain.UserAccount;
+import com.example.admin.user.repository.UserAccountRepository;
+import com.example.admin.user.service.UserAccountService;
 import com.example.auth.security.PasswordHistoryService;
 import java.util.Set;
 import org.springframework.boot.CommandLineRunner;
@@ -70,7 +70,7 @@ public class AuthDataInitializer implements CommandLineRunner {
     ssoUser.linkSsoId("sso-sso-user");
 
     passwordUser = userAccountService.save(passwordUser);
-    passwordHistoryService.record(passwordUser, passwordUser.getPassword());
+    passwordHistoryService.record(passwordUser.getUsername(), passwordUser.getPassword());
     userAccountService.save(adUser);
     userAccountService.save(ssoUser);
   }

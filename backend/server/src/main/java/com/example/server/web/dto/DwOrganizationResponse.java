@@ -6,7 +6,7 @@ import java.util.UUID;
 import java.util.function.UnaryOperator;
 
 import com.example.common.annotation.Sensitive;
-import com.example.dwgateway.dw.DwOrganizationPort;
+import com.example.dw.application.port.DwOrganizationPort;
 
 public record DwOrganizationResponse(UUID id,
                                      String organizationCode,

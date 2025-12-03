@@ -8,8 +8,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
@@ -22,16 +22,16 @@ public class DraftNotificationService {
     private final DraftNotificationPublisher publisher;
     private final DraftReferenceRepository referenceRepository;
     private final PermissionGroupRepository permissionGroupRepository;
-    private final UserAccountRepository userAccountRepository;
+    private final UserAccountProvider userAccountProvider;
 
     public DraftNotificationService(DraftNotificationPublisher publisher,
                                     DraftReferenceRepository referenceRepository,
                                     PermissionGroupRepository permissionGroupRepository,
-                                    UserAccountRepository userAccountRepository) {
+                                    UserAccountProvider userAccountProvider) {
         this.publisher = publisher;
         this.referenceRepository = referenceRepository;
         this.permissionGroupRepository = permissionGroupRepository;
-        this.userAccountRepository = userAccountRepository;
+        this.userAccountProvider = userAccountProvider;
     }
 
     @Transactional(readOnly = true)
@@ -92,9 +92,9 @@ public class DraftNotificationService {
                             .map(PermissionGroup::getCode)
                             .toList();
 
-                    return userAccountRepository.findByPermissionGroupCodeIn(groupCodes)
+                    return userAccountProvider.findByPermissionGroupCodeIn(groupCodes)
                             .stream()
-                            .map(UserAccount::getUsername)
+                            .map(UserAccountInfo::getUsername)
                             .toList();
                 })
                 .orElse(List.of());

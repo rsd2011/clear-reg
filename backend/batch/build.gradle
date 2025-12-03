@@ -9,8 +9,6 @@ dependencies {
     implementation project(':backend:platform')
     implementation project(':backend:admin')
     implementation project(':backend:auth')
-    implementation project(':backend:dw-ingestion-core')
-    implementation project(':backend:dw-gateway-client')
     implementation libs.spring.boot.starter
     implementation libs.spring.boot.starter.data.jpa
     implementation libs.spring.boot.starter.validation
@@ -20,6 +18,7 @@ dependencies {
     implementation libs.spring.boot.starter.quartz
     implementation libs.spring.boot.starter.actuator
     implementation libs.spring.boot.starter.web
+    implementation libs.spring.kafka
     implementation libs.micrometer.tracing.bridge.otel
     implementation libs.micrometer.registry.prometheus
     implementation libs.opentelemetry.exporter.otlp
@@ -34,10 +33,10 @@ dependencies {
     testImplementation libs.testcontainers.junit
     testImplementation libs.testcontainers.postgresql
     testImplementation libs.postgresql
-    testImplementation project(':backend:dw-gateway')
     testImplementation testFixtures(project(':backend:platform'))
     testImplementation project(':backend:auth')
     testImplementation project(':backend:audit')
+    testImplementation project(':backend:file-core')
 
     compileOnly libs.lombok
     annotationProcessor libs.lombok

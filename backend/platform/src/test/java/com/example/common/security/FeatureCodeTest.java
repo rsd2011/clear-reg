@@ -13,7 +13,7 @@ class FeatureCodeTest {
   void givenAllFeatureCodes_whenValues_thenReturnsAllConstants() {
     FeatureCode[] values = FeatureCode.values();
 
-    assertThat(values).hasSize(16);
+    assertThat(values).hasSize(17);
     assertThat(values).contains(
         FeatureCode.RULE_MANAGE,
         FeatureCode.CUSTOMER,
@@ -30,7 +30,8 @@ class FeatureCodeTest {
         FeatureCode.DRAFT,
         FeatureCode.DRAFT_TEMPLATE,
         FeatureCode.APPROVAL,
-        FeatureCode.APPROVAL_MANAGE
+        FeatureCode.APPROVAL_MANAGE,
+        FeatureCode.USER
     );
   }
 

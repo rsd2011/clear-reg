@@ -11,7 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import com.example.admin.permission.context.AuthContext;
 import com.example.admin.permission.context.AuthContextHolder;
 import com.example.common.policy.RowAccessPolicyProvider;
-import com.example.dwgateway.dw.DwOrganizationPort;
+import com.example.dw.application.port.DwOrganizationPort;
 
 import java.util.List;
 

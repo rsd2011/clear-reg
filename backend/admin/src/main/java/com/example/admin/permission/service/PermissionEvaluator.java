@@ -6,8 +6,8 @@ import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.exception.PermissionDeniedException;
-import com.example.admin.permission.spi.UserInfo;
-import com.example.admin.permission.spi.UserInfoProvider;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,13 +21,13 @@ public class PermissionEvaluator {
 
   private static final String DEFAULT_PERMISSION_GROUP = "DEFAULT";
 
-  private final UserInfoProvider userInfoProvider;
+  private final UserAccountProvider userAccountProvider;
   private final PermissionGroupService permissionGroupService;
 
   public PermissionEvaluator(
-      UserInfoProvider userInfoProvider,
+      UserAccountProvider userAccountProvider,
       PermissionGroupService permissionGroupService) {
-    this.userInfoProvider = userInfoProvider;
+    this.userAccountProvider = userAccountProvider;
     this.permissionGroupService = permissionGroupService;
   }
 
@@ -37,7 +37,7 @@ public class PermissionEvaluator {
       throw new PermissionDeniedException("인증 정보가 없습니다.");
     }
     String username = authentication.getName();
-    UserInfo userInfo = userInfoProvider.getByUsernameOrThrow(username);
+    UserAccountInfo userInfo = userAccountProvider.getByUsernameOrThrow(username);
     String groupCode = determineGroupCode(userInfo);
     PermissionGroup group = permissionGroupService.getByCodeOrThrow(groupCode);
     PermissionAssignment assignment =
@@ -48,7 +48,7 @@ public class PermissionEvaluator {
     return new PermissionDecision(userInfo, assignment, group);
   }
 
-  private String determineGroupCode(UserInfo userInfo) {
+  private String determineGroupCode(UserAccountInfo userInfo) {
     String groupCode = userInfo.getPermissionGroupCode();
     if (groupCode == null || groupCode.isBlank()) {
       return DEFAULT_PERMISSION_GROUP;

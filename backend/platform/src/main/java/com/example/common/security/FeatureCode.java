@@ -19,5 +19,6 @@ public enum FeatureCode {
   DRAFT,
   DRAFT_TEMPLATE,
   APPROVAL,
-  APPROVAL_MANAGE;
+  APPROVAL_MANAGE,
+  USER;
 }

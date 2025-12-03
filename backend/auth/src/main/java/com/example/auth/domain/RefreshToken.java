@@ -1,5 +1,6 @@
 package com.example.auth.domain;
 
+import com.example.admin.user.domain.UserAccount;
 import com.example.common.jpa.PrimaryKeyEntity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.persistence.Column;

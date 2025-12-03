@@ -77,6 +77,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(new ProblemResponse(exception.getMessage()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ProblemResponse> handleIllegalState(IllegalStateException exception) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ProblemResponse(exception.getMessage()));
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException exception) {
         ErrorCode code = exception.errorCode();

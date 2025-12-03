@@ -1,0 +1,51 @@
+package com.example.server.web;
+
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.common.security.ActionCode;
+import com.example.common.security.FeatureCode;
+import com.example.admin.permission.annotation.RequirePermission;
+import com.example.dw.application.port.DwBatchPort;
+import com.example.server.web.dto.DwBatchResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+@RestController
+@RequestMapping("/api/dw/batches")
+@Tag(name = "DW Batches", description = "DW 배치 조회 API")
+@RequirePermission(feature = FeatureCode.HR_IMPORT, action = ActionCode.READ)
+public class DwBatchController {
+
+    private final DwBatchPort batchPort;
+
+    public DwBatchController(DwBatchPort batchPort) {
+        this.batchPort = batchPort;
+    }
+
+    @GetMapping
+    @Operation(summary = "List DW ingestion batches")
+    public List<DwBatchResponse> getBatches() {
+        Pageable pageable = Pageable.unpaged();
+        return batchPort.getBatches(pageable)
+                .getContent()
+                .stream()
+                .map(DwBatchResponse::fromRecord)
+                .toList();
+    }
+
+    @GetMapping("/latest")
+    @Operation(summary = "Get the most recent DW ingestion batch")
+    public ResponseEntity<DwBatchResponse> latest() {
+        return batchPort.latestBatch()
+                .map(DwBatchResponse::fromRecord)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}

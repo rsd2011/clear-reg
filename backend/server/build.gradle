@@ -10,7 +10,6 @@ dependencies {
     implementation project(':backend:draft')
     implementation project(':backend:approval')
     implementation project(':backend:data-integration')
-    implementation project(':backend:dw-gateway-client')
     implementation project(':backend:file-core')
     implementation project(':backend:admin')
     implementation libs.spring.boot.starter.web

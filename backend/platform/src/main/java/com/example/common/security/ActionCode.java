@@ -25,7 +25,8 @@ public enum ActionCode {
   DRAFT_DELEGATE,
 
   APPROVAL_ADMIN,
-  APPROVAL_REVIEW;
+  APPROVAL_REVIEW,
+  ADMIN;
 
   public boolean satisfies(ActionCode required) {
     if (required == null) {

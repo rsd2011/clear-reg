@@ -7,8 +7,8 @@ import com.example.admin.permission.TestUserInfo;
 import com.example.common.security.ActionCode;
 import com.example.common.security.FeatureCode;
 import com.example.admin.permission.exception.PermissionDeniedException;
-import com.example.admin.permission.spi.UserInfo;
-import com.example.admin.permission.spi.UserInfoProvider;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class PermissionEvaluatorNoDefaultGroupTest {
 
-  @Mock UserInfoProvider userInfoProvider;
+  @Mock UserAccountProvider userAccountProvider;
   @Mock PermissionGroupService groupService;
 
   @Test
@@ -33,10 +33,10 @@ class PermissionEvaluatorNoDefaultGroupTest {
     SecurityContextHolder.getContext()
         .setAuthentication(new TestingAuthenticationToken("user", "pw"));
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(userInfoProvider, groupService);
+        new PermissionEvaluator(userAccountProvider, groupService);
 
-    UserInfo user = new TestUserInfo("user", "ORG", null, Set.of());
-    given(userInfoProvider.getByUsernameOrThrow("user")).willReturn(user);
+    UserAccountInfo user = new TestUserInfo("user", "ORG", null, Set.of());
+    given(userAccountProvider.getByUsernameOrThrow("user")).willReturn(user);
     given(groupService.getByCodeOrThrow("DEFAULT"))
         .willThrow(new PermissionDeniedException("그룹을 찾을 수 없습니다: DEFAULT"));
 

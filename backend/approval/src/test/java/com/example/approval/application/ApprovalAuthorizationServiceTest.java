@@ -2,6 +2,7 @@ package com.example.approval.application;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
@@ -18,8 +19,8 @@ import com.example.approval.api.ApprovalAction;
 import com.example.admin.approval.exception.ApprovalAccessDeniedException;
 import com.example.approval.domain.ApprovalRequest;
 import com.example.approval.domain.ApprovalStep;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 
@@ -29,13 +30,13 @@ class ApprovalAuthorizationServiceTest {
     @Mock
     PermissionGroupRepository permissionGroupRepository;
     @Mock
-    UserAccountRepository userAccountRepository;
+    UserAccountProvider userAccountProvider;
 
     ApprovalAuthorizationService service;
 
     @BeforeEach
     void setUp() {
-        service = new ApprovalAuthorizationService(permissionGroupRepository, userAccountRepository);
+        service = new ApprovalAuthorizationService(permissionGroupRepository, userAccountProvider);
     }
 
     @Test
@@ -43,10 +44,10 @@ class ApprovalAuthorizationServiceTest {
     void authorizeActiveStep() {
         ApprovalRequest request = sampleRequest();
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
-        UserAccount user = createUserAccount("actor", "ORG", "PERM_GRP");
+        UserAccountInfo user = createUserAccountInfo("actor", "ORG", "PERM_GRP");
 
         given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
-        given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
+        doReturn(List.of(user)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP"));
 
         service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG");
     }
@@ -58,10 +59,10 @@ class ApprovalAuthorizationServiceTest {
         request.defer("actor", OffsetDateTime.now());
 
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
-        UserAccount user = createUserAccount("actor", "ORG", "PERM_GRP");
+        UserAccountInfo user = createUserAccountInfo("actor", "ORG", "PERM_GRP");
 
         given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
-        given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
+        doReturn(List.of(user)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP"));
 
         service.ensureAuthorized(request, ApprovalAction.DEFER_APPROVE, "actor", "ORG");
     }
@@ -71,10 +72,10 @@ class ApprovalAuthorizationServiceTest {
     void authorizeDelegate() {
         ApprovalRequest request = sampleRequest();
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
-        UserAccount user = createUserAccount("actor", "ORG", "PERM_GRP");
+        UserAccountInfo user = createUserAccountInfo("actor", "ORG", "PERM_GRP");
 
         given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
-        given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
+        doReturn(List.of(user)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP"));
 
         service.ensureAuthorized(request, ApprovalAction.DELEGATE, "actor", "ORG");
     }
@@ -94,10 +95,10 @@ class ApprovalAuthorizationServiceTest {
     void denyWhenOrgMismatch() {
         ApprovalRequest request = sampleRequest();
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
-        UserAccount user = createUserAccount("actor", "OTHER_ORG", "PERM_GRP");
+        UserAccountInfo user = createUserAccountInfo("actor", "OTHER_ORG", "PERM_GRP");
 
         given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
-        given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
+        doReturn(List.of(user)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP"));
 
         assertThatThrownBy(() -> service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG"))
                 .isInstanceOf(ApprovalAccessDeniedException.class);
@@ -110,7 +111,7 @@ class ApprovalAuthorizationServiceTest {
         PermissionGroup permGroup = createPermissionGroup("PERM_GRP", "GRP1");
 
         given(permissionGroupRepository.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup));
-        given(userAccountRepository.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of());
+        doReturn(List.of()).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP"));
 
         assertThatThrownBy(() -> service.ensureAuthorized(request, ApprovalAction.APPROVE, "actor", "ORG"))
                 .isInstanceOf(ApprovalAccessDeniedException.class);
@@ -148,12 +149,11 @@ class ApprovalAuthorizationServiceTest {
         return group;
     }
 
-    private UserAccount createUserAccount(String username, String orgCode, String permGroupCode) {
-        return UserAccount.builder()
-                .username(username)
-                .password("password")
-                .organizationCode(orgCode)
-                .permissionGroupCode(permGroupCode)
-                .build();
+    private UserAccountInfo createUserAccountInfo(String username, String orgCode, String permGroupCode) {
+        UserAccountInfo user = mock(UserAccountInfo.class);
+        given(user.getUsername()).willReturn(username);
+        given(user.getOrganizationCode()).willReturn(orgCode);
+        org.mockito.Mockito.lenient().when(user.getPermissionGroupCode()).thenReturn(permGroupCode);
+        return user;
     }
 }

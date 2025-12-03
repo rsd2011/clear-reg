@@ -2,7 +2,7 @@ package com.example.admin.permission.context;
 
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
-import com.example.admin.permission.spi.UserInfo;
+import com.example.common.user.spi.UserAccountInfo;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.Objects;
@@ -19,18 +19,18 @@ import java.util.Objects;
     justification = "Value object forwards domain references deliberately")
 public final class PermissionDecision {
 
-  private final UserInfo userInfo;
+  private final UserAccountInfo userInfo;
   private final PermissionAssignment assignment;
   private final PermissionGroup group;
 
   public PermissionDecision(
-      UserInfo userInfo, PermissionAssignment assignment, PermissionGroup group) {
+      UserAccountInfo userInfo, PermissionAssignment assignment, PermissionGroup group) {
     this.userInfo = userInfo;
     this.assignment = assignment;
     this.group = group;
   }
 
-  public UserInfo userInfo() {
+  public UserAccountInfo userInfo() {
     return userInfo;
   }
 
