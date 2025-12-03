@@ -2,12 +2,10 @@ package com.example.auth.security;
 
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.config.AuthPolicyProperties;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
-import com.example.common.cache.CacheNames;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Instant;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,22 +16,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class AccountStatusPolicy {
 
   private final AuthPolicyProperties properties;
-  private final UserAccountRepository repository;
+  private final UserAccountProvider userAccountProvider;
   private final PasswordHistoryService passwordHistoryService;
   private final PolicyToggleProvider policyToggleProvider;
 
   public AccountStatusPolicy(
       AuthPolicyProperties properties,
-      UserAccountRepository repository,
+      UserAccountProvider userAccountProvider,
       PasswordHistoryService passwordHistoryService,
       PolicyToggleProvider policyToggleProvider) {
     this.properties = properties;
-    this.repository = repository;
+    this.userAccountProvider = userAccountProvider;
     this.passwordHistoryService = passwordHistoryService;
     this.policyToggleProvider = policyToggleProvider;
   }
 
-  public void ensureLoginAllowed(UserAccount account) {
+  public void ensureLoginAllowed(UserAccountInfo account) {
     if (!account.isActive()) {
       throw new InvalidCredentialsException();
     }
@@ -47,44 +45,40 @@ public class AccountStatusPolicy {
   }
 
   @Transactional
-  @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
-  public void onSuccessfulLogin(UserAccount account) {
+  public void onSuccessfulLogin(UserAccountInfo account) {
     if (!policyToggleProvider.isAccountLockEnabled()) {
       return;
     }
     if (account.getFailedLoginAttempts() > 0 || account.getLockedUntil() != null) {
-      account.resetFailedAttempts();
-      account.lockUntil(null);
-      repository.save(account);
+      userAccountProvider.resetFailedAttempts(account.getUsername());
+      userAccountProvider.lockUntil(account.getUsername(), null);
     }
   }
 
   @Transactional
-  @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
-  public void onFailedLogin(UserAccount account) {
+  public void onFailedLogin(UserAccountInfo account) {
     if (!policyToggleProvider.isAccountLockEnabled()) {
       throw new InvalidCredentialsException();
     }
-    account.incrementFailedAttempt();
-    if (account.getFailedLoginAttempts() >= properties.getMaxFailedAttempts()) {
-      account.lockUntil(Instant.now().plusSeconds(properties.getLockoutSeconds()));
-      account.resetFailedAttempts();
+    userAccountProvider.incrementFailedAttempt(account.getUsername());
+    // 실패 횟수를 다시 조회하여 잠금 여부 판단
+    UserAccountInfo updated = userAccountProvider.getByUsernameOrThrow(account.getUsername());
+    if (updated.getFailedLoginAttempts() >= properties.getMaxFailedAttempts()) {
+      userAccountProvider.lockUntil(
+          account.getUsername(),
+          Instant.now().plusSeconds(properties.getLockoutSeconds()));
+      userAccountProvider.resetFailedAttempts(account.getUsername());
     }
-    repository.save(account);
     throw new InvalidCredentialsException();
   }
 
   @Transactional
-  @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
-  public void deactivate(UserAccount account) {
-    account.deactivate();
-    repository.save(account);
+  public void deactivate(UserAccountInfo account) {
+    userAccountProvider.deactivate(account.getUsername());
   }
 
   @Transactional
-  @CacheEvict(cacheNames = CacheNames.USER_ACCOUNTS, key = "#root.args[0].username")
-  public void activate(UserAccount account) {
-    account.activate();
-    repository.save(account);
+  public void activate(UserAccountInfo account) {
+    userAccountProvider.activate(account.getUsername());
   }
 }

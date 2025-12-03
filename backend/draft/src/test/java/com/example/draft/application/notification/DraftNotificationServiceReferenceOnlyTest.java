@@ -14,7 +14,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.domain.UserAccountRepository;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
 import com.example.draft.domain.DraftApprovalStep;
@@ -28,8 +29,8 @@ class DraftNotificationServiceReferenceOnlyTest {
         DraftNotificationServiceTest.DraftNotificationPublisherStub publisher = new DraftNotificationServiceTest.DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
         PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
-        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
+        UserAccountProvider userAccountProvider = mock(UserAccountProvider.class);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountProvider);
 
         Draft draft = Draft.create("t", "c", "F", "ORG", "TPL", "creator", OffsetDateTime.now());
         DraftApprovalStep step = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 1, "GRP", ""));

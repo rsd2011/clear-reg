@@ -1,10 +1,12 @@
 package com.example.auth.security;
 
+import com.example.admin.user.domain.UserAccount;
+import com.example.admin.user.repository.UserAccountRepository;
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.config.AuthPolicyProperties;
 import com.example.auth.domain.PasswordHistory;
 import com.example.auth.domain.PasswordHistoryRepository;
-import com.example.auth.domain.UserAccount;
+import com.example.common.user.spi.UserAccountInfo;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.time.Instant;
 import java.util.List;
@@ -19,36 +21,41 @@ import org.springframework.transaction.annotation.Transactional;
 public class PasswordHistoryService {
 
   private final PasswordHistoryRepository repository;
+  private final UserAccountRepository userAccountRepository;
   private final PasswordEncoder passwordEncoder;
   private final AuthPolicyProperties properties;
   private final PolicyToggleProvider policyToggleProvider;
 
   public PasswordHistoryService(
       PasswordHistoryRepository repository,
+      UserAccountRepository userAccountRepository,
       PasswordEncoder passwordEncoder,
       AuthPolicyProperties properties,
       PolicyToggleProvider policyToggleProvider) {
     this.repository = repository;
+    this.userAccountRepository = userAccountRepository;
     this.passwordEncoder = passwordEncoder;
     this.properties = properties;
     this.policyToggleProvider = policyToggleProvider;
   }
 
   @Transactional
-  public void record(UserAccount user, String encodedPassword) {
+  public void record(String username, String encodedPassword) {
     if (!policyToggleProvider.isPasswordHistoryEnabled()) {
       return;
     }
+    UserAccount user = userAccountRepository.findByUsername(username)
+        .orElseThrow(() -> new InvalidCredentialsException());
     PasswordHistory history = new PasswordHistory(user, encodedPassword);
     repository.save(history);
-    pruneHistory(user);
+    pruneHistory(username);
   }
 
-  public void ensureNotReused(UserAccount user, String rawPassword) {
+  public void ensureNotReused(String username, String rawPassword) {
     if (!policyToggleProvider.isPasswordHistoryEnabled()) {
       return;
     }
-    List<PasswordHistory> histories = repository.findByUserOrderByChangedAtDesc(user);
+    List<PasswordHistory> histories = repository.findByUserUsernameOrderByChangedAtDesc(username);
     histories.stream()
         .limit(properties.getPasswordHistorySize())
         .filter(history -> passwordEncoder.matches(rawPassword, history.getPasswordHash()))
@@ -59,22 +66,22 @@ public class PasswordHistoryService {
             });
   }
 
-  private void pruneHistory(UserAccount user) {
-    List<PasswordHistory> histories = repository.findByUserOrderByChangedAtDesc(user);
+  private void pruneHistory(String username) {
+    List<PasswordHistory> histories = repository.findByUserUsernameOrderByChangedAtDesc(username);
     int max = properties.getPasswordHistorySize();
     for (int i = max; i < histories.size(); i++) {
       repository.delete(histories.get(i));
     }
   }
 
-  public boolean isExpired(UserAccount user) {
+  public boolean isExpired(UserAccountInfo account) {
     if (!policyToggleProvider.isPasswordHistoryEnabled()) {
       return false;
     }
     if (properties.getPasswordExpiryDays() <= 0) {
       return false;
     }
-    Instant changedAt = user.getPasswordChangedAt();
+    Instant changedAt = account.getPasswordChangedAt();
     if (changedAt == null) {
       return true;
     }

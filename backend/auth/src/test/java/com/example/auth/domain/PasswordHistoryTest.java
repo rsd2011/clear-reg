@@ -2,6 +2,7 @@ package com.example.auth.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.example.admin.user.domain.UserAccount;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -10,8 +10,8 @@ import com.example.approval.api.ApprovalStatus;
 import com.example.admin.approval.exception.ApprovalAccessDeniedException;
 import com.example.approval.domain.ApprovalRequest;
 import com.example.approval.domain.ApprovalStep;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 
@@ -19,12 +19,12 @@ import com.example.admin.permission.repository.PermissionGroupRepository;
 public class ApprovalAuthorizationService {
 
     private final PermissionGroupRepository permissionGroupRepository;
-    private final UserAccountRepository userAccountRepository;
+    private final UserAccountProvider userAccountProvider;
 
     public ApprovalAuthorizationService(PermissionGroupRepository permissionGroupRepository,
-                                        UserAccountRepository userAccountRepository) {
+                                        UserAccountProvider userAccountProvider) {
         this.permissionGroupRepository = permissionGroupRepository;
-        this.userAccountRepository = userAccountRepository;
+        this.userAccountProvider = userAccountProvider;
     }
 
     public void ensureAuthorized(ApprovalRequest request,
@@ -52,8 +52,8 @@ public class ApprovalAuthorizationService {
                 .map(PermissionGroup::getCode)
                 .toList();
 
-        List<UserAccount> approvers =
-                userAccountRepository.findByPermissionGroupCodeIn(groupCodes);
+        List<? extends UserAccountInfo> approvers =
+                userAccountProvider.findByPermissionGroupCodeIn(groupCodes);
 
         boolean permitted = approvers.stream()
                 .anyMatch(user -> user.getUsername().equals(actor)

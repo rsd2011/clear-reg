@@ -1,27 +1,27 @@
 package com.example.auth.strategy;
 
+import com.example.admin.user.service.JitProvisioningService;
 import com.example.auth.InvalidCredentialsException;
 import com.example.auth.LoginType;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.LoginRequest;
-import com.example.auth.jit.JitProvisioningService;
 import com.example.auth.sso.SsoClient;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SsoAuthenticationStrategy implements AuthenticationStrategy {
 
   private final SsoClient ssoClient;
-  private final UserAccountService userAccountService;
+  private final UserAccountProvider userAccountProvider;
   private final JitProvisioningService jitProvisioningService;
 
   public SsoAuthenticationStrategy(
       SsoClient ssoClient,
-      UserAccountService userAccountService,
+      UserAccountProvider userAccountProvider,
       JitProvisioningService jitProvisioningService) {
     this.ssoClient = ssoClient;
-    this.userAccountService = userAccountService;
+    this.userAccountProvider = userAccountProvider;
     this.jitProvisioningService = jitProvisioningService;
   }
 
@@ -31,7 +31,7 @@ public class SsoAuthenticationStrategy implements AuthenticationStrategy {
   }
 
   @Override
-  public UserAccount authenticate(LoginRequest request) {
+  public UserAccountInfo authenticate(LoginRequest request) {
     if (request.token() == null) {
       throw new InvalidCredentialsException();
     }
@@ -39,10 +39,10 @@ public class SsoAuthenticationStrategy implements AuthenticationStrategy {
     String ssoId = ssoClient.resolveSsoId(request.token());
 
     // JIT Provisioning이 활성화된 경우 자동 생성/연결 수행
-    if (jitProvisioningService.isEnabledFor(LoginType.SSO)) {
+    if (jitProvisioningService.isEnabledFor(LoginType.SSO.name())) {
       return jitProvisioningService.provisionForSso(ssoId, username).account();
     }
 
-    return userAccountService.getByUsernameOrThrow(username);
+    return userAccountProvider.getByUsernameOrThrow(username);
   }
 }

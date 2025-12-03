@@ -5,6 +5,7 @@ import com.example.draft.TestApprovalHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
@@ -14,8 +15,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.example.admin.approval.domain.ApprovalTemplateStep;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
@@ -30,9 +31,9 @@ class DraftNotificationServiceTest {
         DraftNotificationPublisherStub publisher = new DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
         PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
-        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
+        UserAccountProvider userAccountProvider = mock(UserAccountProvider.class);
 
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountProvider);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
         ApprovalTemplateStep templateStep = TestApprovalHelper.createTemplateStep(null, 1, "GRP", "");
@@ -42,20 +43,24 @@ class DraftNotificationServiceTest {
         PermissionGroup permGroup = mock(PermissionGroup.class);
         given(permGroup.getCode()).willReturn("PERM_GRP");
         given(permGroup.getApprovalGroupCodes()).willReturn(List.of("GRP"));
-        UserAccount user = UserAccount.builder()
-                .username("user1")
-                .password("password")
-                .organizationCode("ORG")
-                .permissionGroupCode("PERM_GRP")
-                .build();
+
+        UserAccountInfo user = createMockUserAccountInfo("user1", "ORG", "PERM_GRP");
 
         given(permGroupRepo.findByApprovalGroupCode("[\"GRP\"]")).willReturn(List.of(permGroup));
-        given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP"))).willReturn(List.of(user));
+        doReturn(List.of(user)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP"));
         given(refRepo.findByDraftIdAndActiveTrue(any())).willReturn(List.of());
 
         svc.notify("ACTION", draft, "actor", step.getId(), null, null, OffsetDateTime.now());
 
         assertThat(publisher.lastPayload.recipients()).contains("creator", "actor", "user1");
+    }
+
+    private UserAccountInfo createMockUserAccountInfo(String username, String orgCode, String permGroupCode) {
+        UserAccountInfo user = mock(UserAccountInfo.class);
+        given(user.getUsername()).willReturn(username);
+        given(user.getOrganizationCode()).willReturn(orgCode);
+        org.mockito.Mockito.lenient().when(user.getPermissionGroupCode()).thenReturn(permGroupCode);
+        return user;
     }
 
     static final class DraftNotificationPublisherStub implements DraftNotificationPublisher {

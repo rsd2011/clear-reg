@@ -1,5 +1,6 @@
 package com.example.auth.domain;
 
+import com.example.admin.user.domain.UserAccount;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

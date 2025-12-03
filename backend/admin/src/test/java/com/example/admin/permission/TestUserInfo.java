@@ -1,12 +1,14 @@
 package com.example.admin.permission;
 
-import com.example.admin.permission.spi.UserInfo;
+import com.example.common.user.spi.UserAccountInfo;
+import java.time.Instant;
 import java.util.Set;
+import java.util.UUID;
 
 /**
- * 테스트용 UserInfo 구현체.
+ * 테스트용 UserAccountInfo 구현체.
  */
-public class TestUserInfo implements UserInfo {
+public class TestUserInfo implements UserAccountInfo {
 
   private final String username;
   private final String organizationCode;
@@ -21,8 +23,23 @@ public class TestUserInfo implements UserInfo {
   }
 
   @Override
+  public UUID getId() {
+    return UUID.randomUUID();
+  }
+
+  @Override
   public String getUsername() {
     return username;
+  }
+
+  @Override
+  public String getPassword() {
+    return "test-password";
+  }
+
+  @Override
+  public String getEmail() {
+    return username + "@test.com";
   }
 
   @Override
@@ -36,8 +53,43 @@ public class TestUserInfo implements UserInfo {
   }
 
   @Override
+  public String getSsoId() {
+    return null;
+  }
+
+  @Override
+  public String getActiveDirectoryDomain() {
+    return null;
+  }
+
+  @Override
   public Set<String> getRoles() {
     return roles;
+  }
+
+  @Override
+  public boolean isActive() {
+    return true;
+  }
+
+  @Override
+  public boolean isLocked() {
+    return false;
+  }
+
+  @Override
+  public Instant getLockedUntil() {
+    return null;
+  }
+
+  @Override
+  public int getFailedLoginAttempts() {
+    return 0;
+  }
+
+  @Override
+  public Instant getPasswordChangedAt() {
+    return Instant.now();
   }
 
   public void setPermissionGroupCode(String permissionGroupCode) {

@@ -14,7 +14,7 @@ class ActionCodeTest {
   void givenAllActionCodes_whenValues_thenReturnsAllConstants() {
     ActionCode[] values = ActionCode.values();
 
-    assertThat(values).hasSize(20);
+    assertThat(values).hasSize(21);
     assertThat(values).contains(
         ActionCode.CREATE,
         ActionCode.READ,
@@ -35,7 +35,8 @@ class ActionCodeTest {
         ActionCode.DRAFT_RESUBMIT,
         ActionCode.DRAFT_DELEGATE,
         ActionCode.APPROVAL_ADMIN,
-        ActionCode.APPROVAL_REVIEW
+        ActionCode.APPROVAL_REVIEW,
+        ActionCode.ADMIN
     );
   }
 

@@ -1,7 +1,7 @@
 package com.example.auth.security;
 
-import com.example.auth.domain.UserAccountRepository;
 import com.example.common.cache.CacheNames;
+import com.example.common.user.spi.UserAccountProvider;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,16 +12,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserAccountDetailsService implements UserDetailsService {
 
-  private final UserAccountRepository repository;
+  private final UserAccountProvider userAccountProvider;
 
-  public UserAccountDetailsService(UserAccountRepository repository) {
-    this.repository = repository;
+  public UserAccountDetailsService(UserAccountProvider userAccountProvider) {
+    this.userAccountProvider = userAccountProvider;
   }
 
   @Override
   @Cacheable(cacheNames = CacheNames.USER_DETAILS, key = "#username")
   public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    return repository
+    return userAccountProvider
         .findByUsername(username)
         .map(
             account ->

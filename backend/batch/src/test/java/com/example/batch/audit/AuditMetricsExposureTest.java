@@ -27,19 +27,18 @@ import com.example.dw.application.job.DwIngestionOutboxService;
 import com.example.batch.quartz.DwQuartzScheduleManager;
 import com.example.dw.application.DwEmployeeDirectoryService;
 import com.example.batch.ingestion.HrEmployeeSynchronizationService;
-import com.example.dwgateway.dw.DwBatchPortAdapter;
+import com.example.dw.application.port.DwBatchPortAdapter;
 import com.example.dw.application.DwBatchQueryService;
-import com.example.dwgateway.dw.DwIngestionPolicyPortAdapter;
+import com.example.dw.application.port.DwIngestionPolicyPortAdapter;
 import com.example.dw.application.policy.DwIngestionPolicyService;
 import com.example.file.FileService;
 import com.example.file.StoredFileRepository;
-import com.example.dwgateway.web.FileController;
 import com.example.dw.application.DwOrganizationQueryService;
 import com.example.dw.application.export.ExportAuditService;
 import com.example.dw.application.export.ExportExecutionHelper;
 import com.example.admin.orggroup.service.OrgGroupPermissionResolver;
 import com.example.admin.orggroup.repository.OrgGroupRepository;
-import com.example.auth.domain.UserAccountRepository;
+import com.example.admin.user.repository.UserAccountRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.example.auth.domain.PasswordHistoryRepository;
 import com.example.auth.config.AuthPolicyProperties;
@@ -153,9 +152,6 @@ class AuditMetricsExposureTest {
 
     @MockBean
     StoredFileRepository storedFileRepository;
-
-    @MockBean
-    FileController fileController;
 
     @MockBean
     DwOrganizationQueryService dwOrganizationQueryService;

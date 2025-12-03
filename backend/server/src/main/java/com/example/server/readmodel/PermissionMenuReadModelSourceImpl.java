@@ -7,8 +7,8 @@ import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.service.PermissionGroupService;
 import com.example.admin.permission.service.PermissionMenuService;
 import com.example.admin.permission.service.PermissionMenuService.MenuTreeNode;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountService;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.dw.application.readmodel.MenuItem.MenuCapabilityRef;
 import com.example.dw.application.readmodel.PermissionMenuItem;
 import com.example.dw.application.readmodel.PermissionMenuReadModel;
@@ -33,16 +33,16 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
 
     private static final String DEFAULT_PERMISSION_GROUP = "DEFAULT";
 
-    private final UserAccountService userAccountService;
+    private final UserAccountProvider userAccountProvider;
     private final PermissionGroupService permissionGroupService;
     private final PermissionMenuService permissionMenuService;
     private final Clock clock;
 
-    public PermissionMenuReadModelSourceImpl(UserAccountService userAccountService,
+    public PermissionMenuReadModelSourceImpl(UserAccountProvider userAccountProvider,
                                              PermissionGroupService permissionGroupService,
                                              PermissionMenuService permissionMenuService,
                                              Clock clock) {
-        this.userAccountService = userAccountService;
+        this.userAccountProvider = userAccountProvider;
         this.permissionGroupService = permissionGroupService;
         this.permissionMenuService = permissionMenuService;
         this.clock = clock;
@@ -50,7 +50,7 @@ public class PermissionMenuReadModelSourceImpl implements PermissionMenuReadMode
 
     @Override
     public PermissionMenuReadModel snapshot(String principalId) {
-        UserAccount account = userAccountService.getByUsernameOrThrow(principalId);
+        UserAccountInfo account = userAccountProvider.getByUsernameOrThrow(principalId);
         String groupCode = account.getPermissionGroupCode();
         if (groupCode == null) {
             groupCode = DEFAULT_PERMISSION_GROUP;

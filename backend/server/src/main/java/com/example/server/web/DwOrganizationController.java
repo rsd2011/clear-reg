@@ -17,7 +17,7 @@ import com.example.common.policy.RowAccessMatch;
 import com.example.common.policy.RowAccessPolicyProvider;
 import com.example.common.policy.RowAccessQuery;
 import com.example.common.security.RowScope;
-import com.example.dwgateway.dw.DwOrganizationPort;
+import com.example.dw.application.port.DwOrganizationPort;
 import com.example.server.web.dto.DwOrganizationResponse;
 
 import io.swagger.v3.oas.annotations.Operation;

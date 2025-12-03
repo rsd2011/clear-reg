@@ -8,8 +8,6 @@ import com.example.audit.AuditPort;
 import com.example.audit.RiskLevel;
 import com.example.auth.domain.RefreshTokenService;
 import com.example.auth.domain.RefreshTokenService.IssuedRefreshToken;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountService;
 import com.example.auth.dto.AccountStatusChangeRequest;
 import com.example.auth.dto.LoginRequest;
 import com.example.auth.dto.LoginResponse;
@@ -18,10 +16,14 @@ import com.example.auth.dto.TokenResponse;
 import com.example.auth.security.AccountStatusPolicy;
 import com.example.auth.security.JwtTokenProvider;
 import com.example.auth.security.JwtTokenProvider.JwtToken;
+import com.example.auth.security.PasswordHistoryService;
 import com.example.auth.security.PasswordPolicyValidator;
 import com.example.auth.security.PolicyToggleProvider;
 import com.example.auth.strategy.AuthenticationStrategy;
 import com.example.auth.strategy.AuthenticationStrategyResolver;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -30,9 +32,11 @@ public class AuthService {
   private final AuthenticationStrategyResolver strategyResolver;
   private final JwtTokenProvider jwtTokenProvider;
   private final RefreshTokenService refreshTokenService;
-  private final UserAccountService userAccountService;
+  private final UserAccountProvider userAccountProvider;
   private final AccountStatusPolicy accountStatusPolicy;
   private final PasswordPolicyValidator passwordPolicyValidator;
+  private final PasswordHistoryService passwordHistoryService;
+  private final PasswordEncoder passwordEncoder;
   private final PolicyToggleProvider policyToggleProvider;
   private final AuditPort auditPort;
 
@@ -40,17 +44,21 @@ public class AuthService {
       AuthenticationStrategyResolver strategyResolver,
       JwtTokenProvider jwtTokenProvider,
       RefreshTokenService refreshTokenService,
-      UserAccountService userAccountService,
+      UserAccountProvider userAccountProvider,
       AccountStatusPolicy accountStatusPolicy,
       PasswordPolicyValidator passwordPolicyValidator,
+      PasswordHistoryService passwordHistoryService,
+      PasswordEncoder passwordEncoder,
       PolicyToggleProvider policyToggleProvider,
       AuditPort auditPort) {
     this.strategyResolver = strategyResolver;
     this.jwtTokenProvider = jwtTokenProvider;
     this.refreshTokenService = refreshTokenService;
-    this.userAccountService = userAccountService;
+    this.userAccountProvider = userAccountProvider;
     this.accountStatusPolicy = accountStatusPolicy;
     this.passwordPolicyValidator = passwordPolicyValidator;
+    this.passwordHistoryService = passwordHistoryService;
+    this.passwordEncoder = passwordEncoder;
     this.policyToggleProvider = policyToggleProvider;
     this.auditPort = auditPort;
   }
@@ -62,7 +70,7 @@ public class AuthService {
     }
     AuthenticationStrategy strategy =
         strategyResolver.resolve(request.type()).orElseThrow(InvalidCredentialsException::new);
-    UserAccount account = strategy.authenticate(request);
+    UserAccountInfo account = strategy.authenticate(request);
     LoginResponse response =
         assembleResponse(account, request.type(), refreshTokenService.issue(account));
     recordAudit("AUTH", "LOGIN", account, true, "OK");
@@ -79,20 +87,23 @@ public class AuthService {
   }
 
   public void changePassword(String username, PasswordChangeRequest request) {
-    UserAccount account = userAccountService.getByUsernameOrThrow(username);
+    UserAccountInfo account = userAccountProvider.getByUsernameOrThrow(username);
     accountStatusPolicy.ensureLoginAllowed(account);
-    if (!userAccountService.passwordMatches(account, request.currentPassword())) {
+    if (!userAccountProvider.passwordMatches(username, request.currentPassword())) {
       accountStatusPolicy.onFailedLogin(account);
       throw new InvalidCredentialsException();
     }
     passwordPolicyValidator.validate(request.newPassword());
-    userAccountService.changePassword(account, request.newPassword());
+    passwordHistoryService.ensureNotReused(username, request.newPassword());
+    String encodedPassword = passwordEncoder.encode(request.newPassword());
+    userAccountProvider.updatePassword(username, encodedPassword);
+    passwordHistoryService.record(username, encodedPassword);
     accountStatusPolicy.onSuccessfulLogin(account);
     recordAudit("AUTH", "PASSWORD_CHANGE", account, true, "OK");
   }
 
   public void updateAccountStatus(AccountStatusChangeRequest request) {
-    UserAccount account = userAccountService.getByUsernameOrThrow(request.username());
+    UserAccountInfo account = userAccountProvider.getByUsernameOrThrow(request.username());
     if (request.active()) {
       accountStatusPolicy.activate(account);
     } else {
@@ -102,12 +113,12 @@ public class AuthService {
   }
 
   private LoginResponse assembleResponse(
-      UserAccount account, LoginType type, IssuedRefreshToken refreshToken) {
+      UserAccountInfo account, LoginType type, IssuedRefreshToken refreshToken) {
     TokenResponse tokenResponse = buildTokenResponse(account, refreshToken);
     return new LoginResponse(account.getUsername(), type, tokenResponse);
   }
 
-  private TokenResponse buildTokenResponse(UserAccount account, IssuedRefreshToken refreshToken) {
+  private TokenResponse buildTokenResponse(UserAccountInfo account, IssuedRefreshToken refreshToken) {
     JwtToken accessToken =
         jwtTokenProvider.generateAccessToken(account.getUsername(), account.getRoles());
     return new TokenResponse(
@@ -118,7 +129,7 @@ public class AuthService {
   }
 
   private void recordAudit(
-      String eventType, String action, UserAccount account, boolean success, String resultCode) {
+      String eventType, String action, UserAccountInfo account, boolean success, String resultCode) {
     try {
       AuditEvent event =
           AuditEvent.builder()

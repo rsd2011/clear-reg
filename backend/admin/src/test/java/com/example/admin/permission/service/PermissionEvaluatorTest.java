@@ -12,8 +12,8 @@ import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.exception.PermissionDeniedException;
-import com.example.admin.permission.spi.UserInfo;
-import com.example.admin.permission.spi.UserInfoProvider;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.testing.bdd.Scenario;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +30,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 @DisplayName("PermissionEvaluator 테스트")
 class PermissionEvaluatorTest {
 
-  @Mock private UserInfoProvider userInfoProvider;
+  @Mock private UserAccountProvider userAccountProvider;
   @Mock private PermissionGroupService permissionGroupService;
 
   @AfterEach
@@ -42,8 +42,8 @@ class PermissionEvaluatorTest {
   @DisplayName("Given 인증 사용자가 권한을 가질 때 When evaluate 호출 Then PermissionDecision을 반환한다")
   void givenAuthenticatedUser_whenPermissionExists_thenReturnDecision() {
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(userInfoProvider, permissionGroupService);
-    UserInfo userInfo = new TestUserInfo("auditor", "ORG1", "AUDIT", Set.of("ROLE_AUDITOR"));
+        new PermissionEvaluator(userAccountProvider, permissionGroupService);
+    UserAccountInfo userInfo = new TestUserInfo("auditor", "ORG1", "AUDIT", Set.of("ROLE_AUDITOR"));
     PermissionGroup group = mock(PermissionGroup.class);
     PermissionAssignment assignment =
         new PermissionAssignment(FeatureCode.ORGANIZATION, ActionCode.READ);
@@ -51,7 +51,7 @@ class PermissionEvaluatorTest {
     SecurityContextHolder.getContext()
         .setAuthentication(
             new UsernamePasswordAuthenticationToken("auditor", "token", java.util.List.of()));
-    given(userInfoProvider.getByUsernameOrThrow("auditor")).willReturn(userInfo);
+    given(userAccountProvider.getByUsernameOrThrow("auditor")).willReturn(userInfo);
     given(permissionGroupService.getByCodeOrThrow("AUDIT")).willReturn(group);
     given(group.assignmentFor(FeatureCode.ORGANIZATION, ActionCode.READ))
         .willReturn(Optional.of(assignment));
@@ -71,7 +71,7 @@ class PermissionEvaluatorTest {
   @DisplayName("Given 인증 컨텍스트가 없을 때 When evaluate 호출 Then PermissionDeniedException을 던진다")
   void givenNoAuthentication_whenEvaluating_thenThrows() {
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(userInfoProvider, permissionGroupService);
+        new PermissionEvaluator(userAccountProvider, permissionGroupService);
 
     assertThatThrownBy(() -> evaluator.evaluate(FeatureCode.CUSTOMER, ActionCode.READ))
         .isInstanceOf(PermissionDeniedException.class);
@@ -81,7 +81,7 @@ class PermissionEvaluatorTest {
   @DisplayName("Given 그룹 코드가 없을 때 When evaluate 호출 Then DEFAULT 그룹을 사용한다")
   void givenMissingPermissionGroup_whenEvaluating_thenUsesDefaultGroup() {
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(userInfoProvider, permissionGroupService);
+        new PermissionEvaluator(userAccountProvider, permissionGroupService);
     TestUserInfo userInfo = new TestUserInfo("auditor", "ORG2", "DEFAULT", Set.of("ROLE_AUDITOR"));
     userInfo.setPermissionGroupCode(null);
     PermissionGroup group = mock(PermissionGroup.class);
@@ -91,7 +91,7 @@ class PermissionEvaluatorTest {
     SecurityContextHolder.getContext()
         .setAuthentication(
             new UsernamePasswordAuthenticationToken("auditor", "token", java.util.List.of()));
-    given(userInfoProvider.getByUsernameOrThrow("auditor")).willReturn(userInfo);
+    given(userAccountProvider.getByUsernameOrThrow("auditor")).willReturn(userInfo);
     given(permissionGroupService.getByCodeOrThrow("DEFAULT")).willReturn(group);
     given(group.assignmentFor(FeatureCode.ORGANIZATION, ActionCode.READ))
         .willReturn(Optional.of(assignment));
@@ -106,14 +106,14 @@ class PermissionEvaluatorTest {
   @DisplayName("Given 권한 할당이 없을 때 When evaluate 호출 Then PermissionDeniedException을 던진다")
   void givenNoAssignment_whenEvaluating_thenThrows() {
     PermissionEvaluator evaluator =
-        new PermissionEvaluator(userInfoProvider, permissionGroupService);
-    UserInfo userInfo = new TestUserInfo("analyst", "ORG3", "ANALYST", Set.of("ROLE_ANALYST"));
+        new PermissionEvaluator(userAccountProvider, permissionGroupService);
+    UserAccountInfo userInfo = new TestUserInfo("analyst", "ORG3", "ANALYST", Set.of("ROLE_ANALYST"));
     PermissionGroup group = mock(PermissionGroup.class);
 
     SecurityContextHolder.getContext()
         .setAuthentication(
             new UsernamePasswordAuthenticationToken("analyst", "token", java.util.List.of()));
-    given(userInfoProvider.getByUsernameOrThrow("analyst")).willReturn(userInfo);
+    given(userAccountProvider.getByUsernameOrThrow("analyst")).willReturn(userInfo);
     given(permissionGroupService.getByCodeOrThrow("ANALYST")).willReturn(group);
     given(group.assignmentFor(FeatureCode.ORGANIZATION, ActionCode.READ))
         .willReturn(Optional.empty());

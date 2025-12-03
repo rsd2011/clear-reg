@@ -5,6 +5,7 @@ import com.example.draft.TestApprovalHelper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import java.time.OffsetDateTime;
@@ -14,8 +15,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountRepository;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.repository.PermissionGroupRepository;
 import com.example.draft.domain.Draft;
@@ -31,8 +32,8 @@ class DraftEndToEndWithNotificationTest {
         DraftNotificationServiceTest.DraftNotificationPublisherStub publisher = new DraftNotificationServiceTest.DraftNotificationPublisherStub();
         DraftReferenceRepository refRepo = mock(DraftReferenceRepository.class);
         PermissionGroupRepository permGroupRepo = mock(PermissionGroupRepository.class);
-        UserAccountRepository userAccountRepo = mock(UserAccountRepository.class);
-        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountRepo);
+        UserAccountProvider userAccountProvider = mock(UserAccountProvider.class);
+        DraftNotificationService svc = new DraftNotificationService(publisher, refRepo, permGroupRepo, userAccountProvider);
 
         Draft draft = Draft.create("title", "content", "FEATURE", "ORG", "TPL", "creator", OffsetDateTime.now());
         DraftApprovalStep step1 = DraftApprovalStep.fromTemplate(TestApprovalHelper.createTemplateStep(null, 1, "GRP1", ""));
@@ -49,9 +50,9 @@ class DraftEndToEndWithNotificationTest {
         given(permGroup1.getCode()).willReturn("PERM_GRP1");
         given(permGroup1.getApprovalGroupCodes()).willReturn(List.of("GRP1"));
         given(permGroupRepo.findByApprovalGroupCode("[\"GRP1\"]")).willReturn(List.of(permGroup1));
-        given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP1"))).willReturn(List.of(
-                UserAccount.builder().username("user1").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP1").build()
-        ));
+
+        UserAccountInfo user1 = createMockUserAccountInfo("user1", "ORG", "PERM_GRP1");
+        doReturn(List.of(user1)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP1"));
 
         UUID step1Id = step1.getId();
         svc.notify("APPROVE", draft, "actor1", step1Id, null, null, OffsetDateTime.now());
@@ -66,12 +67,20 @@ class DraftEndToEndWithNotificationTest {
         given(permGroup2.getCode()).willReturn("PERM_GRP2");
         given(permGroup2.getApprovalGroupCodes()).willReturn(List.of("GRP2"));
         given(permGroupRepo.findByApprovalGroupCode("[\"GRP2\"]")).willReturn(List.of(permGroup2));
-        given(userAccountRepo.findByPermissionGroupCodeIn(List.of("PERM_GRP2"))).willReturn(List.of(
-                UserAccount.builder().username("user2").password("pw").organizationCode("ORG").permissionGroupCode("PERM_GRP2").build()
-        ));
+
+        UserAccountInfo user2 = createMockUserAccountInfo("user2", "ORG", "PERM_GRP2");
+        doReturn(List.of(user2)).when(userAccountProvider).findByPermissionGroupCodeIn(List.of("PERM_GRP2"));
 
         UUID step2Id = step2.getId();
         svc.notify("APPROVE", draft, "actor2", step2Id, null, null, OffsetDateTime.now());
         assertThat(publisher.lastPayload.recipients()).containsExactlyInAnyOrder("creator", "actor2", "ref1", "user2");
+    }
+
+    private UserAccountInfo createMockUserAccountInfo(String username, String orgCode, String permGroupCode) {
+        UserAccountInfo user = mock(UserAccountInfo.class);
+        given(user.getUsername()).willReturn(username);
+        given(user.getOrganizationCode()).willReturn(orgCode);
+        org.mockito.Mockito.lenient().when(user.getPermissionGroupCode()).thenReturn(permGroupCode);
+        return user;
     }
 }

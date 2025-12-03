@@ -15,7 +15,8 @@ import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
 import com.example.admin.permission.domain.PermissionGroup;
 import com.example.admin.permission.domain.PermissionGroupRoot;
-import com.example.admin.permission.spi.UserInfo;
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.admin.permission.TestUserInfo;
 import com.example.common.version.ChangeAction;
 
 /**
@@ -33,7 +34,7 @@ class PermissionDecisionTest {
         @Test
         @DisplayName("Given 모든 필드 When 생성자 호출하면 Then 모든 필드가 설정된다")
         void allFieldsAreSet() {
-            UserInfo userInfo = createUserInfo("user1", "ORG001", "GROUP001");
+            UserAccountInfo userInfo = createUserInfo("user1", "ORG001", "GROUP001");
             PermissionAssignment assignment = new PermissionAssignment(
                     FeatureCode.ORGANIZATION, ActionCode.READ);
             PermissionGroup group = createTestGroup("GROUP001", "테스트 그룹");
@@ -63,7 +64,7 @@ class PermissionDecisionTest {
         @Test
         @DisplayName("Given 권한 결정 When toContext 호출하면 Then AuthContext가 생성된다")
         void convertsToAuthContext() {
-            UserInfo userInfo = createUserInfo("testUser", "ORG100", "GRP100");
+            UserAccountInfo userInfo = createUserInfo("testUser", "ORG100", "GRP100");
             PermissionAssignment assignment = new PermissionAssignment(
                     FeatureCode.DRAFT, ActionCode.UPDATE);
             PermissionGroup group = createTestGroup("GRP100", "그룹");
@@ -94,7 +95,7 @@ class PermissionDecisionTest {
         @Test
         @DisplayName("Given 동일한 값 When equals 호출하면 Then true 반환")
         void equalValuesReturnsTrue() {
-            UserInfo userInfo = createUserInfo("user", "org", "grp");
+            UserAccountInfo userInfo = createUserInfo("user", "org", "grp");
             PermissionAssignment assignment = new PermissionAssignment(
                     FeatureCode.ORGANIZATION, ActionCode.READ);
             PermissionGroup group = createTestGroup("grp", "그룹");
@@ -124,8 +125,8 @@ class PermissionDecisionTest {
         @Test
         @DisplayName("Given 다른 userInfo When equals 호출하면 Then false 반환")
         void differentUserInfoReturnsFalse() {
-            UserInfo userInfo1 = createUserInfo("user1", "org", "grp");
-            UserInfo userInfo2 = createUserInfo("user2", "org", "grp");
+            UserAccountInfo userInfo1 = createUserInfo("user1", "org", "grp");
+            UserAccountInfo userInfo2 = createUserInfo("user2", "org", "grp");
             PermissionAssignment assignment = new PermissionAssignment(
                     FeatureCode.ORGANIZATION, ActionCode.READ);
             PermissionGroup group = createTestGroup("grp", "그룹");
@@ -144,7 +145,7 @@ class PermissionDecisionTest {
         @Test
         @DisplayName("Given 동일한 값 When hashCode 호출하면 Then 같은 해시코드 반환")
         void equalObjectsHaveSameHashCode() {
-            UserInfo userInfo = createUserInfo("user", "org", "grp");
+            UserAccountInfo userInfo = createUserInfo("user", "org", "grp");
             PermissionAssignment assignment = new PermissionAssignment(
                     FeatureCode.ORGANIZATION, ActionCode.READ);
             PermissionGroup group = createTestGroup("grp", "그룹");
@@ -171,7 +172,7 @@ class PermissionDecisionTest {
         @Test
         @DisplayName("Given 권한 결정 When toString 호출하면 Then 모든 필드가 포함된 문자열 반환")
         void includesAllFields() {
-            UserInfo userInfo = createUserInfo("testUser", "ORG001", "GRP001");
+            UserAccountInfo userInfo = createUserInfo("testUser", "ORG001", "GRP001");
             PermissionAssignment assignment = new PermissionAssignment(
                     FeatureCode.DRAFT, ActionCode.UPDATE);
             PermissionGroup group = createTestGroup("GRP001", "테스트 그룹");
@@ -188,7 +189,7 @@ class PermissionDecisionTest {
     }
 
     private PermissionDecision createDecision() {
-        UserInfo userInfo = createUserInfo("user", "org", "grp");
+        UserAccountInfo userInfo = createUserInfo("user", "org", "grp");
         PermissionAssignment assignment = new PermissionAssignment(
                 FeatureCode.ORGANIZATION, ActionCode.READ);
         PermissionGroup group = createTestGroup("grp", "그룹");
@@ -213,27 +214,7 @@ class PermissionDecisionTest {
                 now);
     }
 
-    private UserInfo createUserInfo(String username, String orgCode, String groupCode) {
-        return new UserInfo() {
-            @Override
-            public String getUsername() {
-                return username;
-            }
-
-            @Override
-            public String getOrganizationCode() {
-                return orgCode;
-            }
-
-            @Override
-            public String getPermissionGroupCode() {
-                return groupCode;
-            }
-
-            @Override
-            public Set<String> getRoles() {
-                return Set.of("ROLE_USER");
-            }
-        };
+    private UserAccountInfo createUserInfo(String username, String orgCode, String groupCode) {
+        return new TestUserInfo(username, orgCode, groupCode, Set.of("ROLE_USER"));
     }
 }

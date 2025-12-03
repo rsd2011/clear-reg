@@ -1,6 +1,8 @@
 package com.example.server.readmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -15,10 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.example.admin.menu.domain.MenuCapability;
-import com.example.auth.domain.UserAccount;
-import com.example.auth.domain.UserAccountService;
-import static org.mockito.BDDMockito.given;
-
+import com.example.common.user.spi.UserAccountInfo;
+import com.example.common.user.spi.UserAccountProvider;
 import com.example.common.security.ActionCode;
 import com.example.common.security.FeatureCode;
 import com.example.admin.permission.domain.PermissionAssignment;
@@ -30,7 +30,7 @@ import com.example.dw.application.readmodel.PermissionMenuReadModel;
 
 class PermissionMenuReadModelSourceImplTest {
 
-    private final UserAccountService userAccountService = Mockito.mock(UserAccountService.class);
+    private final UserAccountProvider userAccountProvider = Mockito.mock(UserAccountProvider.class);
     private final PermissionGroupService permissionGroupService = Mockito.mock(PermissionGroupService.class);
     private final PermissionMenuService permissionMenuService = Mockito.mock(PermissionMenuService.class);
     private final Clock clock = Clock.fixed(Instant.parse("2025-01-01T00:00:00Z"), ZoneOffset.UTC);
@@ -39,18 +39,13 @@ class PermissionMenuReadModelSourceImplTest {
 
     @BeforeEach
     void setUp() {
-        source = new PermissionMenuReadModelSourceImpl(userAccountService, permissionGroupService, permissionMenuService, clock);
+        source = new PermissionMenuReadModelSourceImpl(userAccountProvider, permissionGroupService, permissionMenuService, clock);
     }
 
     @Test
     void buildsMenuFromPermissionGroupAssignments() {
-        UserAccount account = UserAccount.builder()
-                .username("user1")
-                .password("pw")
-                .organizationCode("ORG1")
-                .permissionGroupCode("GROUP1")
-                .build();
-        when(userAccountService.getByUsernameOrThrow("user1")).thenReturn(account);
+        UserAccountInfo account = createMockUserAccountInfo("user1", "ORG1", "GROUP1");
+        when(userAccountProvider.getByUsernameOrThrow("user1")).thenReturn(account);
 
         PermissionGroup group = Mockito.mock(PermissionGroup.class);
         given(group.getCode()).willReturn("GROUP1");
@@ -85,13 +80,8 @@ class PermissionMenuReadModelSourceImplTest {
 
     @Test
     void fallsBackToDefaultGroupWhenAccountHasNoGroup() {
-        UserAccount account = UserAccount.builder()
-                .username("user2")
-                .password("pw")
-                .organizationCode("ORG2")
-                .permissionGroupCode(null)
-                .build();
-        when(userAccountService.getByUsernameOrThrow("user2")).thenReturn(account);
+        UserAccountInfo account = createMockUserAccountInfo("user2", "ORG2", null);
+        when(userAccountProvider.getByUsernameOrThrow("user2")).thenReturn(account);
 
         PermissionGroup group = Mockito.mock(PermissionGroup.class);
         given(group.getCode()).willReturn("DEFAULT");
@@ -104,5 +94,13 @@ class PermissionMenuReadModelSourceImplTest {
         PermissionMenuReadModel model = source.snapshot("user2");
 
         assertThat(model.items()).isEmpty();
+    }
+
+    private UserAccountInfo createMockUserAccountInfo(String username, String orgCode, String permGroupCode) {
+        UserAccountInfo user = mock(UserAccountInfo.class);
+        given(user.getUsername()).willReturn(username);
+        given(user.getOrganizationCode()).willReturn(orgCode);
+        given(user.getPermissionGroupCode()).willReturn(permGroupCode);
+        return user;
     }
 }
