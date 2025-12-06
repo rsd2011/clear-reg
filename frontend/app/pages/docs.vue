@@ -31,7 +31,12 @@ const lightThemeEntries = computed(() =>
 )
 
 // 테마 Select 옵션
-const themeSelectOptions = computed(() =>
+interface ThemeSelectOption {
+  label: string
+  value: ThemeName
+}
+
+const themeSelectOptions = computed((): ThemeSelectOption[] =>
   themeStore.availableThemes.map(theme => ({
     label: theme.label,
     value: theme.value,
@@ -146,9 +151,11 @@ function handleThemePreviewEnd() {
   themeStore.cancelPreview()
 }
 
-function handleThemeSelect(themeName: ThemeName, event?: MouseEvent) {
+function handleThemeSelect(themeName: ThemeName, event: MouseEvent | KeyboardEvent) {
   previewingTheme.value = null
-  themeStore.setTheme(themeName, event)
+  // KeyboardEvent는 clientX/Y가 없으므로 MouseEvent만 전달
+  const mouseEvent = 'clientX' in event ? event as MouseEvent : undefined
+  themeStore.setTheme(themeName, mouseEvent)
   toast.success(`테마 변경: ${THEMES[themeName].name}`)
 }
 
@@ -434,9 +441,11 @@ function resetDockviewPanels() {
               테마 프리뷰
             </h3>
             <div class="w-48">
+              <!-- FormSelect의 제네릭 타입이 modelValue에서 추론되어 ThemeName[]을 기대하지만,
+                   optionLabel/optionValue 사용 시 객체 배열이 필요하므로 타입 캐스팅 -->
               <FormSelect
                 v-model="selectedThemeOption"
-                :options="themeSelectOptions"
+                :options="(themeSelectOptions as unknown as ThemeName[])"
                 option-label="label"
                 option-value="value"
                 placeholder="테마 선택"

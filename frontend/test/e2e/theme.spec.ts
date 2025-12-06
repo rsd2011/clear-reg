@@ -1091,13 +1091,14 @@ test.describe('Dockview 테마 통합', () => {
             if (rule instanceof CSSStyleRule) {
               const cssText = rule.cssText
               // Dockview 변수가 정의되어 있는지 확인
-              if (cssText.includes('--dv-group-view-background-color') &&
-                  cssText.includes('--oklch-gray')) {
+              if (cssText.includes('--dv-group-view-background-color')
+                && cssText.includes('--oklch-gray')) {
                 return true
               }
             }
           }
-        } catch {
+        }
+        catch {
           // 크로스 오리진 스타일시트는 접근 불가
         }
       }
@@ -1151,7 +1152,8 @@ test.describe('Dockview 테마 통합', () => {
               }
             }
           }
-        } catch {
+        }
+        catch {
           // 크로스 오리진 스타일시트는 접근 불가
         }
       }
@@ -1364,7 +1366,8 @@ test.describe('RealGrid 테마 통합', () => {
         // 다크/라이트 모드 클래스 확인
         if (theme.mode === 'dark') {
           await expect(html).toHaveClass(/app-dark/)
-        } else {
+        }
+        else {
           await expect(html).not.toHaveClass(/app-dark/)
         }
       }
@@ -1389,7 +1392,8 @@ test.describe('RealGrid 테마 통합', () => {
 
         if (theme.mode === 'dark') {
           expect(colorScheme).toContain('dark')
-        } else {
+        }
+        else {
           expect(colorScheme).toContain('light')
         }
       }

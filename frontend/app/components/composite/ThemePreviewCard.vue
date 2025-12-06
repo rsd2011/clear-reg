@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   /** 테마 선택 시 */
-  'select': [themeName: ThemeName, event: MouseEvent]
+  'select': [themeName: ThemeName, event: MouseEvent | KeyboardEvent]
   /** 프리뷰 시작 */
   'preview-start': [themeName: ThemeName]
   /** 프리뷰 종료 */
@@ -44,7 +44,7 @@ const emit = defineEmits<{
 // Methods
 // ============================================================================
 
-function handleClick(event: MouseEvent) {
+function handleClick(event: MouseEvent | KeyboardEvent) {
   emit('select', props.themeName, event)
 }
 
