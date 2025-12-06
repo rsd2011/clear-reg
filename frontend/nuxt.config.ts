@@ -38,6 +38,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   // 테마 FOUC(Flash of Unstyled Content) 방지를 위한 inline script
+  // 🆕 하이브리드 방식: CSS light-dark()가 시스템 기본 처리, JS는 저장된 선택만 처리
   app: {
     head: {
       script: [
@@ -45,10 +46,30 @@ export default defineNuxtConfig({
           innerHTML: `
             (function() {
               try {
-                var themeName = localStorage.getItem('enterman-theme-name') || 'linear-dark';
-                var themeMode = localStorage.getItem('enterman-theme-mode') || 'system';
-                var isDark = themeMode === 'dark' ||
-                  (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                // 🆕 하이브리드 FOUC 방지:
+                // 1. CSS light-dark()가 시스템 기본 테마 즉시 처리 (FOUC 완전 방지)
+                // 2. 저장된 사용자 선택이 있으면 클래스로 오버라이드
+                var themeName = null;
+                var themeMode = null;
+
+                // 저장된 테마 확인 (pinia-plugin-persistedstate)
+                var stored = localStorage.getItem('app-theme');
+                if (stored) {
+                  var parsed = JSON.parse(stored);
+                  themeName = parsed.themeName;
+                  themeMode = parsed.themeMode;
+                } else {
+                  // 레거시 폴백
+                  themeName = localStorage.getItem('app-theme-name');
+                  themeMode = localStorage.getItem('app-theme-mode');
+                }
+
+                // 저장된 테마가 없으면 기본값 사용
+                if (!themeName) {
+                  themeName = 'linear-dark';
+                  themeMode = 'system';
+                }
+
                 // 테마 클래스 매핑
                 var themeClasses = {
                   'linear-dark': 'theme-linear-dark',
@@ -58,9 +79,27 @@ export default defineNuxtConfig({
                   'koscom-light': 'theme-koscom-light',
                   'notion-light': 'theme-notion-light'
                 };
-                var themeClass = themeClasses[themeName] || 'theme-linear-dark';
-                document.documentElement.classList.add(themeClass);
-                if (isDark) document.documentElement.classList.add('app-dark');
+
+                var themeClass = themeClasses[themeName];
+                if (themeClass) {
+                  document.documentElement.classList.add(themeClass);
+                }
+
+                // 다크/라이트 모드 처리
+                // - 'system': CSS light-dark()에 위임 (클래스 추가 안함)
+                // - 'dark': app-dark 클래스로 다크모드 강제
+                // - 'light': app-light 클래스로 라이트모드 강제
+                if (themeMode === 'dark') {
+                  document.documentElement.classList.add('app-dark');
+                } else if (themeMode === 'light') {
+                  document.documentElement.classList.add('app-light');
+                } else if (themeMode === 'system') {
+                  // 시스템 모드: 현재 시스템 설정에 따라 클래스 추가
+                  // CSS light-dark()도 있지만, PrimeVue 컴포넌트는 클래스 기반이므로 필요
+                  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('app-dark');
+                  }
+                }
               } catch (e) {}
             })();
           `,

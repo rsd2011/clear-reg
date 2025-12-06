@@ -1,9 +1,13 @@
 /**
  * Dockview Theme Dynamic Switcher Plugin
  *
- * 공식 Dockview 테마를 isDark 상태에 따라 동적 전환
- * - 다크 모드: dockview-theme-abyss (VS Code 스타일)
+ * 공식 Dockview 기본 테마를 isDark 상태에 따라 동적 전환
+ * - 다크 모드: dockview-theme-dark
  * - 라이트 모드: dockview-theme-light
+ *
+ * 앱 테마별 스타일링은 CSS 변수 오버라이드로 처리 (main.css)
+ * - 색상: OKLCH 기반 --oklch-gray-*, --oklch-primary-* 변수 연동
+ * - 레이아웃: 테마별 border-radius, tab height, margin 등 차별화
  *
  * HTML 요소에 테마 클래스를 추가하면 Dockview 컴포넌트가 상속받음
  *
@@ -29,9 +33,9 @@ export default defineNuxtPlugin(() => {
   watchEffect(() => {
     const html = document.documentElement
 
-    // 다크모드: abyss (VS Code 스타일), 라이트모드: light
+    // 다크모드: dark, 라이트모드: light (앱 테마 스타일은 CSS 변수로 오버라이드)
     const baseTheme = themeStore.isDark
-      ? 'dockview-theme-abyss'
+      ? 'dockview-theme-dark'
       : 'dockview-theme-light'
 
     // 기존 Dockview 기본 테마 클래스 모두 제거

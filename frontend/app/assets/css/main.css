@@ -14,7 +14,29 @@
 :root {
   --theme-toggle-x: 50%;
   --theme-toggle-y: 50%;
-  color-scheme: light; /* light-dark() 함수 지원을 위한 명시적 선언 */
+  /* ═══════════════════════════════════════════════════════════════════════════
+     🆕 FOUC 방지: light-dark()로 시스템 기본값 처리
+     ═══════════════════════════════════════════════════════════════════════════
+   * JavaScript 실행 전에도 시스템 설정에 따라 적절한 색상이 표시됨
+   * 브라우저 지원: Chrome 123+, Firefox 120+, Safari 17.5+ (2024.05~)
+   */
+  color-scheme: light dark; /* light-dark() 함수가 시스템 설정을 자동 감지 */
+
+  /* 시스템 기본 배경/텍스트 - JavaScript 로드 전 FOUC 방지 */
+  --system-bg: light-dark(#ffffff, #121212);
+  --system-text: light-dark(#1f2937, #f9fafb);
+  --system-border: light-dark(#e5e7eb, #374151);
+}
+
+/* 시스템 기본값 적용 (JavaScript 로드 전) */
+html:not([class*="theme-"]) {
+  background-color: var(--system-bg);
+  color: var(--system-text);
+}
+
+html:not([class*="theme-"]) body {
+  background-color: var(--system-bg);
+  color: var(--system-text);
 }
 
 /* Old view (나가는 테마) - 페이드 아웃 */
@@ -87,8 +109,14 @@ html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* 다크모드 강제 적용 (사용자가 다크모드 선택 시) */
 .app-dark {
   color-scheme: dark;
+}
+
+/* 라이트모드 강제 적용 (사용자가 라이트모드 선택 시) */
+.app-light {
+  color-scheme: light;
 }
 
 /* ============================================================================
@@ -769,4 +797,605 @@ html.high-contrast [role="button"] {
   html:not(.high-contrast) {
     /* 시스템 설정 따르기 (사용자가 명시적으로 끄지 않은 경우) */
   }
+}
+
+/* ============================================================================
+   Dockview 테마 통합 (OKLCH 시스템 연동)
+   ============================================================================
+ *
+ * 🎯 전략: B안 - 기본 테마 클래스 유지 + CSS 변수 오버라이드
+ *
+ * Dockview의 dockview-theme-dark/light를 베이스로 유지하면서
+ * 앱 테마 시스템의 OKLCH 색상으로 오버라이드합니다.
+ *
+ * 장점:
+ * - Dockview 기본 스타일 유지 (레이아웃, 애니메이션 등)
+ * - 색상과 레이아웃만 앱 테마에 맞게 커스터마이징
+ * - 테마 전환 시 자동 적용 (OKLCH 변수 참조)
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1️⃣ Dockview 공통 변수 레이어 (Light Mode 기본값)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── 배경색 (Background) ─── */
+  --dv-group-view-background-color: var(--oklch-gray-1);
+  --dv-tabs-and-actions-container-background-color: var(--oklch-gray-2);
+
+  /* ─── 탭 배경색 (Tab Backgrounds) ─── */
+  --dv-activegroup-visiblepanel-tab-background-color: var(--oklch-gray-1);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--oklch-gray-3);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--oklch-gray-2);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--oklch-gray-3);
+
+  /* ─── 탭 텍스트색 (Tab Text) ─── */
+  --dv-activegroup-visiblepanel-tab-color: var(--oklch-gray-12);
+  --dv-activegroup-hiddenpanel-tab-color: var(--oklch-gray-9);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--oklch-gray-10);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--oklch-gray-8);
+
+  /* ─── 구분선 (Borders/Dividers) ─── */
+  --dv-tab-divider-color: var(--oklch-gray-4);
+  --dv-separator-border: var(--oklch-gray-6);
+  --dv-paneview-header-border-color: var(--oklch-gray-6);
+
+  /* ─── 액센트 색상 (Primary 연동) ⭐ ─── */
+  --dv-paneview-active-outline-color: var(--oklch-primary-9);
+  --dv-active-sash-color: var(--oklch-primary-9);
+  --dv-drag-over-border-color: var(--oklch-primary-9);
+
+  /* ─── 인터랙션 효과 ─── */
+  --dv-icon-hover-background-color: color-mix(in oklch, var(--oklch-primary-4) 50%, transparent);
+  --dv-drag-over-background-color: color-mix(in oklch, var(--oklch-primary-4) 40%, transparent);
+
+  /* ─── 스크롤바 (기존 테마 변수 연동) ─── */
+  --dv-scrollbar-background-color: var(--scrollbar-color, rgba(0, 0, 0, 0.15));
+  --dv-tabs-container-scrollbar-color: var(--scrollbar-color, rgba(0, 0, 0, 0.15));
+
+  /* ─── 플로팅 그림자 (light-dark 자동 전환) ─── */
+  --dv-floating-box-shadow: light-dark(
+    0 8px 24px oklch(0 0 0 / 0.12),
+    0 8px 24px oklch(0 0 0 / 0.5)
+  );
+
+  /* ─── 분할선 (Sash) ─── */
+  --dv-sash-color: transparent;
+  --dv-active-sash-transition-duration: 0.15s;
+  --dv-active-sash-transition-delay: 0.3s;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2️⃣ Dark Mode 오버라이드
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-dark {
+  /* Gray Scale이 .app-dark에서 이미 반전되어 있으므로
+   * 동일한 OKLCH 변수 참조로 자동 적용됨.
+   * 아래는 다크모드 전용 미세 조정만 */
+
+  /* 인터랙션 효과 - 다크모드에서 더 밝게 */
+  --dv-icon-hover-background-color: color-mix(in oklch, var(--oklch-primary-5) 40%, transparent);
+  --dv-drag-over-background-color: color-mix(in oklch, var(--oklch-primary-5) 35%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3️⃣ 테마별 레이아웃 차별화
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Linear Dark - 미니멀 & 모던 (VS Code 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-linear-dark {
+  --dv-border-radius: 0px;
+  --dv-tab-margin: 0;
+  --dv-tabs-and-actions-container-height: 35px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GitHub Dark - 클래식 & 익숙한 (GitHub 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-github-dark {
+  --dv-border-radius: 6px;
+  --dv-tab-margin: 2px 4px;
+  --dv-tabs-and-actions-container-height: 38px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+}
+
+.theme-github-dark .dv-tab {
+  border-radius: 6px;
+}
+
+.theme-github-dark .dv-groupview {
+  border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Figma Dark - 컴팩트 & 효율적 (Figma 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-figma-dark {
+  --dv-border-radius: 4px;
+  --dv-tab-margin: 2px;
+  --dv-tabs-and-actions-container-height: 32px;
+  --dv-tabs-and-actions-container-font-size: 12px;
+}
+
+.theme-figma-dark .dv-tab {
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Slack Aubergine - 둥글고 친근한 (Slack 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-slack-aubergine {
+  --dv-border-radius: 8px;
+  --dv-tab-margin: 4px;
+  --dv-tabs-and-actions-container-height: 40px;
+  --dv-tabs-and-actions-container-font-size: 14px;
+}
+
+.theme-slack-aubergine .dv-tab {
+  border-radius: 8px;
+}
+
+.theme-slack-aubergine .dv-groupview {
+  border-radius: 8px;
+}
+
+.theme-slack-aubergine .dv-tabs-and-actions-container {
+  padding: 0 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Koscom Light - 기업형 & 전문적 (금융 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-koscom-light {
+  --dv-border-radius: 2px;
+  --dv-tab-margin: 0;
+  --dv-tabs-and-actions-container-height: 36px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+
+  /* 금융 스타일: 더 뚜렷한 구분선 */
+  --dv-separator-border: var(--oklch-gray-7);
+  --dv-tab-divider-color: var(--oklch-gray-5);
+}
+
+.theme-koscom-light .dv-tab {
+  border-radius: 2px;
+}
+
+.theme-koscom-light .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--oklch-gray-5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Notion Light - 미니멀 & 깔끔한 (Notion 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-notion-light {
+  --dv-border-radius: 3px;
+  --dv-tab-margin: 2px 4px;
+  --dv-tabs-and-actions-container-height: 34px;
+  --dv-tabs-and-actions-container-font-size: 14px;
+
+  /* Notion 스타일: 얇은 구분선 */
+  --dv-separator-border: var(--oklch-gray-5);
+  --dv-tab-divider-color: transparent;
+}
+
+.theme-notion-light .dv-tab {
+  border-radius: 3px;
+}
+
+.theme-notion-light .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--oklch-gray-4);
+}
+
+/* Notion 탭 호버 효과 */
+.theme-notion-light .dv-tab:hover {
+  background-color: var(--oklch-gray-3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4️⃣ Dockview 컴포넌트 스타일 보정
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 탭 닫기 버튼 SVG 크기 조정 */
+.dv-tab .dv-svg {
+  height: 10px;
+  width: 10px;
+}
+
+/* 플로팅 패널 그림자 보정 */
+.dv-resize-container {
+  box-shadow: var(--dv-floating-box-shadow);
+}
+
+/* 활성 탭 하단 인디케이터 (선택적) */
+.dv-groupview.dv-active-group > .dv-tabs-and-actions-container .dv-tab.dv-active-tab {
+  position: relative;
+}
+
+.dv-groupview.dv-active-group > .dv-tabs-and-actions-container .dv-tab.dv-active-tab::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--oklch-primary-9);
+  border-radius: 1px 1px 0 0;
+}
+
+/* 줄임 모션 모드에서 Dockview 애니메이션 비활성화 */
+html.reduce-motion .dv-drop-target-container .dv-drop-target-anchor,
+html.reduce-motion .dv-split-view-container.dv-animation .dv-view,
+html.reduce-motion .dv-split-view-container.dv-animation .dv-sash {
+  transition: none !important;
+}
+
+/* ============================================================================
+   RealGrid 테마 통합 (OKLCH 시스템 연동) - Option A: 오버레이 방식
+   ============================================================================
+ *
+ * 🎯 전략: RealGrid 공식 스타일 위에 테마 Primary 색상만 오버레이
+ *
+ * - P0: 제거됨 (RealGrid 기본 CSS + realgrid-dark.css 존중)
+ * - P1: Primary 색상 (선택/포커스) - 테마별 색상 적용
+ * - P2: 인터랙션 중 Primary 관련만 유지
+ * - P3: 아이콘 CSS mask (테마 색상 반영)
+ *
+ * 동작 흐름:
+ * - 라이트 모드: RealGrid 기본 CSS → Primary 색상 오버라이드
+ * - 다크 모드:   realgrid-dark.css → Primary 색상 오버라이드
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P1️⃣ Primary 색상 통합 (선택/포커스)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 헤더 선택/포커스 ─── */
+.rg-header-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-header-focus {
+  background: var(--oklch-primary-4) !important;
+}
+
+/* ─── Row Indicator 선택/포커스 ─── */
+.rg-rowbarcontainer .rg-table tr td.rg-rowindicator-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-rowbarcontainer .rg-table tr td.rg-rowindicator-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── State Bar 선택/포커스 ─── */
+.rg-rowbarcontainer .rg-table tr td.rg-statebar-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-rowbarcontainer .rg-table tr td.rg-statebar-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── Check Bar 선택/포커스 ─── */
+.rg-rowbarcontainer .rg-table tr td.rg-checkbar-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-rowbarcontainer .rg-table tr td.rg-checkbar-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── 셀 포커스 ─── */
+.rg-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+.rg-group-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+.rg-deactive-focus {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+/* ─── 포커스 테두리 ─── */
+.rg-focus-line {
+  border-color: var(--oklch-primary-9) !important;
+}
+
+.rg-focus-inner {
+  border-color: var(--oklch-primary-8) !important;
+}
+
+.rg-focus-inner-line {
+  border-color: var(--oklch-primary-7) !important;
+}
+
+/* ─── 행 포커스 ─── */
+.rg-rowfocus {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+/* Note: .rg-rowhover 제거됨 - RealGrid 기본 스타일 사용 */
+
+/* ─── 셀 선택 영역 ─── */
+.rg-selection {
+  background-color: color-mix(in oklch, var(--oklch-primary-4) 60%, transparent) !important;
+}
+
+.rg-selection-cell {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── 서머리 텍스트 (Primary 강조) ─── */
+.rg-header-summary,
+.rg-fixed-header-summary,
+.rg-footer-summary,
+.rg-fixed-footer-summary {
+  color: var(--oklch-primary-10) !important;
+}
+
+/* ─── 에디터 포커스 테두리 ─── */
+.rg-focus-editing {
+  border-color: var(--oklch-primary-7) !important;
+}
+
+/* Note: 배경색 제거됨 - RealGrid 기본 스타일 사용 */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P2️⃣ Primary 인터랙션 (포커스/액티브 상태만)
+   ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Note: 호버/배경/테두리 스타일 제거됨 - RealGrid 기본 스타일 사용
+ * Primary 색상이 필요한 포커스/액티브 상태만 오버라이드
+ */
+
+/* ─── 에디터 포커스 테두리 ─── */
+.rg-editor input:focus,
+.rg-editor textarea:focus,
+.rg-editor select:focus {
+  border-color: var(--oklch-primary-7) !important;
+}
+
+/* ─── 액션 버튼 액티브 상태 ─── */
+.rg-button-action:active,
+.rg-button-popup:active,
+.rg-button-list:active,
+.rg-button-calendar:active {
+  background: var(--oklch-primary-7) !important;
+  border-color: var(--oklch-primary-8) !important;
+}
+
+/* ─── 필터 패널 포커스 ─── */
+.rg-filter-panel-renderer:focus-within {
+  border-color: var(--oklch-primary-7) !important;
+}
+
+/* ─── 팝업/드롭다운 선택 항목 ─── */
+.rg-popup-item.selected,
+.rg-dropdown-item.selected {
+  background: var(--oklch-primary-3) !important;
+  color: var(--oklch-primary-11) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P3️⃣ 아이콘 CSS Mask 교체
+   ═══════════════════════════════════════════════════════════════════════════
+ *
+ * 기존 base64 인코딩된 SVG 배경을 CSS mask로 교체하여
+ * 테마 색상에 맞게 아이콘 색상이 자동 변경되도록 합니다.
+ */
+
+/* ─── 정렬 아이콘 (오름차순) ─── */
+.rg-header-sort-ascending {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='13,8.8 8,4.5 3,8.8 6.6,8.8 6.6,11.5 9.4,11.5 9.4,8.8'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='13,8.8 8,4.5 3,8.8 6.6,8.8 6.6,11.5 9.4,11.5 9.4,8.8'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 정렬 아이콘 (내림차순) ─── */
+.rg-header-sort-descending {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='9.4,7.2 9.4,4.5 6.6,4.5 6.6,7.2 3,7.2 8,11.5 13,7.2'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='9.4,7.2 9.4,4.5 6.6,4.5 6.6,7.2 3,7.2 8,11.5 13,7.2'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 정렬 아이콘 (없음) ─── */
+.rg-header-sort-none {
+  background: none !important;
+  background-color: var(--oklch-gray-7) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8,2l3.2,5.1H4.8L8,2z M4.8,8.9h6.4L8,14L4.8,8.9z'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8,2l3.2,5.1H4.8L8,2z M4.8,8.9h6.4L8,14L4.8,8.9z'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 필터 아이콘 ─── */
+.rg-header-filtering {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='14,2 2,2 2,3 6,7 6,14 10,12 10,7 14,3'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='14,2 2,2 2,3 6,7 6,14 10,12 10,7 14,3'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 필터 아이콘 (활성화) - Primary 색상 ─── */
+.rg-header-filtering.filter-activated {
+  background-color: var(--oklch-primary-9) !important;
+}
+
+/* ─── 팝업 메뉴 아이콘 ─── */
+.rg-header-popup {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4.5' y='4' width='7' height='2'/%3E%3Crect x='4.5' y='7' width='7' height='2'/%3E%3Crect x='4.5' y='10' width='7' height='2'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4.5' y='4' width='7' height='2'/%3E%3Crect x='4.5' y='7' width='7' height='2'/%3E%3Crect x='4.5' y='10' width='7' height='2'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+.rg-header-popup:hover {
+  background-color: var(--oklch-gray-11) !important;
+}
+
+/* ─── 체크박스 아이콘 (체크됨) ─── */
+.rg-header-check-image.checked {
+  background: none !important;
+  background-color: var(--oklch-primary-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M6.8,11.8c-0.3,0-0.5-0.1-0.7-0.3l-3-3c-0.4-0.4-0.4-1,0-1.4s1-0.4,1.4,0l2.3,2.3l4.8-4.8c0.4-0.4,1-0.4,1.4,0s0.4,1,0,1.4l-5.5,5.5C7.3,11.7,7,11.8,6.8,11.8z'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M6.8,11.8c-0.3,0-0.5-0.1-0.7-0.3l-3-3c-0.4-0.4-0.4-1,0-1.4s1-0.4,1.4,0l2.3,2.3l4.8-4.8c0.4-0.4,1-0.4,1.4,0s0.4,1,0,1.4l-5.5,5.5C7.3,11.7,7,11.8,6.8,11.8z'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ─── 체크박스 아이콘 (미체크) ─── */
+.rg-header-check-image.unchecked {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ─── 체크박스 아이콘 (불확정) ─── */
+.rg-header-check-image.indeterminate {
+  background: none !important;
+  background-color: var(--oklch-primary-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3Crect x='5' y='7' width='6' height='2'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3Crect x='5' y='7' width='6' height='2'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ─── 스크롤 화살표 (왼쪽) ─── */
+.rg-hscrollbar .rg-scroll-left {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.5,3.9c0.2,0,0.4,0.1,0.6,0.2c0.4,0.3,0.4,0.7,0,1.1L7.5,8l2.6,2.7c0.4,0.4,0.4,0.8,0,1.1C10,12,9.8,12.1,9.6,12.1c-0.2,0-0.4-0.1-0.6-0.2L5.8,8.5C5.7,8.4,5.6,8.2,5.6,8c0-0.2,0.1-0.4,0.2-0.6C7.9,5.3,9,4.2,9,4.2C9.1,4,9.3,3.9,9.5,3.9z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.5,3.9c0.2,0,0.4,0.1,0.6,0.2c0.4,0.3,0.4,0.7,0,1.1L7.5,8l2.6,2.7c0.4,0.4,0.4,0.8,0,1.1C10,12,9.8,12.1,9.6,12.1c-0.2,0-0.4-0.1-0.6-0.2L5.8,8.5C5.7,8.4,5.6,8.2,5.6,8c0-0.2,0.1-0.4,0.2-0.6C7.9,5.3,9,4.2,9,4.2C9.1,4,9.3,3.9,9.5,3.9z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ─── 스크롤 화살표 (오른쪽) ─── */
+.rg-hscrollbar .rg-scroll-right {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M10.2,7.5c0.1,0.1,0.2,0.3,0.2,0.6c0,0.2-0.1,0.4-0.2,0.5L7,11.8c-0.1,0.1-0.3,0.2-0.6,0.2c-0.2,0-0.4-0.1-0.6-0.2c-0.3-0.3-0.3-0.7,0-1.1L8.5,8L5.9,5.3c-0.3-0.4-0.3-0.8,0-1.1C6,4,6.2,3.9,6.4,3.9C6.7,3.9,6.9,4,7,4.2L10.2,7.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M10.2,7.5c0.1,0.1,0.2,0.3,0.2,0.6c0,0.2-0.1,0.4-0.2,0.5L7,11.8c-0.1,0.1-0.3,0.2-0.6,0.2c-0.2,0-0.4-0.1-0.6-0.2c-0.3-0.3-0.3-0.7,0-1.1L8.5,8L5.9,5.3c-0.3-0.4-0.3-0.8,0-1.1C6,4,6.2,3.9,6.4,3.9C6.7,3.9,6.9,4,7,4.2L10.2,7.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ─── 스크롤 화살표 (위) ─── */
+.rg-vscrollbar .rg-scroll-up {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M12.1,9.5c0,0.2-0.1,0.4-0.2,0.6c-0.3,0.4-0.7,0.4-1.1,0L8,7.5l-2.7,2.6c-0.4,0.4-0.7,0.4-1.1,0C4,10,3.9,9.8,3.9,9.5C3.9,9.3,4,9.1,4.2,9l3.3-3.1C7.6,5.7,7.8,5.6,8,5.6c0.2,0,0.4,0.1,0.6,0.2L11.8,9C12,9.1,12.1,9.3,12.1,9.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M12.1,9.5c0,0.2-0.1,0.4-0.2,0.6c-0.3,0.4-0.7,0.4-1.1,0L8,7.5l-2.7,2.6c-0.4,0.4-0.7,0.4-1.1,0C4,10,3.9,9.8,3.9,9.5C3.9,9.3,4,9.1,4.2,9l3.3-3.1C7.6,5.7,7.8,5.6,8,5.6c0.2,0,0.4,0.1,0.6,0.2L11.8,9C12,9.1,12.1,9.3,12.1,9.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ─── 스크롤 화살표 (아래) ─── */
+.rg-vscrollbar .rg-scroll-down {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8.6,10.1c-0.2,0.2-0.4,0.3-0.6,0.3s-0.4-0.1-0.6-0.3L4.2,7C4,6.9,3.9,6.7,3.9,6.4C3.9,6.2,4,6,4.2,5.9c0.3-0.4,0.7-0.4,1.1,0L8,8.5l2.7-2.6c0.4-0.4,0.7-0.4,1.1,0C12,6,12.1,6.2,12.1,6.4c0,0.2-0.1,0.4-0.2,0.6L8.6,10.1z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8.6,10.1c-0.2,0.2-0.4,0.3-0.6,0.3s-0.4-0.1-0.6-0.3L4.2,7C4,6.9,3.9,6.7,3.9,6.4C3.9,6.2,4,6,4.2,5.9c0.3-0.4,0.7-0.4,1.1,0L8,8.5l2.7-2.6c0.4-0.4,0.7-0.4,1.1,0C12,6,12.1,6.2,12.1,6.4c0,0.2-0.1,0.4-0.2,0.6L8.6,10.1z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   테마별 RealGrid 레이아웃 차별화
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Linear Dark - 미니멀 (VS Code 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-linear-dark .rg-root {
+  --rg-border-radius: 0px;
+}
+
+.theme-linear-dark .rg-grid {
+  border-radius: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GitHub Dark - 클래식
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-github-dark .rg-root {
+  --rg-border-radius: 6px;
+}
+
+.theme-github-dark .rg-grid {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Figma Dark - 컴팩트
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-figma-dark .rg-root {
+  --rg-border-radius: 4px;
+}
+
+.theme-figma-dark .rg-grid {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Slack Aubergine - 둥글고 친근
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-slack-aubergine .rg-root {
+  --rg-border-radius: 8px;
+}
+
+.theme-slack-aubergine .rg-grid {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Koscom Light - 기업형
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-koscom-light .rg-root {
+  --rg-border-radius: 2px;
+}
+
+.theme-koscom-light .rg-grid {
+  border-radius: 2px;
+  border-width: 1px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Notion Light - 미니멀
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-notion-light .rg-root {
+  --rg-border-radius: 4px;
+}
+
+.theme-notion-light .rg-grid {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   줄임 모션 모드 대응
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.reduce-motion .rg-root,
+html.reduce-motion .rg-root * {
+  transition: none !important;
 }

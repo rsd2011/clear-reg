@@ -79,17 +79,17 @@ export interface AccessibilityOptions {
  * 🆕 pinia-plugin-persistedstate 영속화 키
  * - 기존 STORAGE_KEYS와 하위 호환성 유지를 위해 동일한 prefix 사용
  */
-const PERSIST_KEY = 'enterman-theme'
+const PERSIST_KEY = 'app-theme'
 
 /**
  * @deprecated pinia-plugin-persistedstate로 대체됨
  * 하위 호환성을 위해 마이그레이션 로직에서만 사용
  */
 const LEGACY_STORAGE_KEYS = {
-  themeName: 'enterman-theme-name',
-  themeMode: 'enterman-theme-mode',
-  schedule: 'enterman-theme-schedule',
-  accessibility: 'enterman-theme-a11y',
+  themeName: 'app-theme-name',
+  themeMode: 'app-theme-mode',
+  schedule: 'app-theme-schedule',
+  accessibility: 'app-theme-a11y',
 } as const
 
 /** 테마 설정 내보내기 포맷 */
@@ -232,7 +232,7 @@ export const useThemeStore = defineStore('theme', {
     },
 
     /**
-     * 🆕 레거시 localStorage에서 신규 형식으로 마이그레이션
+     * 레거시 localStorage에서 신규 형식으로 마이그레이션
      * - pinia-plugin-persistedstate가 자동으로 상태를 복원하므로
      *   레거시 키가 있는 경우에만 마이그레이션 수행
      */
@@ -604,7 +604,17 @@ export const useThemeStore = defineStore('theme', {
 
       html.classList.remove(...ALL_THEME_CLASSES)
       html.classList.add(theme.className)
-      html.classList.toggle('app-dark', this.isDark)
+
+      // 🆕 하이브리드 FOUC 방지: app-dark/app-light 클래스로 color-scheme 강제
+      // - 'system' 모드: 현재 시스템 설정에 따라 클래스 추가 (PrimeVue 호환)
+      // - 'dark'/'light' 모드: 해당 클래스 추가
+      html.classList.remove('app-dark', 'app-light')
+      if (this.isDark) {
+        html.classList.add('app-dark')
+      }
+      else {
+        html.classList.add('app-light')
+      }
 
       // 3. PrimeVue 프리셋 동적 로드 및 적용
       try {
