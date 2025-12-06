@@ -143,10 +143,10 @@ export function validateTheme(themeName: ThemeName): ThemeValidationResult {
 
   // 배경색 결정
   const backgrounds = theme.prefersDark ? DARK_BACKGROUNDS : LIGHT_BACKGROUNDS
-  const primaryBg = backgrounds[0]
+  const primaryBg = backgrounds[0]!
 
   // 1. Primary 색상 vs 배경 검사
-  const primaryColor = theme.accentColors[0]
+  const primaryColor = theme.accentColors[0]!
   const primaryCheck = checkContrast(primaryColor, primaryBg, 'Primary vs Background')
   checks.push(primaryCheck)
 
@@ -158,8 +158,8 @@ export function validateTheme(themeName: ThemeName): ThemeValidationResult {
   }
 
   // 2. Secondary 색상 vs 배경 검사 (있는 경우)
-  if (theme.accentColors[1]) {
-    const secondaryColor = theme.accentColors[1]
+  const secondaryColor = theme.accentColors[1]
+  if (secondaryColor) {
     const secondaryCheck = checkContrast(secondaryColor, primaryBg, 'Secondary vs Background')
     checks.push(secondaryCheck)
 
@@ -169,8 +169,8 @@ export function validateTheme(themeName: ThemeName): ThemeValidationResult {
   }
 
   // 3. Tertiary 색상 vs 배경 검사 (있는 경우)
-  if (theme.accentColors[2]) {
-    const tertiaryColor = theme.accentColors[2]
+  const tertiaryColor = theme.accentColors[2]
+  if (tertiaryColor) {
     const tertiaryCheck = checkContrast(tertiaryColor, primaryBg, 'Tertiary vs Background')
     checks.push(tertiaryCheck)
 
@@ -343,9 +343,12 @@ export function checkScaleConsistency(scale: Record<number, string>): {
 
   // 각 단계의 OKLCH 밝기 추출
   for (let i = 1; i <= 12; i++) {
-    const oklch = hexToOklch(scale[i as keyof typeof scale])
-    if (oklch) {
-      lightnesses.push(oklch.l)
+    const colorValue = scale[i as keyof typeof scale]
+    if (colorValue) {
+      const oklch = hexToOklch(colorValue)
+      if (oklch) {
+        lightnesses.push(oklch.l)
+      }
     }
   }
 
@@ -361,7 +364,9 @@ export function checkScaleConsistency(scale: Record<number, string>): {
   // 인접 단계 간 밝기 차이 계산
   const steps: number[] = []
   for (let i = 1; i < lightnesses.length; i++) {
-    steps.push(Math.abs(lightnesses[i] - lightnesses[i - 1]))
+    const curr = lightnesses[i]!
+    const prev = lightnesses[i - 1]!
+    steps.push(Math.abs(curr - prev))
   }
 
   const averageStep = steps.reduce((a, b) => a + b, 0) / steps.length
@@ -487,7 +492,7 @@ export function validateThemeOklch(themeName: ThemeName): OklchValidationResult 
   })
 
   // 6. 스케일 일관성 검사
-  const scaleConsistency = checkScaleConsistency(scale as Record<number, string>)
+  const scaleConsistency = checkScaleConsistency(scale as unknown as Record<number, string>)
 
   if (!scaleConsistency.hasUniformSteps) {
     warnings.push(`스케일 단계 간 밝기 차이가 불균일합니다. 최대 편차: ${scaleConsistency.maxDeviation.toFixed(3)}`)

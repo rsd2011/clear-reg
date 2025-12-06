@@ -258,8 +258,7 @@ export function generatePalette(primaryHex: string): ColorPalette | null {
   }
 
   const palette = {} as ColorPalette
-  const shades = Object.keys(lightnessMap) as (keyof ColorPalette)[]
-
+  const shades = Object.keys(lightnessMap) as unknown as Array<keyof ColorPalette>
   for (const shade of shades) {
     const adjustedHsl: HSL = {
       h: hsl.h,
@@ -314,8 +313,7 @@ export function generateDarkPalette(primaryHex: string): ColorPalette | null {
   }
 
   const palette = {} as ColorPalette
-  const shades = Object.keys(lightnessMap) as (keyof ColorPalette)[]
-
+  const shades = Object.keys(lightnessMap) as unknown as Array<keyof ColorPalette>
   for (const shade of shades) {
     const adjustedHsl: HSL = {
       h: hsl.h,
@@ -340,13 +338,16 @@ export function generateDarkPalette(primaryHex: string): ColorPalette | null {
  * @returns Relative luminance (0-1)
  */
 export function getRelativeLuminance(rgb: RGB): number {
-  const sRGB = [rgb.r / 255, rgb.g / 255, rgb.b / 255]
+  const toLinear = (c: number): number => {
+    const srgb = c / 255
+    return srgb <= 0.03928 ? srgb / 12.92 : Math.pow((srgb + 0.055) / 1.055, 2.4)
+  }
 
-  const luminance = sRGB.map((c) => {
-    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
-  })
+  const r = toLinear(rgb.r)
+  const g = toLinear(rgb.g)
+  const b = toLinear(rgb.b)
 
-  return 0.2126 * luminance[0] + 0.7152 * luminance[1] + 0.0722 * luminance[2]
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b
 }
 
 /**
@@ -678,10 +679,13 @@ export function parseOklchCss(css: string): OKLCH | null {
   const match = css.match(/oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\)/)
   if (!match) return null
 
+  const [, lStr, cStr, hStr] = match
+  if (!lStr || !cStr || !hStr) return null
+
   return {
-    l: parseFloat(match[1]),
-    c: parseFloat(match[2]),
-    h: parseFloat(match[3]),
+    l: parseFloat(lStr),
+    c: parseFloat(cStr),
+    h: parseFloat(hStr),
   }
 }
 
@@ -734,7 +738,7 @@ export function generateOklchScale12(
     0.50, // 10: Hovered solid
     0.40, // 11: Low-contrast text
     0.20, // 12: High-contrast text
-  ]
+  ] as const
 
   const darkModeLightness = [
     0.12, // 1: App background
@@ -749,22 +753,22 @@ export function generateOklchScale12(
     0.60, // 10: Hovered solid
     0.75, // 11: Low-contrast text
     0.93, // 12: High-contrast text
-  ]
+  ] as const
 
   // 단계별 chroma 조정 (밝거나 어두운 색상은 채도 감소)
   const chromaMultiplier = [
     0.05, 0.08, 0.15, 0.25, 0.35,
     0.45, 0.60, 0.80, 1.00, 0.95,
     0.70, 0.30,
-  ]
+  ] as const
 
   const lightness = isDark ? darkModeLightness : lightModeLightness
   const scale = {} as ColorScale12
 
   for (let i = 0; i < 12; i++) {
     const step = (i + 1) as keyof ColorScale12
-    const l = lightness[i]
-    const c = chroma * chromaMultiplier[i]
+    const l = lightness[i]!
+    const c = chroma * chromaMultiplier[i]!
     scale[step] = oklchToCss({ l, c, h: hue })
   }
 
@@ -938,7 +942,7 @@ export function generatePrimaryPaletteFromOklch(
     200: 0.86,
     300: 0.78,
     400: 0.68,
-    500: 0.58,   // 메인 색상
+    500: 0.58, // 메인 색상
     600: 0.48,
     700: 0.38,
     800: 0.28,
@@ -953,7 +957,7 @@ export function generatePrimaryPaletteFromOklch(
     200: 0.45,
     300: 0.65,
     400: 0.85,
-    500: 1.0,    // 원본 채도
+    500: 1.0, // 원본 채도
     600: 0.95,
     700: 0.85,
     800: 0.70,
@@ -962,8 +966,7 @@ export function generatePrimaryPaletteFromOklch(
   }
 
   const palette = {} as PrimeVuePalette
-  const steps = Object.keys(lightnessMap) as (keyof PrimeVuePalette)[]
-
+  const steps = Object.keys(lightnessMap) as unknown as Array<keyof PrimeVuePalette>
   for (const step of steps) {
     const l = lightnessMap[step]
     const c = chroma * chromaMultiplier[step]
@@ -992,7 +995,7 @@ export function generatePrimaryPaletteFromOklch(
 export function generateSurfacePaletteFromOklch(isDark = false): Record<string, string> {
   // PrimeVue Surface 팔레트 (0, 50, 100... 950)
   const lightModeLightness: Record<string, number> = {
-    0: 1.00,      // Pure white
+    0: 1.00, // Pure white
     50: 0.98,
     100: 0.96,
     200: 0.92,
@@ -1007,7 +1010,7 @@ export function generateSurfacePaletteFromOklch(isDark = false): Record<string, 
   }
 
   const darkModeLightness: Record<string, number> = {
-    0: 1.00,      // Pure white (텍스트용)
+    0: 1.00, // Pure white (텍스트용)
     50: 0.98,
     100: 0.92,
     200: 0.85,

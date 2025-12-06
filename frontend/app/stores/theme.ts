@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { usePreset, updatePrimaryPalette, updateSurfacePalette } from '@primeuix/themes'
+import type { Preset, PaletteDesignToken } from '@primeuix/themes/types'
 import type { ThemeName, ThemeMode } from '~/themes'
 import { THEMES } from '~/themes'
 import { runThemeValidation } from '~/utils/theme-validator'
@@ -492,8 +493,13 @@ export const useThemeStore = defineStore('theme', {
       const now = new Date()
       const currentMinutes = now.getHours() * 60 + now.getMinutes()
 
-      const [sunriseHour, sunriseMin] = this.schedule.sunriseTime.split(':').map(Number)
-      const [sunsetHour, sunsetMin] = this.schedule.sunsetTime.split(':').map(Number)
+      const sunriseParts = this.schedule.sunriseTime.split(':').map(Number)
+      const sunsetParts = this.schedule.sunsetTime.split(':').map(Number)
+
+      const sunriseHour = sunriseParts[0] ?? 0
+      const sunriseMin = sunriseParts[1] ?? 0
+      const sunsetHour = sunsetParts[0] ?? 0
+      const sunsetMin = sunsetParts[1] ?? 0
 
       const sunriseMinutes = sunriseHour * 60 + sunriseMin
       const sunsetMinutes = sunsetHour * 60 + sunsetMin
@@ -618,7 +624,7 @@ export const useThemeStore = defineStore('theme', {
 
       // 3. PrimeVue 프리셋 동적 로드 및 적용
       try {
-        const preset = await loadPreset(themeName)
+        const preset = await loadPreset(themeName) as Preset
         usePreset(preset)
 
         // 4. 🆕 CSS 변수 → PrimeVue 팔레트 동기화
@@ -665,13 +671,8 @@ export const useThemeStore = defineStore('theme', {
         // Surface 팔레트 동기화
         const surfacePalette = getSurfacePaletteFromCssVars()
         if (surfacePalette) {
-          // dark/light 모드에 따라 적절한 방식으로 업데이트
-          if (this.isDark) {
-            updateSurfacePalette({ dark: surfacePalette })
-          }
-          else {
-            updateSurfacePalette({ light: surfacePalette })
-          }
+          // Surface 팔레트 업데이트 (현재 모드에 맞는 팔레트가 이미 생성됨)
+          updateSurfacePalette(surfacePalette as PaletteDesignToken)
 
           if (import.meta.dev) {
             console.log('[Theme] Surface palette synced:', {

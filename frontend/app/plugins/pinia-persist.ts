@@ -1,3 +1,4 @@
+import type { Pinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 
 /**
@@ -15,5 +16,5 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
  * ```
  */
 export default defineNuxtPlugin(({ $pinia }) => {
-  $pinia.use(piniaPluginPersistedstate)
+  ($pinia as Pinia).use(piniaPluginPersistedstate)
 })
