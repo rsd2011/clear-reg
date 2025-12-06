@@ -4,8 +4,40 @@ import Aura from '@primeuix/themes/aura'
 /**
  * Linear Dark Theme Preset
  * Based on Linear.app design system
- * Primary color: Indigo #5e6ad2
+ *
+ * Primary Color: Indigo
+ * - Hex: #5e6ad2
+ * - OKLCH: oklch(0.55 0.15 265)
+ *
+ * @see https://linear.app/design
  */
+
+/**
+ * OKLCH 색상 정의 (CSS 변수와 동기화)
+ * 테마 전환 시 CSS 변수 --oklch-primary-h, --oklch-primary-c 로 적용됨
+ */
+export const LINEAR_DARK_OKLCH = {
+  primary: {
+    h: 265, // Hue: Indigo
+    c: 0.15, // Chroma: 중간 채도
+    l: 0.55, // Lightness: 메인 색상 (9단계)
+  },
+  // 12단계 스케일 Hex 값 (OKLCH에서 변환)
+  scale: {
+    1: '#0d0e18', // oklch(0.15 0.02 265) - 가장 어두운 배경
+    2: '#121422', // oklch(0.20 0.03 265)
+    3: '#1a1d32', // oklch(0.28 0.06 265)
+    4: '#232842', // oklch(0.35 0.09 265)
+    5: '#2d3454', // oklch(0.42 0.12 265)
+    6: '#3a4268', // oklch(0.50 0.135 265)
+    7: '#48527c', // oklch(0.58 0.15 265)
+    8: '#5660a0', // oklch(0.65 0.15 265)
+    9: '#5e6ad2', // oklch(0.60 0.15 265) - 메인 브랜드 색상
+    10: '#6f79e0', // oklch(0.68 0.15 265)
+    11: '#8c94ea', // oklch(0.78 0.15 265)
+    12: '#c5c9f5', // oklch(0.90 0.15 265) - 가장 밝은 텍스트
+  },
+} as const
 export const LinearDarkPreset = definePreset(Aura, {
   semantic: {
     primary: {
@@ -124,6 +156,8 @@ export const LinearDarkPreset = definePreset(Aura, {
 export const LINEAR_DARK_META = {
   className: 'theme-linear-dark',
   prefersDark: true,
+  /** OKLCH 색상 공간 정보 */
+  oklch: LINEAR_DARK_OKLCH,
 } as const
 
 export default LinearDarkPreset

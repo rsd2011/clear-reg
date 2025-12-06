@@ -39,7 +39,7 @@ const emit = defineEmits<{
 const gridContainer = ref<HTMLDivElement | null>(null)
 const gridInstance = ref<RealGridInstance | null>(null)
 
-// 테마 스토어 구독
+// 테마 스토어 (다크/라이트 모드 감지용)
 const themeStore = useThemeStore()
 
 // 그리드 초기화
@@ -50,8 +50,16 @@ const initGrid = () => {
   }
 
   try {
-    // RealGrid 인스턴스 생성
+    // RealGrid 인스턴스 생성 (기본 옵션 + 사용자 옵션)
     const { gridView, dataProvider } = RealGrid.createGrid(gridContainer.value, {
+      // 기본 레이아웃 옵션
+      rowHeight: 28,
+      columnMovable: true,
+      columnResizable: true,
+      defaultColumnWidth: 100,
+      fitStyle: 'fill',
+      header: { height: 32 },
+      // 사용자 옵션 (override 가능)
       ...props.options,
     })
 
@@ -140,16 +148,15 @@ watch(
   { deep: true },
 )
 
-// Watch theme changes
+// Watch theme changes - 다크/라이트 CSS 전환 시 그리드 새로고침
 watch(
-  () => [themeStore.themeName, themeStore.isDark],
+  () => themeStore.isDark,
   () => {
     if (gridInstance.value) {
-      // 테마 변경 시 그리드 새로고침
+      // 공식 다크/라이트 CSS 전환 후 그리드 새로고침
       gridInstance.value.gridView.refresh()
     }
   },
-  { deep: true },
 )
 
 // 컴포넌트 메서드 노출

@@ -11,7 +11,8 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
+    "postinstall": "nuxt prepare && npm run copy:realgrid-dark",
+    "copy:realgrid-dark": "mkdir -p public/css && cp node_modules/realgrid/dist/realgrid-dark.css public/css/",
     "prepare": "husky",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -20,7 +21,10 @@
     "test:watch": "vitest --watch",
     "test:unit": "vitest --project unit",
     "test:nuxt": "vitest --project nuxt",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed"
   },
   "lint-staged": {
     "*.{vue,js,ts,jsx,tsx,mjs,cjs}": [
@@ -49,6 +53,7 @@
     "eslint": "^9.39.1",
     "nuxt": "^4.2.1",
     "pinia": "^3.0.4",
+    "pinia-plugin-persistedstate": "^4.7.1",
     "primevue": "^4.4.1",
     "realgrid-vue": "^0.9.6",
     "tailwindcss-primeui": "^0.6.1",
@@ -57,6 +62,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@primevue/nuxt-module": "^4.4.1",
     "@vue/test-utils": "^2.4.6",
     "happy-dom": "^20.0.10",

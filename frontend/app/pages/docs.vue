@@ -1,11 +1,49 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { DockviewVue } from 'dockview-vue'
+import { themeLight, themeAbyss } from 'dockview-core'
+import type { DockviewReadyEvent } from 'dockview-core'
+import type { GridView, LocalDataProvider } from 'realgrid'
 import { useThemeStore } from '~/stores/theme'
 import { useAppToast } from '~/composables/useAppToast'
 import type { ThemeName } from '~/themes'
+import { THEMES } from '~/themes'
+import type { RealGridColumn, RealGridInstance, RealGridCellClickData } from '~/types/realgrid'
 
 const themeStore = useThemeStore()
 const toast = useAppToast()
+
+// Dockview 테마 (다크/라이트에 따라 공식 테마 객체 반환)
+const dockviewTheme = computed(() =>
+  themeStore.isDark ? themeAbyss : themeLight,
+)
+
+// 테마 프리뷰 상태
+const previewingTheme = ref<ThemeName | null>(null)
+const selectedThemeForDetail = computed(() => themeStore.themeName)
+
+// 테마 목록 (다크/라이트 분리)
+const darkThemeEntries = computed(() =>
+  Object.entries(THEMES).filter(([_, config]) => config.prefersDark) as [ThemeName, typeof THEMES[ThemeName]][],
+)
+const lightThemeEntries = computed(() =>
+  Object.entries(THEMES).filter(([_, config]) => !config.prefersDark) as [ThemeName, typeof THEMES[ThemeName]][],
+)
+
+// 테마 Select 옵션
+const themeSelectOptions = computed(() =>
+  themeStore.availableThemes.map(theme => ({
+    label: theme.label,
+    value: theme.value,
+  })),
+)
+const selectedThemeOption = computed({
+  get: () => themeStore.themeName,
+  set: (value: ThemeName) => {
+    themeStore.setTheme(value)
+    toast.success(`테마 변경: ${THEMES[value].name}`)
+  },
+})
 
 // Select 옵션 타입
 interface SelectOption {
@@ -98,6 +136,22 @@ function handleModeChange(mode: 'system' | 'dark' | 'light') {
   toast.success(`모드 변경: ${modeLabel}`)
 }
 
+function handleThemePreviewStart(themeName: ThemeName) {
+  previewingTheme.value = themeName
+  themeStore.startPreview(themeName)
+}
+
+function handleThemePreviewEnd() {
+  previewingTheme.value = null
+  themeStore.cancelPreview()
+}
+
+function handleThemeSelect(themeName: ThemeName, event?: MouseEvent) {
+  previewingTheme.value = null
+  themeStore.setTheme(themeName, event)
+  toast.success(`테마 변경: ${THEMES[themeName].name}`)
+}
+
 function handleSearch(query: string) {
   toast.info(`검색: ${query}`)
 }
@@ -113,6 +167,189 @@ function handleRefresh() {
 function handleAdd() {
   toast.success('추가됨')
 }
+
+// ============================================================================
+// RealGrid Demo State
+// ============================================================================
+
+// RealGrid 데모 컬럼 정의
+const realgridColumns: RealGridColumn[] = [
+  {
+    name: 'id',
+    fieldName: 'id',
+    type: 'text',
+    width: 60,
+    header: { text: 'ID' },
+  },
+  {
+    name: 'name',
+    fieldName: 'name',
+    type: 'text',
+    width: 120,
+    header: { text: '이름' },
+  },
+  {
+    name: 'email',
+    fieldName: 'email',
+    type: 'text',
+    width: 180,
+    header: { text: '이메일' },
+  },
+  {
+    name: 'department',
+    fieldName: 'department',
+    type: 'text',
+    width: 100,
+    header: { text: '부서' },
+  },
+  {
+    name: 'status',
+    fieldName: 'status',
+    type: 'text',
+    width: 80,
+    header: { text: '상태' },
+  },
+]
+
+// RealGrid 샘플 데이터
+const realgridData = ref([
+  { id: '1', name: '김철수', email: 'kim@example.com', department: '개발팀', status: 'active' },
+  { id: '2', name: '이영희', email: 'lee@example.com', department: '기획팀', status: 'inactive' },
+  { id: '3', name: '박민수', email: 'park@example.com', department: '인사팀', status: 'pending' },
+  { id: '4', name: '최지현', email: 'choi@example.com', department: '마케팅팀', status: 'active' },
+  { id: '5', name: '정수연', email: 'jung@example.com', department: '영업팀', status: 'active' },
+])
+
+// RealGrid 인스턴스 참조
+const realgridRef = ref<{ getGridInstance: () => RealGridInstance | null } | null>(null)
+
+// RealGrid 이벤트 핸들러
+function onRealgridReady(_grid: GridView, _provider: LocalDataProvider) {
+  toast.info('RealGrid 초기화 완료')
+}
+
+function onRealgridCellClick(_grid: GridView, clickData: RealGridCellClickData) {
+  toast.info(`셀 클릭: ${clickData.column} (Row: ${clickData.dataRow})`)
+}
+
+// RealGrid 행 추가
+function addRealgridRow() {
+  const newId = (realgridData.value.length + 1).toString()
+  realgridData.value.push({
+    id: newId,
+    name: `신규 사원 ${newId}`,
+    email: `new${newId}@example.com`,
+    department: '미정',
+    status: 'pending',
+  })
+  toast.success('행 추가됨')
+}
+
+// RealGrid 마지막 행 삭제
+function removeRealgridRow() {
+  if (realgridData.value.length > 1) {
+    realgridData.value.pop()
+    toast.success('행 삭제됨')
+  }
+  else {
+    toast.warn('최소 1개 행이 필요합니다')
+  }
+}
+
+// ============================================================================
+// DockView Demo State
+// ============================================================================
+
+// DockView API 참조
+const dockviewApi = ref<DockviewReadyEvent['api'] | null>(null)
+
+// DockView 패널 카운터
+const dockviewPanelCount = ref(3)
+
+// DockView 준비 핸들러
+function onDockviewReady(event: DockviewReadyEvent) {
+  dockviewApi.value = event.api
+
+  // 초기 패널 구성
+  event.api.addPanel({
+    id: 'panel1',
+    component: 'panelComponent',
+    params: { title: '패널 1' },
+  })
+
+  event.api.addPanel({
+    id: 'panel2',
+    component: 'panelComponent',
+    params: { title: '패널 2' },
+    position: { referencePanel: 'panel1', direction: 'right' },
+  })
+
+  event.api.addPanel({
+    id: 'panel3',
+    component: 'panelComponent',
+    params: { title: '패널 3' },
+    position: { referencePanel: 'panel1', direction: 'below' },
+  })
+
+  toast.info('DockView 초기화 완료')
+}
+
+// DockView 패널 추가
+function addDockviewPanel() {
+  if (!dockviewApi.value)
+    return
+
+  dockviewPanelCount.value++
+  const panelId = `panel${dockviewPanelCount.value}`
+
+  dockviewApi.value.addPanel({
+    id: panelId,
+    component: 'panelComponent',
+    params: { title: `패널 ${dockviewPanelCount.value}` },
+  })
+
+  toast.success(`패널 ${dockviewPanelCount.value} 추가됨`)
+}
+
+// DockView 모든 패널 리셋
+function resetDockviewPanels() {
+  if (!dockviewApi.value)
+    return
+
+  // 모든 패널 ID 수집 후 제거
+  const panelIds = dockviewApi.value.panels.map(p => p.id)
+  panelIds.forEach((id) => {
+    const panel = dockviewApi.value!.getPanel(id)
+    if (panel) {
+      dockviewApi.value!.removePanel(panel as Parameters<typeof dockviewApi.value.removePanel>[0])
+    }
+  })
+
+  // 초기 상태로 복원
+  dockviewPanelCount.value = 3
+
+  dockviewApi.value.addPanel({
+    id: 'panel1',
+    component: 'panelComponent',
+    params: { title: '패널 1' },
+  })
+
+  dockviewApi.value.addPanel({
+    id: 'panel2',
+    component: 'panelComponent',
+    params: { title: '패널 2' },
+    position: { referencePanel: 'panel1', direction: 'right' },
+  })
+
+  dockviewApi.value.addPanel({
+    id: 'panel3',
+    component: 'panelComponent',
+    params: { title: '패널 3' },
+    position: { referencePanel: 'panel1', direction: 'below' },
+  })
+
+  toast.info('패널 초기화 완료')
+}
 </script>
 
 <template>
@@ -124,7 +361,7 @@ function handleAdd() {
           컴포넌트 라이브러리
         </h1>
         <p class="text-lg opacity-70">
-          33개의 PrimeVue 기반 컴포넌트
+          35개의 PrimeVue 기반 컴포넌트
         </p>
         <div class="flex justify-center gap-2">
           <FeedbackBadge
@@ -132,7 +369,7 @@ function handleAdd() {
             severity="info"
           />
           <FeedbackBadge
-            value="Composite: 5"
+            value="Composite: 7"
             severity="success"
           />
           <FeedbackBadge
@@ -189,6 +426,133 @@ function handleAdd() {
             </div>
           </PanelCard>
         </div>
+
+        <!-- 테마 프리뷰 카드 그리드 -->
+        <div class="mt-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold">
+              테마 프리뷰
+            </h3>
+            <div class="w-48">
+              <FormSelect
+                v-model="selectedThemeOption"
+                :options="themeSelectOptions"
+                option-label="label"
+                option-value="value"
+                placeholder="테마 선택"
+                fluid
+              />
+            </div>
+          </div>
+
+          <!-- 다크 테마 -->
+          <div class="mb-4">
+            <p class="text-sm font-medium text-muted-color mb-2 flex items-center gap-2">
+              <i class="pi pi-moon" />
+              다크 테마
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <ThemePreviewCard
+                v-for="[name, config] in darkThemeEntries"
+                :key="name"
+                :theme-name="name"
+                :theme="config"
+                :selected="themeStore.themeName === name"
+                :previewing="previewingTheme === name"
+                @select="handleThemeSelect"
+                @preview-start="handleThemePreviewStart"
+                @preview-end="handleThemePreviewEnd"
+              />
+            </div>
+          </div>
+
+          <!-- 라이트 테마 -->
+          <div class="mb-4">
+            <p class="text-sm font-medium text-muted-color mb-2 flex items-center gap-2">
+              <i class="pi pi-sun" />
+              라이트 테마
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <ThemePreviewCard
+                v-for="[name, config] in lightThemeEntries"
+                :key="name"
+                :theme-name="name"
+                :theme="config"
+                :selected="themeStore.themeName === name"
+                :previewing="previewingTheme === name"
+                @select="handleThemeSelect"
+                @preview-start="handleThemePreviewStart"
+                @preview-end="handleThemePreviewEnd"
+              />
+            </div>
+          </div>
+
+          <!-- 선택된 테마 상세 정보 -->
+          <PanelCard class="mt-4">
+            <template #title>
+              <div class="flex items-center gap-2">
+                <span
+                  class="w-3 h-3 rounded-full"
+                  :style="{ backgroundColor: THEMES[selectedThemeForDetail].accentColors[0] }"
+                />
+                {{ THEMES[selectedThemeForDetail].name }} 상세 정보
+              </div>
+            </template>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">설명:</span>
+                  <span class="text-sm">{{ THEMES[selectedThemeForDetail].description }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">제작자:</span>
+                  <span class="text-sm">{{ THEMES[selectedThemeForDetail].author }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">버전:</span>
+                  <span class="text-sm">{{ THEMES[selectedThemeForDetail].version }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">폰트:</span>
+                  <span class="text-sm">{{ THEMES[selectedThemeForDetail].fontStyle }}</span>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">모드:</span>
+                  <FeedbackTag
+                    :value="THEMES[selectedThemeForDetail].prefersDark ? '다크' : '라이트'"
+                    :severity="THEMES[selectedThemeForDetail].prefersDark ? 'secondary' : 'info'"
+                    :icon="THEMES[selectedThemeForDetail].prefersDark ? 'pi pi-moon' : 'pi pi-sun'"
+                  />
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">태그:</span>
+                  <div class="flex gap-1 flex-wrap">
+                    <FeedbackTag
+                      v-for="tag in THEMES[selectedThemeForDetail].tags"
+                      :key="tag"
+                      :value="tag"
+                      severity="secondary"
+                    />
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-muted-color w-20">대표색:</span>
+                  <div class="flex gap-1">
+                    <span
+                      v-for="(color, idx) in THEMES[selectedThemeForDetail].accentColors"
+                      :key="idx"
+                      class="w-6 h-6 rounded border border-surface-200"
+                      :style="{ backgroundColor: color }"
+                      :title="color"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </PanelCard>
+        </div>
       </section>
 
       <!-- 탭 네비게이션 -->
@@ -203,7 +567,10 @@ function handleAdd() {
           { value: 'menu', label: '🧭 Menu (4)', icon: 'pi pi-bars' },
           { value: 'feedback', label: '💬 Feedback (4)', icon: 'pi pi-comment' },
           { value: 'composite', label: '🔗 Composite (5)', icon: 'pi pi-link' },
+          { value: 'realgrid', label: '🗂️ RealGrid', icon: 'pi pi-th-large' },
+          { value: 'dockview', label: '🪟 DockView', icon: 'pi pi-objects-column' },
         ]"
+        scrollable
       >
         <!-- Form 탭 -->
         <template #form>
@@ -907,6 +1274,145 @@ function handleAdd() {
             </PanelCard>
           </div>
         </template>
+
+        <!-- RealGrid 탭 -->
+        <template #realgrid>
+          <div class="space-y-6">
+            <PanelCard title="RealGrid - 고성능 데이터 그리드">
+              <template #subtitle>
+                대용량 데이터 처리에 최적화된 엔터프라이즈 그리드 컴포넌트
+              </template>
+
+              <!-- 컨트롤 버튼 -->
+              <div class="flex gap-2 mb-4">
+                <ActionButton
+                  label="행 추가"
+                  icon="pi pi-plus"
+                  severity="success"
+                  @click="addRealgridRow"
+                />
+                <ActionButton
+                  label="행 삭제"
+                  icon="pi pi-minus"
+                  severity="danger"
+                  @click="removeRealgridRow"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="realgridRef"
+                :columns="realgridColumns"
+                :data="realgridData"
+                height="350px"
+                :events="{
+                  onReady: onRealgridReady,
+                  onCellClicked: onRealgridCellClick,
+                }"
+              />
+            </PanelCard>
+
+            <PanelCard title="테마 연동">
+              <div class="space-y-3">
+                <p class="text-sm opacity-70">
+                  RealGrid는 프로젝트 테마 시스템과 자동 연동됩니다.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <FeedbackTag
+                    value="HTML 클래스 기반"
+                    severity="info"
+                    icon="pi pi-code"
+                  />
+                  <FeedbackTag
+                    value="다크/라이트 자동 전환"
+                    severity="success"
+                    icon="pi pi-sync"
+                  />
+                  <FeedbackTag
+                    value="6개 테마 지원"
+                    severity="secondary"
+                    icon="pi pi-palette"
+                  />
+                </div>
+                <p class="text-xs opacity-50 mt-2">
+                  상단의 테마 설정에서 테마를 변경하면 그리드 스타일이 자동으로 업데이트됩니다.
+                </p>
+              </div>
+            </PanelCard>
+          </div>
+        </template>
+
+        <!-- DockView 탭 -->
+        <template #dockview>
+          <div class="space-y-6">
+            <PanelCard title="DockView - 도킹 레이아웃 매니저">
+              <template #subtitle>
+                VS Code 스타일의 드래그 앤 드롭 패널 레이아웃
+              </template>
+
+              <!-- 컨트롤 버튼 -->
+              <div class="flex gap-2 mb-4">
+                <ActionButton
+                  label="패널 추가"
+                  icon="pi pi-plus"
+                  severity="success"
+                  @click="addDockviewPanel"
+                />
+                <ActionButton
+                  label="초기화"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  @click="resetDockviewPanels"
+                />
+              </div>
+
+              <!-- DockView 컨테이너 (제한된 높이) -->
+              <div class="dockview-demo-container">
+                <DockviewVue
+                  :theme="dockviewTheme"
+                  @ready="onDockviewReady"
+                />
+              </div>
+
+              <!-- 사용 안내 -->
+              <div class="mt-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg text-sm">
+                <p class="font-medium mb-2">
+                  사용 방법:
+                </p>
+                <ul class="list-disc list-inside space-y-1 opacity-70">
+                  <li>탭을 드래그하여 패널 위치 변경</li>
+                  <li>패널 경계를 드래그하여 크기 조절</li>
+                  <li>탭을 다른 패널로 드롭하여 그룹화</li>
+                </ul>
+              </div>
+            </PanelCard>
+
+            <PanelCard title="테마 연동">
+              <div class="space-y-3">
+                <p class="text-sm opacity-70">
+                  DockView는 프로젝트 테마 시스템과 자동 연동됩니다.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                  <FeedbackTag
+                    value="CSS 변수 기반"
+                    severity="info"
+                    icon="pi pi-code"
+                  />
+                  <FeedbackTag
+                    value="트랜지션 효과"
+                    severity="success"
+                    icon="pi pi-sparkles"
+                  />
+                  <FeedbackTag
+                    value="반응형 레이아웃"
+                    severity="secondary"
+                    icon="pi pi-arrows-alt"
+                  />
+                </div>
+              </div>
+            </PanelCard>
+          </div>
+        </template>
       </PanelTabs>
 
       <!-- Common 컴포넌트 섹션 -->
@@ -938,7 +1444,7 @@ function handleAdd() {
         <p class="font-semibold">
           Enterman Component Library
         </p>
-        <p>33 Components • Base (28) + Composite (5) + Common (3)</p>
+        <p>35 Components • Base (28) + Composite (7) + Common (3)</p>
         <p class="text-xs">
           3-tier Architecture • Category-based Prefix • PrimeVue 4.4.1
         </p>
@@ -946,3 +1452,29 @@ function handleAdd() {
     </div>
   </NuxtLayout>
 </template>
+
+<style scoped>
+/* DockView 데모 컨테이너 - 제한된 공간에서 표시 */
+.dockview-demo-container {
+  height: 400px;
+  border: 1px solid var(--p-surface-200);
+  border-radius: var(--p-border-radius);
+  overflow: hidden;
+}
+
+/* ClientOnly 래퍼 및 Dockview가 부모 높이를 상속받도록 설정 */
+.dockview-demo-container > * {
+  width: 100%;
+  height: 100%;
+}
+
+/* Dockview 컨테이너 - 공식 테마는 HTML에서 상속됨 */
+.dockview-demo-container :deep(.dv-dockview) {
+  width: 100%;
+  height: 100%;
+}
+
+.app-dark .dockview-demo-container {
+  border-color: var(--p-surface-700);
+}
+</style>

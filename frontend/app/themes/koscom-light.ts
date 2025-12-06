@@ -4,8 +4,37 @@ import Aura from '@primeuix/themes/aura'
 /**
  * Koscom Light Theme Preset
  * Based on Koscom.co.kr design system
- * Primary color: Orange #f06e1e
+ *
+ * Primary Color: Orange
+ * - Hex: #f06e1e
+ * - OKLCH: oklch(0.68 0.20 55)
  */
+
+/**
+ * OKLCH 색상 정의 (CSS 변수와 동기화)
+ * 라이트 테마: 밝은 배경에서 시작, 어두운 텍스트로 종료
+ */
+export const KOSCOM_LIGHT_OKLCH = {
+  primary: {
+    h: 55, // Hue: Orange
+    c: 0.20, // Chroma: 높은 채도 (Koscom 브랜드의 선명한 오렌지)
+    l: 0.68, // Lightness: 메인 색상
+  },
+  scale: {
+    1: '#ffffff', // oklch(0.99 0 0) - 가장 밝은 배경
+    2: '#f6f6f6', // oklch(0.97 0 0)
+    3: '#f5f5f5', // oklch(0.96 0.01 55)
+    4: '#f0f0f0', // oklch(0.94 0.015 55)
+    5: '#efefef', // oklch(0.93 0.02 55)
+    6: '#d6d6d6', // oklch(0.87 0.025 55)
+    7: '#aaaaaa', // oklch(0.72 0.03 55)
+    8: '#797575', // oklch(0.55 0.04 55)
+    9: '#f06e1e', // oklch(0.68 0.20 55) - 메인 브랜드 색상
+    10: '#ea580c', // oklch(0.60 0.20 55)
+    11: '#5d6060', // oklch(0.45 0.02 55) - 본문 텍스트
+    12: '#3c3c3c', // oklch(0.32 0.01 55) - 가장 어두운 텍스트
+  },
+} as const
 export const KoscomLightPreset = definePreset(Aura, {
   semantic: {
     primary: {
@@ -125,6 +154,7 @@ export const KoscomLightPreset = definePreset(Aura, {
 export const KOSCOM_LIGHT_META = {
   className: 'theme-koscom-light',
   prefersDark: false,
+  oklch: KOSCOM_LIGHT_OKLCH,
 } as const
 
 export default KoscomLightPreset

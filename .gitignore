@@ -158,3 +158,12 @@ frontend/.gradle/
 
 # hysky
 frontend/.husky/
+
+
+# Playwright
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Serena MCP
+.serena/

@@ -4,31 +4,6 @@ import Aura from '@primeuix/themes/aura'
 export default defineNuxtConfig({
   // SSR 비활성화 - CSR(Client Side Rendering) 전용 SPA 모드
   // PrimeVue Hydration 경고 완전 제거
-  ssr: false,
-
-  // 테마 FOUC(Flash of Unstyled Content) 방지를 위한 inline script
-  app: {
-    head: {
-      script: [
-        {
-          innerHTML: `
-            (function() {
-              try {
-                var themeName = localStorage.getItem('enterman-theme-name') || 'linear-dark';
-                var themeMode = localStorage.getItem('enterman-theme-mode') || 'system';
-                var isDark = themeMode === 'dark' ||
-                  (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                var themeClass = themeName === 'koscom-light' ? 'theme-koscom-light' : 'theme-linear-dark';
-                document.documentElement.classList.add(themeClass);
-                if (isDark) document.documentElement.classList.add('app-dark');
-              } catch (e) {}
-            })();
-          `,
-          type: 'text/javascript',
-        },
-      ],
-    },
-  },
 
   modules: [
     '@nuxt/eslint',
@@ -43,6 +18,7 @@ export default defineNuxtConfig({
     '@primevue/nuxt-module',
     '@pinia/nuxt',
   ],
+  ssr: false,
 
   // 컴포넌트 자동 import 설정
   components: [
@@ -61,17 +37,50 @@ export default defineNuxtConfig({
   ],
   devtools: { enabled: true },
 
+  // 테마 FOUC(Flash of Unstyled Content) 방지를 위한 inline script
+  app: {
+    head: {
+      script: [
+        {
+          innerHTML: `
+            (function() {
+              try {
+                var themeName = localStorage.getItem('enterman-theme-name') || 'linear-dark';
+                var themeMode = localStorage.getItem('enterman-theme-mode') || 'system';
+                var isDark = themeMode === 'dark' ||
+                  (themeMode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                // 테마 클래스 매핑
+                var themeClasses = {
+                  'linear-dark': 'theme-linear-dark',
+                  'github-dark': 'theme-github-dark',
+                  'figma-dark': 'theme-figma-dark',
+                  'slack-aubergine': 'theme-slack-aubergine',
+                  'koscom-light': 'theme-koscom-light',
+                  'notion-light': 'theme-notion-light'
+                };
+                var themeClass = themeClasses[themeName] || 'theme-linear-dark';
+                document.documentElement.classList.add(themeClass);
+                if (isDark) document.documentElement.classList.add('app-dark');
+              } catch (e) {}
+            })();
+          `,
+          type: 'text/javascript',
+        },
+      ],
+    },
+  },
+
   css: [
     '~/assets/css/main.css',
-    'realgrid/dist/realgrid-style.css', // RealGrid 기본 스타일
-    '~/assets/css/realgrid-theme.css', // 테마 색상 덮어쓰기
+    'realgrid/dist/realgrid-style.css', // RealGrid 기본 스타일 (라이트모드)
+    // RealGrid 다크테마: main.css에서 .app-dark 스코프로 핵심 스타일 적용
   ],
-  compatibilityDate: '2025-07-15',
 
   // 개발 서버 설정
   devServer: {
     port: 3000, // 개발 서버 포트 고정
   },
+  compatibilityDate: '2025-07-15',
 
   // Vite 서버 설정
   vite: {

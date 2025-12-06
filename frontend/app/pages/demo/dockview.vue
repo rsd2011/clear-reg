@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { DockviewVue } from 'dockview-vue'
+import { themeLight, themeAbyss } from 'dockview-core'
 import type { DockviewReadyEvent } from 'dockview-core'
 import { useThemeStore } from '~/stores/theme'
 
@@ -8,6 +10,11 @@ definePageMeta({
 })
 
 const themeStore = useThemeStore()
+
+// Dockview 테마 (다크/라이트에 따라 공식 테마 객체 반환)
+const dockviewTheme = computed(() =>
+  themeStore.isDark ? themeAbyss : themeLight,
+)
 
 function handleDockViewReady(event: DockviewReadyEvent) {
   const api = event.api
@@ -72,17 +79,11 @@ function handleDockViewReady(event: DockviewReadyEvent) {
       </div>
     </div>
 
-    <ClientOnly>
-      <DockviewVue
-        class="dockview-theme-enterman"
-        @ready="handleDockViewReady"
-      />
-      <template #fallback>
-        <div class="loading">
-          Loading DockView...
-        </div>
-      </template>
-    </ClientOnly>
+    <DockviewVue
+      class="dockview-container"
+      :theme="dockviewTheme"
+      @ready="handleDockViewReady"
+    />
   </div>
 </template>
 
@@ -95,7 +96,8 @@ function handleDockViewReady(event: DockviewReadyEvent) {
   flex-direction: column;
 }
 
-.dockview-theme-enterman {
+/* 공식 테마는 HTML에서 상속됨 - plugins/dockview-theme.client.ts */
+.dockview-container {
   flex: 1;
   min-height: 0;
 }
@@ -151,13 +153,5 @@ function handleDockViewReady(event: DockviewReadyEvent) {
 
 .app-dark :deep(.dv-panel-content) {
   color: var(--p-surface-0);
-}
-
-.loading {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--p-surface-700);
 }
 </style>

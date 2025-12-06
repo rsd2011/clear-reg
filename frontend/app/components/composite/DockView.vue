@@ -21,7 +21,6 @@ function handleReady(event: DockviewReadyEvent) {
   <div class="themable-dockview-wrapper">
     <DockviewVue
       v-bind="props"
-      class="dockview-theme-enterman"
       @ready="handleReady"
     >
       <slot />
@@ -35,8 +34,5 @@ function handleReady(event: DockviewReadyEvent) {
   height: 100%;
 }
 
-/* 테마 전환 트랜지션 */
-.dockview-theme-enterman {
-  transition: background-color 0.3s ease, border-radius 0.3s ease;
-}
+/* 테마 전환 트랜지션 - 공식 테마 클래스는 HTML에서 상속됨 */
 </style>
