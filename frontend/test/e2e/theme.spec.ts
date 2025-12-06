@@ -767,3 +767,242 @@ test.describe('테마 프리뷰 로딩/에러 상태', () => {
     expect(restoredClass).toContain('theme-linear-dark')
   })
 })
+
+/**
+ * PrimeVue 팔레트 동기화 E2E 테스트
+ *
+ * CSS 변수 (--oklch-primary-h, --oklch-primary-c)에서
+ * PrimeVue 토큰 (--p-primary-*) 자동 동기화 검증
+ */
+test.describe('PrimeVue 팔레트 동기화', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await page.evaluate(() => {
+      localStorage.removeItem('enterman-theme-name')
+      localStorage.removeItem('enterman-theme-mode')
+    })
+    await page.reload()
+    // CSS와 테마 동기화가 완료될 때까지 대기
+    await page.waitForFunction(() => {
+      const styles = getComputedStyle(document.documentElement)
+      // PrimeVue 팔레트가 업데이트되었는지 확인 (Aura 기본값이 아닌 경우)
+      const primary500 = styles.getPropertyValue('--p-primary-500').trim()
+      return primary500 && primary500 !== '#10b981' // Aura 기본 emerald가 아님
+    }, { timeout: 5000 }).catch(() => {
+      // 타임아웃 시 무시하고 진행 (기본 테마에서는 동기화 안 됨 가능)
+    })
+  })
+
+  test('기본 테마에서 --p-primary-500이 정의되어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    // PrimeVue primary-500 변수 확인
+    const primary500 = await page.evaluate(() => {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--p-primary-500')
+        .trim()
+    })
+
+    expect(primary500).toBeTruthy()
+    expect(primary500).toMatch(/^#[0-9a-fA-F]{6}$|^rgb/)
+  })
+
+  test('테마 전환 시 --p-primary-500이 변경되어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    // 팔레트 동기화 완료 대기
+    await page.waitForFunction(() => {
+      const styles = getComputedStyle(document.documentElement)
+      const primary500 = styles.getPropertyValue('--p-primary-500').trim()
+      return primary500 && primary500 !== '#10b981'
+    }, { timeout: 5000 })
+
+    // 초기 테마 (linear-dark)의 primary-500 저장
+    const initialPrimary = await page.evaluate(() => {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--p-primary-500')
+        .trim()
+    })
+
+    // github-dark로 테마 변경
+    await page.evaluate(() => {
+      localStorage.setItem('enterman-theme-name', 'github-dark')
+    })
+    await page.reload()
+
+    // 새 테마의 팔레트 동기화 완료 대기
+    await page.waitForFunction((prevPrimary) => {
+      const styles = getComputedStyle(document.documentElement)
+      const primary500 = styles.getPropertyValue('--p-primary-500').trim()
+      // 이전 값과 다르고, Aura 기본값이 아닌 경우
+      return primary500 && primary500 !== '#10b981' && primary500 !== prevPrimary
+    }, initialPrimary, { timeout: 5000 })
+
+    // 변경된 primary-500 확인
+    const changedPrimary = await page.evaluate(() => {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--p-primary-500')
+        .trim()
+    })
+
+    // 두 테마의 primary color가 달라야 함
+    // Linear Dark: indigo 계열, GitHub Dark: blue 계열
+    expect(changedPrimary).toBeTruthy()
+    expect(changedPrimary).not.toBe(initialPrimary)
+  })
+
+  test('모든 PrimeVue primary 스케일이 정의되어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    const primaryScale = await page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement)
+      return {
+        50: styles.getPropertyValue('--p-primary-50').trim(),
+        100: styles.getPropertyValue('--p-primary-100').trim(),
+        200: styles.getPropertyValue('--p-primary-200').trim(),
+        300: styles.getPropertyValue('--p-primary-300').trim(),
+        400: styles.getPropertyValue('--p-primary-400').trim(),
+        500: styles.getPropertyValue('--p-primary-500').trim(),
+        600: styles.getPropertyValue('--p-primary-600').trim(),
+        700: styles.getPropertyValue('--p-primary-700').trim(),
+        800: styles.getPropertyValue('--p-primary-800').trim(),
+        900: styles.getPropertyValue('--p-primary-900').trim(),
+        950: styles.getPropertyValue('--p-primary-950').trim(),
+      }
+    })
+
+    // 모든 스케일이 정의되어야 함
+    for (const [step, value] of Object.entries(primaryScale)) {
+      expect(value, `--p-primary-${step} should be defined`).toBeTruthy()
+    }
+  })
+
+  test('Surface 팔레트가 정의되어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    const surfaceScale = await page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement)
+      return {
+        0: styles.getPropertyValue('--p-surface-0').trim(),
+        50: styles.getPropertyValue('--p-surface-50').trim(),
+        100: styles.getPropertyValue('--p-surface-100').trim(),
+        500: styles.getPropertyValue('--p-surface-500').trim(),
+        900: styles.getPropertyValue('--p-surface-900').trim(),
+        950: styles.getPropertyValue('--p-surface-950').trim(),
+      }
+    })
+
+    // 주요 surface 스케일이 정의되어야 함
+    expect(surfaceScale[0]).toBeTruthy()
+    expect(surfaceScale[500]).toBeTruthy()
+    expect(surfaceScale[900]).toBeTruthy()
+  })
+
+  test('다크 테마에서 surface-0이 흰색이어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    // 다크 테마 설정
+    await page.evaluate(() => {
+      localStorage.setItem('enterman-theme-name', 'linear-dark')
+    })
+    await page.reload()
+
+    const surface0 = await page.evaluate(() => {
+      return getComputedStyle(document.documentElement)
+        .getPropertyValue('--p-surface-0')
+        .trim()
+    })
+
+    // surface-0은 항상 순백색 (#ffffff)
+    expect(surface0.toLowerCase()).toBe('#ffffff')
+  })
+
+  test('라이트 테마 전환 시 Surface 팔레트가 유지되어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    // 라이트 테마로 전환
+    await page.evaluate(() => {
+      localStorage.setItem('enterman-theme-name', 'koscom-light')
+    })
+    await page.reload()
+
+    const surfaceScale = await page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement)
+      return {
+        0: styles.getPropertyValue('--p-surface-0').trim(),
+        500: styles.getPropertyValue('--p-surface-500').trim(),
+        950: styles.getPropertyValue('--p-surface-950').trim(),
+      }
+    })
+
+    // 라이트 테마에서도 surface palette 정의됨
+    expect(surfaceScale[0]).toBeTruthy()
+    expect(surfaceScale[500]).toBeTruthy()
+    expect(surfaceScale[950]).toBeTruthy()
+  })
+
+  test('OKLCH CSS 변수가 테마별로 설정되어야 함', async ({ page }) => {
+    await page.goto('/')
+
+    // CSS 로드 완료 대기 (OKLCH 변수가 정의될 때까지)
+    await page.waitForFunction(() => {
+      const styles = getComputedStyle(document.documentElement)
+      const h = styles.getPropertyValue('--oklch-primary-h').trim()
+      return h && h !== ''
+    }, { timeout: 5000 })
+
+    // Linear Dark의 OKLCH 변수 확인 (h: 265, c: 0.15)
+    const linearOklch = await page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement)
+      return {
+        h: styles.getPropertyValue('--oklch-primary-h').trim(),
+        c: styles.getPropertyValue('--oklch-primary-c').trim(),
+      }
+    })
+
+    expect(linearOklch.h).toBeTruthy()
+    expect(linearOklch.c).toBeTruthy()
+
+    // GitHub Dark로 전환 (pinia-plugin-persistedstate 형식으로 저장)
+    await page.evaluate(() => {
+      // 새로운 persistedstate 형식
+      const themeData = {
+        themeName: 'github-dark',
+        themeMode: 'system',
+        schedule: { enabled: false, lightTheme: 'notion-light', darkTheme: 'linear-dark', sunriseTime: '07:00', sunsetTime: '19:00' },
+        accessibility: { highContrast: false, reducedMotion: false },
+      }
+      localStorage.setItem('enterman-theme', JSON.stringify(themeData))
+      // 레거시 키도 함께 설정 (마이그레이션 로직 호환)
+      localStorage.setItem('enterman-theme-name', 'github-dark')
+    })
+    await page.reload()
+
+    // GitHub Dark 테마 클래스가 적용될 때까지 대기
+    await page.waitForFunction(() => {
+      return document.documentElement.classList.contains('theme-github-dark')
+    }, { timeout: 5000 })
+
+    // CSS 로드 완료 대기 (GitHub Dark의 OKLCH h: 230)
+    await page.waitForFunction(() => {
+      const styles = getComputedStyle(document.documentElement)
+      const h = styles.getPropertyValue('--oklch-primary-h').trim()
+      // GitHub Dark의 h 값은 230
+      return h && h !== '' && h !== '265'
+    }, { timeout: 5000 })
+
+    // GitHub Dark의 OKLCH 변수 확인 (h: 230, c: 0.14)
+    const githubOklch = await page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement)
+      return {
+        h: styles.getPropertyValue('--oklch-primary-h').trim(),
+        c: styles.getPropertyValue('--oklch-primary-c').trim(),
+      }
+    })
+
+    // 다른 테마는 다른 OKLCH 값을 가져야 함
+    // Linear Dark: h=265, GitHub Dark: h=230
+    expect(githubOklch.h).toBeTruthy()
+    expect(githubOklch.h).not.toBe(linearOklch.h)
+  })
+})

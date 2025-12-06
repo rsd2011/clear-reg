@@ -1,8 +1,12 @@
 import { defineStore } from 'pinia'
-import { usePreset } from '@primeuix/themes'
+import { usePreset, updatePrimaryPalette, updateSurfacePalette } from '@primeuix/themes'
 import type { ThemeName, ThemeMode } from '~/themes'
 import { THEMES } from '~/themes'
 import { runThemeValidation } from '~/utils/theme-validator'
+import {
+  getPrimaryPaletteFromCssVars,
+  getSurfacePaletteFromCssVars,
+} from '~/utils/color-utils'
 
 // ============================================================================
 // 🆕 Dynamic Theme Preset Loader
@@ -606,6 +610,12 @@ export const useThemeStore = defineStore('theme', {
       try {
         const preset = await loadPreset(themeName)
         usePreset(preset)
+
+        // 4. 🆕 CSS 변수 → PrimeVue 팔레트 동기화
+        // CSS 변수가 적용된 후 팔레트 생성 (requestAnimationFrame으로 레이아웃 완료 대기)
+        requestAnimationFrame(() => {
+          this.syncPaletteFromCssVars()
+        })
       }
       catch (error) {
         console.error('[Theme] Failed to load preset:', themeName, error)
@@ -620,6 +630,49 @@ export const useThemeStore = defineStore('theme', {
           isPreview: this.isPreviewMode,
           cached: presetCache.has(themeName),
         })
+      }
+    },
+
+    /**
+     * 🆕 CSS 변수에서 PrimeVue 팔레트 동기화
+     * OKLCH 색상 변수를 읽어 PrimeVue의 Primary/Surface 팔레트 업데이트
+     */
+    syncPaletteFromCssVars() {
+      try {
+        // Primary 팔레트 동기화
+        const primaryPalette = getPrimaryPaletteFromCssVars()
+        if (primaryPalette) {
+          updatePrimaryPalette(primaryPalette)
+
+          if (import.meta.dev) {
+            console.log('[Theme] Primary palette synced:', {
+              sample500: primaryPalette[500],
+              isDark: this.isDark,
+            })
+          }
+        }
+
+        // Surface 팔레트 동기화
+        const surfacePalette = getSurfacePaletteFromCssVars()
+        if (surfacePalette) {
+          // dark/light 모드에 따라 적절한 방식으로 업데이트
+          if (this.isDark) {
+            updateSurfacePalette({ dark: surfacePalette })
+          }
+          else {
+            updateSurfacePalette({ light: surfacePalette })
+          }
+
+          if (import.meta.dev) {
+            console.log('[Theme] Surface palette synced:', {
+              sample500: surfacePalette[500],
+              isDark: this.isDark,
+            })
+          }
+        }
+      }
+      catch (error) {
+        console.error('[Theme] Failed to sync palette from CSS vars:', error)
       }
     },
 

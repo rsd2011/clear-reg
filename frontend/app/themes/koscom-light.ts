@@ -36,6 +36,60 @@ export const KOSCOM_LIGHT_OKLCH = {
   },
 } as const
 export const KoscomLightPreset = definePreset(Aura, {
+  primitive: {
+    green: {
+      50: '#f0fdf0',
+      100: '#dcfadc',
+      200: '#a8f0a0',
+      300: '#8ae680',
+      400: '#78dc68',
+      500: '#68cc58',
+      600: '#5bb84d',
+      700: '#4ea342',
+      800: '#3d8034',
+      900: '#2c5c26',
+      950: '#1b3818',
+    },
+    blue: {
+      50: '#f0f4ff',
+      100: '#e0e8ff',
+      200: '#b3c4ff',
+      300: '#86a0ff',
+      400: '#597cff',
+      500: '#4368f2',
+      600: '#3366cc',
+      700: '#2952b8',
+      800: '#1f3e8a',
+      900: '#152a5c',
+      950: '#0a152e',
+    },
+    orange: {
+      50: '#fff7ed',
+      100: '#ffedd5',
+      200: '#fed7aa',
+      300: '#fdba74',
+      400: '#fb923c',
+      500: '#f06e1e',
+      600: '#ea580c',
+      700: '#c2410c',
+      800: '#9a3412',
+      900: '#7c2d12',
+      950: '#431407',
+    },
+    red: {
+      50: '#fff5f5',
+      100: '#ffe0e0',
+      200: '#ffb3b3',
+      300: '#ff8080',
+      400: '#ff4d4d',
+      500: '#ff2a2a',
+      600: '#ff1e1e',
+      700: '#e61a1a',
+      800: '#b31414',
+      900: '#800f0f',
+      950: '#4d0909',
+    },
+  },
   semantic: {
     primary: {
       50: '#fff7ed',
@@ -102,18 +156,15 @@ export const KoscomLightPreset = definePreset(Aura, {
   // 커스텀 디자인 토큰 (typography, spacing 등)
   extend: {
     typography: {
-      fontPrimary: '\'Noto Sans KR\', sans-serif',
-      fontSecondary: '\'Nanum Gothic\', \'나눔고딕\', \'맑은고딕\', \'malgun gothic\', sans-serif',
-      xs: '13px',
-      sm: '14px',
-      base: '15px',
-      md: '17px',
-      lg: '20px',
-      xl: '26px',
-      xxl: '38px',
-      weightNormal: '400',
-      weightBold: '700',
-      weightExtraBold: '800',
+      fontSans: '\'Noto Sans KR\', sans-serif',
+      fontMono: '\'Nanum Gothic\', \'나눔고딕\', \'맑은고딕\', \'malgun gothic\', sans-serif',
+      micro: '0.8125rem',
+      mini: '0.875rem',
+      small: '0.9375rem',
+      regular: '1.0625rem',
+      large: '1.25rem',
+      title1: '1.625rem',
+      title2: '2.375rem',
     },
   },
   components: {
@@ -140,6 +191,22 @@ export const KoscomLightPreset = definePreset(Aura, {
     badge: {
       root: {
         borderRadius: '0px',
+      },
+    },
+    tag: {
+      colorScheme: {
+        light: {
+          success: { background: 'color-mix(in srgb, {green.500} 16%, transparent)', color: '{green.500}' },
+          info: { background: 'color-mix(in srgb, {blue.500} 16%, transparent)', color: '{blue.500}' },
+          warn: { background: 'color-mix(in srgb, {orange.500} 16%, transparent)', color: '{orange.500}' },
+          danger: { background: 'color-mix(in srgb, {red.500} 16%, transparent)', color: '{red.500}' },
+        },
+        dark: {
+          success: { background: 'color-mix(in srgb, {green.500} 16%, transparent)', color: '{green.500}' },
+          info: { background: 'color-mix(in srgb, {blue.500} 16%, transparent)', color: '{blue.500}' },
+          warn: { background: 'color-mix(in srgb, {orange.500} 16%, transparent)', color: '{orange.500}' },
+          danger: { background: 'color-mix(in srgb, {red.500} 16%, transparent)', color: '{red.500}' },
+        },
       },
     },
     dialog: {

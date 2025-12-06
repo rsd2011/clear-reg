@@ -37,6 +37,60 @@ export const GITHUB_DARK_OKLCH = {
   },
 } as const
 export const GithubDarkPreset = definePreset(Aura, {
+  primitive: {
+    green: {
+      50: '#f0fff4',
+      100: '#dcffe4',
+      200: '#a7f3bc',
+      300: '#7ee89a',
+      400: '#56d364',
+      500: '#3fb950',
+      600: '#238636',
+      700: '#196c2e',
+      800: '#0f5323',
+      900: '#033a16',
+      950: '#02260f',
+    },
+    sky: {
+      50: '#f0f8ff',
+      100: '#e1f0ff',
+      200: '#a5d6ff',
+      300: '#79b8ff',
+      400: '#58a6ff',
+      500: '#1f6feb',
+      600: '#1158c7',
+      700: '#0d419d',
+      800: '#0a2d6e',
+      900: '#051937',
+      950: '#030d1c',
+    },
+    orange: {
+      50: '#fff8f0',
+      100: '#ffeed5',
+      200: '#ffe3b3',
+      300: '#e3b341',
+      400: '#d29922',
+      500: '#9e6a03',
+      600: '#845306',
+      700: '#693e05',
+      800: '#4e2c04',
+      900: '#331d02',
+      950: '#1a0f01',
+    },
+    red: {
+      50: '#fff5f5',
+      100: '#ffe2e0',
+      200: '#ffc1bd',
+      300: '#ff7b72',
+      400: '#f85149',
+      500: '#da3633',
+      600: '#b62324',
+      700: '#8e1c1c',
+      800: '#661514',
+      900: '#3d0d0d',
+      950: '#1f0606',
+    },
+  },
   semantic: {
     primary: {
       50: '#e6f2ff',
@@ -104,13 +158,14 @@ export const GithubDarkPreset = definePreset(Aura, {
     typography: {
       fontSans: '-apple-system, BlinkMacSystemFont, \'Segoe UI\', \'Noto Sans\', Helvetica, Arial, sans-serif',
       fontMono: '\'SFMono-Regular\', Consolas, \'Liberation Mono\', Menlo, monospace',
-      xs: '12px',
-      sm: '14px',
-      base: '16px',
-      md: '18px',
-      lg: '20px',
-      xl: '24px',
-      xxl: '32px',
+      micro: '0.75rem',
+      mini: '0.8125rem',
+      small: '0.875rem',
+      regular: '1rem',
+      large: '1.125rem',
+      title1: '1.25rem',
+      title2: '1.5rem',
+      title3: '2rem',
     },
   },
   components: {
@@ -137,6 +192,22 @@ export const GithubDarkPreset = definePreset(Aura, {
     badge: {
       root: {
         borderRadius: '10px',
+      },
+    },
+    tag: {
+      colorScheme: {
+        light: {
+          success: { background: 'color-mix(in srgb, {green.400} 16%, transparent)', color: '{green.400}' },
+          info: { background: 'color-mix(in srgb, {sky.400} 16%, transparent)', color: '{sky.400}' },
+          warn: { background: 'color-mix(in srgb, {orange.400} 16%, transparent)', color: '{orange.400}' },
+          danger: { background: 'color-mix(in srgb, {red.400} 16%, transparent)', color: '{red.400}' },
+        },
+        dark: {
+          success: { background: 'color-mix(in srgb, {green.400} 16%, transparent)', color: '{green.400}' },
+          info: { background: 'color-mix(in srgb, {sky.400} 16%, transparent)', color: '{sky.400}' },
+          warn: { background: 'color-mix(in srgb, {orange.400} 16%, transparent)', color: '{orange.400}' },
+          danger: { background: 'color-mix(in srgb, {red.400} 16%, transparent)', color: '{red.400}' },
+        },
       },
     },
     dialog: {

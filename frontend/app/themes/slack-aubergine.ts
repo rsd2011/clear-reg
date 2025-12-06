@@ -38,6 +38,60 @@ export const SLACK_AUBERGINE_OKLCH = {
   },
 } as const
 export const SlackAuberginePreset = definePreset(Aura, {
+  primitive: {
+    green: {
+      50: '#edfdf6',
+      100: '#d4f9e8',
+      200: '#87eec0',
+      300: '#50e39f',
+      400: '#36d395',
+      500: '#2eb67d',
+      600: '#239762',
+      700: '#1a7249',
+      800: '#114d31',
+      900: '#082918',
+      950: '#04140c',
+    },
+    cyan: {
+      50: '#f0fbff',
+      100: '#e0f7ff',
+      200: '#a8e8fc',
+      300: '#7adff8',
+      400: '#5ed3f5',
+      500: '#36c5f0',
+      600: '#1fa8d4',
+      700: '#1785a8',
+      800: '#0f627c',
+      900: '#083f50',
+      950: '#042028',
+    },
+    yellow: {
+      50: '#fffdf0',
+      100: '#fffbe0',
+      200: '#fff3b3',
+      300: '#ffe680',
+      400: '#f5c754',
+      500: '#ecb22e',
+      600: '#d9a020',
+      700: '#a87a18',
+      800: '#775510',
+      900: '#463108',
+      950: '#231904',
+    },
+    red: {
+      50: '#fef2f6',
+      100: '#fde5ed',
+      200: '#f9b5cc',
+      300: '#f586ab',
+      400: '#f03b72',
+      500: '#e01e5a',
+      600: '#b8174a',
+      700: '#8f1239',
+      800: '#660d28',
+      900: '#3d0818',
+      950: '#1f040c',
+    },
+  },
   semantic: {
     primary: {
       50: '#f5e6f5',
@@ -105,13 +159,14 @@ export const SlackAuberginePreset = definePreset(Aura, {
     typography: {
       fontSans: '\'Slack-Lato\', \'Lato\', -apple-system, BlinkMacSystemFont, sans-serif',
       fontMono: '\'Monaco\', \'Menlo\', \'Ubuntu Mono\', \'Consolas\', monospace',
-      xs: '12px',
-      sm: '13px',
-      base: '15px',
-      md: '16px',
-      lg: '18px',
-      xl: '22px',
-      xxl: '28px',
+      micro: '0.75rem',
+      mini: '0.8125rem',
+      small: '0.875rem',
+      regular: '0.9375rem',
+      large: '1rem',
+      title1: '1.125rem',
+      title2: '1.375rem',
+      title3: '1.75rem',
     },
   },
   components: {
@@ -138,6 +193,22 @@ export const SlackAuberginePreset = definePreset(Aura, {
     badge: {
       root: {
         borderRadius: '3px',
+      },
+    },
+    tag: {
+      colorScheme: {
+        light: {
+          success: { background: 'color-mix(in srgb, {green.500} 16%, transparent)', color: '{green.500}' },
+          info: { background: 'color-mix(in srgb, {cyan.500} 16%, transparent)', color: '{cyan.500}' },
+          warn: { background: 'color-mix(in srgb, {yellow.500} 16%, transparent)', color: '{yellow.500}' },
+          danger: { background: 'color-mix(in srgb, {red.500} 16%, transparent)', color: '{red.500}' },
+        },
+        dark: {
+          success: { background: 'color-mix(in srgb, {green.500} 16%, transparent)', color: '{green.500}' },
+          info: { background: 'color-mix(in srgb, {cyan.500} 16%, transparent)', color: '{cyan.500}' },
+          warn: { background: 'color-mix(in srgb, {yellow.500} 16%, transparent)', color: '{yellow.500}' },
+          danger: { background: 'color-mix(in srgb, {red.500} 16%, transparent)', color: '{red.500}' },
+        },
       },
     },
     dialog: {

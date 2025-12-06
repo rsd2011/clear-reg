@@ -888,3 +888,201 @@ export function toDarkMode(lightModeOklch: OKLCH): string {
     h: lightModeOklch.h,
   })
 }
+
+// ============================================================================
+// PrimeVue Compatible Palette Generation
+// ============================================================================
+
+/**
+ * PrimeVue 호환 Primary 팔레트 타입 (11단계)
+ */
+export interface PrimeVuePalette {
+  50: string
+  100: string
+  200: string
+  300: string
+  400: string
+  500: string
+  600: string
+  700: string
+  800: string
+  900: string
+  950: string
+}
+
+/**
+ * OKLCH H/C 값에서 PrimeVue 호환 Primary 팔레트 생성
+ *
+ * @param hue - OKLCH Hue (0-360)
+ * @param chroma - OKLCH Chroma (0-0.4, 일반적으로 0.1-0.2)
+ * @param isDark - 다크모드 여부 (다크모드에서는 밝기 조정)
+ * @returns PrimeVue 호환 팔레트 (HEX 색상)
+ *
+ * @example
+ * ```ts
+ * const palette = generatePrimaryPaletteFromOklch(265, 0.15, true)
+ * // { 50: '#eef0fb', 100: '#d5d9f5', ... 950: '#080a15' }
+ * ```
+ */
+export function generatePrimaryPaletteFromOklch(
+  hue: number,
+  chroma: number,
+  isDark = false,
+): PrimeVuePalette {
+  // PrimeVue 팔레트 단계별 Lightness 값
+  // 라이트모드: 밝음(50) → 어두움(950)
+  // 다크모드: 동일하지만 채도를 약간 조정
+  const lightnessMap: Record<keyof PrimeVuePalette, number> = {
+    50: 0.97,
+    100: 0.93,
+    200: 0.86,
+    300: 0.78,
+    400: 0.68,
+    500: 0.58,   // 메인 색상
+    600: 0.48,
+    700: 0.38,
+    800: 0.28,
+    900: 0.18,
+    950: 0.10,
+  }
+
+  // 단계별 Chroma 배율 (밝거나 어두운 색상은 채도 감소)
+  const chromaMultiplier: Record<keyof PrimeVuePalette, number> = {
+    50: 0.15,
+    100: 0.25,
+    200: 0.45,
+    300: 0.65,
+    400: 0.85,
+    500: 1.0,    // 원본 채도
+    600: 0.95,
+    700: 0.85,
+    800: 0.70,
+    900: 0.50,
+    950: 0.30,
+  }
+
+  const palette = {} as PrimeVuePalette
+  const steps = Object.keys(lightnessMap) as (keyof PrimeVuePalette)[]
+
+  for (const step of steps) {
+    const l = lightnessMap[step]
+    const c = chroma * chromaMultiplier[step]
+
+    // 다크모드에서는 채도를 약간 높여 가독성 향상
+    const adjustedC = isDark ? Math.min(0.25, c * 1.1) : c
+
+    palette[step] = oklchToHex({ l, c: adjustedC, h: hue })
+  }
+
+  return palette
+}
+
+/**
+ * OKLCH 기반 Surface 팔레트 생성 (Gray Scale)
+ *
+ * @param isDark - 다크모드 여부
+ * @returns PrimeVue 호환 Surface 팔레트 (HEX 색상)
+ *
+ * @example
+ * ```ts
+ * const surface = generateSurfacePaletteFromOklch(true)
+ * // { 0: '#ffffff', 50: '#f7f8f8', ... 950: '#050506' }
+ * ```
+ */
+export function generateSurfacePaletteFromOklch(isDark = false): Record<string, string> {
+  // PrimeVue Surface 팔레트 (0, 50, 100... 950)
+  const lightModeLightness: Record<string, number> = {
+    0: 1.00,      // Pure white
+    50: 0.98,
+    100: 0.96,
+    200: 0.92,
+    300: 0.85,
+    400: 0.75,
+    500: 0.60,
+    600: 0.45,
+    700: 0.32,
+    800: 0.20,
+    900: 0.12,
+    950: 0.08,
+  }
+
+  const darkModeLightness: Record<string, number> = {
+    0: 1.00,      // Pure white (텍스트용)
+    50: 0.98,
+    100: 0.92,
+    200: 0.85,
+    300: 0.58,
+    400: 0.42,
+    500: 0.30,
+    600: 0.22,
+    700: 0.18,
+    800: 0.12,
+    900: 0.08,
+    950: 0.05,
+  }
+
+  const lightnessMap = isDark ? darkModeLightness : lightModeLightness
+  const palette: Record<string, string> = {}
+
+  for (const [step, l] of Object.entries(lightnessMap)) {
+    // Gray는 무채색 (chroma = 0)
+    palette[step] = oklchToHex({ l, c: 0, h: 0 })
+  }
+
+  return palette
+}
+
+/**
+ * CSS 변수에서 OKLCH H/C 값을 읽어 PrimeVue 팔레트 생성
+ * theme.ts에서 사용할 헬퍼 함수
+ *
+ * @param element - CSS 변수를 읽을 요소 (기본: document.documentElement)
+ * @returns Primary 팔레트 또는 null (CSS 변수가 없는 경우)
+ *
+ * @example
+ * ```ts
+ * const palette = getPrimaryPaletteFromCssVars()
+ * if (palette) {
+ *   updatePrimaryPalette(palette)
+ * }
+ * ```
+ */
+export function getPrimaryPaletteFromCssVars(
+  element: Element = document.documentElement,
+): PrimeVuePalette | null {
+  const style = getComputedStyle(element)
+
+  const hStr = style.getPropertyValue('--oklch-primary-h').trim()
+  const cStr = style.getPropertyValue('--oklch-primary-c').trim()
+
+  if (!hStr || !cStr) {
+    console.warn('[color-utils] CSS variables --oklch-primary-h or --oklch-primary-c not found')
+    return null
+  }
+
+  const h = parseFloat(hStr)
+  const c = parseFloat(cStr)
+
+  if (Number.isNaN(h) || Number.isNaN(c)) {
+    console.warn('[color-utils] Invalid OKLCH values:', { h: hStr, c: cStr })
+    return null
+  }
+
+  // 다크모드 여부 확인
+  const isDark = element.classList.contains('app-dark')
+
+  return generatePrimaryPaletteFromOklch(h, c, isDark)
+}
+
+/**
+ * CSS 변수에서 Surface 팔레트 생성
+ *
+ * @param element - CSS 변수를 읽을 요소
+ * @returns Surface 팔레트
+ */
+export function getSurfacePaletteFromCssVars(
+  element: Element = document.documentElement,
+): Record<string, string> {
+  const isDark = element.classList.contains('app-dark')
+  return generateSurfacePaletteFromOklch(isDark)
+}

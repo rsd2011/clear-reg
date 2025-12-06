@@ -39,6 +39,60 @@ export const LINEAR_DARK_OKLCH = {
   },
 } as const
 export const LinearDarkPreset = definePreset(Aura, {
+  primitive: {
+    green: {
+      50: '#f0fdf0',
+      100: '#dcfadc',
+      200: '#92de87',
+      300: '#7dd56f',
+      400: '#68cc58',
+      500: '#5bb84d',
+      600: '#4ea342',
+      700: '#418937',
+      800: '#346e2c',
+      900: '#274f20',
+      950: '#1a3515',
+    },
+    sky: {
+      50: '#f0f9ff',
+      100: '#e0f2fe',
+      200: '#90c9fe',
+      300: '#6fb8fd',
+      400: '#4ea7fc',
+      500: '#3d95e8',
+      600: '#2b7cc9',
+      700: '#1c65a8',
+      800: '#144e87',
+      900: '#0d3866',
+      950: '#072245',
+    },
+    orange: {
+      50: '#fff7ed',
+      100: '#ffedd5',
+      200: '#fcd9a8',
+      300: '#f8bc78',
+      400: '#f29949',
+      500: '#f08230',
+      600: '#e06a1e',
+      700: '#ba5317',
+      800: '#943f12',
+      900: '#6e2e0d',
+      950: '#481d08',
+    },
+    red: {
+      50: '#fef2f2',
+      100: '#fee2e2',
+      200: '#f8b4ae',
+      300: '#f28f87',
+      400: '#ec6a5e',
+      500: '#e74c3c',
+      600: '#d43f2f',
+      700: '#b33426',
+      800: '#8f2a1e',
+      900: '#6b2017',
+      950: '#47150f',
+    },
+  },
   semantic: {
     primary: {
       50: '#eef0fb',
@@ -141,7 +195,23 @@ export const LinearDarkPreset = definePreset(Aura, {
     },
     badge: {
       root: {
-        borderRadius: '4px',
+        borderRadius: '6px',
+      },
+    },
+    tag: {
+      colorScheme: {
+        light: {
+          success: { background: 'color-mix(in srgb, {green.400} 16%, transparent)', color: '{green.400}' },
+          info: { background: 'color-mix(in srgb, {sky.400} 16%, transparent)', color: '{sky.400}' },
+          warn: { background: 'color-mix(in srgb, {orange.400} 16%, transparent)', color: '{orange.400}' },
+          danger: { background: 'color-mix(in srgb, {red.400} 16%, transparent)', color: '{red.400}' },
+        },
+        dark: {
+          success: { background: 'color-mix(in srgb, {green.400} 16%, transparent)', color: '{green.400}' },
+          info: { background: 'color-mix(in srgb, {sky.400} 16%, transparent)', color: '{sky.400}' },
+          warn: { background: 'color-mix(in srgb, {orange.400} 16%, transparent)', color: '{orange.400}' },
+          danger: { background: 'color-mix(in srgb, {red.400} 16%, transparent)', color: '{red.400}' },
+        },
       },
     },
     dialog: {

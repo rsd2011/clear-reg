@@ -37,6 +37,60 @@ export const FIGMA_DARK_OKLCH = {
   },
 } as const
 export const FigmaDarkPreset = definePreset(Aura, {
+  primitive: {
+    green: {
+      50: '#edfaf2',
+      100: '#d1f4e0',
+      200: '#7ae4a8',
+      300: '#47d684',
+      400: '#1bc76b',
+      500: '#14ae5c',
+      600: '#0f8a49',
+      700: '#0b6837',
+      800: '#074525',
+      900: '#032313',
+      950: '#02110a',
+    },
+    purple: {
+      50: '#faf5ff',
+      100: '#f3e8ff',
+      200: '#dfc4ff',
+      300: '#c9a0ff',
+      400: '#b77fff',
+      500: '#a259ff',
+      600: '#8b3fdf',
+      700: '#7030b5',
+      800: '#54238a',
+      900: '#38185c',
+      950: '#1c0c2e',
+    },
+    yellow: {
+      50: '#fffef0',
+      100: '#fffde0',
+      200: '#fff8b3',
+      300: '#ffef7a',
+      400: '#ffd54f',
+      500: '#ffcd29',
+      600: '#e6b800',
+      700: '#b38f00',
+      800: '#806600',
+      900: '#4d3d00',
+      950: '#261f00',
+    },
+    red: {
+      50: '#fff5f2',
+      100: '#ffe5de',
+      200: '#ffb9a8',
+      300: '#ff8b71',
+      400: '#ff6647',
+      500: '#f24822',
+      600: '#d93a18',
+      700: '#ab2d12',
+      800: '#7d200d',
+      900: '#4f1408',
+      950: '#280a04',
+    },
+  },
   semantic: {
     primary: {
       50: '#e7f5ff',
@@ -104,13 +158,13 @@ export const FigmaDarkPreset = definePreset(Aura, {
     typography: {
       fontSans: '\'Inter\', -apple-system, BlinkMacSystemFont, \'Segoe UI\', Roboto, sans-serif',
       fontMono: '\'JetBrains Mono\', \'Fira Code\', \'Source Code Pro\', monospace',
-      xs: '11px',
-      sm: '12px',
-      base: '13px',
-      md: '14px',
-      lg: '16px',
-      xl: '20px',
-      xxl: '28px',
+      micro: '0.6875rem',
+      mini: '0.75rem',
+      small: '0.8125rem',
+      regular: '0.875rem',
+      large: '1rem',
+      title1: '1.25rem',
+      title2: '1.75rem',
     },
   },
   components: {
@@ -137,6 +191,22 @@ export const FigmaDarkPreset = definePreset(Aura, {
     badge: {
       root: {
         borderRadius: '4px',
+      },
+    },
+    tag: {
+      colorScheme: {
+        light: {
+          success: { background: 'color-mix(in srgb, {green.500} 16%, transparent)', color: '{green.500}' },
+          info: { background: 'color-mix(in srgb, {purple.500} 16%, transparent)', color: '{purple.500}' },
+          warn: { background: 'color-mix(in srgb, {yellow.500} 16%, transparent)', color: '{yellow.500}' },
+          danger: { background: 'color-mix(in srgb, {red.500} 16%, transparent)', color: '{red.500}' },
+        },
+        dark: {
+          success: { background: 'color-mix(in srgb, {green.500} 16%, transparent)', color: '{green.500}' },
+          info: { background: 'color-mix(in srgb, {purple.500} 16%, transparent)', color: '{purple.500}' },
+          warn: { background: 'color-mix(in srgb, {yellow.500} 16%, transparent)', color: '{yellow.500}' },
+          danger: { background: 'color-mix(in srgb, {red.500} 16%, transparent)', color: '{red.500}' },
+        },
       },
     },
     dialog: {
