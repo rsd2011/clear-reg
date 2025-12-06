@@ -62,6 +62,9 @@ const darkThemes = computed(() => themeStore.darkThemes)
 const lightThemes = computed(() => themeStore.lightThemes)
 const currentThemeName = computed(() => themeStore.themeName)
 const currentMode = computed(() => themeStore.themeMode)
+const isPreviewLoading = computed(() => themeStore.isPreviewLoading)
+const previewError = computed(() => themeStore.previewError)
+const previewThemeName = computed(() => themeStore.previewThemeName)
 
 const modeOptions = [
   { value: 'system', label: '시스템', icon: 'pi pi-desktop' },
@@ -153,11 +156,30 @@ function resetSettings() {
       </SelectButton>
     </div>
 
+    <!-- 프리뷰 에러 메시지 -->
+    <div
+      v-if="previewError"
+      class="theme-selector__error"
+    >
+      <i class="pi pi-exclamation-triangle" />
+      <span>{{ previewError }}</span>
+      <button
+        class="theme-selector__error-close"
+        @click="themeStore.clearPreviewError()"
+      >
+        <i class="pi pi-times" />
+      </button>
+    </div>
+
     <!-- 다크 테마 목록 -->
     <div class="theme-selector__group">
       <span class="theme-selector__group-label">
         <i class="pi pi-moon" />
         다크 테마
+        <i
+          v-if="isPreviewLoading && darkThemes.some(t => t.value === previewThemeName)"
+          class="pi pi-spin pi-spinner theme-selector__loading"
+        />
       </span>
       <div class="theme-selector__list">
         <button
@@ -193,6 +215,10 @@ function resetSettings() {
       <span class="theme-selector__group-label">
         <i class="pi pi-sun" />
         라이트 테마
+        <i
+          v-if="isPreviewLoading && lightThemes.some(t => t.value === previewThemeName)"
+          class="pi pi-spin pi-spinner theme-selector__loading"
+        />
       </span>
       <div class="theme-selector__list">
         <button
@@ -492,6 +518,47 @@ function resetSettings() {
 .theme-selector__check {
   color: var(--p-primary-color);
   font-size: 0.75rem;
+}
+
+.theme-selector__loading {
+  margin-left: auto;
+  font-size: 0.625rem;
+  color: var(--p-primary-color);
+}
+
+/* 프리뷰 에러 메시지 */
+.theme-selector__error {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--p-red-50);
+  border: 1px solid var(--p-red-200);
+  border-radius: var(--p-border-radius);
+  font-size: 0.75rem;
+  color: var(--p-red-700);
+}
+
+.app-dark .theme-selector__error {
+  background: color-mix(in srgb, var(--p-red-500) 15%, transparent);
+  border-color: var(--p-red-800);
+  color: var(--p-red-300);
+}
+
+.theme-selector__error-close {
+  margin-left: auto;
+  padding: 0.125rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--p-border-radius-sm);
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.theme-selector__error-close:hover {
+  opacity: 1;
 }
 
 .theme-selector__actions {

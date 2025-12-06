@@ -128,9 +128,12 @@ export const useThemeStore = defineStore('theme', {
     themeMode: 'system' as ThemeMode,
     isDark: false,
     isInitialized: false,
-    // Phase 2: 프리뷰 모드
+    // Phase 2: 프리뷰 모드 (Enhanced)
     isPreviewMode: false,
     previewThemeName: null as ThemeName | null,
+    isPreviewLoading: false,
+    previewError: null as string | null,
+    previewDebounceTimer: null as ReturnType<typeof setTimeout> | null,
     // Phase 2: 시간대별 자동 전환
     schedule: { ...DEFAULT_SCHEDULE } as ThemeSchedule,
     scheduleTimerId: null as ReturnType<typeof setInterval> | null,
@@ -342,37 +345,96 @@ export const useThemeStore = defineStore('theme', {
     },
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 프리뷰 모드 (Phase 2)
+    // 프리뷰 모드 (Phase 2 - Enhanced)
     // ─────────────────────────────────────────────────────────────────────────
 
+    /** 프리뷰 디바운스 딜레이 (ms) */
+    PREVIEW_DEBOUNCE_DELAY: 150,
+
     /**
-     * 테마 프리뷰 시작 (hover 시)
+     * 테마 프리뷰 시작 (hover 시) - 디바운스 적용
+     * @param themeName 프리뷰할 테마 이름
      */
-    async startPreview(themeName: ThemeName) {
-      this.isPreviewMode = true
-      this.previewThemeName = themeName
-      await this.applyThemeInternal(themeName, false)
+    startPreview(themeName: ThemeName) {
+      // 이전 디바운스 타이머 취소
+      if (this.previewDebounceTimer) {
+        clearTimeout(this.previewDebounceTimer)
+        this.previewDebounceTimer = null
+      }
+
+      // 에러 상태 초기화
+      this.previewError = null
+
+      // 디바운스 적용: 150ms 후 프리뷰 실행
+      this.previewDebounceTimer = setTimeout(async () => {
+        try {
+          this.isPreviewLoading = true
+          this.isPreviewMode = true
+          this.previewThemeName = themeName
+          await this.applyThemeInternal(themeName, false)
+        }
+        catch (error) {
+          this.previewError = error instanceof Error
+            ? error.message
+            : '테마 프리뷰 로드 중 오류가 발생했습니다.'
+          console.error('[ThemeStore] Preview error:', error)
+        }
+        finally {
+          this.isPreviewLoading = false
+        }
+      }, this.PREVIEW_DEBOUNCE_DELAY)
     },
 
     /**
      * 테마 프리뷰 취소 (hover 종료 시)
      */
     async cancelPreview() {
+      // 대기 중인 디바운스 타이머 취소
+      if (this.previewDebounceTimer) {
+        clearTimeout(this.previewDebounceTimer)
+        this.previewDebounceTimer = null
+      }
+
       if (!this.isPreviewMode) return
-      this.isPreviewMode = false
-      this.previewThemeName = null
-      await this.applyTheme()
+
+      try {
+        this.isPreviewLoading = true
+        this.isPreviewMode = false
+        this.previewThemeName = null
+        this.previewError = null
+        await this.applyTheme()
+      }
+      catch (error) {
+        console.error('[ThemeStore] Cancel preview error:', error)
+      }
+      finally {
+        this.isPreviewLoading = false
+      }
     },
 
     /**
      * 프리뷰 중인 테마 확정
      */
     confirmPreview() {
+      // 대기 중인 디바운스 타이머 취소
+      if (this.previewDebounceTimer) {
+        clearTimeout(this.previewDebounceTimer)
+        this.previewDebounceTimer = null
+      }
+
       if (this.previewThemeName) {
         this.setTheme(this.previewThemeName)
       }
       this.isPreviewMode = false
       this.previewThemeName = null
+      this.previewError = null
+    },
+
+    /**
+     * 프리뷰 에러 초기화
+     */
+    clearPreviewError() {
+      this.previewError = null
     },
 
     // ─────────────────────────────────────────────────────────────────────────
