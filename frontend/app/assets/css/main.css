@@ -1055,9 +1055,11 @@ html.reduce-motion .dv-split-view-container.dv-animation .dv-sash {
   background-color: var(--oklch-primary-4) !important;
 }
 
-/* ─── 셀 포커스 (배경 + 테두리 모두 오버라이드) ─── */
+/* ─── 셀 포커스 (테두리만 표시 - 배경 투명으로 텍스트 가시성 보장) ─── */
 .rg-root .rg-focus {
-  background-color: var(--oklch-primary-4) !important;
+  /* 배경색을 투명으로 설정하여 셀 내용이 보이도록 함 */
+  background-color: transparent !important;
+  /* 또는 반투명: background-color: color-mix(in oklch, var(--oklch-primary-4) 30%, transparent) !important; */
   border: 2px solid var(--oklch-primary-9) !important;
 }
 
@@ -1100,6 +1102,28 @@ html.reduce-motion .dv-split-view-container.dv-animation .dv-sash {
 .rg-root .rg-selection-cell {
   background: var(--oklch-primary-4) !important;
   border-color: var(--oklch-primary-9) !important;
+  color: var(--app-color-text-primary) !important; /* 선택된 셀 텍스트 가시성 보장 */
+}
+
+/* 선택된 셀 내부 모든 요소에 텍스트 색상 강제 적용 */
+.rg-root .rg-selection-cell *,
+.rg-root .rg-selection-cell span,
+.rg-root .rg-selection-cell div,
+.rg-root .rg-selection-cell .rg-renderer,
+.rg-root td.rg-selection-cell,
+.rg-root td.rg-selection-cell *,
+.rg-root td.rg-selection-cell .rg-renderer {
+  color: var(--app-color-text-primary) !important;
+}
+
+/* 다크 모드에서 선택된 셀 텍스트 가시성 */
+:root.dark .rg-root .rg-selection-cell,
+:root.dark .rg-root .rg-selection-cell *,
+:root.dark .rg-root .rg-selection-cell .rg-renderer,
+.app-dark .rg-root .rg-selection-cell,
+.app-dark .rg-root .rg-selection-cell *,
+.app-dark .rg-root .rg-selection-cell .rg-renderer {
+  color: var(--app-color-text-primary) !important;
 }
 
 /* ─── 선택 핸들 (블록 선택 드래그 핸들) ─── */

@@ -32,8 +32,43 @@ const gridDataToArray = (
     ? columns.filter(col => col.visible)
     : columns
 
-  // 헤더
-  const headers = visibleColumns.map(col => col.header?.text || col.name || '')
+  // 헤더와 필드명 매핑
+  // RealGrid의 getColumns()가 반환하는 객체에서 name과 fieldName을 안전하게 추출
+  const columnInfos = visibleColumns.map((col) => {
+    // 컬럼명 가져오기 (타입 안전하게)
+    const colName = col.name || ''
+
+    // fieldName 가져오기 - 여러 방법 시도
+    let fieldName = ''
+
+    // 1. grid.getColumnProperty 사용 (가장 정확)
+    if (colName) {
+      try {
+        const fn = grid.getColumnProperty(colName, 'fieldName')
+        if (fn && typeof fn === 'string') fieldName = fn
+      }
+      catch {
+        // 무시
+      }
+    }
+
+    // 2. 폴백: 컬럼 객체에서 직접 접근
+    if (!fieldName) {
+      const colAny = col as Record<string, unknown>
+      if (typeof colAny.fieldName === 'string') fieldName = colAny.fieldName
+    }
+
+    // 3. 최종 폴백: 컬럼명 사용 (RealGrid에서 fieldName 미지정시 name과 동일)
+    if (!fieldName) fieldName = colName
+
+    // 헤더 텍스트
+    const headerText = col.header?.text || colName || ''
+
+    return { colName, fieldName, headerText }
+  })
+
+  const headers = columnInfos.map(info => info.headerText)
+  const fieldNames = columnInfos.map(info => info.fieldName)
 
   // 데이터 행
   let rowCount = provider.getRowCount()
@@ -47,17 +82,26 @@ const gridDataToArray = (
     }
   }
 
+  // provider.getFieldNames()로 실제 필드 인덱스 확인
+  const providerFieldNames = provider.getFieldNames() as string[]
+
+  // 필드명 → 필드 인덱스 매핑 생성 (대소문자 무시)
+  const fieldIndexMap = new Map<string, number>()
+  providerFieldNames.forEach((fn, idx) => {
+    fieldIndexMap.set(fn.toUpperCase(), idx)
+  })
+
+  // 각 행의 데이터를 수동으로 가져오기 (대소문자 무시 매핑)
   const data: unknown[][] = []
-  for (let i = startRow; i < rowCount; i++) {
-    const row: unknown[] = []
-    for (const col of visibleColumns) {
-      // GridColumn에서 fieldName 속성 접근 (타입 정의에 없을 수 있음)
-      const fieldName = (col as unknown as { fieldName?: string }).fieldName || col.name
-      if (fieldName) {
-        row.push(provider.getValue(i, fieldName))
+  for (let rowIdx = startRow; rowIdx < rowCount; rowIdx++) {
+    const rowData: unknown[] = fieldNames.map((fieldName) => {
+      const fieldIndex = fieldIndexMap.get(fieldName.toUpperCase())
+      if (fieldIndex !== undefined) {
+        return provider.getValue(rowIdx, fieldIndex) ?? ''
       }
-    }
-    data.push(row)
+      return ''
+    })
+    data.push(rowData)
   }
 
   return { headers, data }

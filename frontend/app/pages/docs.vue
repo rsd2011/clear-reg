@@ -1,22 +1,46 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { DockviewVue } from 'dockview-vue'
-import { themeLight, themeAbyss } from 'dockview-core'
-import type { DockviewReadyEvent } from 'dockview-core'
 import type { GridView, LocalDataProvider } from 'realgrid'
 import { useThemeStore } from '~/stores/theme'
 import { useAppToast } from '~/composables/useAppToast'
 import type { ThemeName } from '~/themes'
 import { THEMES } from '~/themes'
-import type { RealGridColumn, RealGridInstance, RealGridCellClickData } from '~/types/realgrid'
+import type {
+  RealGridColumn,
+  RealGridInstance,
+  RealGridCellClickData,
+  RealGridColumnValidation,
+  InfiniteScrollLoadFn,
+} from '~/types/realgrid'
+
+// 🚀 DockView 지연 로딩 (탭 활성화 시에만 로드)
+const DockviewVue = defineAsyncComponent(() =>
+  import('dockview-vue').then(m => m.DockviewVue),
+)
+
+// DockView 테마 (지연 로드)
+const dockviewThemes = shallowRef<{ themeLight: unknown, themeAbyss: unknown } | null>(null)
+async function loadDockviewThemes() {
+  if (!dockviewThemes.value) {
+    const { themeLight, themeAbyss } = await import('dockview-core')
+    dockviewThemes.value = { themeLight, themeAbyss }
+  }
+  return dockviewThemes.value
+}
+
+// DockviewReadyEvent 타입 (동적 import를 위해)
+type DockviewReadyEvent = { api: unknown }
+
+// DockView 로딩 상태
+const dockviewLoading = ref(false)
 
 const themeStore = useThemeStore()
 const toast = useAppToast()
 
 // Dockview 테마 (다크/라이트에 따라 공식 테마 객체 반환)
-const dockviewTheme = computed(() =>
-  themeStore.isDark ? themeAbyss : themeLight,
-)
+const dockviewTheme = computed(() => {
+  if (!dockviewThemes.value) return null
+  return themeStore.isDark ? dockviewThemes.value.themeAbyss : dockviewThemes.value.themeLight
+})
 
 // 테마 프리뷰 상태
 const previewingTheme = ref<ThemeName | null>(null)
@@ -104,6 +128,19 @@ const treeData = ref([
 // Panel 상태
 const activeTab = ref('form')
 const accordionValue = ref<string[]>(['0'])
+
+// 🚀 DockView 탭 활성화 시 테마 지연 로딩
+watch(activeTab, async (newTab) => {
+  if (newTab === 'dockview' && !dockviewThemes.value) {
+    dockviewLoading.value = true
+    try {
+      await loadDockviewThemes()
+    }
+    finally {
+      dockviewLoading.value = false
+    }
+  }
+})
 
 // Overlay 상태
 const dialogVisible = ref(false)
@@ -210,6 +247,13 @@ const realgridColumns: RealGridColumn[] = [
     header: { text: '부서' },
   },
   {
+    name: 'score',
+    fieldName: 'score',
+    type: 'number',
+    width: 80,
+    header: { text: '점수' },
+  },
+  {
     name: 'status',
     fieldName: 'status',
     type: 'text',
@@ -220,15 +264,49 @@ const realgridColumns: RealGridColumn[] = [
 
 // RealGrid 샘플 데이터
 const realgridData = ref([
-  { id: '1', name: '김철수', email: 'kim@example.com', department: '개발팀', status: 'active' },
-  { id: '2', name: '이영희', email: 'lee@example.com', department: '기획팀', status: 'inactive' },
-  { id: '3', name: '박민수', email: 'park@example.com', department: '인사팀', status: 'pending' },
-  { id: '4', name: '최지현', email: 'choi@example.com', department: '마케팅팀', status: 'active' },
-  { id: '5', name: '정수연', email: 'jung@example.com', department: '영업팀', status: 'active' },
+  { id: '1', name: '김철수', email: 'kim@example.com', department: '개발팀', score: 85, status: 'active' },
+  { id: '2', name: '이영희', email: 'lee@example.com', department: '기획팀', score: 92, status: 'inactive' },
+  { id: '3', name: '박민수', email: 'park@example.com', department: '인사팀', score: 78, status: 'pending' },
+  { id: '4', name: '최지현', email: 'choi@example.com', department: '마케팅팀', score: 95, status: 'active' },
+  { id: '5', name: '정수연', email: 'jung@example.com', department: '영업팀', score: 88, status: 'active' },
 ])
 
-// RealGrid 인스턴스 참조
-const realgridRef = ref<{ getGridInstance: () => RealGridInstance | null } | null>(null)
+// RealGrid 인스턴스 참조 (RealGrid.vue에서 expose한 타입)
+interface RealGridComponentExpose {
+  getGridInstance: () => RealGridInstance | null
+  updateData: (data: Record<string, unknown>[]) => void
+  exportExcel: (fileName?: string) => void
+  exportCsv: (fileName?: string) => void
+  exportJson: (fileName?: string) => void
+  copyToClipboard: () => Promise<boolean>
+  validateAll: () => { valid: boolean, errors: { row: number, column: string, message: string }[] }
+  goToFirstError: () => void
+  validationErrors?: { row: number, column: string, message: string }[]
+  isValid?: boolean
+  selectionSummary: { sum: number, count: number, average: number, min: number, max: number, numericCount: number }
+  getSelectionSum: () => number
+  saveState: () => void
+  loadState: () => boolean
+  clearState: () => void
+  pagination?: {
+    state: { currentPage: number, totalItems: number, itemsPerPage: number }
+    pageNumbers: { value: number[] }
+    canGoPrev: { value: boolean }
+    canGoNext: { value: boolean }
+    goToPage: (page: number) => Promise<void>
+    nextPage: () => Promise<void>
+    prevPage: () => Promise<void>
+    goToFirst: () => Promise<void>
+    goToLast: () => Promise<void>
+    setTotalItems: (n: number) => void
+  }
+  infiniteScroll?: {
+    state: { isLoading: boolean, hasMore: boolean, currentOffset: number, pageSize: number, totalItems: number }
+    loadMore: () => Promise<void>
+    reset: () => Promise<void>
+  }
+}
+const realgridRef = ref<RealGridComponentExpose | null>(null)
 
 // RealGrid 이벤트 핸들러
 function onRealgridReady(_grid: GridView, _provider: LocalDataProvider) {
@@ -247,6 +325,7 @@ function addRealgridRow() {
     name: `신규 사원 ${newId}`,
     email: `new${newId}@example.com`,
     department: '미정',
+    score: Math.floor(Math.random() * 30) + 70, // 70~99 랜덤 점수
     status: 'pending',
   })
   toast.success('행 추가됨')
@@ -263,35 +342,240 @@ function removeRealgridRow() {
   }
 }
 
+// RealGrid 내보내기 핸들러
+function exportRealgridExcel() {
+  realgridRef.value?.exportExcel?.('realgrid-demo')
+  toast.success('Excel 내보내기 완료')
+}
+
+function exportRealgridCsv() {
+  realgridRef.value?.exportCsv?.('realgrid-demo')
+  toast.success('CSV 내보내기 완료')
+}
+
+function exportRealgridJson() {
+  realgridRef.value?.exportJson?.('realgrid-demo')
+  toast.success('JSON 내보내기 완료')
+}
+
+// ============================================================================
+// RealGrid 2: 상태 저장 + 유효성 검사 + 페이지네이션 데모
+// ============================================================================
+
+// 부서 목록
+const departments = ['개발팀', '기획팀', '인사팀', '마케팅팀', '영업팀', '재무팀', '디자인팀', 'QA팀']
+const statuses = ['active', 'inactive', 'pending']
+
+// 대용량 샘플 데이터 생성 (100건)
+function generateSampleData(count: number) {
+  const names = ['김철수', '이영희', '박민수', '최지현', '정수연', '홍길동', '강미나', '윤서준', '임도현', '송하늘']
+  const data = []
+  for (let i = 1; i <= count; i++) {
+    data.push({
+      id: String(i),
+      name: (names[i % names.length] ?? '사원') + (Math.floor(i / names.length) || ''),
+      email: `user${i}@example.com`,
+      department: departments[i % departments.length],
+      status: statuses[i % statuses.length],
+      salary: Math.floor(3000 + Math.random() * 7000) * 10000, // 3000만원 ~ 1억
+      hireDate: new Date(2020 + Math.floor(i / 30), i % 12, (i % 28) + 1).toISOString().split('T')[0],
+    })
+  }
+  return data
+}
+
+// 그리드 2 컬럼 정의 (급여, 입사일 추가)
+const realgrid2Columns: RealGridColumn[] = [
+  { name: 'id', fieldName: 'id', type: 'text', width: 60, header: { text: 'ID' } },
+  { name: 'name', fieldName: 'name', type: 'text', width: 100, header: { text: '이름' }, editable: true },
+  { name: 'email', fieldName: 'email', type: 'text', width: 180, header: { text: '이메일' }, editable: true },
+  { name: 'department', fieldName: 'department', type: 'text', width: 100, header: { text: '부서' } },
+  { name: 'salary', fieldName: 'salary', type: 'number', width: 120, header: { text: '급여' } },
+  { name: 'status', fieldName: 'status', type: 'text', width: 80, header: { text: '상태' } },
+]
+
+// 🚀 그리드 2 데이터 (100건 - 지연 생성)
+const realgrid2AllData = ref<Record<string, unknown>[]>([])
+const realgrid2Data = ref<Record<string, unknown>[]>([])
+const realgrid2TotalItems = ref(100)
+const realgrid2Ref = ref<RealGridComponentExpose | null>(null)
+const realgrid2Initialized = ref(false)
+
+// 유효성 검사 규칙
+const realgrid2Validations: RealGridColumnValidation[] = [
+  {
+    column: 'name',
+    rules: [
+      { type: 'required', message: '이름은 필수입니다' },
+    ],
+  },
+  {
+    column: 'email',
+    rules: [
+      { type: 'required', message: '이메일은 필수입니다' },
+      { type: 'pattern', value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: '올바른 이메일 형식이 아닙니다' },
+    ],
+  },
+]
+
+// 그리드 2 이벤트 핸들러
+function onRealgrid2Ready(_grid: GridView, _provider: LocalDataProvider) {
+  toast.info('RealGrid 2 (페이지네이션) 초기화 완료')
+
+  // 🚀 데이터 지연 생성 (최초 1회)
+  if (!realgrid2Initialized.value) {
+    realgrid2AllData.value = generateSampleData(100)
+    realgrid2Initialized.value = true
+  }
+
+  // 페이지네이션 총 아이템 수 설정
+  nextTick(() => {
+    realgrid2Ref.value?.pagination?.setTotalItems(realgrid2TotalItems.value)
+  })
+  // 페이지네이션 초기 데이터 로드
+  loadPage2Data(1)
+}
+
+function onRealgrid2ValidationError(errors: { row: number, column: string, message: string }[]) {
+  const firstError = errors[0]
+  if (firstError) {
+    toast.error(`유효성 검사 오류: ${firstError.message}`)
+  }
+}
+
+// 페이지네이션 데이터 로드
+async function loadPage2Data(page: number) {
+  const pageSize = 10
+  const start = (page - 1) * pageSize
+  const end = start + pageSize
+  realgrid2Data.value = realgrid2AllData.value.slice(start, end)
+}
+
+// 페이지 변경 핸들러
+async function onPage2Change(page: number) {
+  toast.info(`페이지 ${page} 로딩 중...`)
+  await loadPage2Data(page)
+}
+
+// 그리드 2 상태 저장/로드
+function saveGrid2State() {
+  realgrid2Ref.value?.saveState?.()
+  toast.success('그리드 상태 저장됨')
+}
+
+function loadGrid2State() {
+  const result = realgrid2Ref.value?.loadState?.()
+  if (result) {
+    toast.success('그리드 상태 복원됨')
+  }
+  else {
+    toast.warn('저장된 상태가 없습니다')
+  }
+}
+
+function clearGrid2State() {
+  realgrid2Ref.value?.clearState?.()
+  toast.info('저장된 상태 삭제됨')
+}
+
+// 그리드 2 유효성 검사
+function validateGrid2() {
+  const result = realgrid2Ref.value?.validateAll?.()
+  if (result?.valid) {
+    toast.success('유효성 검사 통과!')
+  }
+  else {
+    toast.error(`${result?.errors?.length || 0}건의 오류 발견`)
+    realgrid2Ref.value?.goToFirstError?.()
+  }
+}
+
+// ============================================================================
+// RealGrid 3: 무한 스크롤 데모
+// ============================================================================
+
+const realgrid3Columns: RealGridColumn[] = [
+  { name: 'id', fieldName: 'id', type: 'text', width: 60, header: { text: 'ID' } },
+  { name: 'name', fieldName: 'name', type: 'text', width: 100, header: { text: '이름' } },
+  { name: 'email', fieldName: 'email', type: 'text', width: 180, header: { text: '이메일' } },
+  { name: 'department', fieldName: 'department', type: 'text', width: 100, header: { text: '부서' } },
+  { name: 'salary', fieldName: 'salary', type: 'number', width: 120, header: { text: '급여' } },
+  { name: 'hireDate', fieldName: 'hireDate', type: 'text', width: 100, header: { text: '입사일' } },
+]
+
+// 🚀 무한 스크롤 전체 데이터 (500건 - 지연 생성)
+let realgrid3AllData: Record<string, unknown>[] = []
+const realgrid3Data = ref<Record<string, unknown>[]>([])
+const realgrid3Ref = ref<RealGridComponentExpose | null>(null)
+const realgrid3Initialized = ref(false)
+
+// 무한 스크롤 데이터 로드 함수
+const loadGrid3Data: InfiniteScrollLoadFn = async (offset: number, limit: number) => {
+  // 🚀 데이터 지연 생성 (최초 1회)
+  if (!realgrid3Initialized.value) {
+    realgrid3AllData = generateSampleData(500)
+    realgrid3Initialized.value = true
+  }
+
+  // 네트워크 지연 시뮬레이션
+  await new Promise(resolve => setTimeout(resolve, 500))
+
+  const data = realgrid3AllData.slice(offset, offset + limit)
+  const hasMore = offset + limit < realgrid3AllData.length
+
+  return {
+    data,
+    hasMore,
+    total: realgrid3AllData.length,
+  }
+}
+
+// 그리드 3 이벤트 핸들러
+async function onRealgrid3Ready(_grid: GridView, _provider: LocalDataProvider) {
+  toast.info('RealGrid 3 (무한 스크롤) 초기화 완료')
+  // 초기 데이터 로드 (무한 스크롤 시작)
+  await nextTick()
+  await realgrid3Ref.value?.infiniteScroll?.loadMore()
+}
+
+// 무한 스크롤 리셋
+async function resetGrid3InfiniteScroll() {
+  await realgrid3Ref.value?.infiniteScroll?.reset?.()
+  toast.info('무한 스크롤 초기화됨')
+}
+
 // ============================================================================
 // DockView Demo State
 // ============================================================================
 
 // DockView API 참조
-const dockviewApi = ref<DockviewReadyEvent['api'] | null>(null)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const dockviewApi = ref<any>(null)
 
 // DockView 패널 카운터
 const dockviewPanelCount = ref(3)
 
 // DockView 준비 핸들러
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onDockviewReady(event: DockviewReadyEvent) {
-  dockviewApi.value = event.api
+  const api = event.api as any
+  dockviewApi.value = api
 
   // 초기 패널 구성
-  event.api.addPanel({
+  api.addPanel({
     id: 'panel1',
     component: 'panelComponent',
     params: { title: '패널 1' },
   })
 
-  event.api.addPanel({
+  api.addPanel({
     id: 'panel2',
     component: 'panelComponent',
     params: { title: '패널 2' },
     position: { referencePanel: 'panel1', direction: 'right' },
   })
 
-  event.api.addPanel({
+  api.addPanel({
     id: 'panel3',
     component: 'panelComponent',
     params: { title: '패널 3' },
@@ -324,11 +608,12 @@ function resetDockviewPanels() {
     return
 
   // 모든 패널 ID 수집 후 제거
-  const panelIds = dockviewApi.value.panels.map(p => p.id)
-  panelIds.forEach((id) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const panelIds = dockviewApi.value.panels.map((p: any) => p.id)
+  panelIds.forEach((id: string) => {
     const panel = dockviewApi.value!.getPanel(id)
     if (panel) {
-      dockviewApi.value!.removePanel(panel as Parameters<typeof dockviewApi.value.removePanel>[0])
+      dockviewApi.value!.removePanel(panel)
     }
   })
 
@@ -1287,13 +1572,46 @@ function resetDockviewPanels() {
         <!-- RealGrid 탭 -->
         <template #realgrid>
           <div class="space-y-6">
-            <PanelCard title="RealGrid - 고성능 데이터 그리드">
+            <!-- ========================================== -->
+            <!-- 그리드 1: 기본 기능 + 내보내기 -->
+            <!-- ========================================== -->
+            <PanelCard title="RealGrid 1 - 기본 기능 데모">
               <template #subtitle>
-                대용량 데이터 처리에 최적화된 엔터프라이즈 그리드 컴포넌트
+                컨텍스트 메뉴, 키보드 단축키, 선택 요약, 내보내기 기능
               </template>
 
+              <!-- 기능 안내 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p class="font-medium mb-2 flex items-center gap-2">
+                      <i class="pi pi-bars" />
+                      컨텍스트 메뉴 (우클릭)
+                    </p>
+                    <ul class="list-disc list-inside opacity-70 space-y-1">
+                      <li>컬럼 고정/해제</li>
+                      <li>컬럼 표시/숨김</li>
+                      <li>행 높이 조절</li>
+                      <li>Excel/CSV 내보내기</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p class="font-medium mb-2 flex items-center gap-2">
+                      <i class="pi pi-keyboard" />
+                      키보드 단축키
+                    </p>
+                    <ul class="list-disc list-inside opacity-70 space-y-1">
+                      <li><kbd>Ctrl+C</kbd> 복사</li>
+                      <li><kbd>Ctrl+V</kbd> 붙여넣기</li>
+                      <li><kbd>Ctrl+Z</kbd> 실행 취소</li>
+                      <li><kbd>Delete</kbd> 삭제</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
               <!-- 컨트롤 버튼 -->
-              <div class="flex gap-2 mb-4">
+              <div class="flex flex-wrap gap-2 mb-4">
                 <ActionButton
                   label="행 추가"
                   icon="pi pi-plus"
@@ -1306,6 +1624,28 @@ function resetDockviewPanels() {
                   severity="danger"
                   @click="removeRealgridRow"
                 />
+                <div class="border-l mx-2" />
+                <ActionButton
+                  label="Excel"
+                  icon="pi pi-file-excel"
+                  severity="info"
+                  outlined
+                  @click="exportRealgridExcel"
+                />
+                <ActionButton
+                  label="CSV"
+                  icon="pi pi-file"
+                  severity="info"
+                  outlined
+                  @click="exportRealgridCsv"
+                />
+                <ActionButton
+                  label="JSON"
+                  icon="pi pi-code"
+                  severity="info"
+                  outlined
+                  @click="exportRealgridJson"
+                />
               </div>
 
               <!-- RealGrid 컴포넌트 -->
@@ -1313,14 +1653,196 @@ function resetDockviewPanels() {
                 ref="realgridRef"
                 :columns="realgridColumns"
                 :data="realgridData"
-                height="350px"
+                height="300px"
                 :events="{
                   onReady: onRealgridReady,
                   onCellClicked: onRealgridCellClick,
                 }"
               />
+
+              <!-- 선택 영역 안내 -->
+              <p class="text-xs opacity-50 mt-2">
+                💡 셀을 드래그하여 선택하면 하단에 합계/평균/최대/최소가 표시됩니다.
+              </p>
             </PanelCard>
 
+            <!-- ========================================== -->
+            <!-- 그리드 2: 페이지네이션 + 상태 저장 + 유효성 검사 -->
+            <!-- ========================================== -->
+            <PanelCard title="RealGrid 2 - 페이지네이션 + 고급 기능">
+              <template #subtitle>
+                페이지네이션, 상태 저장 (컬럼 너비/순서), 유효성 검사 데모
+              </template>
+
+              <!-- 상태 저장 컨트롤 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="font-medium mb-2 flex items-center gap-2">
+                  <i class="pi pi-save" />
+                  상태 저장 기능
+                </p>
+                <p class="text-sm opacity-70 mb-3">
+                  컬럼 너비, 순서, 고정 상태가 localStorage에 저장됩니다. 컬럼을 드래그하여 순서를 바꾸거나 너비를 조절한 후 저장해보세요.
+                </p>
+                <div class="flex gap-2">
+                  <ActionButton
+                    label="상태 저장"
+                    icon="pi pi-save"
+                    severity="success"
+                    size="small"
+                    @click="saveGrid2State"
+                  />
+                  <ActionButton
+                    label="상태 복원"
+                    icon="pi pi-refresh"
+                    severity="info"
+                    size="small"
+                    @click="loadGrid2State"
+                  />
+                  <ActionButton
+                    label="상태 삭제"
+                    icon="pi pi-trash"
+                    severity="secondary"
+                    size="small"
+                    @click="clearGrid2State"
+                  />
+                </div>
+              </div>
+
+              <!-- 유효성 검사 컨트롤 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="font-medium mb-2 flex items-center gap-2">
+                  <i class="pi pi-check-circle" />
+                  유효성 검사
+                </p>
+                <p class="text-sm opacity-70 mb-3">
+                  이름(필수), 이메일(필수 + 형식) 검사가 적용됩니다. 셀을 더블클릭하여 편집 후 검사해보세요.
+                </p>
+                <ActionButton
+                  label="전체 검사 실행"
+                  icon="pi pi-check"
+                  severity="warn"
+                  size="small"
+                  @click="validateGrid2"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="realgrid2Ref"
+                :columns="realgrid2Columns"
+                :data="realgrid2Data"
+                height="350px"
+                enable-persistence
+                storage-key="docs-realgrid2-state"
+                :validations="realgrid2Validations"
+                scroll-mode="pagination"
+                :pagination-options="{
+                  itemsPerPage: 10,
+                  onPageChange: onPage2Change,
+                }"
+                :events="{
+                  onReady: onRealgrid2Ready,
+                }"
+                @validation-error="onRealgrid2ValidationError"
+              />
+
+              <!-- 기능 태그 -->
+              <div class="flex flex-wrap gap-2 mt-3">
+                <FeedbackTag
+                  value="페이지네이션"
+                  severity="info"
+                  icon="pi pi-list"
+                />
+                <FeedbackTag
+                  value="100건 데이터"
+                  severity="secondary"
+                  icon="pi pi-database"
+                />
+                <FeedbackTag
+                  value="상태 저장"
+                  severity="success"
+                  icon="pi pi-save"
+                />
+                <FeedbackTag
+                  value="유효성 검사"
+                  severity="warn"
+                  icon="pi pi-check"
+                />
+              </div>
+            </PanelCard>
+
+            <!-- ========================================== -->
+            <!-- 그리드 3: 무한 스크롤 -->
+            <!-- ========================================== -->
+            <PanelCard title="RealGrid 3 - 무한 스크롤">
+              <template #subtitle>
+                스크롤 시 자동으로 데이터를 추가 로딩하는 무한 스크롤 데모 (500건)
+              </template>
+
+              <!-- 무한 스크롤 안내 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="font-medium mb-2 flex items-center gap-2">
+                  <i class="pi pi-arrow-down" />
+                  무한 스크롤 사용법
+                </p>
+                <p class="text-sm opacity-70 mb-3">
+                  그리드를 아래로 스크롤하면 자동으로 다음 데이터가 로딩됩니다.
+                  네트워크 지연을 시뮬레이션하기 위해 500ms 딜레이가 있습니다.
+                </p>
+                <ActionButton
+                  label="처음부터 다시 로드"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  size="small"
+                  @click="resetGrid3InfiniteScroll"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="realgrid3Ref"
+                :columns="realgrid3Columns"
+                :data="realgrid3Data"
+                height="400px"
+                scroll-mode="infinite"
+                :infinite-scroll-options="{
+                  pageSize: 20,
+                  threshold: 0.8,
+                }"
+                :load-fn="loadGrid3Data"
+                :events="{
+                  onReady: onRealgrid3Ready,
+                }"
+              />
+
+              <!-- 기능 태그 -->
+              <div class="flex flex-wrap gap-2 mt-3">
+                <FeedbackTag
+                  value="무한 스크롤"
+                  severity="info"
+                  icon="pi pi-arrow-down"
+                />
+                <FeedbackTag
+                  value="500건 데이터"
+                  severity="secondary"
+                  icon="pi pi-database"
+                />
+                <FeedbackTag
+                  value="자동 로딩"
+                  severity="success"
+                  icon="pi pi-sync"
+                />
+                <FeedbackTag
+                  value="500ms 지연"
+                  severity="warn"
+                  icon="pi pi-clock"
+                />
+              </div>
+            </PanelCard>
+
+            <!-- ========================================== -->
+            <!-- 테마 연동 정보 -->
+            <!-- ========================================== -->
             <PanelCard title="테마 연동">
               <div class="space-y-3">
                 <p class="text-sm opacity-70">
@@ -1346,6 +1868,46 @@ function resetDockviewPanels() {
                 <p class="text-xs opacity-50 mt-2">
                   상단의 테마 설정에서 테마를 변경하면 그리드 스타일이 자동으로 업데이트됩니다.
                 </p>
+              </div>
+            </PanelCard>
+
+            <!-- ========================================== -->
+            <!-- 컴포저블 기능 요약 -->
+            <!-- ========================================== -->
+            <PanelCard title="RealGrid 컴포저블 기능 요약">
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridContextMenu</p>
+                  <p class="text-xs opacity-70">컨텍스트 메뉴 (고정, 컬럼, 행높이, 내보내기)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridKeyboard</p>
+                  <p class="text-xs opacity-70">키보드 단축키 (복사, 붙여넣기, 실행취소)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridExport</p>
+                  <p class="text-xs opacity-70">내보내기 (Excel, CSV, JSON, 클립보드)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridSelection</p>
+                  <p class="text-xs opacity-70">선택 요약 (합계, 평균, 최대, 최소)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridValidation</p>
+                  <p class="text-xs opacity-70">유효성 검사 (필수, 패턴, 범위, 커스텀)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridPersistence</p>
+                  <p class="text-xs opacity-70">상태 저장 (컬럼, 필터, 정렬, 고정)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridPagination</p>
+                  <p class="text-xs opacity-70">페이지네이션 (페이지 이동, 총 건수)</p>
+                </div>
+                <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                  <p class="font-medium mb-2">useRealGridInfiniteScroll</p>
+                  <p class="text-xs opacity-70">무한 스크롤 (자동 로딩, 임계값)</p>
+                </div>
               </div>
             </PanelCard>
           </div>
@@ -1377,10 +1939,31 @@ function resetDockviewPanels() {
 
               <!-- DockView 컨테이너 (제한된 높이) -->
               <div class="dockview-demo-container">
-                <DockviewVue
-                  :theme="dockviewTheme"
-                  @ready="onDockviewReady"
-                />
+                <!-- 🚀 DockView 지연 로딩: 테마 로드 후 렌더링 -->
+                <template v-if="dockviewLoading">
+                  <div class="flex items-center justify-center h-full">
+                    <Loading />
+                    <span class="ml-2 text-sm opacity-70">DockView 로딩 중...</span>
+                  </div>
+                </template>
+                <Suspense v-else-if="dockviewTheme">
+                  <!-- eslint-disable-next-line vue/attribute-hyphenation -->
+                  <DockviewVue
+                    :theme="(dockviewTheme as any)"
+                    @ready="onDockviewReady"
+                  />
+                  <template #fallback>
+                    <div class="flex items-center justify-center h-full">
+                      <Loading />
+                    </div>
+                  </template>
+                </Suspense>
+                <div
+                  v-else
+                  class="flex items-center justify-center h-full text-sm opacity-70"
+                >
+                  DockView 초기화 대기 중...
+                </div>
               </div>
 
               <!-- 사용 안내 -->
@@ -1485,5 +2068,23 @@ function resetDockviewPanels() {
 
 .app-dark .dockview-demo-container {
   border-color: var(--p-surface-700);
+}
+
+/* 키보드 단축키 스타일 */
+kbd {
+  display: inline-block;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: var(--p-surface-200);
+  border: 1px solid var(--p-surface-300);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+:root.dark kbd,
+.app-dark kbd {
+  background: var(--p-surface-700);
+  border-color: var(--p-surface-600);
 }
 </style>

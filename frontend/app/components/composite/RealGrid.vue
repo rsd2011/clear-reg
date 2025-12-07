@@ -11,8 +11,9 @@
  * - 페이지네이션 / 무한 스크롤
  */
 
-import RealGrid, { type GridView } from 'realgrid'
+import type { GridView, DataFieldObject } from 'realgrid'
 import { useThemeStore } from '~/stores/theme'
+import { initializeRealGrid } from '~/plugins/realgrid.client'
 import type {
   RealGridColumn,
   RealGridEventsExtended,
@@ -207,7 +208,7 @@ const infiniteScroll = props.scrollMode === 'infinite' && props.loadFn
 // 그리드 초기화
 // ============================================================================
 
-const initGrid = () => {
+const initGrid = async () => {
   if (!gridContainer.value) {
     console.error('[RealGrid] Container not found')
     return
@@ -222,6 +223,12 @@ const initGrid = () => {
   }
 
   try {
+    // 🚀 RealGrid 지연 초기화 (필요 시점에 로드)
+    await initializeRealGrid()
+
+    // 동적 import로 RealGrid 모듈 로드
+    const RealGrid = await import('realgrid')
+
     // RealGrid 인스턴스 생성
     // Note: RealGrid 라이브러리의 TypeScript 타입 정의가 모든 옵션을 포함하지 않으므로 타입 단언 사용
     const gridOptions = {
@@ -233,12 +240,30 @@ const initGrid = () => {
       header: { height: 32 },
       // 사용자 옵션 (override 가능)
       ...props.options,
-    } as Parameters<typeof RealGrid.createGrid>[1]
+    } as Parameters<typeof RealGrid.default.createGrid>[1]
 
-    const { gridView, dataProvider } = RealGrid.createGrid(gridContainer.value, gridOptions)
+    // Undo/Redo 지원을 위해 LocalDataProvider와 GridView를 직접 생성
+    // Note: LocalDataProvider(true)로 생성해야 undo 이력이 저장됨
+    // createGrid()는 내부적으로 LocalDataProvider()를 기본값으로 생성하므로 undo가 작동하지 않음
+    // 참고: https://docs.realgrid.com/guides/editing/undo
+    const dataProvider = new RealGrid.LocalDataProvider(true) // true: undo 이력 저장
+    const gridView = new RealGrid.GridView(gridContainer.value)
+    gridView.setDataSource(dataProvider)
+
+    // undoable 설정 (GridView와 DataProvider 모두 필요)
+    ;(gridView as unknown as { undoable: boolean }).undoable = true
+    ;(dataProvider as unknown as { undoable: boolean }).undoable = true
 
     // 행 높이 설정 (displayOptions를 통해 설정)
     gridView.displayOptions.rowHeight = 28
+
+    // 필드 설정 (CSV/JSON 내보내기를 위해 필수)
+    // 컬럼 정의에서 필드 정보 추출
+    const fields: DataFieldObject[] = props.columns.map((col) => ({
+      fieldName: col.fieldName || col.name,
+      dataType: col.type === 'number' ? 'number' : 'text',
+    } as DataFieldObject))
+    dataProvider.setFields(fields)
 
     // 컬럼 설정
     gridView.setColumns(props.columns)
@@ -601,6 +626,7 @@ defineExpose({
       ref="gridContainer"
       class="realgrid-container"
       :style="{ height: props.height, minHeight: '200px' }"
+      tabindex="0"
     />
 
     <!-- 선택 요약 상태바 (선택적) -->

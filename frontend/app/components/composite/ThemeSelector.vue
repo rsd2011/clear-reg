@@ -11,7 +11,6 @@
  * - 내보내기/가져오기
  */
 
-import { computed, ref } from 'vue'
 import { useThemeStore } from '~/stores/theme'
 import type { ThemeName, ThemeMode } from '~/themes'
 

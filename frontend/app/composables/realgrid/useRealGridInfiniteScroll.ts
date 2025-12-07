@@ -102,6 +102,12 @@ export const useRealGridInfiniteScroll = <T = Record<string, unknown>>(
       if (providerRef && result.data.length > 0) {
         // 기존 데이터에 추가
         providerRef.addRows(result.data as Record<string, unknown>[])
+
+        // 행 상태를 모두 'none'으로 초기화 (insert → none)
+        // 무한 스크롤에서 서버에서 가져온 데이터는 'created' 상태가 아닌 'none' 상태여야 함
+        // clearRowStates(deleteRows: false, rowEvents: false)
+        ;(providerRef as unknown as { clearRowStates: (deleteRows: boolean, rowEvents: boolean) => void }).clearRowStates(false, false)
+
         state.currentOffset += result.data.length
       }
 
@@ -134,27 +140,27 @@ export const useRealGridInfiniteScroll = <T = Record<string, unknown>>(
 
   /**
    * 스크롤 위치 확인 및 로드 트리거
+   * RealGrid의 topIndex와 itemCount를 사용하여 스크롤 위치 계산
    */
   const checkScrollPosition = (grid: GridView): void => {
     if (!state.hasMore || state.isLoading) {
       return
     }
 
-    // RealGrid의 스크롤 정보 가져오기 (타입 정의에 없을 수 있음)
-    const g = grid as unknown as { getScrollInfo?: () => { vscrollPosition: number, vscrollSize: number, viewHeight: number } }
-    if (!g.getScrollInfo) return
-    const scrollInfo = g.getScrollInfo()
-    const { vscrollPosition, vscrollSize, viewHeight } = scrollInfo
+    // 현재 표시 가능한 행 수와 전체 행 수로 스크롤 위치 계산
+    const itemCount = grid.getItemCount()
+    if (itemCount === 0) return
 
-    // 스크롤 가능한 총 높이
-    const totalScrollable = vscrollSize - viewHeight
-    if (totalScrollable <= 0) {
-      // 스크롤이 필요 없는 경우 (데이터가 적음)
-      return
-    }
+    // displayOptions에서 표시 가능한 행 수 추정
+    const displayRowCount = Math.floor(
+      (grid.displayOptions?.maxRowHeight || 400) / (grid.displayOptions?.rowHeight || 28),
+    )
 
-    // 현재 스크롤 비율
-    const scrollRatio = vscrollPosition / totalScrollable
+    // 현재 보이는 맨 위 행 인덱스
+    const topIndex = grid.getTopItem?.() ?? 0
+
+    // 스크롤 비율 계산: (현재 위치 + 화면 행 수) / 전체 행 수
+    const scrollRatio = (topIndex + displayRowCount) / itemCount
 
     // 임계값 도달 시 로드
     if (scrollRatio >= threshold) {
@@ -164,26 +170,31 @@ export const useRealGridInfiniteScroll = <T = Record<string, unknown>>(
 
   /**
    * 무한 스크롤 설정
+   * RealGrid 공식 이벤트 onTopIndexChanged 사용
    */
   const setupInfiniteScroll = (grid: GridView, provider: LocalDataProvider): void => {
     gridRef = grid
     providerRef = provider
 
-    // 스크롤 이벤트 핸들러 등록
+    // 스크롤 이벤트 핸들러 등록 (onTopIndexChanged: 스크롤 시 맨 위 행 인덱스 변경 감지)
     scrollHandler = (g: GridView) => {
       checkScrollPosition(g)
     }
 
-    // onScrolled는 타입 정의에 없을 수 있음
-    ;(grid as unknown as { onScrolled: typeof scrollHandler }).onScrolled = scrollHandler
+    // RealGrid 공식 이벤트: onTopIndexChanged
+    grid.onTopIndexChanged = (_grid, itemIndex) => {
+      if (scrollHandler) {
+        scrollHandler(_grid as GridView)
+      }
+    }
   }
 
   /**
    * 무한 스크롤 해제
    */
   const teardownInfiniteScroll = (): void => {
-    if (gridRef && scrollHandler) {
-      ;(gridRef as unknown as { onScrolled: null }).onScrolled = null
+    if (gridRef) {
+      gridRef.onTopIndexChanged = undefined
     }
 
     if (loadDebounceTimer) {

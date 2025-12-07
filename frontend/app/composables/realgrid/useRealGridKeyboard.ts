@@ -220,13 +220,89 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
   // 등록된 단축키 맵
   const shortcuts = ref<Map<string, RealGridKeyboardShortcut>>(new Map())
 
-  // 키 조합을 문자열로 변환
+  // 키 조합을 문자열로 변환 (KeyboardEvent용)
   const getShortcutKey = (e: KeyboardEvent): string => {
+    // modifier 키만 눌렸을 때는 빈 문자열 반환 (실제 키 조합이 아님)
+    const modifierKeys = ['Control', 'Shift', 'Alt', 'Meta']
+    if (modifierKeys.includes(e.key)) {
+      return ''
+    }
+
     const parts: string[] = []
     if (e.ctrlKey || e.metaKey) parts.push('ctrl')
     if (e.shiftKey) parts.push('shift')
     if (e.altKey) parts.push('alt')
     parts.push(e.key.toLowerCase())
+    return parts.join('+')
+  }
+
+  // 키 코드를 키 문자열로 변환 (RealGrid onKeyDown용)
+  // RealGrid 2.x onKeyDown 시그니처: (grid, key, ctrl, shift, alt)
+  // key는 숫자형 키 코드 (예: 90 = 'Z', 46 = Delete, 113 = F2, 27 = Escape)
+  const keyCodeToString = (keyCode: number): string => {
+    // 특수 키 매핑
+    const specialKeys: Record<number, string> = {
+      8: 'backspace',
+      9: 'tab',
+      13: 'enter',
+      27: 'escape',
+      32: 'space',
+      33: 'pageup',
+      34: 'pagedown',
+      35: 'end',
+      36: 'home',
+      37: 'arrowleft',
+      38: 'arrowup',
+      39: 'arrowright',
+      40: 'arrowdown',
+      45: 'insert',
+      46: 'delete',
+      112: 'f1',
+      113: 'f2',
+      114: 'f3',
+      115: 'f4',
+      116: 'f5',
+      117: 'f6',
+      118: 'f7',
+      119: 'f8',
+      120: 'f9',
+      121: 'f10',
+      122: 'f11',
+      123: 'f12',
+    }
+
+    if (specialKeys[keyCode]) {
+      return specialKeys[keyCode]
+    }
+
+    // 알파벳 키 (A-Z: 65-90)
+    if (keyCode >= 65 && keyCode <= 90) {
+      return String.fromCharCode(keyCode).toLowerCase()
+    }
+
+    // 숫자 키 (0-9: 48-57)
+    if (keyCode >= 48 && keyCode <= 57) {
+      return String.fromCharCode(keyCode)
+    }
+
+    // 숫자패드 키 (0-9: 96-105)
+    if (keyCode >= 96 && keyCode <= 105) {
+      return String(keyCode - 96)
+    }
+
+    return ''
+  }
+
+  // 키 코드와 modifier에서 단축키 문자열 생성 (RealGrid onKeyDown용)
+  const getShortcutKeyFromCode = (keyCode: number, ctrl: boolean, shift: boolean, alt: boolean): string => {
+    const keyString = keyCodeToString(keyCode)
+    if (!keyString) return ''
+
+    const parts: string[] = []
+    if (ctrl) parts.push('ctrl')
+    if (shift) parts.push('shift')
+    if (alt) parts.push('alt')
+    parts.push(keyString)
     return parts.join('+')
   }
 
@@ -330,9 +406,11 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
   // 이벤트 핸들러 참조
   let keydownHandler: ((e: KeyboardEvent) => void) | null = null
   let containerRef: HTMLElement | null = null
+  let gridRef: GridView | null = null
 
   /**
    * 키보드 단축키 설정
+   * RealGrid의 onKeyDown 이벤트를 사용하여 그리드 내부 키보드 이벤트 처리
    */
   const setupKeyboard = (
     grid: GridView,
@@ -341,8 +419,35 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
   ): void => {
     // 기본 단축키 등록
     registerDefaultShortcuts(grid, provider)
+    gridRef = grid
 
-    // 키다운 핸들러
+    // RealGrid의 onKeyDown 이벤트 사용 (그리드 내부 키보드 이벤트 처리)
+    // RealGrid 2.x 이벤트 시그니처: onKeyDown(grid, key, ctrl, shift, alt)
+    // - key: 숫자형 키 코드 (예: 90 = 'Z')
+    // - ctrl, shift, alt: boolean
+    // - 반환값: false면 기본 동작 취소, 아무것도 반환하지 않으면 기본 동작 실행
+    // 참고: http://help.realgrid.com/api/GridBase/onKeyDown/
+    ;(grid as unknown as {
+      onKeyDown: (grid: GridView, key: number, ctrl: boolean, shift: boolean, alt: boolean) => boolean | void
+    }).onKeyDown = (_grid, keyCode, ctrl, shift, alt) => {
+      // 키 코드에서 단축키 문자열 생성
+      const key = getShortcutKeyFromCode(keyCode, ctrl, shift, alt)
+
+      // 키 문자열이 없으면 기본 동작 실행 (방향키 등)
+      if (!key) {
+        return // 기본 동작 실행
+      }
+
+      const shortcut = shortcuts.value.get(key)
+      if (shortcut) {
+        shortcut.action(grid, provider)
+        return false // 기본 동작 취소 (RealGrid에서는 false가 취소)
+      }
+      // 등록되지 않은 키는 기본 동작 실행 (방향키, Enter 등)
+      return // 기본 동작 실행
+    }
+
+    // 폴백: 컨테이너 키다운 핸들러 (그리드 외부에서도 동작하도록)
     keydownHandler = (e: KeyboardEvent) => {
       const key = getShortcutKey(e)
       const shortcut = shortcuts.value.get(key)
@@ -354,7 +459,6 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
       }
     }
 
-    // 컨테이너 또는 그리드 엘리먼트에 이벤트 등록
     containerRef = container || (grid as unknown as { container: HTMLElement }).container
     if (containerRef) {
       containerRef.addEventListener('keydown', keydownHandler)

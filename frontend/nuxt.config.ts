@@ -7,11 +7,11 @@ export default defineNuxtConfig({
 
   modules: [
     '@nuxt/eslint',
-    '@nuxt/content',
+    // '@nuxt/content', // 미사용 - 필요 시 content.config.ts와 함께 활성화
     '@nuxt/fonts',
-    '@nuxt/icon',
-    '@nuxt/image',
-    '@nuxt/scripts',
+    // '@nuxt/icon', // 미사용 - PrimeIcons (pi pi-*) 사용 중
+    // '@nuxt/image', // 미사용 - 필요 시 활성화
+    // '@nuxt/scripts', // 미사용 - 필요 시 활성화
     '@nuxt/test-utils/module',
     // '@nuxt/hints', // SSR 비활성화로 hydration 체크 불필요
     '@nuxtjs/tailwindcss',
@@ -121,11 +121,30 @@ export default defineNuxtConfig({
   },
   compatibilityDate: '2025-07-15',
 
-  // Vite 서버 설정
+  // Vite 설정 (서버 + 빌드 최적화)
   vite: {
     server: {
       strictPort: true, // 포트 사용 중이면 에러 발생 (다른 포트로 자동 이동 안 함)
       allowedHosts: ['.rsd-toy.com'], // rsd-toy.com의 모든 서브도메인 허용
+    },
+    // 🚀 빌드 최적화: 무거운 라이브러리 청크 분리
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // RealGrid + JSZip (Excel 내보내기) - ~8MB
+            'vendor-realgrid': ['realgrid', 'jszip'],
+            // DockView (도킹 레이아웃) - ~15MB
+            'vendor-dockview': ['dockview-core', 'dockview-vue'],
+            // PrimeVue 코어 - ~19MB
+            'vendor-primevue': ['primevue'],
+          },
+        },
+      },
+    },
+    // 의존성 사전 번들링 최적화
+    optimizeDeps: {
+      include: ['realgrid', 'jszip', 'dockview-core', 'dockview-vue', 'primevue'],
     },
   },
 
