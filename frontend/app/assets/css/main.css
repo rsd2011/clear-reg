@@ -38,13 +38,29 @@
    접근성 옵션 (Phase 2)
    ============================================================================ */
 
-/* 줄임 모션 모드 (사용자 설정) */
-html.reduce-motion,
-html.reduce-motion * {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
+/* 줄임 모션 모드 (사용자 설정)
+ * 🔧 최적화: `*` 선택자 제거 (전체 요소 스타일 재계산 방지)
+ * - View Transition은 JS에서 shouldReduceMotion 체크로 이미 비활성화됨
+ * - 여기서는 CSS 애니메이션/트랜지션만 최소화
+ */
+html.reduce-motion {
   scroll-behavior: auto !important;
+}
+
+/* View Transition 애니메이션만 명시적으로 비활성화 */
+html.reduce-motion ::view-transition-group(*),
+html.reduce-motion ::view-transition-old(*),
+html.reduce-motion ::view-transition-new(*) {
+  animation: none !important;
+}
+
+/* 주요 UI 컴포넌트의 트랜지션만 비활성화 (필요 시 확장) */
+html.reduce-motion .p-component,
+html.reduce-motion .p-component *,
+html.reduce-motion [class*="transition-"],
+html.reduce-motion [class*="animate-"] {
+  animation: none !important;
+  transition: none !important;
 }
 
 /* 고대비 모드 */

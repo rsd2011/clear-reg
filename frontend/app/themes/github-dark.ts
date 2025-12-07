@@ -121,11 +121,12 @@ export const GithubDarkPreset = definePreset(Aura, {
           900: '#0d1117',
           950: '#010409',
         },
+        // primary: 토큰 참조로 semantic.primary 팔레트와 연동 (updatePrimaryPalette()가 팔레트 변경 시 자동 반영)
         primary: {
-          color: '#58a6ff',
+          color: '{primary.500}',
           contrastColor: '#ffffff',
-          hoverColor: '#79b8ff',
-          activeColor: '#1f6feb',
+          hoverColor: '{primary.400}',
+          activeColor: '{primary.600}',
         },
         success: {
           color: '#3fb950',

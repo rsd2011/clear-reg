@@ -122,11 +122,12 @@ export const SlackAuberginePreset = definePreset(Aura, {
           900: '#121016',
           950: '#0a090c',
         },
+        // primary: 토큰 참조로 semantic.primary 팔레트와 연동 (updatePrimaryPalette()가 팔레트 변경 시 자동 반영)
         primary: {
-          color: '#4a154b',
+          color: '{primary.500}',
           contrastColor: '#ffffff',
-          hoverColor: '#611f63',
-          activeColor: '#330e33',
+          hoverColor: '{primary.400}',
+          activeColor: '{primary.600}',
         },
         success: {
           color: '#2eb67d',

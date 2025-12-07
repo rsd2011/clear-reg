@@ -120,11 +120,12 @@ export const KoscomLightPreset = definePreset(Aura, {
           900: '#3c3c3c',
           950: '#1a1a1a',
         },
+        // primary: 토큰 참조로 semantic.primary 팔레트와 연동 (updatePrimaryPalette()가 팔레트 변경 시 자동 반영)
         primary: {
-          color: '#f06e1e',
+          color: '{primary.500}',
           contrastColor: '#ffffff',
-          hoverColor: '#ea580c',
-          activeColor: '#c2410c',
+          hoverColor: '{primary.600}',
+          activeColor: '{primary.700}',
         },
         success: {
           color: '#68cc58',

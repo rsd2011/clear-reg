@@ -123,11 +123,12 @@ export const LinearDarkPreset = definePreset(Aura, {
           900: '#08090a',
           950: '#050506',
         },
+        // primary: 토큰 참조로 semantic.primary 팔레트와 연동 (updatePrimaryPalette()가 팔레트 변경 시 자동 반영)
         primary: {
-          color: '#5e6ad2',
+          color: '{primary.500}',
           contrastColor: '#ffffff',
-          hoverColor: '#6771d8',
-          activeColor: '#4a54a8',
+          hoverColor: '{primary.400}',
+          activeColor: '{primary.600}',
         },
         success: {
           color: '#68cc58',

@@ -122,11 +122,12 @@ export const NotionLightPreset = definePreset(Aura, {
           900: '#1f1f1e',
           950: '#0f0f0e',
         },
+        // primary: 토큰 참조로 semantic.primary 팔레트와 연동 (updatePrimaryPalette()가 팔레트 변경 시 자동 반영)
         primary: {
-          color: '#2eaadc',
+          color: '{primary.500}',
           contrastColor: '#ffffff',
-          hoverColor: '#47b7df',
-          activeColor: '#2488b0',
+          hoverColor: '{primary.400}',
+          activeColor: '{primary.600}',
         },
         success: {
           color: '#448361',

@@ -121,11 +121,12 @@ export const FigmaDarkPreset = definePreset(Aura, {
           900: '#121212',
           950: '#0a0a0a',
         },
+        // primary: 토큰 참조로 semantic.primary 팔레트와 연동 (updatePrimaryPalette()가 팔레트 변경 시 자동 반영)
         primary: {
-          color: '#0d99ff',
+          color: '{primary.500}',
           contrastColor: '#ffffff',
-          hoverColor: '#3fafff',
-          activeColor: '#0a7acc',
+          hoverColor: '{primary.400}',
+          activeColor: '{primary.600}',
         },
         success: {
           color: '#14ae5c',

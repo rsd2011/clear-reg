@@ -50,9 +50,7 @@
    Primary: Indigo #5e6ad2 → oklch(0.55 0.15 265)
    ═══════════════════════════════════════════════════════════════════════════ */
 .theme-linear-dark {
-  /* OKLCH Primary - Indigo */
-  --oklch-primary-h: 265;
-  --oklch-primary-c: 0.15;
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
 
   /* Typography - Inter Variable + Berkeley Mono */
   font-family: 'Inter Variable', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -80,9 +78,7 @@
    Primary: Blue #58a6ff → oklch(0.70 0.14 230)
    ═══════════════════════════════════════════════════════════════════════════ */
 .theme-github-dark {
-  /* OKLCH Primary - GitHub Blue */
-  --oklch-primary-h: 230;
-  --oklch-primary-c: 0.14;
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
 
   /* Typography - System fonts (GitHub style) */
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
@@ -109,9 +105,7 @@
    Primary: Blue #0d99ff → oklch(0.68 0.18 230)
    ═══════════════════════════════════════════════════════════════════════════ */
 .theme-figma-dark {
-  /* OKLCH Primary - Figma Blue */
-  --oklch-primary-h: 230;
-  --oklch-primary-c: 0.18;
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
 
   /* Typography - Inter (Figma style) */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -138,9 +132,7 @@
    Primary: Purple #611f63 → oklch(0.35 0.15 320)
    ═══════════════════════════════════════════════════════════════════════════ */
 .theme-slack-aubergine {
-  /* OKLCH Primary - Slack Purple (Aubergine) */
-  --oklch-primary-h: 320;
-  --oklch-primary-c: 0.15;
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
 
   /* Typography - Lato (SIL OFL 라이선스, Slack-Lato 브랜드 자산 제거) */
   font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -167,9 +159,7 @@
    Primary: Orange #f06e1e → oklch(0.68 0.20 55)
    ═══════════════════════════════════════════════════════════════════════════ */
 .theme-koscom-light {
-  /* OKLCH Primary - Koscom Orange */
-  --oklch-primary-h: 55;
-  --oklch-primary-c: 0.20;
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
 
   /* Typography - Spoqa Han Sans Neo (SIL OFL 라이선스, 기업용 한글 폰트) */
   font-family: 'Spoqa Han Sans Neo', 'Noto Sans KR', sans-serif;
@@ -197,9 +187,7 @@
    Primary: Teal #2eaadc → oklch(0.68 0.12 200)
    ═══════════════════════════════════════════════════════════════════════════ */
 .theme-notion-light {
-  /* OKLCH Primary - Notion Teal */
-  --oklch-primary-h: 200;
-  --oklch-primary-c: 0.12;
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
 
   /* Typography - Segoe UI (Notion style) */
   font-family: 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif;
