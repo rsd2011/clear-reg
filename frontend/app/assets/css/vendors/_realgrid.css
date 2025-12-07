@@ -111,12 +111,12 @@
 }
 
 .rg-root .rg-selection-cell {
-  background: var(--oklch-primary-4) !important;
-  border-color: var(--oklch-primary-9) !important;
-  color: var(--app-color-text-primary) !important; /* 선택된 셀 텍스트 가시성 보장 */
+  background: var(--oklch-primary-9) !important;
+  border-color: var(--oklch-primary-10) !important;
+  color: #FFFFFF !important; /* 선택된 셀 - 흰색 텍스트로 가시성 보장 */
 }
 
-/* 선택된 셀 내부 모든 요소에 텍스트 색상 강제 적용 */
+/* 선택된 셀 내부 모든 요소에 흰색 텍스트 강제 적용 */
 .rg-root .rg-selection-cell *,
 .rg-root .rg-selection-cell span,
 .rg-root .rg-selection-cell div,
@@ -124,7 +124,7 @@
 .rg-root td.rg-selection-cell,
 .rg-root td.rg-selection-cell *,
 .rg-root td.rg-selection-cell .rg-renderer {
-  color: var(--app-color-text-primary) !important;
+  color: #FFFFFF !important;
 }
 
 /* 다크 모드에서 선택된 셀 텍스트 가시성 */
@@ -134,7 +134,7 @@
 .app-dark .rg-root .rg-selection-cell,
 .app-dark .rg-root .rg-selection-cell *,
 .app-dark .rg-root .rg-selection-cell .rg-renderer {
-  color: var(--app-color-text-primary) !important;
+  color: #FFFFFF !important;
 }
 
 /* ─── 선택 핸들 (블록 선택 드래그 핸들) ─── */
