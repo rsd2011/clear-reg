@@ -216,9 +216,13 @@
   color: var(--oklch-primary-11) !important;
 }
 
-/* ─── 팝업 메뉴 호버/포커스 (주황색 #E56615 제거) ─── */
-.rg-root .rg-popup-item:hover,
-.rg-root .rg-popup-item-focused {
+/* ─── 팝업 메뉴 테마 연동 (주황색 #E56615 제거) ─── */
+/*
+ * ⚠️ 중요: .rg-popup-menu는 body에 직접 추가되므로
+ * .rg-root 없이 선택해야 함
+ */
+.rg-popup-item:hover,
+.rg-popup-item-focused {
   background-color: var(--oklch-primary-9) !important;
   color: #FFFFFF !important;
 }
