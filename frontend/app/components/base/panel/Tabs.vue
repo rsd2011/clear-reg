@@ -20,11 +20,14 @@ interface Props extends /* @vue-ignore */ Omit<TabsProps, 'value'> {
   items?: TabItem[]
   /** 스크롤 가능 */
   scrollable?: boolean
+  /** 🚀 탭 지연 렌더링 (활성 탭만 렌더링) */
+  lazy?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   items: () => [],
   value: '',
+  lazy: true, // 🚀 기본값: 지연 렌더링 활성화
 })
 
 defineEmits<{
@@ -60,6 +63,7 @@ defineEmits<{
         v-for="item in props.items"
         :key="item.value"
         :value="item.value"
+        :lazy="props.lazy"
       >
         <slot :name="item.value" />
       </TabPanel>
