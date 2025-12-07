@@ -1,0 +1,465 @@
+/* ============================================================================
+   RealGrid 테마 통합 (OKLCH 시스템 연동) - Option A: 오버레이 방식
+   ============================================================================
+ *
+ * 🎯 전략: RealGrid 공식 스타일 위에 테마 Primary 색상만 오버라이드
+ *
+ * - P0: 제거됨 (RealGrid 기본 CSS + realgrid-dark.css 존중)
+ * - P1: Primary 색상 (선택/포커스) - 테마별 색상 적용
+ * - P2: 인터랙션 중 Primary 관련만 유지
+ * - P3: 아이콘 CSS mask (테마 색상 반영)
+ *
+ * 동작 흐름:
+ * - 라이트 모드: RealGrid 기본 CSS → Primary 색상 오버라이드
+ * - 다크 모드:   realgrid-dark.css → Primary 색상 오버라이드
+ *
+ * 📦 분리됨: main.css에서 vendors/_realgrid.css로 이동 (2024-12)
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P0️⃣ 폰트 상속 오버라이드
+   ═══════════════════════════════════════════════════════════════════════════
+ * RealGrid 기본 폰트("Malgun Gothic")를 테마 폰트로 상속받도록 오버라이드
+ * 테마별로 지정된 font-family가 그리드에도 적용됨
+ */
+.rg-root {
+  font-family: inherit !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P1️⃣ Primary 색상 통합 (선택/포커스)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─── 헤더 선택/포커스 ─── */
+.rg-root .rg-header-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-root .rg-header-focus {
+  background: var(--oklch-primary-4) !important;
+}
+
+/* ─── Row Indicator 선택/포커스 ─── */
+.rg-root .rg-rowbarcontainer .rg-table tr td.rg-rowindicator-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-root .rg-rowbarcontainer .rg-table tr td.rg-rowindicator-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── State Bar 선택/포커스 ─── */
+.rg-root .rg-rowbarcontainer .rg-table tr td.rg-statebar-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-root .rg-rowbarcontainer .rg-table tr td.rg-statebar-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── Check Bar 선택/포커스 ─── */
+.rg-root .rg-rowbarcontainer .rg-table tr td.rg-checkbar-select {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+.rg-root .rg-rowbarcontainer .rg-table tr td.rg-checkbar-focus {
+  background-color: var(--oklch-primary-4) !important;
+}
+
+/* ─── 셀 포커스 (테두리만 표시 - 배경 투명으로 텍스트 가시성 보장) ─── */
+.rg-root .rg-focus {
+  /* 배경색을 투명으로 설정하여 셀 내용이 보이도록 함 */
+  background-color: transparent !important;
+  /* 또는 반투명: background-color: color-mix(in oklch, var(--oklch-primary-4) 30%, transparent) !important; */
+  border: 2px solid var(--oklch-primary-9) !important;
+}
+
+.rg-root .rg-group-focus {
+  background-color: var(--oklch-primary-4) !important;
+  border: 2px solid var(--oklch-primary-9) !important;
+}
+
+.rg-root .rg-deactive-focus {
+  background-color: transparent !important;
+  border: 2px solid var(--oklch-primary-7) !important;
+}
+
+/* ─── 포커스 테두리 (border 전체 오버라이드) ─── */
+.rg-root .rg-focus-line {
+  border: 2px solid var(--oklch-primary-9) !important;
+}
+
+.rg-root .rg-focus-inner {
+  border: 1px solid var(--oklch-primary-8) !important;
+}
+
+.rg-root .rg-focus-inner-line {
+  border: 1px solid var(--oklch-primary-7) !important;
+}
+
+/* ─── 행 포커스 ─── */
+.rg-root .rg-rowfocus {
+  background-color: var(--oklch-primary-3) !important;
+}
+
+/* Note: .rg-rowhover 제거됨 - RealGrid 기본 스타일 사용 */
+
+/* ─── 셀 선택 영역 (블록 선택 - 배경 + 테두리 모두 오버라이드) ─── */
+.rg-root .rg-selection {
+  background: color-mix(in oklch, var(--oklch-primary-4) 60%, transparent) !important;
+  border: 1px solid var(--oklch-primary-8) !important;
+}
+
+.rg-root .rg-selection-cell {
+  background: var(--oklch-primary-4) !important;
+  border-color: var(--oklch-primary-9) !important;
+  color: var(--app-color-text-primary) !important; /* 선택된 셀 텍스트 가시성 보장 */
+}
+
+/* 선택된 셀 내부 모든 요소에 텍스트 색상 강제 적용 */
+.rg-root .rg-selection-cell *,
+.rg-root .rg-selection-cell span,
+.rg-root .rg-selection-cell div,
+.rg-root .rg-selection-cell .rg-renderer,
+.rg-root td.rg-selection-cell,
+.rg-root td.rg-selection-cell *,
+.rg-root td.rg-selection-cell .rg-renderer {
+  color: var(--app-color-text-primary) !important;
+}
+
+/* 다크 모드에서 선택된 셀 텍스트 가시성 */
+:root.dark .rg-root .rg-selection-cell,
+:root.dark .rg-root .rg-selection-cell *,
+:root.dark .rg-root .rg-selection-cell .rg-renderer,
+.app-dark .rg-root .rg-selection-cell,
+.app-dark .rg-root .rg-selection-cell *,
+.app-dark .rg-root .rg-selection-cell .rg-renderer {
+  color: var(--app-color-text-primary) !important;
+}
+
+/* ─── 선택 핸들 (블록 선택 드래그 핸들) ─── */
+.rg-root .rg-selection-handle,
+.rg-root .rg-selection-handleleft-handle {
+  background: var(--oklch-primary-9) !important;
+  border-color: var(--oklch-primary-10) !important;
+}
+
+/* ─── 서머리 텍스트 (Primary 강조) ─── */
+.rg-root .rg-header-summary,
+.rg-root .rg-fixed-header-summary,
+.rg-root .rg-footer-summary,
+.rg-root .rg-fixed-footer-summary {
+  color: var(--oklch-primary-10) !important;
+}
+
+/* ─── 에디터 포커스 테두리 ─── */
+.rg-root .rg-focus-editing {
+  border: 1px solid var(--oklch-primary-7) !important;
+}
+
+/* ─── 에디터 컨테이너 테두리 (주황색 #E56615 제거) ─── */
+.rg-root .rg-editor-container {
+  border-color: var(--oklch-primary-9) !important;
+}
+
+/* 에디터 내부 input/textarea 스타일 일관성 */
+.rg-root .rg-editor-container > input,
+.rg-root .rg-editor-container > textarea {
+  border: none !important;
+  outline: none !important;
+}
+
+/* Note: 배경색 제거됨 - RealGrid 기본 스타일 사용 */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P2️⃣ Primary 인터랙션 (포커스/액티브 상태만)
+   ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Note: 호버/배경/테두리 스타일 제거됨 - RealGrid 기본 스타일 사용
+ * Primary 색상이 필요한 포커스/액티브 상태만 오버라이드
+ */
+
+/* ─── 에디터 포커스 테두리 ─── */
+.rg-root .rg-editor input:focus,
+.rg-root .rg-editor textarea:focus,
+.rg-root .rg-editor select:focus {
+  border-color: var(--oklch-primary-7) !important;
+}
+
+/* ─── 액션 버튼 액티브 상태 ─── */
+.rg-root .rg-button-action:active,
+.rg-root .rg-button-popup:active,
+.rg-root .rg-button-list:active,
+.rg-root .rg-button-calendar:active {
+  background: var(--oklch-primary-7) !important;
+  border-color: var(--oklch-primary-8) !important;
+}
+
+/* ─── 필터 패널 포커스 ─── */
+.rg-root .rg-filter-panel-renderer:focus-within {
+  border: 1px solid var(--oklch-primary-7) !important;
+}
+
+/* ─── 멀티체크 선택 항목 (주황색 제거) ─── */
+.rg-root .rg-multicheck-item:hover {
+  background: color-mix(in oklch, var(--oklch-primary-4) 50%, transparent) !important;
+}
+
+.rg-root .rg-multicheck-selectitem {
+  background: color-mix(in oklch, var(--oklch-primary-6) 70%, transparent) !important;
+}
+
+/* ─── 팝업/드롭다운 선택 항목 ─── */
+.rg-root .rg-popup-item.selected,
+.rg-root .rg-dropdown-item.selected {
+  background: var(--oklch-primary-3) !important;
+  color: var(--oklch-primary-11) !important;
+}
+
+/* ─── 팝업 메뉴 호버/포커스 (주황색 #E56615 제거) ─── */
+.rg-root .rg-popup-item:hover,
+.rg-root .rg-popup-item-focused {
+  background-color: var(--oklch-primary-9) !important;
+  color: #FFFFFF !important;
+}
+
+/* ─── 드롭다운 선택 항목 (주황색 제거) ─── */
+.rg-root .rg-dropdown-select {
+  background: var(--oklch-primary-9) !important;
+  color: #FFFFFF !important;
+}
+
+/* ─── 캘린더 오늘 버튼 호버 (주황색 제거) ─── */
+.rg-root .rg-cal-today-button:hover {
+  border-color: var(--oklch-primary-9) !important;
+  background: var(--oklch-primary-9) !important;
+  color: #FFFFFF !important;
+}
+
+/* ─── 고정 행 바 (주황색 #E56615 제거) ─── */
+.rg-root .rg-fixed-row-bar,
+.rg-root .rg-fixed-row-bar-cell {
+  background: var(--oklch-primary-8) !important;
+}
+
+/* ─── 고정 열 바 (주황색 제거) ─── */
+.rg-root .rg-fixed-column-bar,
+.rg-root .rg-right-column-bar {
+  background: var(--oklch-primary-8) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   P3️⃣ 아이콘 CSS Mask 교체
+   ═══════════════════════════════════════════════════════════════════════════
+ *
+ * 기존 base64 인코딩된 SVG 배경을 CSS mask로 교체하여
+ * 테마 색상에 맞게 아이콘 색상이 자동 변경되도록 합니다.
+ */
+
+/* ─── 정렬 아이콘 (오름차순) ─── */
+.rg-root .rg-header-sort-ascending {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='13,8.8 8,4.5 3,8.8 6.6,8.8 6.6,11.5 9.4,11.5 9.4,8.8'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='13,8.8 8,4.5 3,8.8 6.6,8.8 6.6,11.5 9.4,11.5 9.4,8.8'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 정렬 아이콘 (내림차순) ─── */
+.rg-root .rg-header-sort-descending {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='9.4,7.2 9.4,4.5 6.6,4.5 6.6,7.2 3,7.2 8,11.5 13,7.2'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='9.4,7.2 9.4,4.5 6.6,4.5 6.6,7.2 3,7.2 8,11.5 13,7.2'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 정렬 아이콘 (없음) ─── */
+.rg-root .rg-header-sort-none {
+  background: none !important;
+  background-color: var(--oklch-gray-7) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8,2l3.2,5.1H4.8L8,2z M4.8,8.9h6.4L8,14L4.8,8.9z'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8,2l3.2,5.1H4.8L8,2z M4.8,8.9h6.4L8,14L4.8,8.9z'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 필터 아이콘 ─── */
+.rg-root .rg-header-filtering {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='14,2 2,2 2,3 6,7 6,14 10,12 10,7 14,3'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='14,2 2,2 2,3 6,7 6,14 10,12 10,7 14,3'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+/* ─── 필터 아이콘 (활성화) - Primary 색상 ─── */
+.rg-root .rg-header-filtering.filter-activated {
+  background-color: var(--oklch-primary-9) !important;
+}
+
+/* ─── 팝업 메뉴 아이콘 ─── */
+.rg-root .rg-header-popup {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4.5' y='4' width='7' height='2'/%3E%3Crect x='4.5' y='7' width='7' height='2'/%3E%3Crect x='4.5' y='10' width='7' height='2'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='4.5' y='4' width='7' height='2'/%3E%3Crect x='4.5' y='7' width='7' height='2'/%3E%3Crect x='4.5' y='10' width='7' height='2'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: 70%;
+  mask-size: 70%;
+}
+
+.rg-root .rg-header-popup:hover {
+  background-color: var(--oklch-gray-11) !important;
+}
+
+/* ─── 체크박스 아이콘 (체크됨) ─── */
+.rg-root .rg-header-check-image.checked {
+  background: none !important;
+  background-color: var(--oklch-primary-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M6.8,11.8c-0.3,0-0.5-0.1-0.7-0.3l-3-3c-0.4-0.4-0.4-1,0-1.4s1-0.4,1.4,0l2.3,2.3l4.8-4.8c0.4-0.4,1-0.4,1.4,0s0.4,1,0,1.4l-5.5,5.5C7.3,11.7,7,11.8,6.8,11.8z'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M6.8,11.8c-0.3,0-0.5-0.1-0.7-0.3l-3-3c-0.4-0.4-0.4-1,0-1.4s1-0.4,1.4,0l2.3,2.3l4.8-4.8c0.4-0.4,1-0.4,1.4,0s0.4,1,0,1.4l-5.5,5.5C7.3,11.7,7,11.8,6.8,11.8z'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ─── 체크박스 아이콘 (미체크) ─── */
+.rg-root .rg-header-check-image.unchecked {
+  background: none !important;
+  background-color: var(--oklch-gray-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ─── 체크박스 아이콘 (불확정) ─── */
+.rg-root .rg-header-check-image.indeterminate {
+  background: none !important;
+  background-color: var(--oklch-primary-9) !important;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3Crect x='5' y='7' width='6' height='2'/%3E%3C/svg%3E") no-repeat center;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13,1H3C1.9,1,1,1.9,1,3v10c0,1.1,0.9,2,2,2h10c1.1,0,2-0.9,2-2V3C15,1.9,14.1,1,13,1z M13,13H3V3h10V13z'/%3E%3Crect x='5' y='7' width='6' height='2'/%3E%3C/svg%3E") no-repeat center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+}
+
+/* ─── 스크롤 화살표 (왼쪽) ─── */
+.rg-root .rg-hscrollbar .rg-scroll-left {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.5,3.9c0.2,0,0.4,0.1,0.6,0.2c0.4,0.3,0.4,0.7,0,1.1L7.5,8l2.6,2.7c0.4,0.4,0.4,0.8,0,1.1C10,12,9.8,12.1,9.6,12.1c-0.2,0-0.4-0.1-0.6-0.2L5.8,8.5C5.7,8.4,5.6,8.2,5.6,8c0-0.2,0.1-0.4,0.2-0.6C7.9,5.3,9,4.2,9,4.2C9.1,4,9.3,3.9,9.5,3.9z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M9.5,3.9c0.2,0,0.4,0.1,0.6,0.2c0.4,0.3,0.4,0.7,0,1.1L7.5,8l2.6,2.7c0.4,0.4,0.4,0.8,0,1.1C10,12,9.8,12.1,9.6,12.1c-0.2,0-0.4-0.1-0.6-0.2L5.8,8.5C5.7,8.4,5.6,8.2,5.6,8c0-0.2,0.1-0.4,0.2-0.6C7.9,5.3,9,4.2,9,4.2C9.1,4,9.3,3.9,9.5,3.9z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ─── 스크롤 화살표 (오른쪽) ─── */
+.rg-root .rg-hscrollbar .rg-scroll-right {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M10.2,7.5c0.1,0.1,0.2,0.3,0.2,0.6c0,0.2-0.1,0.4-0.2,0.5L7,11.8c-0.1,0.1-0.3,0.2-0.6,0.2c-0.2,0-0.4-0.1-0.6-0.2c-0.3-0.3-0.3-0.7,0-1.1L8.5,8L5.9,5.3c-0.3-0.4-0.3-0.8,0-1.1C6,4,6.2,3.9,6.4,3.9C6.7,3.9,6.9,4,7,4.2L10.2,7.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M10.2,7.5c0.1,0.1,0.2,0.3,0.2,0.6c0,0.2-0.1,0.4-0.2,0.5L7,11.8c-0.1,0.1-0.3,0.2-0.6,0.2c-0.2,0-0.4-0.1-0.6-0.2c-0.3-0.3-0.3-0.7,0-1.1L8.5,8L5.9,5.3c-0.3-0.4-0.3-0.8,0-1.1C6,4,6.2,3.9,6.4,3.9C6.7,3.9,6.9,4,7,4.2L10.2,7.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ─── 스크롤 화살표 (위) ─── */
+.rg-root .rg-vscrollbar .rg-scroll-up {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M12.1,9.5c0,0.2-0.1,0.4-0.2,0.6c-0.3,0.4-0.7,0.4-1.1,0L8,7.5l-2.7,2.6c-0.4,0.4-0.7,0.4-1.1,0C4,10,3.9,9.8,3.9,9.5C3.9,9.3,4,9.1,4.2,9l3.3-3.1C7.6,5.7,7.8,5.6,8,5.6c0.2,0,0.4,0.1,0.6,0.2L11.8,9C12,9.1,12.1,9.3,12.1,9.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M12.1,9.5c0,0.2-0.1,0.4-0.2,0.6c-0.3,0.4-0.7,0.4-1.1,0L8,7.5l-2.7,2.6c-0.4,0.4-0.7,0.4-1.1,0C4,10,3.9,9.8,3.9,9.5C3.9,9.3,4,9.1,4.2,9l3.3-3.1C7.6,5.7,7.8,5.6,8,5.6c0.2,0,0.4,0.1,0.6,0.2L11.8,9C12,9.1,12.1,9.3,12.1,9.5z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ─── 스크롤 화살표 (아래) ─── */
+.rg-root .rg-vscrollbar .rg-scroll-down {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8.6,10.1c-0.2,0.2-0.4,0.3-0.6,0.3s-0.4-0.1-0.6-0.3L4.2,7C4,6.9,3.9,6.7,3.9,6.4C3.9,6.2,4,6,4.2,5.9c0.3-0.4,0.7-0.4,1.1,0L8,8.5l2.7-2.6c0.4-0.4,0.7-0.4,1.1,0C12,6,12.1,6.2,12.1,6.4c0,0.2-0.1,0.4-0.2,0.6L8.6,10.1z'/%3E%3C/svg%3E") no-repeat center !important;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8.6,10.1c-0.2,0.2-0.4,0.3-0.6,0.3s-0.4-0.1-0.6-0.3L4.2,7C4,6.9,3.9,6.7,3.9,6.4C3.9,6.2,4,6,4.2,5.9c0.3-0.4,0.7-0.4,1.1,0L8,8.5l2.7-2.6c0.4-0.4,0.7-0.4,1.1,0C12,6,12.1,6.2,12.1,6.4c0,0.2-0.1,0.4-0.2,0.6L8.6,10.1z'/%3E%3C/svg%3E") no-repeat center !important;
+  -webkit-mask-size: 60%;
+  mask-size: 60%;
+  background-color: var(--oklch-gray-9) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   테마별 RealGrid 레이아웃 차별화
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Linear Dark - 미니멀 (VS Code 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-linear-dark .rg-root {
+  --rg-border-radius: 0px;
+}
+
+.theme-linear-dark .rg-grid {
+  border-radius: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GitHub Dark - 클래식
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-github-dark .rg-root {
+  --rg-border-radius: 6px;
+}
+
+.theme-github-dark .rg-grid {
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Figma Dark - 컴팩트
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-figma-dark .rg-root {
+  --rg-border-radius: 4px;
+}
+
+.theme-figma-dark .rg-grid {
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Slack Aubergine - 둥글고 친근한 (Slack 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-slack-aubergine .rg-root {
+  --rg-border-radius: 8px;
+}
+
+.theme-slack-aubergine .rg-grid {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Koscom Light - 기업형
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-koscom-light .rg-root {
+  --rg-border-radius: 2px;
+}
+
+.theme-koscom-light .rg-grid {
+  border-radius: 2px;
+  border-width: 1px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Notion Light - 미니멀
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-notion-light .rg-root {
+  --rg-border-radius: 3px;
+}
+
+.theme-notion-light .rg-grid {
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   줄임 모션 모드 대응
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.reduce-motion .rg-root,
+html.reduce-motion .rg-root * {
+  transition: none !important;
+}

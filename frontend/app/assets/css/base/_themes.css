@@ -1,0 +1,228 @@
+/* ============================================================================
+   테마별 CSS 변수 스코핑
+   ============================================================================
+ *
+ * 📦 분리됨: main.css에서 base/_themes.css로 이동 (2024-12)
+ *
+ * 🎨 테마 아키텍처 (Single Source of Truth)
+ *
+ * PrimeVue 관련 (themes/*.ts에서 관리):
+ *   - primary 색상 (--p-primary-*)
+ *   - semantic colors (success, warn, danger, info)
+ *   - surface colors
+ *   - 컴포넌트 borderRadius
+ *   - typography (extend 토큰)
+ *
+ * CSS에서만 관리 (이 파일):
+ *   - 제3자 라이브러리 스타일 (DockView --dv-*)
+ *   - 스크롤바, 그라데이션 등 CSS-only 효과
+ *   - 앱 전역 변수 (--app-bg, --app-text)
+ *
+ * 포함된 테마:
+ *   - Dark: Linear, GitHub, Figma, Slack Aubergine
+ *   - Light: Koscom, Notion
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Dark Theme 공통 Gray Scale (반전된 Lightness 값)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-linear-dark,
+.theme-github-dark,
+.theme-figma-dark,
+.theme-slack-aubergine {
+  /* Gray Scale 반전 (Light → Dark) - 12단계 Radix UI 패턴 */
+  --oklch-gray-l-1: 0.15;   /* App background */
+  --oklch-gray-l-2: 0.20;   /* Subtle background */
+  --oklch-gray-l-3: 0.25;   /* UI element bg */
+  --oklch-gray-l-4: 0.30;   /* Hovered UI element */
+  --oklch-gray-l-5: 0.38;   /* Active UI element */
+  --oklch-gray-l-6: 0.45;   /* Subtle border */
+  --oklch-gray-l-7: 0.55;   /* Border */
+  --oklch-gray-l-8: 0.65;   /* Hovered border */
+  --oklch-gray-l-9: 0.75;   /* Solid bg */
+  --oklch-gray-l-10: 0.82;  /* Hovered solid */
+  --oklch-gray-l-11: 0.90;  /* Low contrast text */
+  --oklch-gray-l-12: 0.97;  /* High contrast text */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Linear Dark Theme
+   Primary: Indigo #5e6ad2 → oklch(0.55 0.15 265)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-linear-dark {
+  /* OKLCH Primary - Indigo */
+  --oklch-primary-h: 265;
+  --oklch-primary-c: 0.15;
+
+  /* Typography - Inter Variable + Berkeley Mono */
+  font-family: 'Inter Variable', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Visual Effects */
+  --gradient-card-shine: linear-gradient(134deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02), transparent 55%);
+  --gradient-subtle-overlay: linear-gradient(rgba(255, 255, 255, 0.05), transparent 20%);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(255, 255, 255, 0.1);
+  --scrollbar-color-hover: rgba(255, 255, 255, 0.2);
+  --scrollbar-color-active: rgba(255, 255, 255, 0.4);
+  --scrollbar-size: 6px;
+}
+
+.theme-linear-dark code,
+.theme-linear-dark pre,
+.theme-linear-dark .font-mono {
+  /* Berkeley Mono → JetBrains Mono (SIL OFL 라이선스) */
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Menlo', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GitHub Dark Theme
+   Primary: Blue #58a6ff → oklch(0.70 0.14 230)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-github-dark {
+  /* OKLCH Primary - GitHub Blue */
+  --oklch-primary-h: 230;
+  --oklch-primary-c: 0.14;
+
+  /* Typography - System fonts (GitHub style) */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+
+  /* Visual Effects */
+  --gradient-card-shine: linear-gradient(134deg, rgba(88, 166, 255, 0.06), rgba(88, 166, 255, 0.02), transparent 55%);
+  --gradient-subtle-overlay: linear-gradient(rgba(255, 255, 255, 0.03), transparent 20%);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(139, 148, 158, 0.2);
+  --scrollbar-color-hover: rgba(139, 148, 158, 0.4);
+  --scrollbar-color-active: rgba(139, 148, 158, 0.6);
+  --scrollbar-size: 8px;
+}
+
+.theme-github-dark code,
+.theme-github-dark pre,
+.theme-github-dark .font-mono {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Figma Dark Theme
+   Primary: Blue #0d99ff → oklch(0.68 0.18 230)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-figma-dark {
+  /* OKLCH Primary - Figma Blue */
+  --oklch-primary-h: 230;
+  --oklch-primary-c: 0.18;
+
+  /* Typography - Inter (Figma style) */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Visual Effects */
+  --gradient-card-shine: linear-gradient(134deg, rgba(13, 153, 255, 0.08), rgba(13, 153, 255, 0.02), transparent 55%);
+  --gradient-subtle-overlay: linear-gradient(rgba(255, 255, 255, 0.04), transparent 20%);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(179, 179, 179, 0.15);
+  --scrollbar-color-hover: rgba(179, 179, 179, 0.3);
+  --scrollbar-color-active: rgba(179, 179, 179, 0.5);
+  --scrollbar-size: 6px;
+}
+
+.theme-figma-dark code,
+.theme-figma-dark pre,
+.theme-figma-dark .font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Slack Aubergine Theme
+   Primary: Purple #611f63 → oklch(0.35 0.15 320)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-slack-aubergine {
+  /* OKLCH Primary - Slack Purple (Aubergine) */
+  --oklch-primary-h: 320;
+  --oklch-primary-c: 0.15;
+
+  /* Typography - Lato (SIL OFL 라이선스, Slack-Lato 브랜드 자산 제거) */
+  font-family: 'Lato', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Visual Effects */
+  --gradient-card-shine: linear-gradient(134deg, rgba(74, 21, 75, 0.15), rgba(74, 21, 75, 0.05), transparent 55%);
+  --gradient-subtle-overlay: linear-gradient(rgba(255, 255, 255, 0.03), transparent 20%);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(209, 210, 211, 0.15);
+  --scrollbar-color-hover: rgba(209, 210, 211, 0.3);
+  --scrollbar-color-active: rgba(209, 210, 211, 0.5);
+  --scrollbar-size: 8px;
+}
+
+.theme-slack-aubergine code,
+.theme-slack-aubergine pre,
+.theme-slack-aubergine .font-mono {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Koscom Light Theme
+   Primary: Orange #f06e1e → oklch(0.68 0.20 55)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-koscom-light {
+  /* OKLCH Primary - Koscom Orange */
+  --oklch-primary-h: 55;
+  --oklch-primary-c: 0.20;
+
+  /* Typography - Spoqa Han Sans Neo (SIL OFL 라이선스, 기업용 한글 폰트) */
+  font-family: 'Spoqa Han Sans Neo', 'Noto Sans KR', sans-serif;
+
+  /* Visual Effects */
+  --shadow-none: none;
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(0, 0, 0, 0.1);
+  --scrollbar-color-hover: rgba(0, 0, 0, 0.2);
+  --scrollbar-color-active: rgba(0, 0, 0, 0.4);
+  --scrollbar-size: 8px;
+}
+
+.theme-koscom-light code,
+.theme-koscom-light pre,
+.theme-koscom-light .font-mono {
+  /* 코드용 모노스페이스 폰트 */
+  font-family: 'JetBrains Mono', 'D2Coding', 'Nanum Gothic Coding', monospace;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Notion Light Theme
+   Primary: Teal #2eaadc → oklch(0.68 0.12 200)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-notion-light {
+  /* OKLCH Primary - Notion Teal */
+  --oklch-primary-h: 200;
+  --oklch-primary-c: 0.12;
+
+  /* Typography - Segoe UI (Notion style) */
+  font-family: 'Segoe UI', Helvetica, 'Apple Color Emoji', Arial, sans-serif;
+
+  /* Visual Effects */
+  --shadow-none: none;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(55, 53, 47, 0.08);
+  --scrollbar-color-hover: rgba(55, 53, 47, 0.16);
+  --scrollbar-color-active: rgba(55, 53, 47, 0.24);
+  --scrollbar-size: 6px;
+}
+
+.theme-notion-light code,
+.theme-notion-light pre,
+.theme-notion-light .font-mono {
+  font-family: 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+/* Notion 테마 전용 serif 폰트 클래스 */
+.theme-notion-light .font-serif {
+  /* Lyon-Text(유료) → Lora(SIL OFL) + 시스템 serif 폰트 */
+  font-family: 'Lora', Georgia, 'Cambria', 'Times New Roman', Times, serif;
+}

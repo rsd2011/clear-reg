@@ -1,0 +1,208 @@
+/* ============================================================================
+   Dockview 테마 통합 (OKLCH 시스템 연동)
+   ============================================================================
+ *
+ * 🎯 전략: B안 - 기본 테마 클래스 유지 + CSS 변수 오버라이드
+ *
+ * Dockview의 dockview-theme-dark/light를 베이스로 유지하면서
+ * 앱 테마 시스템의 OKLCH 색상으로 오버라이드합니다.
+ *
+ * 장점:
+ * - Dockview 기본 스타일 유지 (레이아웃, 애니메이션 등)
+ * - 색상과 레이아웃만 앱 테마에 맞게 커스터마이징
+ * - 테마 전환 시 자동 적용 (OKLCH 변수 참조)
+ *
+ * 📦 분리됨: main.css에서 vendors/_dockview.css로 이동 (2024-12)
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   1️⃣ Dockview 공통 변수 레이어 (Light Mode 기본값)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ─── 배경색 (Background) ─── */
+  --dv-group-view-background-color: var(--oklch-gray-1);
+  --dv-tabs-and-actions-container-background-color: var(--oklch-gray-2);
+
+  /* ─── 탭 배경색 (Tab Backgrounds) ─── */
+  --dv-activegroup-visiblepanel-tab-background-color: var(--oklch-gray-1);
+  --dv-activegroup-hiddenpanel-tab-background-color: var(--oklch-gray-3);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--oklch-gray-2);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: var(--oklch-gray-3);
+
+  /* ─── 탭 텍스트색 (Tab Text) ─── */
+  --dv-activegroup-visiblepanel-tab-color: var(--oklch-gray-12);
+  --dv-activegroup-hiddenpanel-tab-color: var(--oklch-gray-9);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--oklch-gray-10);
+  --dv-inactivegroup-hiddenpanel-tab-color: var(--oklch-gray-8);
+
+  /* ─── 구분선 (Borders/Dividers) ─── */
+  --dv-tab-divider-color: var(--oklch-gray-4);
+  --dv-separator-border: var(--oklch-gray-6);
+  --dv-paneview-header-border-color: var(--oklch-gray-6);
+
+  /* ─── 액센트 색상 (Primary 연동) ⭐ ─── */
+  --dv-paneview-active-outline-color: var(--oklch-primary-9);
+  --dv-active-sash-color: var(--oklch-primary-9);
+  --dv-drag-over-border-color: var(--oklch-primary-9);
+
+  /* ─── 인터랙션 효과 ─── */
+  --dv-icon-hover-background-color: color-mix(in oklch, var(--oklch-primary-4) 50%, transparent);
+  --dv-drag-over-background-color: color-mix(in oklch, var(--oklch-primary-4) 40%, transparent);
+
+  /* ─── 스크롤바 (기존 테마 변수 연동) ─── */
+  --dv-scrollbar-background-color: var(--scrollbar-color, rgba(0, 0, 0, 0.15));
+  --dv-tabs-container-scrollbar-color: var(--scrollbar-color, rgba(0, 0, 0, 0.15));
+
+  /* ─── 플로팅 그림자 (light-dark 자동 전환) ─── */
+  --dv-floating-box-shadow: light-dark(
+    0 8px 24px oklch(0 0 0 / 0.12),
+    0 8px 24px oklch(0 0 0 / 0.5)
+  );
+
+  /* ─── 분할선 (Sash) ─── */
+  --dv-sash-color: transparent;
+  --dv-active-sash-transition-duration: 0.15s;
+  --dv-active-sash-transition-delay: 0.3s;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2️⃣ Dark Mode 오버라이드
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.app-dark {
+  /* Gray Scale이 .app-dark에서 이미 반전되어 있으므로
+   * 동일한 OKLCH 변수 참조로 자동 적용됨.
+   * 아래는 다크모드 전용 미세 조정만 */
+
+  /* 인터랙션 효과 - 다크모드에서 더 밝게 */
+  --dv-icon-hover-background-color: color-mix(in oklch, var(--oklch-primary-5) 40%, transparent);
+  --dv-drag-over-background-color: color-mix(in oklch, var(--oklch-primary-5) 35%, transparent);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3️⃣ 테마별 레이아웃 차별화
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Linear Dark - 미니멀 (VS Code 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-linear-dark {
+  --dv-border-radius: 0px;
+  --dv-tab-margin: 0;
+  --dv-tabs-and-actions-container-height: 35px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   GitHub Dark - 클래식
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-github-dark {
+  --dv-border-radius: 6px;
+  --dv-tab-margin: 2px 4px;
+  --dv-tabs-and-actions-container-height: 38px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+}
+
+.theme-github-dark .dv-tab {
+  border-radius: 6px;
+}
+
+.theme-github-dark .dv-groupview {
+  border-radius: 6px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Figma Dark - 컴팩트
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-figma-dark {
+  --dv-border-radius: 4px;
+  --dv-tab-margin: 2px;
+  --dv-tabs-and-actions-container-height: 32px;
+  --dv-tabs-and-actions-container-font-size: 12px;
+}
+
+.theme-figma-dark .dv-tab {
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Slack Aubergine - 둥글고 친근한 (Slack 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-slack-aubergine {
+  --dv-border-radius: 8px;
+  --dv-tab-margin: 4px;
+  --dv-tabs-and-actions-container-height: 40px;
+  --dv-tabs-and-actions-container-font-size: 14px;
+}
+
+.theme-slack-aubergine .dv-tab {
+  border-radius: 8px;
+}
+
+.theme-slack-aubergine .dv-groupview {
+  border-radius: 8px;
+}
+
+.theme-slack-aubergine .dv-tabs-and-actions-container {
+  padding: 0 8px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Koscom Light - 기업형 & 전문적 (금융 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-koscom-light {
+  --dv-border-radius: 2px;
+  --dv-tab-margin: 0;
+  --dv-tabs-and-actions-container-height: 36px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+
+  /* 금융 스타일: 더 뚜렷한 구분선 */
+  --dv-separator-border: var(--oklch-gray-7);
+  --dv-tab-divider-color: var(--oklch-gray-5);
+}
+
+.theme-koscom-light .dv-tab {
+  border-radius: 2px;
+}
+
+.theme-koscom-light .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--oklch-gray-5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Notion Light - 미니멀 & 깔끔한 (Notion 스타일)
+   ───────────────────────────────────────────────────────────────────────────── */
+.theme-notion-light {
+  --dv-border-radius: 3px;
+  --dv-tab-margin: 2px 4px;
+  --dv-tabs-and-actions-container-height: 34px;
+  --dv-tabs-and-actions-container-font-size: 14px;
+
+  /* Notion 스타일: 얇은 구분선 */
+  --dv-separator-border: var(--oklch-gray-5);
+  --dv-tab-divider-color: transparent;
+}
+
+.theme-notion-light .dv-tab {
+  border-radius: 3px;
+}
+
+.theme-notion-light .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--oklch-gray-4);
+}
+
+/* Notion 탭 호버 효과 */
+.theme-notion-light .dv-tab:hover {
+  background-color: var(--oklch-gray-3) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   줄임 모션 모드 대응
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.reduce-motion .dv-drop-target-container .dv-drop-target-anchor,
+html.reduce-motion .dv-split-view-container.dv-animation .dv-view,
+html.reduce-motion .dv-split-view-container.dv-animation .dv-sash {
+  transition: none !important;
+}
