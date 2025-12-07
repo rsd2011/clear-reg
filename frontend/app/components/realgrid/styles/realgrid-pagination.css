@@ -1,0 +1,103 @@
+/**
+ * RealGrid 페이지네이션 스타일
+ * OKLCH 디자인 토큰 시스템 통합 (2024-12)
+ */
+
+.realgrid-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--oklch-gray-2);
+  border-top: 1px solid var(--oklch-gray-6);
+}
+
+.realgrid-pagination__btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--oklch-gray-6);
+  background: var(--oklch-gray-1);
+  color: var(--oklch-gray-12);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.realgrid-pagination__btn:hover:not(:disabled) {
+  background: var(--oklch-gray-4);
+}
+
+.realgrid-pagination__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.realgrid-pagination__btn--active {
+  background: var(--oklch-primary-9);
+  color: #FFFFFF;
+  border-color: var(--oklch-primary-9);
+  font-weight: bold;
+}
+
+.realgrid-pagination__btn--active:hover:not(:disabled) {
+  background: var(--oklch-primary-10);
+}
+
+.realgrid-pagination__info {
+  margin-left: 1rem;
+  font-size: 0.875rem;
+  color: var(--oklch-gray-9);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   테마별 레이아웃 차별화
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Linear Dark - 미니멀 (border-radius: 0) */
+.theme-linear-dark .realgrid-pagination {
+  border-radius: 0;
+}
+.theme-linear-dark .realgrid-pagination__btn {
+  border-radius: 0;
+}
+
+/* GitHub Dark - 클래식 */
+.theme-github-dark .realgrid-pagination {
+  border-radius: 0 0 6px 6px;
+}
+.theme-github-dark .realgrid-pagination__btn {
+  border-radius: 6px;
+}
+
+/* Figma Dark - 컴팩트 */
+.theme-figma-dark .realgrid-pagination {
+  border-radius: 0 0 4px 4px;
+}
+.theme-figma-dark .realgrid-pagination__btn {
+  border-radius: 4px;
+}
+
+/* Slack Aubergine - 둥글고 친근한 */
+.theme-slack-aubergine .realgrid-pagination {
+  border-radius: 0 0 8px 8px;
+}
+.theme-slack-aubergine .realgrid-pagination__btn {
+  border-radius: 8px;
+}
+
+/* Koscom Light - 기업형 */
+.theme-koscom-light .realgrid-pagination {
+  border-radius: 0 0 2px 2px;
+}
+.theme-koscom-light .realgrid-pagination__btn {
+  border-radius: 2px;
+}
+
+/* Notion Light - 미니멀 */
+.theme-notion-light .realgrid-pagination {
+  border-radius: 0 0 3px 3px;
+}
+.theme-notion-light .realgrid-pagination__btn {
+  border-radius: 3px;
+}

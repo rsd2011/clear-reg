@@ -359,12 +359,212 @@ function exportRealgridJson() {
 }
 
 // ============================================================================
-// RealGrid 2: 상태 저장 + 유효성 검사 + 페이지네이션 데모
+// RealGrid 프리셋별 데모
 // ============================================================================
 
-// 부서 목록
+import type { RealGridPreset } from '~/types/realgrid'
+
+// 부서 목록 및 상태
 const departments = ['개발팀', '기획팀', '인사팀', '마케팅팀', '영업팀', '재무팀', '디자인팀', 'QA팀']
 const statuses = ['active', 'inactive', 'pending']
+const positions = ['사원', '대리', '과장', '차장', '부장', '이사', '상무', '전무']
+
+// 프리셋 데모용 데이터 생성 함수
+function generatePresetDemoData(count: number): Record<string, unknown>[] {
+  const names = ['김철수', '이영희', '박민수', '최지현', '정수연', '홍길동', '강미나', '윤서준', '임도현', '송하늘']
+  const data: Record<string, unknown>[] = []
+  for (let i = 1; i <= count; i++) {
+    data.push({
+      id: String(i),
+      name: (names[i % names.length] ?? '사원') + (Math.floor(i / names.length) || ''),
+      email: `user${i}@example.com`,
+      department: departments[i % departments.length],
+      position: positions[i % positions.length],
+      salary: Math.floor(3000 + Math.random() * 7000) * 10000,
+      hireDate: new Date(2020 + Math.floor(i / 30), i % 12, (i % 28) + 1).toISOString().split('T')[0],
+      status: statuses[i % statuses.length],
+    })
+  }
+  return data
+}
+
+// 프리셋 데모 컬럼 정의
+const presetDemoColumns: RealGridColumn[] = [
+  { name: 'id', fieldName: 'id', type: 'text', width: 60, header: { text: 'ID' } },
+  { name: 'name', fieldName: 'name', type: 'text', width: 100, header: { text: '이름' }, editable: true },
+  { name: 'email', fieldName: 'email', type: 'text', width: 180, header: { text: '이메일' }, editable: true },
+  { name: 'department', fieldName: 'department', type: 'text', width: 100, header: { text: '부서' } },
+  { name: 'position', fieldName: 'position', type: 'text', width: 80, header: { text: '직급' } },
+  { name: 'salary', fieldName: 'salary', type: 'number', width: 100, header: { text: '급여' } },
+  { name: 'hireDate', fieldName: 'hireDate', type: 'text', width: 100, header: { text: '입사일' } },
+  { name: 'status', fieldName: 'status', type: 'text', width: 80, header: { text: '상태' } },
+]
+
+// 프리셋별 설명 정보
+const PRESET_INFO: Record<RealGridPreset, {
+  title: string
+  icon: string
+  description: string
+  features: string[]
+  tags: { label: string, severity: 'info' | 'success' | 'warn' | 'secondary' | 'danger', icon: string }[]
+}> = {
+  default: {
+    title: '기본 편집',
+    icon: 'pi pi-pencil',
+    description: '일반적인 데이터 편집에 적합한 기본 설정입니다. 편집, 복사/붙여넣기, 실행 취소가 모두 활성화됩니다.',
+    features: ['편집 가능', '소프트 삭제', 'Ctrl+Z 실행 취소', 'Ctrl+C/V 복사/붙여넣기'],
+    tags: [
+      { label: '편집', severity: 'info', icon: 'pi pi-pencil' },
+      { label: '소프트삭제', severity: 'success', icon: 'pi pi-trash' },
+      { label: 'Undo', severity: 'warn', icon: 'pi pi-undo' },
+      { label: '복사/붙여넣기', severity: 'secondary', icon: 'pi pi-copy' },
+    ],
+  },
+  editable: {
+    title: '확장 편집',
+    icon: 'pi pi-file-edit',
+    description: '셀 단위 커밋이 활성화된 확장 편집 모드입니다. 각 셀 편집 후 즉시 커밋되어 데이터 일관성을 보장합니다.',
+    features: ['셀 단위 커밋', '소프트 삭제', '강화된 붙여넣기', '실행 취소 지원'],
+    tags: [
+      { label: '셀 커밋', severity: 'info', icon: 'pi pi-check' },
+      { label: '편집', severity: 'success', icon: 'pi pi-pencil' },
+      { label: '소프트삭제', severity: 'warn', icon: 'pi pi-trash' },
+      { label: 'Undo', severity: 'secondary', icon: 'pi pi-undo' },
+    ],
+  },
+  readonly: {
+    title: '읽기 전용',
+    icon: 'pi pi-eye',
+    description: '데이터 조회 전용 모드입니다. 편집이 비활성화되고 복사만 허용됩니다. 메모리 절약을 위해 Undo가 비활성화됩니다.',
+    features: ['편집 비활성화', '복사만 허용', 'Undo 비활성화 (메모리 절약)', '삭제된 행 숨김'],
+    tags: [
+      { label: '읽기전용', severity: 'info', icon: 'pi pi-eye' },
+      { label: '복사만', severity: 'secondary', icon: 'pi pi-copy' },
+      { label: 'Undo 비활성', severity: 'warn', icon: 'pi pi-ban' },
+    ],
+  },
+  search: {
+    title: '검색/필터 특화',
+    icon: 'pi pi-search',
+    description: '대용량 데이터 검색에 최적화된 설정입니다. 필터 패널이 표시되고, 성능 최적화를 위해 Undo가 비활성화됩니다.',
+    features: ['필터 패널 표시', '대소문자 무시 검색', '입력 지연 필터링 (300ms)', '스크롤 성능 최적화'],
+    tags: [
+      { label: '필터패널', severity: 'info', icon: 'pi pi-filter' },
+      { label: '검색최적화', severity: 'success', icon: 'pi pi-search' },
+      { label: 'Undo 비활성', severity: 'warn', icon: 'pi pi-ban' },
+      { label: '100건', severity: 'secondary', icon: 'pi pi-database' },
+    ],
+  },
+}
+
+// 프리셋별 데이터 및 ref
+const presetDefaultData = ref<Record<string, unknown>[]>([])
+const presetEditableData = ref<Record<string, unknown>[]>([])
+const presetReadonlyData = ref<Record<string, unknown>[]>([])
+const presetSearchData = ref<Record<string, unknown>[]>([])
+
+const presetDefaultRef = ref<RealGridComponentExpose | null>(null)
+const presetEditableRef = ref<RealGridComponentExpose | null>(null)
+const presetReadonlyRef = ref<RealGridComponentExpose | null>(null)
+const presetSearchRef = ref<RealGridComponentExpose | null>(null)
+
+// 초기화 여부
+const presetInitialized = ref({
+  default: false,
+  editable: false,
+  readonly: false,
+  search: false,
+})
+
+// 프리셋별 Ready 핸들러
+function onPresetDefaultReady(_grid: GridView, _provider: LocalDataProvider) {
+  if (!presetInitialized.value.default) {
+    presetDefaultData.value = generatePresetDemoData(100)
+    presetInitialized.value.default = true
+  }
+  toast.info('default 프리셋 그리드 초기화 완료')
+}
+
+function onPresetEditableReady(_grid: GridView, _provider: LocalDataProvider) {
+  if (!presetInitialized.value.editable) {
+    presetEditableData.value = generatePresetDemoData(100)
+    presetInitialized.value.editable = true
+  }
+  toast.info('editable 프리셋 그리드 초기화 완료')
+}
+
+function onPresetReadonlyReady(_grid: GridView, _provider: LocalDataProvider) {
+  if (!presetInitialized.value.readonly) {
+    presetReadonlyData.value = generatePresetDemoData(100)
+    presetInitialized.value.readonly = true
+  }
+  toast.info('readonly 프리셋 그리드 초기화 완료')
+}
+
+function onPresetSearchReady(_grid: GridView, _provider: LocalDataProvider) {
+  if (!presetInitialized.value.search) {
+    presetSearchData.value = generatePresetDemoData(100)
+    presetInitialized.value.search = true
+  }
+  toast.info('search 프리셋 그리드 초기화 완료')
+}
+
+// 프리셋별 행 추가
+function addPresetRow(preset: RealGridPreset) {
+  const dataMap = {
+    default: presetDefaultData,
+    editable: presetEditableData,
+    readonly: presetReadonlyData,
+    search: presetSearchData,
+  }
+  const data = dataMap[preset]
+  const newId = (data.value.length + 1).toString()
+  data.value.push({
+    id: newId,
+    name: `신규 사원 ${newId}`,
+    email: `new${newId}@example.com`,
+    department: departments[Math.floor(Math.random() * departments.length)],
+    position: positions[Math.floor(Math.random() * positions.length)],
+    salary: Math.floor(3000 + Math.random() * 7000) * 10000,
+    hireDate: new Date().toISOString().split('T')[0],
+    status: 'pending',
+  })
+  toast.success(`[${preset}] 행 추가됨`)
+}
+
+// 프리셋별 행 삭제
+function removePresetRow(preset: RealGridPreset) {
+  const dataMap = {
+    default: presetDefaultData,
+    editable: presetEditableData,
+    readonly: presetReadonlyData,
+    search: presetSearchData,
+  }
+  const data = dataMap[preset]
+  if (data.value.length > 1) {
+    data.value.pop()
+    toast.success(`[${preset}] 행 삭제됨`)
+  }
+  else {
+    toast.warn('최소 1개 행이 필요합니다')
+  }
+}
+
+// 프리셋별 데이터 리셋
+function resetPresetData(preset: RealGridPreset) {
+  const dataMap = {
+    default: presetDefaultData,
+    editable: presetEditableData,
+    readonly: presetReadonlyData,
+    search: presetSearchData,
+  }
+  dataMap[preset].value = generatePresetDemoData(100)
+  toast.info(`[${preset}] 데이터 리셋 완료`)
+}
+
+// ============================================================================
+// RealGrid 2: 상태 저장 + 유효성 검사 + 페이지네이션 데모
+// ============================================================================
 
 // 대용량 샘플 데이터 생성 (100건)
 function generateSampleData(count: number) {
@@ -1663,6 +1863,279 @@ function resetDockviewPanels() {
               <!-- 선택 영역 안내 -->
               <p class="text-xs opacity-50 mt-2">
                 💡 셀을 드래그하여 선택하면 하단에 합계/평균/최대/최소가 표시됩니다.
+              </p>
+            </PanelCard>
+
+            <!-- ========================================== -->
+            <!-- 프리셋별 그리드 데모 -->
+            <!-- ========================================== -->
+
+            <!-- default 프리셋 -->
+            <PanelCard :title="`프리셋: ${PRESET_INFO.default.title}`">
+              <template #subtitle>
+                <div class="flex items-center gap-2">
+                  <i :class="PRESET_INFO.default.icon" />
+                  preset="default"
+                </div>
+              </template>
+
+              <!-- 프리셋 설명 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="text-sm mb-2">{{ PRESET_INFO.default.description }}</p>
+                <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
+                  <li v-for="feature in PRESET_INFO.default.features" :key="feature">{{ feature }}</li>
+                </ul>
+              </div>
+
+              <!-- 컨트롤 버튼 -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <ActionButton
+                  label="행 추가"
+                  icon="pi pi-plus"
+                  severity="success"
+                  size="small"
+                  @click="addPresetRow('default')"
+                />
+                <ActionButton
+                  label="행 삭제"
+                  icon="pi pi-minus"
+                  severity="danger"
+                  size="small"
+                  @click="removePresetRow('default')"
+                />
+                <ActionButton
+                  label="데이터 리셋"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  size="small"
+                  @click="resetPresetData('default')"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="presetDefaultRef"
+                :columns="presetDemoColumns"
+                :data="presetDefaultData"
+                height="350px"
+                preset="default"
+                :events="{
+                  onReady: onPresetDefaultReady,
+                }"
+              />
+
+              <!-- 기능 태그 -->
+              <div class="flex flex-wrap gap-2 mt-3">
+                <FeedbackTag
+                  v-for="tag in PRESET_INFO.default.tags"
+                  :key="tag.label"
+                  :value="tag.label"
+                  :severity="tag.severity"
+                  :icon="tag.icon"
+                />
+              </div>
+            </PanelCard>
+
+            <!-- editable 프리셋 -->
+            <PanelCard :title="`프리셋: ${PRESET_INFO.editable.title}`">
+              <template #subtitle>
+                <div class="flex items-center gap-2">
+                  <i :class="PRESET_INFO.editable.icon" />
+                  preset="editable"
+                </div>
+              </template>
+
+              <!-- 프리셋 설명 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="text-sm mb-2">{{ PRESET_INFO.editable.description }}</p>
+                <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
+                  <li v-for="feature in PRESET_INFO.editable.features" :key="feature">{{ feature }}</li>
+                </ul>
+              </div>
+
+              <!-- 컨트롤 버튼 -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <ActionButton
+                  label="행 추가"
+                  icon="pi pi-plus"
+                  severity="success"
+                  size="small"
+                  @click="addPresetRow('editable')"
+                />
+                <ActionButton
+                  label="행 삭제"
+                  icon="pi pi-minus"
+                  severity="danger"
+                  size="small"
+                  @click="removePresetRow('editable')"
+                />
+                <ActionButton
+                  label="데이터 리셋"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  size="small"
+                  @click="resetPresetData('editable')"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="presetEditableRef"
+                :columns="presetDemoColumns"
+                :data="presetEditableData"
+                height="350px"
+                preset="editable"
+                :events="{
+                  onReady: onPresetEditableReady,
+                }"
+              />
+
+              <!-- 기능 태그 -->
+              <div class="flex flex-wrap gap-2 mt-3">
+                <FeedbackTag
+                  v-for="tag in PRESET_INFO.editable.tags"
+                  :key="tag.label"
+                  :value="tag.label"
+                  :severity="tag.severity"
+                  :icon="tag.icon"
+                />
+              </div>
+            </PanelCard>
+
+            <!-- readonly 프리셋 -->
+            <PanelCard :title="`프리셋: ${PRESET_INFO.readonly.title}`">
+              <template #subtitle>
+                <div class="flex items-center gap-2">
+                  <i :class="PRESET_INFO.readonly.icon" />
+                  preset="readonly"
+                </div>
+              </template>
+
+              <!-- 프리셋 설명 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="text-sm mb-2">{{ PRESET_INFO.readonly.description }}</p>
+                <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
+                  <li v-for="feature in PRESET_INFO.readonly.features" :key="feature">{{ feature }}</li>
+                </ul>
+              </div>
+
+              <!-- 컨트롤 버튼 -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <ActionButton
+                  label="행 추가"
+                  icon="pi pi-plus"
+                  severity="success"
+                  size="small"
+                  @click="addPresetRow('readonly')"
+                />
+                <ActionButton
+                  label="행 삭제"
+                  icon="pi pi-minus"
+                  severity="danger"
+                  size="small"
+                  @click="removePresetRow('readonly')"
+                />
+                <ActionButton
+                  label="데이터 리셋"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  size="small"
+                  @click="resetPresetData('readonly')"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="presetReadonlyRef"
+                :columns="presetDemoColumns"
+                :data="presetReadonlyData"
+                height="350px"
+                preset="readonly"
+                :events="{
+                  onReady: onPresetReadonlyReady,
+                }"
+              />
+
+              <!-- 기능 태그 -->
+              <div class="flex flex-wrap gap-2 mt-3">
+                <FeedbackTag
+                  v-for="tag in PRESET_INFO.readonly.tags"
+                  :key="tag.label"
+                  :value="tag.label"
+                  :severity="tag.severity"
+                  :icon="tag.icon"
+                />
+              </div>
+            </PanelCard>
+
+            <!-- search 프리셋 -->
+            <PanelCard :title="`프리셋: ${PRESET_INFO.search.title}`">
+              <template #subtitle>
+                <div class="flex items-center gap-2">
+                  <i :class="PRESET_INFO.search.icon" />
+                  preset="search"
+                </div>
+              </template>
+
+              <!-- 프리셋 설명 -->
+              <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
+                <p class="text-sm mb-2">{{ PRESET_INFO.search.description }}</p>
+                <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
+                  <li v-for="feature in PRESET_INFO.search.features" :key="feature">{{ feature }}</li>
+                </ul>
+              </div>
+
+              <!-- 컨트롤 버튼 -->
+              <div class="flex flex-wrap gap-2 mb-4">
+                <ActionButton
+                  label="행 추가"
+                  icon="pi pi-plus"
+                  severity="success"
+                  size="small"
+                  @click="addPresetRow('search')"
+                />
+                <ActionButton
+                  label="행 삭제"
+                  icon="pi pi-minus"
+                  severity="danger"
+                  size="small"
+                  @click="removePresetRow('search')"
+                />
+                <ActionButton
+                  label="데이터 리셋"
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  size="small"
+                  @click="resetPresetData('search')"
+                />
+              </div>
+
+              <!-- RealGrid 컴포넌트 -->
+              <RealGrid
+                ref="presetSearchRef"
+                :columns="presetDemoColumns"
+                :data="presetSearchData"
+                height="350px"
+                preset="search"
+                :events="{
+                  onReady: onPresetSearchReady,
+                }"
+              />
+
+              <!-- 기능 태그 -->
+              <div class="flex flex-wrap gap-2 mt-3">
+                <FeedbackTag
+                  v-for="tag in PRESET_INFO.search.tags"
+                  :key="tag.label"
+                  :value="tag.label"
+                  :severity="tag.severity"
+                  :icon="tag.icon"
+                />
+              </div>
+
+              <!-- 필터 사용 안내 -->
+              <p class="text-xs opacity-50 mt-2">
+                💡 그리드 상단의 필터 패널에서 각 컬럼별로 검색어를 입력하여 데이터를 필터링할 수 있습니다.
               </p>
             </PanelCard>
 

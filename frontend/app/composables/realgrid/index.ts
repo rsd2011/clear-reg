@@ -11,6 +11,12 @@ export { useRealGrid } from './useRealGrid'
 export type { UseRealGridOptions, UseRealGridReturn } from './useRealGrid'
 
 // ============================================================================
+// Setup Composable (RealGrid 컴포넌트용)
+// ============================================================================
+export { useRealGridSetup } from './useRealGridSetup'
+export type { UseRealGridSetupOptions, UseRealGridSetupReturn } from './useRealGridSetup'
+
+// ============================================================================
 // 컨텍스트 메뉴
 // ============================================================================
 export { useRealGridContextMenu } from './useRealGridContextMenu'

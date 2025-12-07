@@ -1,0 +1,53 @@
+/**
+ * RealGrid 상태바 스타일
+ * OKLCH 디자인 토큰 시스템 통합 (2024-12)
+ */
+
+.realgrid-status-bar {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: var(--oklch-gray-2);
+  border-top: 1px solid var(--oklch-gray-6);
+  font-size: 0.875rem;
+  color: var(--oklch-gray-11);
+}
+
+.realgrid-status-bar__item {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   테마별 레이아웃 차별화
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Linear Dark - 미니멀 (border-radius: 0) */
+.theme-linear-dark .realgrid-status-bar {
+  border-radius: 0;
+}
+
+/* GitHub Dark - 클래식 */
+.theme-github-dark .realgrid-status-bar {
+  border-radius: 0 0 6px 6px;
+}
+
+/* Figma Dark - 컴팩트 */
+.theme-figma-dark .realgrid-status-bar {
+  border-radius: 0 0 4px 4px;
+}
+
+/* Slack Aubergine - 둥글고 친근한 */
+.theme-slack-aubergine .realgrid-status-bar {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Koscom Light - 기업형 */
+.theme-koscom-light .realgrid-status-bar {
+  border-radius: 0 0 2px 2px;
+}
+
+/* Notion Light - 미니멀 */
+.theme-notion-light .realgrid-status-bar {
+  border-radius: 0 0 3px 3px;
+}

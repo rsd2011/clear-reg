@@ -34,6 +34,8 @@ export default defineNuxtConfig({
     { path: '~/components/composite', pathPrefix: false },
     // Common 컴포넌트 - 프리픽스 없음
     { path: '~/components/common', pathPrefix: false },
+    // RealGrid 컴포넌트 - 프리픽스 없음
+    { path: '~/components/realgrid', pathPrefix: false },
   ],
   devtools: { enabled: true },
 

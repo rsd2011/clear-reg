@@ -2,6 +2,64 @@
 import type { GridView, LocalDataProvider } from 'realgrid'
 
 // ============================================================================
+// 프리셋 타입 정의
+// ============================================================================
+
+/**
+ * 그리드 프리셋 타입
+ * - default: 기본 설정 (편집 가능, 추천 설정 적용)
+ * - editable: 편집 최적화 (셀 단위 커밋, 소프트 삭제, 복사/붙여넣기 강화)
+ * - readonly: 읽기 전용 (편집 비활성화, 선택/복사만 허용)
+ * - search: 대용량 데이터 검색용 (필터 패널, 성능 최적화, Undo 비활성화)
+ */
+export type RealGridPreset = 'default' | 'editable' | 'readonly' | 'search'
+
+/**
+ * 프리셋별 설정 값
+ */
+export interface RealGridPresetConfig {
+  /** 편집 가능 여부 */
+  editable: boolean
+  /** 소프트 삭제 사용 여부 */
+  softDeleting: boolean
+  /** 삭제된 행 숨김 여부 */
+  hideDeletedRows: boolean
+  /** 복사 옵션 */
+  copyOptions: {
+    lookupDisplay: boolean
+  }
+  /** 붙여넣기 옵션 */
+  pasteOptions: {
+    enabled: boolean
+    convertLookupLabel: boolean
+    checkDomainOnly: boolean
+    checkReadOnly: boolean
+  }
+  /** 고정 옵션 (reporting용) */
+  fixedOptions?: {
+    colCount: number
+    rowCount: number
+  }
+  /** 병합셀 편집 (reporting용) */
+  editItemMerging?: boolean
+  /** 필터 패널 옵션 (search용) */
+  filterPanel?: {
+    visible: boolean
+    height?: number
+    /** 입력 후 필터 적용 지연 시간 (ms) - 대용량 데이터 시 성능 향상 */
+    filterDelay?: number
+    /** 대소문자 무시 */
+    ignoreCase?: boolean
+    /** 공백 제거 */
+    trimData?: boolean
+  }
+  /** Undo/Redo 비활성화 (대용량 데이터 성능 최적화) */
+  undoable?: boolean
+  /** 스크롤 성능 최적화 모드 */
+  refreshMode?: 'auto' | 'recycle'
+}
+
+// ============================================================================
 // 기본 타입 정의
 // ============================================================================
 

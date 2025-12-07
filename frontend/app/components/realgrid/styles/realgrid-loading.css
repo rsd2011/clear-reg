@@ -1,0 +1,37 @@
+/**
+ * RealGrid 로딩 스타일
+ * OKLCH 디자인 토큰 시스템 통합 (2024-12)
+ */
+
+.realgrid-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--oklch-gray-2);
+  border-top: 1px solid var(--oklch-gray-6);
+  color: var(--oklch-gray-11);
+}
+
+.realgrid-loading__spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--oklch-gray-6);
+  border-top-color: var(--oklch-primary-9);
+  border-radius: 50%;
+  animation: realgrid-spin 0.8s linear infinite;
+}
+
+@keyframes realgrid-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   줄임 모션 모드 대응
+   ═══════════════════════════════════════════════════════════════════════════ */
+html.reduce-motion .realgrid-loading__spinner {
+  animation: none;
+}
