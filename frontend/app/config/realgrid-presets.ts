@@ -170,7 +170,6 @@ export function applyPresetConfig(
       ;(gridView.displayOptions as unknown as { refreshMode: string }).refreshMode = config.refreshMode
     }
   }
-
 }
 
 /**

@@ -175,10 +175,10 @@ const {
     loadFn: props.loadFn,
   },
   callbacks: {
-    onReady: (instance) => emit('ready', instance),
-    onSelectionSummaryChange: (summary) => emit('selectionSummaryChange', summary),
-    onValidationError: (errors) => emit('validationError', errors),
-    onPageChange: (page) => emit('pageChange', page),
+    onReady: instance => emit('ready', instance),
+    onSelectionSummaryChange: summary => emit('selectionSummaryChange', summary),
+    onValidationError: errors => emit('validationError', errors),
+    onPageChange: page => emit('pageChange', page),
     onLoadMore: () => emit('loadMore'),
   },
 })

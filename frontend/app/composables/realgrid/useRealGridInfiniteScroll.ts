@@ -182,7 +182,7 @@ export const useRealGridInfiniteScroll = <T = Record<string, unknown>>(
     }
 
     // RealGrid 공식 이벤트: onTopIndexChanged
-    grid.onTopIndexChanged = (_grid, itemIndex) => {
+    grid.onTopIndexChanged = (_grid, _itemIndex) => {
       if (scrollHandler) {
         scrollHandler(_grid as GridView)
       }

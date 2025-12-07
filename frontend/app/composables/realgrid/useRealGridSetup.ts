@@ -5,7 +5,7 @@
  * 모든 기능 composable을 조합하여 통합된 인터페이스를 제공합니다.
  */
 
-import type { GridView, LocalDataProvider, DataFieldObject } from 'realgrid'
+import type { GridView, DataFieldObject } from 'realgrid'
 import type {
   RealGridColumn,
   RealGridEventsExtended,
@@ -21,7 +21,6 @@ import type {
 
 import { initializeRealGrid } from '~/plugins/realgrid.client'
 import {
-  PRESET_CONFIGS,
   applyRecommendedOptions,
   applyPresetConfig,
   isUndoEnabled,
@@ -323,7 +322,7 @@ export function useRealGridSetup(options: UseRealGridSetupOptions): UseRealGridS
       }
 
       // 필드 설정
-      const fields: DataFieldObject[] = columns.map((col) => ({
+      const fields: DataFieldObject[] = columns.map(col => ({
         fieldName: col.fieldName || col.name,
         dataType: col.type === 'number' ? 'number' : 'text',
       } as DataFieldObject))

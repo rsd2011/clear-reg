@@ -186,4 +186,12 @@ export default defineNuxtConfig({
       },
     },
   },
+
+  // 🔧 Tailwind CSS 레이어 충돌 해결
+  // 모듈의 자동 CSS 주입 비활성화 → main.css에서 @layer 구문으로 직접 관리
+  // 이렇게 해야 CSS 레이어 순서가 올바르게 적용됨:
+  // tailwind-base (reset) → primevue (컴포넌트) → tailwind-utilities
+  tailwindcss: {
+    cssPath: false,
+  },
 })

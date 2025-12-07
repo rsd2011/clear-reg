@@ -10,6 +10,7 @@ import type {
   RealGridCellClickData,
   RealGridColumnValidation,
   InfiniteScrollLoadFn,
+  RealGridPreset,
 } from '~/types/realgrid'
 
 // 🚀 DockView 지연 로딩 (탭 활성화 시에만 로드)
@@ -361,8 +362,6 @@ function exportRealgridJson() {
 // ============================================================================
 // RealGrid 프리셋별 데모
 // ============================================================================
-
-import type { RealGridPreset } from '~/types/realgrid'
 
 // 부서 목록 및 상태
 const departments = ['개발팀', '기획팀', '인사팀', '마케팅팀', '영업팀', '재무팀', '디자인팀', 'QA팀']
@@ -756,8 +755,8 @@ const dockviewApi = ref<any>(null)
 const dockviewPanelCount = ref(3)
 
 // DockView 준비 핸들러
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function onDockviewReady(event: DockviewReadyEvent) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const api = event.api as any
   dockviewApi.value = api
 
@@ -1881,9 +1880,16 @@ function resetDockviewPanels() {
 
               <!-- 프리셋 설명 -->
               <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                <p class="text-sm mb-2">{{ PRESET_INFO.default.description }}</p>
+                <p class="text-sm mb-2">
+                  {{ PRESET_INFO.default.description }}
+                </p>
                 <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
-                  <li v-for="feature in PRESET_INFO.default.features" :key="feature">{{ feature }}</li>
+                  <li
+                    v-for="feature in PRESET_INFO.default.features"
+                    :key="feature"
+                  >
+                    {{ feature }}
+                  </li>
                 </ul>
               </div>
 
@@ -1947,9 +1953,16 @@ function resetDockviewPanels() {
 
               <!-- 프리셋 설명 -->
               <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                <p class="text-sm mb-2">{{ PRESET_INFO.editable.description }}</p>
+                <p class="text-sm mb-2">
+                  {{ PRESET_INFO.editable.description }}
+                </p>
                 <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
-                  <li v-for="feature in PRESET_INFO.editable.features" :key="feature">{{ feature }}</li>
+                  <li
+                    v-for="feature in PRESET_INFO.editable.features"
+                    :key="feature"
+                  >
+                    {{ feature }}
+                  </li>
                 </ul>
               </div>
 
@@ -2013,9 +2026,16 @@ function resetDockviewPanels() {
 
               <!-- 프리셋 설명 -->
               <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                <p class="text-sm mb-2">{{ PRESET_INFO.readonly.description }}</p>
+                <p class="text-sm mb-2">
+                  {{ PRESET_INFO.readonly.description }}
+                </p>
                 <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
-                  <li v-for="feature in PRESET_INFO.readonly.features" :key="feature">{{ feature }}</li>
+                  <li
+                    v-for="feature in PRESET_INFO.readonly.features"
+                    :key="feature"
+                  >
+                    {{ feature }}
+                  </li>
                 </ul>
               </div>
 
@@ -2079,9 +2099,16 @@ function resetDockviewPanels() {
 
               <!-- 프리셋 설명 -->
               <div class="mb-4 p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                <p class="text-sm mb-2">{{ PRESET_INFO.search.description }}</p>
+                <p class="text-sm mb-2">
+                  {{ PRESET_INFO.search.description }}
+                </p>
                 <ul class="list-disc list-inside text-xs opacity-70 space-y-1">
-                  <li v-for="feature in PRESET_INFO.search.features" :key="feature">{{ feature }}</li>
+                  <li
+                    v-for="feature in PRESET_INFO.search.features"
+                    :key="feature"
+                  >
+                    {{ feature }}
+                  </li>
                 </ul>
               </div>
 
@@ -2350,36 +2377,68 @@ function resetDockviewPanels() {
             <PanelCard title="RealGrid 컴포저블 기능 요약">
               <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridContextMenu</p>
-                  <p class="text-xs opacity-70">컨텍스트 메뉴 (고정, 컬럼, 행높이, 내보내기)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridContextMenu
+                  </p>
+                  <p class="text-xs opacity-70">
+                    컨텍스트 메뉴 (고정, 컬럼, 행높이, 내보내기)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridKeyboard</p>
-                  <p class="text-xs opacity-70">키보드 단축키 (복사, 붙여넣기, 실행취소)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridKeyboard
+                  </p>
+                  <p class="text-xs opacity-70">
+                    키보드 단축키 (복사, 붙여넣기, 실행취소)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridExport</p>
-                  <p class="text-xs opacity-70">내보내기 (Excel, CSV, JSON, 클립보드)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridExport
+                  </p>
+                  <p class="text-xs opacity-70">
+                    내보내기 (Excel, CSV, JSON, 클립보드)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridSelection</p>
-                  <p class="text-xs opacity-70">선택 요약 (합계, 평균, 최대, 최소)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridSelection
+                  </p>
+                  <p class="text-xs opacity-70">
+                    선택 요약 (합계, 평균, 최대, 최소)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridValidation</p>
-                  <p class="text-xs opacity-70">유효성 검사 (필수, 패턴, 범위, 커스텀)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridValidation
+                  </p>
+                  <p class="text-xs opacity-70">
+                    유효성 검사 (필수, 패턴, 범위, 커스텀)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridPersistence</p>
-                  <p class="text-xs opacity-70">상태 저장 (컬럼, 필터, 정렬, 고정)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridPersistence
+                  </p>
+                  <p class="text-xs opacity-70">
+                    상태 저장 (컬럼, 필터, 정렬, 고정)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridPagination</p>
-                  <p class="text-xs opacity-70">페이지네이션 (페이지 이동, 총 건수)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridPagination
+                  </p>
+                  <p class="text-xs opacity-70">
+                    페이지네이션 (페이지 이동, 총 건수)
+                  </p>
                 </div>
                 <div class="p-3 bg-surface-100 dark:bg-surface-800 rounded-lg">
-                  <p class="font-medium mb-2">useRealGridInfiniteScroll</p>
-                  <p class="text-xs opacity-70">무한 스크롤 (자동 로딩, 임계값)</p>
+                  <p class="font-medium mb-2">
+                    useRealGridInfiniteScroll
+                  </p>
+                  <p class="text-xs opacity-70">
+                    무한 스크롤 (자동 로딩, 임계값)
+                  </p>
                 </div>
               </div>
             </PanelCard>

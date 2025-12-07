@@ -116,7 +116,7 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
             localStorage.setItem('app-theme-name', t.name)
             localStorage.setItem('app-theme-mode', t.mode)
           },
-          theme
+          theme,
         )
 
         await page.reload()
@@ -128,7 +128,8 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
         // 다크/라이트 모드 클래스 확인
         if (theme.mode === 'dark') {
           await expect(html).toHaveClass(/app-dark/)
-        } else {
+        }
+        else {
           await expect(html).not.toHaveClass(/app-dark/)
         }
       })
@@ -158,44 +159,45 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
 
                 // 각 테마의 border-radius 규칙 확인
                 if (
-                  selector.includes('.theme-linear-dark') &&
-                  selector.includes('realgrid-')
+                  selector.includes('.theme-linear-dark')
+                  && selector.includes('realgrid-')
                 ) {
                   themes.linearDark = true
                 }
                 if (
-                  selector.includes('.theme-github-dark') &&
-                  selector.includes('realgrid-')
+                  selector.includes('.theme-github-dark')
+                  && selector.includes('realgrid-')
                 ) {
                   themes.githubDark = true
                 }
                 if (
-                  selector.includes('.theme-figma-dark') &&
-                  selector.includes('realgrid-')
+                  selector.includes('.theme-figma-dark')
+                  && selector.includes('realgrid-')
                 ) {
                   themes.figmaDark = true
                 }
                 if (
-                  selector.includes('.theme-slack-aubergine') &&
-                  selector.includes('realgrid-')
+                  selector.includes('.theme-slack-aubergine')
+                  && selector.includes('realgrid-')
                 ) {
                   themes.slackAubergine = true
                 }
                 if (
-                  selector.includes('.theme-koscom-light') &&
-                  selector.includes('realgrid-')
+                  selector.includes('.theme-koscom-light')
+                  && selector.includes('realgrid-')
                 ) {
                   themes.koscomLight = true
                 }
                 if (
-                  selector.includes('.theme-notion-light') &&
-                  selector.includes('realgrid-')
+                  selector.includes('.theme-notion-light')
+                  && selector.includes('realgrid-')
                 ) {
                   themes.notionLight = true
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }
@@ -226,7 +228,7 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
           JSON.stringify({
             highContrast: false,
             reducedMotion: true,
-          })
+          }),
         )
       })
 
@@ -247,15 +249,16 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
 
                 // html.reduce-motion .realgrid-loading__spinner 규칙 확인
                 if (
-                  selector.includes('reduce-motion') &&
-                  selector.includes('spinner') &&
-                  cssText.includes('animation')
+                  selector.includes('reduce-motion')
+                  && selector.includes('spinner')
+                  && cssText.includes('animation')
                 ) {
                   return true
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }
@@ -297,7 +300,8 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }
@@ -322,7 +326,8 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }
@@ -345,7 +350,8 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }
@@ -368,7 +374,8 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }
@@ -400,32 +407,33 @@ test.describe('RealGrid 컴포넌트 테마 통합', () => {
 
                 // 각 컴포넌트에서 --oklch-* 변수 사용 확인
                 if (
-                  selector.includes('.realgrid-status-bar') &&
-                  cssText.includes('--oklch-')
+                  selector.includes('.realgrid-status-bar')
+                  && cssText.includes('--oklch-')
                 ) {
                   references.statusBar = true
                 }
                 if (
-                  selector.includes('.realgrid-pagination') &&
-                  cssText.includes('--oklch-')
+                  selector.includes('.realgrid-pagination')
+                  && cssText.includes('--oklch-')
                 ) {
                   references.pagination = true
                 }
                 if (
-                  selector.includes('.realgrid-loading') &&
-                  cssText.includes('--oklch-')
+                  selector.includes('.realgrid-loading')
+                  && cssText.includes('--oklch-')
                 ) {
                   references.loading = true
                 }
                 if (
-                  selector.includes('.realgrid-error') &&
-                  cssText.includes('--oklch-')
+                  selector.includes('.realgrid-error')
+                  && cssText.includes('--oklch-')
                 ) {
                   references.error = true
                 }
               }
             }
-          } catch {
+          }
+          catch {
             // 크로스 오리진 스타일시트 무시
           }
         }

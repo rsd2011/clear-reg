@@ -406,7 +406,7 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
   // 이벤트 핸들러 참조
   let keydownHandler: ((e: KeyboardEvent) => void) | null = null
   let containerRef: HTMLElement | null = null
-  let gridRef: GridView | null = null
+  let _gridRef: GridView | null = null
 
   /**
    * 키보드 단축키 설정
@@ -419,7 +419,7 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
   ): void => {
     // 기본 단축키 등록
     registerDefaultShortcuts(grid, provider)
-    gridRef = grid
+    _gridRef = grid
 
     // RealGrid의 onKeyDown 이벤트 사용 (그리드 내부 키보드 이벤트 처리)
     // RealGrid 2.x 이벤트 시그니처: onKeyDown(grid, key, ctrl, shift, alt)
@@ -428,7 +428,7 @@ export const useRealGridKeyboard = (input: UseRealGridKeyboardInput = {}) => {
     // - 반환값: false면 기본 동작 취소, 아무것도 반환하지 않으면 기본 동작 실행
     // 참고: http://help.realgrid.com/api/GridBase/onKeyDown/
     ;(grid as unknown as {
-      onKeyDown: (grid: GridView, key: number, ctrl: boolean, shift: boolean, alt: boolean) => boolean | void
+      onKeyDown: (grid: GridView, key: number, ctrl: boolean, shift: boolean, alt: boolean) => boolean | undefined
     }).onKeyDown = (_grid, keyCode, ctrl, shift, alt) => {
       // 키 코드에서 단축키 문자열 생성
       const key = getShortcutKeyFromCode(keyCode, ctrl, shift, alt)

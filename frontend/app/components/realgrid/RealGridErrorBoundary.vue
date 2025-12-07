@@ -36,8 +36,12 @@ const handleRetry = () => {
   >
     <div class="realgrid-error__content">
       <span class="realgrid-error__icon">⚠️</span>
-      <h3 class="realgrid-error__title">그리드 초기화 실패</h3>
-      <p class="realgrid-error__message">{{ error.message }}</p>
+      <h3 class="realgrid-error__title">
+        그리드 초기화 실패
+      </h3>
+      <p class="realgrid-error__message">
+        {{ error.message }}
+      </p>
       <button
         class="realgrid-error__retry-btn"
         :disabled="isRetrying"

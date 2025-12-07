@@ -67,7 +67,8 @@ test.describe('RealGrid 수정 사항 테스트', () => {
               }
             }
           }
-        } catch {
+        }
+        catch {
           // Cross-origin stylesheets will throw
         }
       }
