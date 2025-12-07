@@ -30,6 +30,7 @@ import {
   SLACK_AUBERGINE_OKLCH,
   KOSCOM_LIGHT_OKLCH,
   NOTION_LIGHT_OKLCH,
+  ELONSOFT_LIGHT_OKLCH,
 } from '~/themes'
 
 // ============================================================================
@@ -97,6 +98,7 @@ const THEME_OKLCH_MAP: Record<ThemeName, ThemeOklch> = {
   'slack-aubergine': SLACK_AUBERGINE_OKLCH,
   'koscom-light': KOSCOM_LIGHT_OKLCH,
   'notion-light': NOTION_LIGHT_OKLCH,
+  'elonsoft-light': ELONSOFT_LIGHT_OKLCH,
 }
 
 /** OKLCH 밝기 차이 임계값 */

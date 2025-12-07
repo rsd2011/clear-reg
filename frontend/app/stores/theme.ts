@@ -25,6 +25,7 @@ const THEME_PRESET_LOADERS: Record<ThemeName, () => Promise<unknown>> = {
   'slack-aubergine': () => import('~/themes/slack-aubergine').then(m => m.SlackAuberginePreset),
   'koscom-light': () => import('~/themes/koscom-light').then(m => m.KoscomLightPreset),
   'notion-light': () => import('~/themes/notion-light').then(m => m.NotionLightPreset),
+  'elonsoft-light': () => import('~/themes/elonsoft-light').then(m => m.ElonsoftLightPreset),
 }
 
 /** 로드된 프리셋 캐시 (중복 로드 방지) */
@@ -111,7 +112,7 @@ const ALL_THEME_CLASSES = Object.values(THEMES).map(t => t.className)
 /** 기본 스케줄 설정 */
 const DEFAULT_SCHEDULE: ThemeSchedule = {
   enabled: false,
-  lightTheme: 'notion-light',
+  lightTheme: 'elonsoft-light',
   darkTheme: 'linear-dark',
   sunriseTime: '07:00',
   sunsetTime: '19:00',
@@ -129,10 +130,10 @@ const DEFAULT_ACCESSIBILITY: AccessibilityOptions = {
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
-    themeName: 'linear-dark' as ThemeName,
+    themeName: 'elonsoft-light' as ThemeName,
     themeMode: 'system' as ThemeMode,
-    primaryColor: 'indigo' as PrimaryColorName,
-    surfaceColor: 'slate' as SurfaceColorName,
+    primaryColor: 'blue' as PrimaryColorName,
+    surfaceColor: 'neutral' as SurfaceColorName,
     isDark: false,
     isInitialized: false,
     // Phase 2: 프리뷰 모드 (Enhanced)
@@ -1017,10 +1018,10 @@ export const useThemeStore = defineStore('theme', {
       localStorage.removeItem(PERSIST_KEY)
 
       // 상태 초기화
-      this.themeName = 'linear-dark'
+      this.themeName = 'elonsoft-light'
       this.themeMode = 'system'
-      this.primaryColor = 'indigo'
-      this.surfaceColor = 'slate'
+      this.primaryColor = 'blue'
+      this.surfaceColor = 'neutral'
       this.schedule = { ...DEFAULT_SCHEDULE }
       this.accessibility = { ...DEFAULT_ACCESSIBILITY }
 

@@ -2,7 +2,7 @@
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
 import Button from 'primevue/button'
-import ThemeConfigurator from '~/components/common/ThemeConfigurator.vue'
+import ThemeConfigurator from '~/components/theme/ThemeConfigurator.vue'
 
 // ============================================================================
 // State

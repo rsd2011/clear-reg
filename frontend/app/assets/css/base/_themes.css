@@ -20,7 +20,7 @@
  *
  * 포함된 테마:
  *   - Dark: Linear, GitHub, Figma, Slack Aubergine
- *   - Light: Koscom, Notion
+ *   - Light: ELONSOFT, Koscom, Notion
  */
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -213,4 +213,33 @@
 .theme-notion-light .font-serif {
   /* Lyon-Text(유료) → Lora(SIL OFL) + 시스템 serif 폰트 */
   font-family: 'Lora', Georgia, 'Cambria', 'Times New Roman', Times, serif;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ELONSOFT Light Theme
+   Primary: Navy Blue #182A88 → oklch(0.35 0.18 265)
+   Accent: Orange #F39800 → oklch(0.75 0.18 70)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.theme-elonsoft-light {
+  /* OKLCH Primary는 theme.ts에서 동적으로 관리 (applyPrimaryColor) */
+
+  /* Typography - Pretendard (SIL OFL 라이선스, 모던 한글 폰트) */
+  font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Visual Effects - 기업 전문성 강조 */
+  --shadow-none: none;
+  --shadow-card: 0 1px 4px rgba(24, 42, 136, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --gradient-subtle-overlay: linear-gradient(rgba(24, 42, 136, 0.02), transparent 30%);
+
+  /* Scrollbar */
+  --scrollbar-color: rgba(24, 42, 136, 0.08);
+  --scrollbar-color-hover: rgba(24, 42, 136, 0.16);
+  --scrollbar-color-active: rgba(24, 42, 136, 0.24);
+  --scrollbar-size: 8px;
+}
+
+.theme-elonsoft-light code,
+.theme-elonsoft-light pre,
+.theme-elonsoft-light .font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', 'D2Coding', Consolas, monospace;
 }

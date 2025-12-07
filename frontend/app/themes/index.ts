@@ -4,6 +4,7 @@ export { GithubDarkPreset, GITHUB_DARK_META, GITHUB_DARK_OKLCH } from './github-
 export { NotionLightPreset, NOTION_LIGHT_META, NOTION_LIGHT_OKLCH } from './notion-light'
 export { FigmaDarkPreset, FIGMA_DARK_META, FIGMA_DARK_OKLCH } from './figma-dark'
 export { SlackAuberginePreset, SLACK_AUBERGINE_META, SLACK_AUBERGINE_OKLCH } from './slack-aubergine'
+export { ElonsoftLightPreset, ELONSOFT_LIGHT_META, ELONSOFT_LIGHT_OKLCH } from './elonsoft-light'
 
 // Note: DockView/RealGrid 커스텀 테마 제거됨 - 공식 다크/라이트 테마만 사용
 // @see plugins/dockview-theme.client.ts - Dockview 공식 테마 전환
@@ -20,6 +21,7 @@ export type ThemeName
     | 'slack-aubergine'
     | 'koscom-light'
     | 'notion-light'
+    | 'elonsoft-light'
 
 export type ThemeMode = 'system' | 'dark' | 'light'
 
@@ -178,6 +180,19 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
   // ─────────────────────────────────────────────────────────────────────────
   // Light Themes
   // ─────────────────────────────────────────────────────────────────────────
+  'elonsoft-light': {
+    name: 'ELONSOFT Light',
+    description: 'ELONSOFT 스타일 라이트 테마',
+    className: 'theme-elonsoft-light',
+    prefersDark: false,
+    author: 'ELONSOFT',
+    version: '1.0.0',
+    tags: ['corporate', 'cool', 'muted'],
+    accentColors: ['#182A88', '#ffffff', '#F39800'],
+    fontStyle: 'sans',
+    defaultPrimaryColor: 'blue',
+    defaultSurfaceColor: 'neutral',
+  },
   'koscom-light': {
     name: 'Koscom Light',
     description: 'Koscom 스타일 라이트 테마',
